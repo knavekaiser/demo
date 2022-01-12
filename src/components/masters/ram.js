@@ -229,7 +229,7 @@ const RiskAssessmentForm = ({ edit, onSuccess, parameters, clearForm }) => {
         setValue={setValue}
         required={true}
         placeholder="Select"
-        options={parameters?.["1"]}
+        options={parameters?.["9"]}
       />
       <Combobox
         name="serverity"
