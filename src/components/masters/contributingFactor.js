@@ -235,7 +235,7 @@ const ContributingFactorDetail = ({
   // <Box label="CONTRIBUTING FACTOR DETAILS">
   // </Box>
   return (
-    <div className={s.child}>
+    <div className={`${s.child} ${s.contributingFactorDetails}`}>
       <div className={s.head}>
         <span className={s.contributingFactorName}>
           Category: <strong>{name}</strong>

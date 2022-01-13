@@ -205,7 +205,7 @@ const RcaCauses = ({ rca: { id, name, rcaCauses }, setRcas }) => {
   // <Box label="RCA CAUSES">
   // </Box>
   return (
-    <div className={s.child}>
+    <div className={`${s.child} ${s.rcaDetails}`}>
       <div className={s.head}>
         <span className={s.rcaName}>
           Category: <strong>{name}</strong>

@@ -12,7 +12,7 @@
   .content {
     display: grid;
     grid-gap: 1.5rem;
-    grid-template-columns: clamp(20rem, 25rem, 25rem) minmax(50rem, 1fr);
+    grid-template-columns: clamp(15rem, 20rem, 20rem) minmax(50rem, 1fr);
     &.parent_child {
       .inlineForm {
         grid-column: 1/-1;
@@ -149,7 +149,20 @@
         grid-template-columns: 1fr 3rem max-content !important;
       }
     }
+    .rcaDetails {
+      table {
+        width: auto;
+      }
+    }
+    .contributingFactorDetails {
+      table {
+        width: auto;
+      }
+    }
     .twoFieldMasterDetail {
+      table {
+        width: auto;
+      }
       .inlineForm form {
         grid-template-columns: 1fr 3rem 4rem !important;
       }
@@ -159,6 +172,9 @@
     }
 
     .personAffectedDetails {
+      table {
+        width: auto;
+      }
       .loading {
         background: rgb(191, 216, 226) !important;
         pointer-events: none;
@@ -166,6 +182,9 @@
     }
   }
   .locations {
+    table {
+      width: auto;
+    }
     form {
       display: grid;
       align-items: center;
@@ -238,6 +257,9 @@
     }
   }
   .ram {
+    table {
+      width: auto;
+    }
     form {
       display: grid;
       align-items: center;
