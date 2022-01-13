@@ -76,6 +76,7 @@ export default function IncidentReporting() {
         <form
           className={s.content}
           onSubmit={methods.handleSubmit((data) => {
+            if (!window.confirm("Once submitted , IR’s cannot be edited. Are you sure you want to continue")) return;
             fetch(`${process.env.REACT_APP_HOST}/IncidentReport`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -101,6 +102,7 @@ export default function IncidentReporting() {
                 register={methods.register}
                 label="Incident Date & Time"
                 type="datetime-local"
+                max={(new Date()).toISOString().slice(0,16)}
               />
               <Combobox
                 label="Location of incident"
@@ -136,13 +138,13 @@ export default function IncidentReporting() {
               <Input
                 name="complientDate"
                 register={methods.register}
-                label="Complient Date & Time"
+                label="Complaint Date & Time"
                 type="datetime-local"
               />
               <Input
                 name="comlientId"
                 register={methods.register}
-                label="Complient ID"
+                label="Complaint ID"
               />
             </div>
           </Box>
@@ -361,7 +363,7 @@ export default function IncidentReporting() {
                       <div>
                         <Textarea placeholder="Enter" />
                         <Input placeholder="Enter" icon={<BiSearch />} />
-                        <Input type="datetime-local" />
+                        <Input type="datetime-local" max={(new Date()).toISOString().slice(0,16)} />
                         <button className="btn secondary">
                           <AiOutlinePlus />
                         </button>

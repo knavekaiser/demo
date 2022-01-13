@@ -14,6 +14,7 @@ import { Tabs, Input, Combobox, Table, TableActions, Moment } from "./elements";
 import { useForm } from "react-hook-form";
 import s from "./incidentReportingDashboard.module.scss";
 
+const incidentType = [undefined, "Unsafe condition", "No Harm", "Near Miss", "Adverse Event", "Sentinel Event"];
 function IncidentReportingDashboard() {
   return (
     <div className={s.container}>
@@ -174,7 +175,7 @@ const MyDashboard = ({}) => {
                 ?.subCategorys?.find((item) => item.id === inc.inciSubCat)
                 ?.name || inc.inciSubCat}
             </td>
-            <td>{inc.typeofInci}</td>
+            <td>{incidentType[inc.typeofInci]}</td>
             <td>{inc.reportedBy}</td>
             <td>{inc.irInvestigator}</td>
             <td>{inc.status}</td>
