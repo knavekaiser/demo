@@ -152,6 +152,7 @@ const TwoFieldMasterForm = ({
   twoFieldMasters,
 }) => {
   const { handleSubmit, register, reset } = useForm({ ...edit });
+  const [loading, setLoading] = useState(false);
   useEffect(() => {
     reset({ ...edit });
   }, [edit]);
@@ -174,6 +175,7 @@ const TwoFieldMasterForm = ({
           });
           return;
         }
+        setLoading(true);
         fetch(url, {
           method: edit ? "PUT" : "POST",
           headers: { "Content-Type": "application/json" },
@@ -181,16 +183,22 @@ const TwoFieldMasterForm = ({
         })
           .then((res) => res.json())
           .then((data) => {
+            setLoading(false);
             if (data.name) {
               onSuccess(data);
               reset();
             }
+          })
+          .catch((err) => {
+            setLoading(false);
+            Prompt({ type: "error", message: err.message });
+            console.log(err);
           });
       })}
     >
       <Input name="name" register={register} required={true} />
       <div className={s.btns}>
-        <button className="btn secondary">
+        <button className="btn secondary" type="submit" disabled={loading}>
           {edit ? <FaCheck /> : <FaPlus />}
         </button>
         {edit && (
@@ -225,7 +233,7 @@ const TwoFieldMasterDetails = ({
       </div>
       <Table
         columns={[
-          { label: "Description" },
+          { label: "Details" },
           { label: "Status" },
           { label: "Action" },
         ]}
@@ -346,6 +354,7 @@ const TwoFieldMasterDetailForm = ({
   twoFieldMasterDetails,
 }) => {
   const { handleSubmit, register, reset, watch } = useForm({ ...edit });
+  const [loading, setLoading] = useState(false);
   useEffect(() => {
     reset({ showToggle: true, ...edit });
   }, [edit]);
@@ -365,6 +374,7 @@ const TwoFieldMasterDetailForm = ({
           });
           return;
         }
+        setLoading(true);
         fetch(`${process.env.REACT_APP_HOST}/twoFieldMasterDetails`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -375,12 +385,15 @@ const TwoFieldMasterDetailForm = ({
         })
           .then((res) => res.json())
           .then((data) => {
+            setLoading(false);
             if (data.name) {
               onSuccess(data);
               reset();
             }
           })
           .catch((err) => {
+            setLoading(false);
+            Prompt({ type: "error", message: err.message });
             console.log(err);
           });
       })}
@@ -398,7 +411,7 @@ const TwoFieldMasterDetailForm = ({
         watch={watch}
       />
       <div className={s.btns}>
-        <button className="btn secondary">
+        <button className="btn secondary" type="submit" disabled={loading}>
           {edit ? <FaCheck /> : <FaPlus />}
         </button>
         {edit && (

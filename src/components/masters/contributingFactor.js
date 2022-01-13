@@ -55,8 +55,8 @@ export default function ContributingFactor() {
           </div>
           <Table
             columns={[
-              { label: "Master Name" },
-              { label: "Show" },
+              { label: "Contributing Factor" },
+              // { label: "Show" },
               { label: "Action" },
             ]}
           >
@@ -101,12 +101,14 @@ export default function ContributingFactor() {
                       {contributingFactor.name}
                     </span>
                   </td>
-                  <td>
-                    <Toggle
-                      readOnly={true}
-                      defaultValue={contributingFactor.show}
-                    />
-                  </td>
+                  {
+                    //   <td>
+                    //   <Toggle
+                    //     readOnly={true}
+                    //     defaultValue={contributingFactor.show}
+                    //   />
+                    // </td>
+                  }
                   <TableActions
                     actions={[
                       {
@@ -169,6 +171,7 @@ const ContributingFactorForm = ({
   contributingFactors,
 }) => {
   const { handleSubmit, register, reset, watch } = useForm({ ...edit });
+  const [loading, setLoading] = useState(false);
   useEffect(() => {
     reset({ show: true, ...edit });
   }, [edit]);
@@ -191,6 +194,7 @@ const ContributingFactorForm = ({
           });
           return;
         }
+        setLoading(true);
         fetch(url, {
           method: edit ? "PUT" : "POST",
           headers: { "Content-Type": "application/json" },
@@ -198,17 +202,25 @@ const ContributingFactorForm = ({
         })
           .then((res) => res.json())
           .then((data) => {
+            setLoading(false);
             if (data.name) {
               onSuccess(data);
               reset();
             }
+          })
+          .catch((err) => {
+            setLoading(false);
+            Prompt({ type: "error", message: err.message });
+            console.log(err);
           });
       })}
     >
       <Input name="name" register={register} required={true} />
-      <Toggle name="show" watch={watch} register={register} required={true} />
+      {
+        // <Toggle name="show" watch={watch} register={register} required={true} />
+      }
       <div className={s.btns}>
-        <button className="btn secondary">
+        <button className="btn secondary" type="submit" disabled={loading}>
           {edit ? <FaCheck /> : <FaPlus />}
         </button>
         {edit && (
@@ -235,13 +247,13 @@ const ContributingFactorDetail = ({
   // <Box label="CONTRIBUTING FACTOR DETAILS">
   // </Box>
   return (
-    <div className={`${s.child} ${s.contributingFactorDetails}`}>
+    <div className={s.child}>
       <div className={s.head}>
         <span className={s.contributingFactorName}>
-          Category: <strong>{name}</strong>
+          Contributing Factor: <strong>{name}</strong>
         </span>
       </div>
-      <Table columns={[{ label: "Description" }, { label: "Action" }]}>
+      <Table columns={[{ label: "Details" }, { label: "Action" }]}>
         <tr>
           <td className={s.inlineForm}>
             <ContributingFactorDetailForm
@@ -345,6 +357,7 @@ const ContributingFactorDetailForm = ({
   contributingFactorDetails,
 }) => {
   const { handleSubmit, register, reset } = useForm({ ...edit });
+  const [loading, setLoading] = useState(false);
   useEffect(() => {
     reset({ ...edit });
   }, [edit]);
@@ -364,6 +377,7 @@ const ContributingFactorDetailForm = ({
           });
           return;
         }
+        setLoading(true);
         fetch(
           `${process.env.REACT_APP_HOST}/contributingFactorDetails${
             edit ? `/${edit.id}` : ""
@@ -379,12 +393,15 @@ const ContributingFactorDetailForm = ({
         )
           .then((res) => res.json())
           .then((data) => {
+            setLoading(false);
             if (data.name) {
               onSuccess(data);
               reset();
             }
           })
           .catch((err) => {
+            setLoading(false);
+            Prompt({ type: "error", message: err.message });
             console.log(err);
           });
       })}
@@ -396,7 +413,7 @@ const ContributingFactorDetailForm = ({
         placeholder="Enter"
       />
       <div className={s.btns}>
-        <button className="btn secondary">
+        <button className="btn secondary" type="submit" disabled={loading}>
           {edit ? <FaCheck /> : <FaPlus />}
         </button>
         {edit && (

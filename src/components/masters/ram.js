@@ -19,7 +19,15 @@ import { useForm } from "react-hook-form";
 import s from "./masters.module.scss";
 
 export default function RiskAssessments() {
-  const [parameters, setParameters] = useState(null);
+  const [parameters, setParameters] = useState({
+    colors: [
+      { label: "Green", value: "1", hex: "#68ad03" },
+      { label: "Yellow", value: "2", hex: "#f6d304" },
+      { label: "Orange", value: "3", hex: "#fb8433" },
+      { label: "Red", value: "4", hex: "#c00208" },
+      { label: "Light Green", value: "5", hex: "#c1cd23" },
+    ],
+  });
   const [risks, setRisks] = useState([]);
   const [edit, setEdit] = useState(null);
   useEffect(() => {
@@ -36,12 +44,12 @@ export default function RiskAssessments() {
       fetch(`${process.env.REACT_APP_HOST}/twoFieldMaster/4`).then((res) =>
         res.json()
       ),
-      fetch(`${process.env.REACT_APP_HOST}/twoFieldMaster/5`).then((res) =>
-        res.json()
-      ),
+      // fetch(`${process.env.REACT_APP_HOST}/twoFieldMaster/5`).then((res) =>
+      //   res.json()
+      // ),
     ])
       .then((masters) => {
-        const _parameters = {};
+        const _parameters = { ...parameters };
         masters.forEach(({ id, name, twoFieldMasterDetails }) => {
           _parameters[id] = twoFieldMasterDetails
             .filter((i) => i.showToggle)
@@ -136,8 +144,22 @@ export default function RiskAssessments() {
                 )?.label || risk.riskstatus}
               </td>
               <td>
-                {parameters?.["5"].find((item) => item.value === +risk.color)
-                  ?.label || risk.color}
+                {parameters.colors.find((item) => item.value === risk.color)
+                  ?.label ? (
+                  <span
+                    className={s.color}
+                    style={{
+                      background: parameters.colors.find(
+                        (item) => item.value === risk.color
+                      ).hex,
+                      height: "25px",
+                      width: "100%",
+                      display: "block",
+                    }}
+                  />
+                ) : (
+                  risk.color
+                )}
               </td>
               <td>
                 <Toggle readOnly={true} defaultValue={risk.status} />
@@ -194,12 +216,14 @@ const RiskAssessmentForm = ({ edit, onSuccess, parameters, clearForm }) => {
   const { handleSubmit, reset, watch, setValue, register } = useForm({
     ...edit,
   });
+  const [loading, setLoading] = useState(false);
   useEffect(() => {
     reset({ status: true, ...edit });
   }, [edit]);
   return (
     <form
       onSubmit={handleSubmit((data) => {
+        setLoading(true);
         fetch(
           `${process.env.REACT_APP_HOST}/riskAssement${
             edit ? `/${edit.id}` : ""
@@ -212,12 +236,15 @@ const RiskAssessmentForm = ({ edit, onSuccess, parameters, clearForm }) => {
         )
           .then((res) => res.json())
           .then((data) => {
+            setLoading(false);
             if (data.id) {
               onSuccess(data);
               reset();
             }
           })
           .catch((err) => {
+            setLoading(false);
+            Prompt({ type: "error", message: err.message });
             console.log(err);
           });
       })}
@@ -265,11 +292,11 @@ const RiskAssessmentForm = ({ edit, onSuccess, parameters, clearForm }) => {
         setValue={setValue}
         required={true}
         placeholder="Select"
-        options={parameters?.["5"]}
+        options={parameters.colors}
       />
       <Toggle name="status" watch={watch} register={register} required={true} />
       <div className={s.btns}>
-        <button className="btn secondary">
+        <button className="btn secondary" type="submit" disabled={loading}>
           {edit ? <FaCheck /> : <FaPlus />}
         </button>
         {edit && (

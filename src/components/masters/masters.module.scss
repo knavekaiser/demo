@@ -9,10 +9,11 @@
       font-weight: 500;
     }
   }
+  max-width: calc(100vw - (240px + 16px));
   .content {
     display: grid;
     grid-gap: 1.5rem;
-    grid-template-columns: clamp(15rem, 20rem, 20rem) minmax(50rem, 1fr);
+    grid-template-columns: clamp(20rem, 25rem, 25rem) 1fr;
     &.parent_child {
       .inlineForm {
         grid-column: 1/-1;
@@ -33,11 +34,23 @@
           }
         }
       }
+      table {
+        tbody {
+          tr:first-child {
+            background: white;
+            position: sticky;
+            top: 0;
+          }
+        }
+      }
       .parent {
         .head {
           margin-bottom: 0.5rem;
         }
         table {
+          tbody {
+            max-height: calc(100vh - (50px + 25px + 45px + 75px));
+          }
           tr {
             .inlineForm {
               form {
@@ -58,6 +71,8 @@
         }
       }
       .child {
+        display: grid;
+        grid-auto-rows: max-content;
         .head {
           span {
             display: block;
@@ -66,7 +81,7 @@
         }
         table {
           tr {
-            grid-template-columns: clamp(5rem, 50%, 20rem) 4rem;
+            grid-template-columns: minmax(15rem, 20rem) 4rem;
             form {
               grid-template-columns: 1fr max-content;
             }
@@ -86,7 +101,7 @@
           }
           tr,
           .inlineForm form {
-            grid-template-columns: 1fr 1fr 5rem 6rem 3rem 4rem !important;
+            grid-template-columns: minmax(10rem, 20rem) minmax(10rem, 20rem) 5rem 6rem 3rem 4rem !important;
           }
           .reportableBtn {
             cursor: pointer;
@@ -142,27 +157,14 @@
     }
 
     // .personAffected,
-    .contributingFactors,
+    // .contributingFactors,
     .rca {
       tr,
       .inlineForm form {
         grid-template-columns: 1fr 3rem max-content !important;
       }
     }
-    .rcaDetails {
-      table {
-        width: auto;
-      }
-    }
-    .contributingFactorDetails {
-      table {
-        width: auto;
-      }
-    }
     .twoFieldMasterDetail {
-      table {
-        width: auto;
-      }
       .inlineForm form {
         grid-template-columns: 1fr 3rem 4rem !important;
       }
@@ -170,11 +172,7 @@
         grid-template-columns: clamp(5rem, 50%, 20rem) 3rem 4rem !important;
       }
     }
-
     .personAffectedDetails {
-      table {
-        width: auto;
-      }
       .loading {
         background: rgb(191, 216, 226) !important;
         pointer-events: none;
@@ -182,9 +180,6 @@
     }
   }
   .locations {
-    table {
-      width: auto;
-    }
     form {
       display: grid;
       align-items: center;
@@ -199,17 +194,21 @@
     }
   }
   .users {
-    form {
-      display: grid;
-      align-items: center;
-      grid-gap: 0.5rem;
-      .btns {
-        grid-column: -1/-2;
+    display: grid;
+    .inlineForm {
+      grid-column: 1/-1;
+      form {
+        display: grid;
+        align-items: center;
+        grid-gap: 0.5rem;
+        .btns {
+          grid-column: -1/-2;
+        }
       }
     }
     tr,
     form {
-      grid-template-columns: 12rem 5rem 10rem 8rem 10rem 15rem 10rem 10rem 10rem 3rem;
+      grid-template-columns: 12rem 5rem 10rem 8rem 10rem 15rem 10rem 10rem 10rem 4rem;
     }
     tr {
       .moreRoles {
@@ -257,9 +256,6 @@
     }
   }
   .ram {
-    table {
-      width: auto;
-    }
     form {
       display: grid;
       align-items: center;
@@ -267,7 +263,7 @@
     }
     tr,
     form {
-      grid-template-columns: 12rem 8rem 10rem 8rem 10rem 6rem 3rem;
+      grid-template-columns: 12rem 8rem 10rem 8rem 10rem 7rem 3rem;
       .btns {
         grid-column: -1/-2;
       }

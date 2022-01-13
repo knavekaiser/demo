@@ -37,7 +37,7 @@ export default function Rcas() {
   return (
     <div className={s.container}>
       <header>
-        <h3>RCA MASTER</h3>
+        <h3>ROOT CAUSE MASTER</h3>
       </header>
       <div className={`${s.content} ${s.parent_child}`}>
         {
@@ -52,7 +52,7 @@ export default function Rcas() {
           }
           <Table
             columns={[
-              { label: "Master Name" },
+              { label: "Root Cause" },
               { label: "Show" },
               { label: "Action" },
             ]}
@@ -142,6 +142,7 @@ export default function Rcas() {
 }
 const RcaForm = ({ edit, onSuccess, clearForm, rcas }) => {
   const { handleSubmit, register, reset, watch } = useForm({ ...edit });
+  const [loading, setLoading] = useState(false);
   useEffect(() => {
     reset({ show: true, ...edit });
   }, [edit]);
@@ -164,6 +165,7 @@ const RcaForm = ({ edit, onSuccess, clearForm, rcas }) => {
           });
           return;
         }
+        setLoading(true);
         fetch(url, {
           method: edit ? "PUT" : "POST",
           headers: { "Content-Type": "application/json" },
@@ -171,17 +173,23 @@ const RcaForm = ({ edit, onSuccess, clearForm, rcas }) => {
         })
           .then((res) => res.json())
           .then((data) => {
+            setLoading(false);
             if (data.name) {
               onSuccess(data);
               reset();
             }
+          })
+          .catch((err) => {
+            setLoading(false);
+            Prompt({ type: "error", message: err.message });
+            console.log(err);
           });
       })}
     >
       <Input name="name" register={register} required={true} />
       <Toggle name="show" register={register} required={true} watch={watch} />
       <div className={s.btns}>
-        <button className="btn secondary">
+        <button className="btn secondary" type="submit" disabled={loading}>
           {edit ? <FaCheck /> : <FaPlus />}
         </button>
         {edit && (
@@ -205,13 +213,13 @@ const RcaCauses = ({ rca: { id, name, rcaCauses }, setRcas }) => {
   // <Box label="RCA CAUSES">
   // </Box>
   return (
-    <div className={`${s.child} ${s.rcaDetails}`}>
+    <div className={s.child}>
       <div className={s.head}>
         <span className={s.rcaName}>
-          Category: <strong>{name}</strong>
+          Root Cause: <strong>{name}</strong>
         </span>
       </div>
-      <Table columns={[{ label: "Description" }, { label: "Action" }]}>
+      <Table columns={[{ label: "Causes" }, { label: "Action" }]}>
         <tr>
           <td className={s.inlineForm}>
             <RcaCauseForm
@@ -313,6 +321,7 @@ const RcaCauses = ({ rca: { id, name, rcaCauses }, setRcas }) => {
 };
 const RcaCauseForm = ({ edit, rcaId, onSuccess, clearForm, rcaCauses }) => {
   const { handleSubmit, register, reset } = useForm({ ...edit });
+  const [loading, setLoading] = useState(false);
   useEffect(() => {
     reset({ ...edit });
   }, [edit]);
@@ -332,6 +341,7 @@ const RcaCauseForm = ({ edit, rcaId, onSuccess, clearForm, rcaCauses }) => {
           });
           return;
         }
+        setLoading(true);
         fetch(`${process.env.REACT_APP_HOST}/rcaCauses`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -339,12 +349,15 @@ const RcaCauseForm = ({ edit, rcaId, onSuccess, clearForm, rcaCauses }) => {
         })
           .then((res) => res.json())
           .then((data) => {
+            setLoading(false);
             if (data.name) {
               onSuccess(data);
               reset();
             }
           })
           .catch((err) => {
+            setLoading(false);
+            Prompt({ type: "error", message: err.message });
             console.log(err);
           });
       })}
@@ -356,7 +369,7 @@ const RcaCauseForm = ({ edit, rcaId, onSuccess, clearForm, rcaCauses }) => {
         placeholder="Enter"
       />
       <div className={s.btns}>
-        <button className="btn secondary">
+        <button className="btn secondary" type="submit" disabled={loading}>
           {edit ? <FaCheck /> : <FaPlus />}
         </button>
         {edit && (

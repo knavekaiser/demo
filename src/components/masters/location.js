@@ -139,6 +139,7 @@ const LocationForm = ({
   onSuccess,
 }) => {
   const { handleSubmit, register, reset, setValue, watch } = useForm();
+  const [loading, setLoading] = useState(false);
   useEffect(() => {
     reset({ status: true, ...edit });
   }, [edit]);
@@ -161,6 +162,7 @@ const LocationForm = ({
           });
           return;
         }
+        setLoading(true);
         fetch(url, {
           method: edit ? "PUT" : "POST",
           headers: { "Content-Type": "application/json" },
@@ -168,10 +170,16 @@ const LocationForm = ({
         })
           .then((res) => res.json())
           .then((data) => {
+            setLoading(false);
             if (data.name) {
               onSuccess(data);
               reset();
             }
+          })
+          .catch((err) => {
+            setLoading(false);
+            Prompt({ type: "error", message: err.message });
+            console.log(err);
           });
       })}
     >
@@ -192,7 +200,7 @@ const LocationForm = ({
       />
       <Toggle name="status" register={register} watch={watch} />
       <div className={s.btns}>
-        <button className="btn secondary">
+        <button className="btn secondary" type="submit" disabled={loading}>
           {edit ? <FaCheck /> : <FaPlus />}
         </button>
         {edit && (

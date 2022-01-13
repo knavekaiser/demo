@@ -171,6 +171,7 @@ const UserForm = ({ edit, onSuccess, clearForm, departments, users, role }) => {
     ...edit,
     ...(edit?.dob && { dob: moment({ time: edit.dob, format: "YYYY-MM-DD" }) }),
   });
+  const [loading, setLoading] = useState(false);
   useEffect(() => {
     reset({
       ...edit,
@@ -205,6 +206,7 @@ const UserForm = ({ edit, onSuccess, clearForm, departments, users, role }) => {
           });
           return;
         }
+        setLoading(true);
         fetch(url, {
           method: edit ? "PUT" : "POST",
           headers: { "Content-Type": "application/json" },
@@ -212,10 +214,16 @@ const UserForm = ({ edit, onSuccess, clearForm, departments, users, role }) => {
         })
           .then((res) => res.json())
           .then((data) => {
+            setLoading(false);
             if (data.name) {
               onSuccess(data);
               reset();
             }
+          })
+          .catch((err) => {
+            setLoading(false);
+            Prompt({ type: "error", message: err.message });
+            console.log(err);
           });
       })}
     >
@@ -292,7 +300,7 @@ const UserForm = ({ edit, onSuccess, clearForm, departments, users, role }) => {
         options={role}
       />
       <div className={s.btns}>
-        <button className="btn secondary">
+        <button className="btn secondary" type="submit" disabled={loading}>
           {edit ? <FaCheck /> : <FaPlus />}
         </button>
         {edit && (

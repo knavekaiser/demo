@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { FaInfoCircle, FaPlus, FaCheck, FaRegTrashAlt } from "react-icons/fa";
 import { BsPencilFill } from "react-icons/bs";
 import { BiSearch } from "react-icons/bi";
@@ -19,6 +19,13 @@ import { Modal, Prompt } from "../modal";
 import s from "./masters.module.scss";
 
 export default function PersonAffected() {
+  const immutable = useRef([
+    "patient",
+    "staff",
+    "visitor",
+    "contractor",
+    "others",
+  ]);
   const [selected, setSelected] = useState(null);
   const [personAffecteds, setPersonAffecteds] = useState([]);
   const [filter, setFilter] = useState(null);
@@ -52,7 +59,7 @@ export default function PersonAffected() {
           </div>
           <Table
             columns={[
-              { label: "Master Name" },
+              { label: "Person Affected" },
               // { label: "Show" },
               { label: "Action" },
             ]}
@@ -103,46 +110,52 @@ export default function PersonAffected() {
                     //   <Toggle readOnly={true} defaultValue={personAffected.show} />
                     // </td>
                   }
-                  <TableActions
-                    actions={[
-                      {
-                        icon: <BsPencilFill />,
-                        label: "Edit",
-                        callBack: () => setEdit(personAffected),
-                      },
-                      {
-                        icon: <FaRegTrashAlt />,
-                        label: "Delete",
-                        callBack: () =>
-                          Prompt({
-                            type: "confirmation",
-                            message: `Are you sure you want to remove ${personAffected.name}?`,
-                            callback: () => {
-                              fetch(
-                                `${process.env.REACT_APP_HOST}/personAffected/${personAffected.pa_id}`,
-                                {
-                                  method: "DELETE",
-                                }
-                              ).then((res) => {
-                                if (res.status === 204) {
-                                  setPersonAffecteds((prev) =>
-                                    prev.filter(
-                                      (p) => p.pa_id !== personAffected.pa_id
-                                    )
-                                  );
-                                } else if (res.status === 409) {
-                                  Prompt({
-                                    type: "error",
-                                    message:
-                                      "Remove children to delete this master.",
-                                  });
-                                }
-                              });
-                            },
-                          }),
-                      },
-                    ]}
-                  />
+                  {immutable.current.includes(
+                    personAffected.name.toLowerCase()
+                  ) ? (
+                    <td />
+                  ) : (
+                    <TableActions
+                      actions={[
+                        {
+                          icon: <BsPencilFill />,
+                          label: "Edit",
+                          callBack: () => setEdit(personAffected),
+                        },
+                        {
+                          icon: <FaRegTrashAlt />,
+                          label: "Delete",
+                          callBack: () =>
+                            Prompt({
+                              type: "confirmation",
+                              message: `Are you sure you want to remove ${personAffected.name}?`,
+                              callback: () => {
+                                fetch(
+                                  `${process.env.REACT_APP_HOST}/personAffected/${personAffected.pa_id}`,
+                                  {
+                                    method: "DELETE",
+                                  }
+                                ).then((res) => {
+                                  if (res.status === 204) {
+                                    setPersonAffecteds((prev) =>
+                                      prev.filter(
+                                        (p) => p.pa_id !== personAffected.pa_id
+                                      )
+                                    );
+                                  } else if (res.status === 409) {
+                                    Prompt({
+                                      type: "error",
+                                      message:
+                                        "Remove children to delete this master.",
+                                    });
+                                  }
+                                });
+                              },
+                            }),
+                        },
+                      ]}
+                    />
+                  )}
                 </tr>
               ))}
           </Table>
@@ -190,6 +203,7 @@ const PersonAffectedForm = ({
   personAffecteds,
 }) => {
   const { handleSubmit, register, reset, watch } = useForm({ ...edit });
+  const [loading, setLoading] = useState(false);
   useEffect(() => {
     reset({ show: true, ...edit });
   }, [edit]);
@@ -212,6 +226,7 @@ const PersonAffectedForm = ({
           });
           return;
         }
+        setLoading(true);
         fetch(url, {
           method: edit ? "PUT" : "POST",
           headers: { "Content-Type": "application/json" },
@@ -219,10 +234,16 @@ const PersonAffectedForm = ({
         })
           .then((res) => res.json())
           .then((data) => {
+            setLoading(false);
             if (data.name) {
               onSuccess(data);
               reset();
             }
+          })
+          .catch((err) => {
+            setLoading(false);
+            Prompt({ type: "error", message: err.message });
+            console.log(err);
           });
       })}
     >
@@ -231,7 +252,7 @@ const PersonAffectedForm = ({
         // <Toggle name="show" register={register} required={true} watch={watch} />
       }
       <div className={s.btns}>
-        <button className="btn secondary">
+        <button className="btn secondary" type="submit" disabled={loading}>
           {edit ? <FaCheck /> : <FaPlus />}
         </button>
         {edit && (
@@ -259,10 +280,10 @@ const PersonAffectedDetail = ({
     <div className={`${s.child} ${s.personAffectedDetails}`}>
       <div className={s.head}>
         <span className={s.personAffectedName}>
-          Category: <strong>{name}</strong>
+          Person Affected: <strong>{name}</strong>
         </span>
       </div>
-      <Table columns={[{ label: "Description" }, { label: "Action" }]}>
+      <Table columns={[{ label: "Details" }, { label: "Action" }]}>
         <tr>
           <td className={s.inlineForm}>
             <PersonAffectedDetailForm
@@ -335,6 +356,7 @@ const SinglePersonEffectedDetail = ({
   setEdit,
 }) => {
   const [loading, setLoading] = useState(false);
+  const immutable = useRef(["name", "age", "gender"]);
   return (
     <tr className={loading ? s.loading : ""}>
       <td>
@@ -388,45 +410,49 @@ const SinglePersonEffectedDetail = ({
         />{" "}
         {personAffected.name}
       </td>
-      <TableActions
-        actions={[
-          {
-            icon: <BsPencilFill />,
-            label: "Edit",
-            callBack: () => setEdit(personAffected),
-          },
-          {
-            icon: <FaRegTrashAlt />,
-            label: "Delete",
-            callBack: () =>
-              Prompt({
-                type: "confirmation",
-                message: `Are you sure you want to remove ${personAffected.name}?`,
-                callback: () => {
-                  fetch(
-                    `${process.env.REACT_APP_HOST}/personAffectedDetails/${personAffected.id}`,
-                    { method: "DELETE" }
-                  ).then((res) => {
-                    if (res.status === 204) {
-                      setPersonAffecteds((prev) =>
-                        prev.map((pa) =>
-                          pa.pa_id === pa_id
-                            ? {
-                                ...pa,
-                                personAffectedDetails: pa.personAffectedDetails.filter(
-                                  (pad) => pad.id !== personAffected.id
-                                ),
-                              }
-                            : pa
-                        )
-                      );
-                    }
-                  });
-                },
-              }),
-          },
-        ]}
-      />
+      {immutable.current.includes(personAffected.name.toLowerCase()) ? (
+        <td />
+      ) : (
+        <TableActions
+          actions={[
+            {
+              icon: <BsPencilFill />,
+              label: "Edit",
+              callBack: () => setEdit(personAffected),
+            },
+            {
+              icon: <FaRegTrashAlt />,
+              label: "Delete",
+              callBack: () =>
+                Prompt({
+                  type: "confirmation",
+                  message: `Are you sure you want to remove ${personAffected.name}?`,
+                  callback: () => {
+                    fetch(
+                      `${process.env.REACT_APP_HOST}/personAffectedDetails/${personAffected.id}`,
+                      { method: "DELETE" }
+                    ).then((res) => {
+                      if (res.status === 204) {
+                        setPersonAffecteds((prev) =>
+                          prev.map((pa) =>
+                            pa.pa_id === pa_id
+                              ? {
+                                  ...pa,
+                                  personAffectedDetails: pa.personAffectedDetails.filter(
+                                    (pad) => pad.id !== personAffected.id
+                                  ),
+                                }
+                              : pa
+                          )
+                        );
+                      }
+                    });
+                  },
+                }),
+            },
+          ]}
+        />
+      )}
     </tr>
   );
 };
@@ -438,6 +464,7 @@ const PersonAffectedDetailForm = ({
   personAffectedDetails,
 }) => {
   const { handleSubmit, register, reset } = useForm({ ...edit });
+  const [loading, setLoading] = useState(false);
   useEffect(() => {
     reset({ ...edit });
   }, [edit]);
@@ -457,6 +484,7 @@ const PersonAffectedDetailForm = ({
           });
           return;
         }
+        setLoading(true);
         fetch(`${process.env.REACT_APP_HOST}/personAffectedDetails`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -467,12 +495,15 @@ const PersonAffectedDetailForm = ({
         })
           .then((res) => res.json())
           .then((data) => {
+            setLoading(false);
             if (data.name) {
               onSuccess(data);
               reset();
             }
           })
           .catch((err) => {
+            setLoading(false);
+            Prompt({ type: "error", message: err.message });
             console.log(err);
           });
       })}
@@ -484,7 +515,7 @@ const PersonAffectedDetailForm = ({
         placeholder="Enter"
       />
       <div className={s.btns}>
-        <button className="btn secondary">
+        <button className="btn secondary" type="submit" disabled={loading}>
           {edit ? <FaCheck /> : <FaPlus />}
         </button>
         {edit && (

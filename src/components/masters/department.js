@@ -42,7 +42,7 @@ export default function Department() {
         <Table
           columns={[
             // { label: "Code" },
-            { label: "Master Name" },
+            { label: "Department Name" },
             // { label: "Location Type" },
             // { label: "Status" },
             { label: "Action" },
@@ -112,6 +112,7 @@ export default function Department() {
 }
 const DepartmentForm = ({ edit, onSuccess, clearForm, departments }) => {
   const { handleSubmit, register, reset } = useForm({ ...edit });
+  const [loading, setLoading] = useState(false);
   useEffect(() => {
     reset({ ...edit });
   }, [edit]);
@@ -134,6 +135,7 @@ const DepartmentForm = ({ edit, onSuccess, clearForm, departments }) => {
           });
           return;
         }
+        setLoading(true);
         fetch(url, {
           method: edit ? "PUT" : "POST",
           headers: { "Content-Type": "application/json" },
@@ -141,10 +143,16 @@ const DepartmentForm = ({ edit, onSuccess, clearForm, departments }) => {
         })
           .then((res) => res.json())
           .then((data) => {
+            setLoading(false);
             if (data.name) {
               onSuccess(data);
               reset();
             }
+          })
+          .catch((err) => {
+            setLoading(false);
+            Prompt({ type: "error", message: err.message });
+            console.log(err);
           });
       })}
     >
@@ -176,7 +184,7 @@ const DepartmentForm = ({ edit, onSuccess, clearForm, departments }) => {
         // <Toggle name="status" />
       }
       <div className={s.btns}>
-        <button className="btn secondary">
+        <button className="btn secondary" type="submit" disabled={loading}>
           {edit ? <FaCheck /> : <FaPlus />}
         </button>
         {edit && (

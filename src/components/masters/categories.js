@@ -54,7 +54,7 @@ export default function Categories() {
               onChange={(e) => setFilter(e.target.value)}
             />
           </div>
-          <Table columns={[{ label: "Master Name" }, { label: "Action" }]}>
+          <Table columns={[{ label: "Category Name" }, { label: "Action" }]}>
             <tr>
               <td className={s.inlineForm}>
                 <CategoryForm
@@ -146,6 +146,7 @@ export default function Categories() {
 }
 const CategoryForm = ({ edit, onSuccess, clearForm, categories }) => {
   const { handleSubmit, register, reset } = useForm({ ...edit });
+  const [loading, setLoading] = useState(false);
   useEffect(() => {
     reset({ ...edit });
   }, [edit]);
@@ -168,6 +169,7 @@ const CategoryForm = ({ edit, onSuccess, clearForm, categories }) => {
           });
           return;
         }
+        setLoading(true);
         fetch(url, {
           method: edit ? "PUT" : "POST",
           headers: { "Content-Type": "application/json" },
@@ -175,16 +177,22 @@ const CategoryForm = ({ edit, onSuccess, clearForm, categories }) => {
         })
           .then((res) => res.json())
           .then((data) => {
+            setLoading(false);
             if (data.name) {
               onSuccess(data);
               reset();
             }
+          })
+          .catch((err) => {
+            setLoading(false);
+            Prompt({ type: "error", message: err.message });
+            console.log(err);
           });
       })}
     >
       <Input name="name" register={register} required={true} />
       <div className={s.btns}>
-        <button className="btn secondary">
+        <button className="btn secondary" type="submit" disabled={loading}>
           {edit ? <FaCheck /> : <FaPlus />}
         </button>
         {edit && (
@@ -278,9 +286,9 @@ const SubCategories = ({
                     )
                   );
                 }
-                if (!edit && subCategory.reportable) {
-                  setAddReportable(subCategory);
-                }
+                // if (!edit && subCategory.reportable) {
+                //   setAddReportable(subCategory);
+                // }
                 setEdit(null);
               }}
               clearForm={() => {
@@ -328,12 +336,14 @@ const SingleSubCategory = ({ id, subCategory, setCategories, setEdit }) => {
       <td>{subCategory.template}</td>
       <td>{subCategory.sentinel ? "Sentinel" : ""}</td>
       <td>
-        <span
-          className={s.reportableBtn}
-          onClick={() => setAddReportable(subCategory)}
-        >
-          Reportable
-        </span>
+        {subCategory.reportStatus && (
+          <span
+            className={s.reportableBtn}
+            onClick={() => setAddReportable(subCategory)}
+          >
+            Reportable
+          </span>
+        )}
       </td>
       <td>
         <Toggle defaultValue={subCategory.status} readOnly={true} />
@@ -415,12 +425,13 @@ const SubCategoryForm = ({
     ...edit,
   });
   const [showReportableForm, setShowReportableForm] = useState(false);
+  const [loading, setLoading] = useState(false);
   const reportable = watch("reportable");
-  useEffect(() => {
-    if (reportable) {
-      setShowReportableForm(true);
-    }
-  }, [reportable]);
+  // useEffect(() => {
+  //   if (reportable) {
+  //     setShowReportableForm(true);
+  //   }
+  // }, [reportable]);
   useEffect(() => {
     reset({ status: true, ...edit });
   }, [edit]);
@@ -442,6 +453,7 @@ const SubCategoryForm = ({
             });
             return;
           }
+          setLoading(true);
           fetch(`${process.env.REACT_APP_HOST}/subCategory`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -453,12 +465,15 @@ const SubCategoryForm = ({
           })
             .then((res) => res.json())
             .then((newSubCategory) => {
+              setLoading(false);
               if (newSubCategory.name) {
                 onSuccess({ ...newSubCategory, reportable: data.reportable });
                 reset();
               }
             })
             .catch((err) => {
+              setLoading(false);
+              Prompt({ type: "error", message: err.message });
               console.log(err);
             });
         })}
@@ -477,7 +492,11 @@ const SubCategoryForm = ({
           placeholder="Enter"
         />
         <Checkbox register={register} name="sentinel" />
-        {edit ? <div /> : <Checkbox register={register} name="reportable" />}
+        <Checkbox
+          register={register}
+          name="reportStatus"
+          readOnly={edit && edit.reportable?.length > 0}
+        />
         <Toggle
           register={register}
           name="status"
@@ -485,7 +504,7 @@ const SubCategoryForm = ({
           watch={watch}
         />
         <div className={s.btns}>
-          <button className="btn secondary">
+          <button className="btn secondary" type="submit" disabled={loading}>
             {edit ? <FaCheck /> : <FaPlus />}
           </button>
           {edit && (
@@ -649,6 +668,7 @@ const ReportableInlineForm = ({
   const { handleSubmit, register, reset, watch, setValue } = useForm({
     ...edit,
   });
+  const [loading, setLoading] = useState(false);
   const [reportTo, setReportTo] = useState([]);
   useEffect(() => {
     fetch(`${process.env.REACT_APP_HOST}/twoFieldMaster/10`)
@@ -673,6 +693,7 @@ const ReportableInlineForm = ({
   return (
     <form
       onSubmit={handleSubmit((data) => {
+        setLoading(true);
         fetch(`${process.env.REACT_APP_HOST}/reportable`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -683,10 +704,16 @@ const ReportableInlineForm = ({
         })
           .then((res) => res.json())
           .then((data) => {
+            setLoading(false);
             if (data.id) {
               onSuccess(data);
             }
             reset();
+          })
+          .catch((err) => {
+            setLoading(false);
+            Prompt({ type: "error", message: err.message });
+            console.log(err);
           });
       })}
     >
@@ -699,7 +726,7 @@ const ReportableInlineForm = ({
       />
       <Textarea name="reporting_instructions" register={register} />
       <div className={s.btns}>
-        <button className="btn secondary">
+        <button className="btn secondary" type="submit" disabled={loading}>
           {edit ? <FaCheck /> : <FaPlus />}
         </button>
         {edit && (

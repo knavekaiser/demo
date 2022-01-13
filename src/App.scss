@@ -195,3 +195,15 @@ button {
     }
   }
 }
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+  background-color: #c6cfee;
+  border: 1px solid #b5bdc8;
+  border-radius: 1rem;
+}
+::-webkit-scrollbar-thumb {
+  background-color: #3c4c80;
+  border-radius: 1rem;
+}

@@ -511,12 +511,22 @@ const ComboboxList = ({
     </ul>
   );
 };
-export const Checkbox = ({ register, name, label, required }) => {
+export const Checkbox = ({ register, name, label, required, readOnly }) => {
   const id = useRef(Math.random().toString(36).substr(-8));
   return (
     <section className={s.checkbox} data-testid="checkbox-input">
-      <input {...register(name)} id={id} required={required} type="checkbox" />
-      {label && <label htmlFor={label}>{label}</label>}
+      <input
+        {...register(name)}
+        id={id.current}
+        required={required}
+        type="checkbox"
+        {...(readOnly && {
+          onClick: (e) => {
+            e.preventDefault();
+          },
+        })}
+      />
+      {label && <label htmlFor={id.current}>{label}</label>}
     </section>
   );
 };
@@ -539,8 +549,11 @@ export const Tabs = ({ tabs, className }) => {
   );
 };
 export const Table = ({ columns, className, children }) => {
+  const table = useRef();
+  const [style, setStyle] = useState({});
   return (
     <table
+      ref={table}
       className={`${s.table} ${className || ""}`}
       cellPadding={0}
       cellSpacing={0}

@@ -21,3 +21,15 @@ test("Prompt", () => {
   const prompt = component.getByTestId("prompt");
   expect(prompt.textContent).toMatch("This is a test modal");
 });
+test("Modal", () => {
+  const component = render(
+    <div>
+      <div id="portal" />
+      <Modal open={true}>
+        <h2>this is a test modal</h2>
+      </Modal>
+    </div>
+  );
+  const modal = component.getByTestId("modal");
+  expect(modal.textContent).toMatch("This is a test modal");
+});

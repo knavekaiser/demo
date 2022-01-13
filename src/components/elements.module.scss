@@ -366,6 +366,9 @@
 }
 
 .table {
+  display: grid;
+  grid-auto-rows: max-content;
+  overflow-x: auto !important;
   width: 100%;
   tr {
     display: grid;
@@ -379,12 +382,12 @@
   thead {
     background: #647299;
     tr {
-      padding: 6px 8px;
+      padding: 5px 8px;
     }
     th {
       color: white;
       font-weight: 400;
-      font-size: 13px;
+      // font-size: 13px;
       text-align: left;
       &:last-child {
         text-align: right;
@@ -392,6 +395,7 @@
     }
   }
   tbody {
+    overflow-y: auto !important;
     tr {
       border: 1px solid #b7b7b7;
       border-top: none;
