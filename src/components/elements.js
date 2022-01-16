@@ -4,47 +4,41 @@ import React, {
   useRef,
   useLayoutEffect,
   useCallback,
+  forwardRef,
 } from "react";
 import { IoIosClose } from "react-icons/io";
 import { FaUpload, FaSortDown } from "react-icons/fa";
-import { BsFillGearFill } from "react-icons/bs";
+import { BsFillGearFill, BsFillExclamationTriangleFill } from "react-icons/bs";
 import { Link, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { Modal } from "./modal";
 import s from "./elements.module.scss";
 
-export const Input = ({
-  register = () => {},
-  label,
-  name,
-  placeholder,
-  onChange,
-  type,
-  icon,
-  className,
-  required,
-  readOnly,
-  min,
-  max,
-}) => {
-  return (
-    <section className={`${s.input} ${className || ""}`}>
-      {label && <label>{label}</label>}
-      <input
-        {...register(name || label)}
-        {...(onChange && { onChange: onChange })}
-        name={name || label}
-        placeholder={placeholder || "Enter"}
-        type={type || "text"}
-        required={required}
-        min={min}
-        max={max}
-        readOnly={readOnly}
-      />
-      {icon && icon}
-    </section>
-  );
-};
+export const Input = forwardRef(
+  ({ className, label, icon, error, ...rest }, ref) => {
+    return (
+      <section
+        className={`${s.input} ${className || ""} ${error ? s.err : ""}`}
+      >
+        {label && <label>{label}</label>}
+        <div className={s.wrapper}>
+          <input
+            ref={ref}
+            {...rest}
+            placeholder={rest.placeholder || "Enter"}
+          />
+          {error && (
+            <span className={s.errIcon}>
+              <BsFillExclamationTriangleFill />
+            </span>
+          )}
+          {error && <span className={s.errMsg}>{error.message}</span>}
+          {icon && icon}
+        </div>
+      </section>
+    );
+  }
+);
 export const FileInput = ({ label, required, multiple, onChange }) => {
   const id = useRef(Math.random().toString(36).substr(4));
   const [files, setFiles] = useState([]);
@@ -89,42 +83,46 @@ export const FileInput = ({ label, required, multiple, onChange }) => {
     </section>
   );
 };
-export const Textarea = ({
-  register = () => {},
-  name,
-  label,
-  placeholder,
-  type,
-  icon,
-  className,
-  required,
-}) => {
-  return (
-    <section className={`${s.input} ${s.textinput} ${className || ""}`}>
-      {label && <label>{label}</label>}
-      <textarea
-        {...register(name)}
-        placeholder={placeholder || "Enter"}
-        required={required}
-      />
-      {icon && icon}
-    </section>
-  );
-};
+export const Textarea = forwardRef(
+  ({ className, label, error, ...rest }, ref) => {
+    return (
+      <section
+        className={`${s.input} ${s.textinput} ${className || ""} ${
+          error ? s.err : ""
+        }`}
+      >
+        {label && <label>{label}</label>}
+        <textarea ref={ref} {...rest} />
+        {error && (
+          <span
+            className={s.errIcon}
+            style={!label ? { transform: "translateY(-6px)" } : {}}
+          >
+            <BsFillExclamationTriangleFill />
+          </span>
+        )}
+        {error && <span className={s.errMsg}>{error.message}</span>}
+      </section>
+    );
+  }
+);
 export const Radio = ({
   register = () => {},
+  formOptions,
   name,
   options,
   onChange,
-  required,
+  error,
 }) => {
   return (
-    <section className={s.radio} data-testid="radioInput">
+    <section
+      className={`${s.radio} ${error ? s.err : ""}`}
+      data-testid="radioInput"
+    >
       {options.map(({ label, value: v, hint, disabled }) => (
         <label key={v} htmlFor={v} className={disabled ? s.disabled : ""}>
           <input
-            required={required}
-            {...register(name)}
+            {...register(name, { ...formOptions })}
             type="radio"
             name={name}
             id={v}
@@ -135,6 +133,7 @@ export const Radio = ({
           {hint && <span className={s.hint}>{hint}</span>}
         </label>
       ))}
+      {error && <span className={s.errMsg}>{error.message}</span>}
     </section>
   );
 };
@@ -275,16 +274,18 @@ export const Toggle = ({
 };
 export const Combobox = ({
   register = () => {},
+  formOptions,
   label,
   name,
   watch,
   setValue = () => {},
   placeholder,
-  required,
   options,
   multiple,
   className,
   onChange,
+  error,
+  clearErrors,
 }) => {
   const container = useRef();
   const selected = watch?.(name);
@@ -312,7 +313,7 @@ export const Combobox = ({
       data-testid="combobox-container"
       className={`${s.combobox} ${className || ""} ${open ? s.open : ""} ${
         !(Array.isArray(options) && options.length > 1) ? s.noOptions : ""
-      }`}
+      } ${error ? s.err : ""}`}
     >
       {label && <label data-testid="combobox-label">{label}</label>}
       <div
@@ -347,39 +348,39 @@ export const Combobox = ({
         </p>
         <input
           data-testid="combobox-input"
-          {...register(name)}
-          required={required}
+          {...register(name, { ...formOptions })}
           readOnly={true}
           onKeyDown={(e) => {
             if (!open && e.keyCode === 32) {
               setOpen(true);
             }
-            // e.preventDefault();
           }}
         />
         <span data-testid="combobox-btn" className={s.btn}>
           <FaSortDown />
         </span>
-        <Modal
-          open={open}
-          className={s.comboboxModal}
-          backdropClass={s.comboboxBackdrop}
-          open={open}
-          setOpen={setOpen}
-          onBackdropClick={() => setOpen(false)}
-          style={style}
-        >
-          <ComboboxList
-            options={options}
-            setValue={setValue}
-            selected={selected}
-            multiple={multiple}
-            name={name}
-            setOpen={setOpen}
-            onChange={onChange}
-          />
-        </Modal>
       </div>
+      {error && <span className={s.errMsg}>{error.message}</span>}
+      <Modal
+        open={open}
+        className={s.comboboxModal}
+        backdropClass={s.comboboxBackdrop}
+        open={open}
+        setOpen={setOpen}
+        onBackdropClick={() => setOpen(false)}
+        style={style}
+      >
+        <ComboboxList
+          options={options}
+          setValue={setValue}
+          selected={selected}
+          multiple={multiple}
+          name={name}
+          setOpen={setOpen}
+          onChange={onChange}
+          clearErrors={clearErrors}
+        />
+      </Modal>
     </section>
   );
 };
@@ -391,6 +392,7 @@ const ComboboxList = ({
   name,
   setOpen,
   onChange = () => {},
+  clearErrors,
 }) => {
   const ul = useRef();
   const [hover, setHover] = useState(
@@ -423,6 +425,7 @@ const ComboboxList = ({
       if (!multiple) {
         setOpen(false);
       }
+      clearErrors?.(name);
       onChange({ label, value });
     },
     [selected]

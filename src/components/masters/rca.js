@@ -141,7 +141,13 @@ export default function Rcas() {
   );
 }
 const RcaForm = ({ edit, onSuccess, clearForm, rcas }) => {
-  const { handleSubmit, register, reset, watch } = useForm({ ...edit });
+  const {
+    handleSubmit,
+    register,
+    reset,
+    watch,
+    formState: { errors },
+  } = useForm({ ...edit });
   const [loading, setLoading] = useState(false);
   useEffect(() => {
     reset({ show: true, ...edit });
@@ -186,7 +192,12 @@ const RcaForm = ({ edit, onSuccess, clearForm, rcas }) => {
           });
       })}
     >
-      <Input name="name" register={register} required={true} />
+      <Input
+        {...register("name", {
+          required: "Please enter a name",
+        })}
+        error={errors.name}
+      />
       <Toggle name="show" register={register} required={true} watch={watch} />
       <div className={s.btns}>
         <button className="btn secondary" type="submit" disabled={loading}>
@@ -320,7 +331,12 @@ const RcaCauses = ({ rca: { id, name, rcaCauses }, setRcas }) => {
   );
 };
 const RcaCauseForm = ({ edit, rcaId, onSuccess, clearForm, rcaCauses }) => {
-  const { handleSubmit, register, reset } = useForm({ ...edit });
+  const {
+    handleSubmit,
+    register,
+    reset,
+    formState: { errors },
+  } = useForm({ ...edit });
   const [loading, setLoading] = useState(false);
   useEffect(() => {
     reset({ ...edit });
@@ -363,10 +379,10 @@ const RcaCauseForm = ({ edit, rcaId, onSuccess, clearForm, rcaCauses }) => {
       })}
     >
       <Input
-        register={register}
-        required={true}
-        name="name"
-        placeholder="Enter"
+        {...register("name", {
+          required: "Please enter a name",
+        })}
+        error={errors.name}
       />
       <div className={s.btns}>
         <button className="btn secondary" type="submit" disabled={loading}>

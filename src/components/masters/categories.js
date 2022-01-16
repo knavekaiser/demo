@@ -145,7 +145,12 @@ export default function Categories() {
   );
 }
 const CategoryForm = ({ edit, onSuccess, clearForm, categories }) => {
-  const { handleSubmit, register, reset } = useForm({ ...edit });
+  const {
+    handleSubmit,
+    register,
+    reset,
+    formState: { errors },
+  } = useForm({ ...edit });
   const [loading, setLoading] = useState(false);
   useEffect(() => {
     reset({ ...edit });
@@ -190,7 +195,12 @@ const CategoryForm = ({ edit, onSuccess, clearForm, categories }) => {
           });
       })}
     >
-      <Input name="name" register={register} required={true} />
+      <Input
+        {...register("name", {
+          required: "Please enter a name",
+        })}
+        error={errors.name}
+      />
       <div className={s.btns}>
         <button className="btn secondary" type="submit" disabled={loading}>
           {edit ? <FaCheck /> : <FaPlus />}
@@ -421,7 +431,14 @@ const SubCategoryForm = ({
   clearForm,
   subCategorys,
 }) => {
-  const { handleSubmit, register, reset, watch, setValue } = useForm({
+  const {
+    handleSubmit,
+    register,
+    reset,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm({
     ...edit,
   });
   const [showReportableForm, setShowReportableForm] = useState(false);
@@ -479,17 +496,17 @@ const SubCategoryForm = ({
         })}
       >
         <Input
-          register={register}
-          required={true}
-          name="name"
-          placeholder="Enter"
+          {...register("name", {
+            required: "Please enter a name",
+          })}
+          error={errors.name}
         />
         <Input
-          register={register}
+          {...register("template", {
+            required: "Please enter a name",
+          })}
           type="number"
-          required={true}
-          name="template"
-          placeholder="Enter"
+          error={errors.name}
         />
         <Checkbox register={register} name="sentinel" />
         <Checkbox

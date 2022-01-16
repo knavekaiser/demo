@@ -167,7 +167,14 @@ export default function UserMaster() {
   );
 }
 const UserForm = ({ edit, onSuccess, clearForm, departments, users, role }) => {
-  const { handleSubmit, register, reset, watch, setValue } = useForm({
+  const {
+    handleSubmit,
+    register,
+    reset,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm({
     ...edit,
     ...(edit?.dob && { dob: moment({ time: edit.dob, format: "YYYY-MM-DD" }) }),
   });
@@ -228,10 +235,11 @@ const UserForm = ({ edit, onSuccess, clearForm, departments, users, role }) => {
       })}
     >
       <Input
-        name="name"
-        register={register}
-        required={true}
+        {...register("name", {
+          required: "Please enter a name",
+        })}
         placeholder="Enter"
+        error={errors.name}
       />
       <Combobox
         name="gender"
@@ -246,38 +254,49 @@ const UserForm = ({ edit, onSuccess, clearForm, departments, users, role }) => {
         ]}
       />
       <Input
-        name="dob"
+        {...register("dob", {
+          required: "Date of birth",
+        })}
         type="date"
-        register={register}
-        required={true}
-        placeholder="Enter"
+        error={errors.dob}
       />
       <Input
-        register={register}
-        required={true}
-        name="employeeId"
+        {...register("employeeId", {
+          required: "Employee ID",
+        })}
+        error={errors.employeeId}
+        placeholder="Enter"
+        readOnly={edit}
+        type="number"
+        tabIndex={edit ? "0" : "1"}
+      />
+      <Input
+        {...register("contact", {
+          required: "Enter a phone number",
+        })}
+        error={errors.contact}
         placeholder="Enter"
         readOnly={edit}
         tabIndex={edit ? "0" : "1"}
       />
       <Input
-        register={register}
-        required={true}
-        name="contact"
+        {...register("email", {
+          required: "Please enter an email address",
+          pattern: {
+            value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+            message: "invalid email address",
+          },
+        })}
+        error={errors.email}
         placeholder="Enter"
         readOnly={edit}
+        tabIndex={edit ? "0" : "1"}
       />
       <Input
-        register={register}
-        required={true}
-        name="email"
-        type="email"
-        placeholder="Enter"
-        readOnly={edit}
-      />
-      <Input
-        register={register}
-        required={true}
+        {...register("password", {
+          required: "Please enter a password",
+        })}
+        error={errors.password}
         type="password"
         name="password"
         placeholder="Enter"

@@ -170,7 +170,13 @@ const ContributingFactorForm = ({
   clearForm,
   contributingFactors,
 }) => {
-  const { handleSubmit, register, reset, watch } = useForm({ ...edit });
+  const {
+    handleSubmit,
+    register,
+    reset,
+    watch,
+    formState: { errors },
+  } = useForm({ ...edit });
   const [loading, setLoading] = useState(false);
   useEffect(() => {
     reset({ show: true, ...edit });
@@ -215,7 +221,12 @@ const ContributingFactorForm = ({
           });
       })}
     >
-      <Input name="name" register={register} required={true} />
+      <Input
+        {...register("name", {
+          required: "Please enter a name",
+        })}
+        error={errors.name}
+      />
       {
         // <Toggle name="show" watch={watch} register={register} required={true} />
       }
@@ -356,7 +367,12 @@ const ContributingFactorDetailForm = ({
   clearForm,
   contributingFactorDetails,
 }) => {
-  const { handleSubmit, register, reset } = useForm({ ...edit });
+  const {
+    handleSubmit,
+    register,
+    reset,
+    formState: { errors },
+  } = useForm({ ...edit });
   const [loading, setLoading] = useState(false);
   useEffect(() => {
     reset({ ...edit });
@@ -407,10 +423,10 @@ const ContributingFactorDetailForm = ({
       })}
     >
       <Input
-        register={register}
-        required={true}
-        name="name"
-        placeholder="Enter"
+        {...register("name", {
+          required: "Please enter a name",
+        })}
+        error={errors.name}
       />
       <div className={s.btns}>
         <button className="btn secondary" type="submit" disabled={loading}>

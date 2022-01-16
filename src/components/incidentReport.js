@@ -76,33 +76,47 @@ export default function IncidentReporting() {
         <form
           className={s.content}
           onSubmit={methods.handleSubmit((data) => {
-            if (!window.confirm("Once submitted , IR’s cannot be edited. Are you sure you want to continue")) return;
-            fetch(`${process.env.REACT_APP_HOST}/IncidentReport`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(data),
-            })
-              .then((res) => res.json())
-              .then((data) => {
-                if (data.id) {
-                  Prompt({
-                    type: "success",
-                    message: "Incident was successfully reported.",
-                  });
-                  methods.reset();
-                }
+            const postData = () => {
+              fetch(`${process.env.REACT_APP_HOST}/IncidentReport`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data),
+              })
+                .then((res) => res.json())
+                .then((data) => {
+                  if (data.id) {
+                    Prompt({
+                      type: "success",
+                      message: "Incident was successfully reported.",
+                    });
+                    methods.reset();
+                  }
+                });
+            };
+            if (data.status === "Submitted") {
+              Prompt({
+                type: "confirmation",
+                message:
+                  "Once submitted , IR’s cannot be edited. Are you sure you want to continue",
+                callback: postData,
               });
+            } else {
+              postData();
+            }
           })}
         >
           <Box label="INCIDENT DETAILS" collapsable={true}>
             <div className={s.boxContent}>
               <Input
-                name="incident_Date_Time"
-                required={true}
-                register={methods.register}
+                {...methods.register("incident_Date_Time", {
+                  required: "Please select incident date",
+                  validate: (v) =>
+                    new Date(v) < new Date() ||
+                    "Can not select date from future",
+                })}
+                error={methods.formState.errors.incident_Date_Time}
                 label="Incident Date & Time"
                 type="datetime-local"
-                max={(new Date()).toISOString().slice(0,16)}
               />
               <Combobox
                 label="Location of incident"
@@ -114,8 +128,10 @@ export default function IncidentReporting() {
                 options={parameters?.locations}
               />
               <Input
-                name="locationDetailsEntry"
-                register={methods.register}
+                {...methods.register("locationDetailsEntry", {
+                  required: "Please enter location detail",
+                })}
+                error={methods.formState.errors.locationDetailsEntry}
                 label={
                   <>
                     Location Detail <i>(if any)</i>
@@ -130,20 +146,26 @@ export default function IncidentReporting() {
                 label="Patient Complaint"
               />
               <Input
-                name="patientname"
-                register={methods.register}
+                {...methods.register("patientname", {
+                  required: "Please enter patient name",
+                })}
+                error={methods.formState.errors.patientname}
                 label="Patient name / UHID"
-                icon={<BiSearch />}
+                // icon={<BiSearch />}
               />
               <Input
-                name="complientDate"
-                register={methods.register}
+                {...methods.register("complaintDatetime", {
+                  required: "Please select complient date",
+                })}
+                error={methods.formState.errors.complaintDatetime}
                 label="Complaint Date & Time"
                 type="datetime-local"
               />
               <Input
-                name="comlientId"
-                register={methods.register}
+                {...methods.register("comlientId", {
+                  required: "Please enter comlient ID",
+                })}
+                error={methods.formState.errors.comlientId}
                 label="Complaint ID"
               />
             </div>
@@ -151,8 +173,10 @@ export default function IncidentReporting() {
           <Box label="TYPE OF INCIDENT" collapsable={true}>
             <div className={s.typeOfIncident}>
               <Radio
-                required={true}
                 register={methods.register}
+                formOptions={{
+                  required: "Please select a type of incident",
+                }}
                 name="typeofInci"
                 options={[
                   {
@@ -186,6 +210,7 @@ export default function IncidentReporting() {
                       "Any potential safety event that did not reach the patient.",
                   },
                 ]}
+                error={methods.formState.errors.typeofInci}
               />
               <table className={s.adverseEvent} cellSpacing={0} cellPadding={0}>
                 <thead>
@@ -298,18 +323,22 @@ export default function IncidentReporting() {
           <Box label="INCIDENT DESCRIPTION" collapsable={true}>
             <div className={s.incidentDescription}>
               <Textarea
+                {...methods.register("inciDescription", {
+                  required: "Please enter incident description",
+                })}
+                error={methods.formState.errors.inciDescription}
                 label="Incident Description"
                 className={s.description}
-                register={methods.register}
-                name="inciDescription"
-                required={true}
               />
               <section className={s.departments}>
                 <Input
-                  name="deptInvolved"
-                  register={methods.register}
+                  {...methods.register(
+                    "deptInvolved"
+                    // { required: "Please enter patient name", }
+                  )}
+                  error={methods.formState.errors.deptInvolved}
                   label="Department Involved"
-                  icon={<BiSearch />}
+                  // icon={<BiSearch />}
                   className={s.search}
                 />
                 {departments.map((department) => (
@@ -363,7 +392,10 @@ export default function IncidentReporting() {
                       <div>
                         <Textarea placeholder="Enter" />
                         <Input placeholder="Enter" icon={<BiSearch />} />
-                        <Input type="datetime-local" max={(new Date()).toISOString().slice(0,16)} />
+                        <Input
+                          type="datetime-local"
+                          max={new Date().toISOString().slice(0, 16)}
+                        />
                         <button className="btn secondary">
                           <AiOutlinePlus />
                         </button>
@@ -484,19 +516,45 @@ export default function IncidentReporting() {
               </div>
               <div className={s.fieldWrapper}>
                 <FileInput label="Upload" />
-                <Input label="Incident Reported by" readOnly={true} />
-                <Input label="Department" readOnly={true} />
+                <Input label="Incident Reported by" />
+                <Input label="Department" />
                 <Input
                   label="Head of the department"
                   placeholder="Enter"
-                  icon={<BiSearch />}
+                  {...methods.register("headofDepart")}
                 />
               </div>
+              <input
+                style={{ display: "none" }}
+                {...methods.register("status")}
+              />
               <div className={s.btns}>
-                {
-                  // <button className="btn secondary w-100">Save</button>
-                }
-                <button className="btn w-100">Submit</button>
+                <button
+                  className="btn secondary w-100"
+                  type="button"
+                  onClick={() => {
+                    methods.reset();
+                    methods.clearErrors();
+                  }}
+                >
+                  Clear
+                </button>
+                <button
+                  onClick={() => {
+                    methods.setValue("status", "Saved");
+                  }}
+                  className="btn secondary w-100"
+                >
+                  Save
+                </button>
+                <button
+                  onClick={() => {
+                    methods.setValue("status", "Submitted");
+                  }}
+                  className="btn w-100"
+                >
+                  Submit
+                </button>
               </div>
             </div>
           </Box>
@@ -521,7 +579,7 @@ export const IncidentCategory = () => {
   }, []);
   return (
     <ConnectForm>
-      {({ register, setValue, watch }) => {
+      {({ register, setValue, watch, formState: { errors }, clearErrors }) => {
         const cat = watch("inciCateg");
         return (
           <div
@@ -530,11 +588,13 @@ export const IncidentCategory = () => {
           >
             <div className={s.form}>
               <Combobox
-                required={true}
                 label="Incident Category"
                 placeholder="Select"
                 name="inciCateg"
                 register={register}
+                formOptions={{
+                  required: "Please select a category",
+                }}
                 setValue={setValue}
                 watch={watch}
                 options={categories.map(({ id, name }) => ({
@@ -544,6 +604,8 @@ export const IncidentCategory = () => {
                 onChange={({ value }) => {
                   setValue("inciSubCat", "");
                 }}
+                error={errors.inciCateg}
+                clearErrors={clearErrors}
               />
               <Combobox
                 label="Incident Sub-category"
@@ -560,7 +622,11 @@ export const IncidentCategory = () => {
                       label: name,
                     })) || null
                 }
-                required={true}
+                formOptions={{
+                  required: "Please select a subcategory",
+                }}
+                error={errors.inciSubCat}
+                clearErrors={clearErrors}
               />
               <button className="btn secondary">
                 <FaPlus /> Add Template

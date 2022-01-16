@@ -138,7 +138,14 @@ const LocationForm = ({
   locationTypes,
   onSuccess,
 }) => {
-  const { handleSubmit, register, reset, setValue, watch } = useForm();
+  const {
+    handleSubmit,
+    register,
+    reset,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm();
   const [loading, setLoading] = useState(false);
   useEffect(() => {
     reset({ status: true, ...edit });
@@ -184,10 +191,10 @@ const LocationForm = ({
       })}
     >
       <Input
-        required={true}
-        name="name"
-        register={register}
-        placeholder="Enter"
+        {...register("name", {
+          required: "Please enter a name",
+        })}
+        error={errors.name}
       />
       <Combobox
         name="locationType"

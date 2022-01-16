@@ -14,7 +14,14 @@ import { Tabs, Input, Combobox, Table, TableActions, Moment } from "./elements";
 import { useForm } from "react-hook-form";
 import s from "./incidentReportingDashboard.module.scss";
 
-const incidentType = [undefined, "Unsafe condition", "No Harm", "Near Miss", "Adverse Event", "Sentinel Event"];
+const incidentType = [
+  undefined,
+  "Unsafe condition",
+  "No Harm",
+  "Near Miss",
+  "Adverse Event",
+  "Sentinel Event",
+];
 function IncidentReportingDashboard() {
   return (
     <div className={s.container}>
@@ -81,6 +88,7 @@ const MyDashboard = ({}) => {
     },
   ]);
   const [filters, setFilters] = useState({});
+  console.log(incidents);
   useEffect(() => {
     Promise.all([
       fetch(`${process.env.REACT_APP_HOST}/location`).then((res) => res.json()),
@@ -138,6 +146,7 @@ const MyDashboard = ({}) => {
       <Filters onSubmit={(values) => setFilters(values)} />
       <Table
         columns={[
+          { label: "IR Code" },
           { label: "Reporting Date & Time" },
           { label: "Incident Date & Time" },
           { label: "Incident Location" },
@@ -153,6 +162,7 @@ const MyDashboard = ({}) => {
       >
         {incidents.map((inc) => (
           <tr key={inc.id}>
+            <td>{inc.sequence}</td>
             <td>
               <Moment format="DD/MM/YYYY hh:mm">{inc.reportingDate}</Moment>
             </td>
@@ -255,7 +265,7 @@ const Filters = ({ onSubmit }) => {
   ]);
   return (
     <form className={s.filters} onSubmit={handleSubmit(onSubmit)}>
-      <Input label="IR Code" name="incidentCode" register={register} />
+      <Input label="IR Code" {...register("incidentCode")} />
       <Combobox
         label="Category"
         name="category"
@@ -266,33 +276,17 @@ const Filters = ({ onSubmit }) => {
       />
       <section className={s.pair}>
         <label>Incident Date Range</label>
-        <Input
-          type="date"
-          placeholder="From"
-          name="inciDate_from"
-          register={register}
-        />
-        <Input
-          type="date"
-          placeholder="To"
-          name="inciDate_to"
-          register={register}
-        />
+        <Input type="date" placeholder="From" {...register("inciDate_from")} />
+        <Input type="date" placeholder="To" {...register("inciDate_to")} />
       </section>
       <section className={s.pair}>
         <label>Reporting Date Range</label>
         <Input
           type="date"
           placeholder="From"
-          name="inciDate_from"
-          register={register}
+          {...register("reportDate_from")}
         />
-        <Input
-          type="date"
-          placeholder="To"
-          name="inciDate_to"
-          register={register}
-        />
+        <Input type="date" placeholder="To" {...register("reportDate_to")} />
       </section>
       <Combobox
         label="Incident Type"

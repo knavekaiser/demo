@@ -63,6 +63,7 @@ main {
   }
   .boxContent {
     display: grid;
+    align-items: flex-start;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     grid-gap: 1rem;
     grid-column-gap: 2rem;
@@ -89,7 +90,7 @@ main {
     .form {
       display: flex;
       flex-wrap: wrap;
-      align-items: flex-end;
+      align-items: flex-start;
       grid-gap: 0.5rem 1.5rem;
       margin-bottom: 1rem;
       & > button {
@@ -138,6 +139,7 @@ main {
     .departments {
       display: flex;
       grid-gap: 0.5rem;
+      align-items: flex-start;
       flex-wrap: wrap;
       .search {
         display: flex;

@@ -9,6 +9,9 @@
     margin-bottom: 0.2rem;
     white-space: nowrap;
   }
+  .wrapper {
+    position: relative;
+  }
   input,
   textarea {
     width: 100%;
@@ -37,6 +40,27 @@
     bottom: 7px;
     margin: auto;
     right: 0.3rem;
+  }
+  &.err {
+    input,
+    textarea {
+      border-color: red;
+    }
+  }
+  .errIcon {
+    position: absolute;
+    right: 4px;
+    top: 53%;
+    // top: 3.05rem;
+    color: red;
+    font-size: 0.8em;
+    pointer-events: none;
+  }
+  .errMsg {
+    font-size: 10pt;
+    color: red;
+    text-align: left;
+    display: block;
   }
 }
 .fileInput {
@@ -149,6 +173,12 @@
         display: block;
       }
     }
+  }
+  .errMsg {
+    color: red;
+    font-size: 10pt;
+    text-align: left;
+    flex-basis: 100%;
   }
 }
 .customRadio {
@@ -302,6 +332,18 @@
       p {
         border-color: #3450a3;
       }
+    }
+  }
+  &.err {
+    .field {
+      .displayValue {
+        border-color: red;
+      }
+    }
+    .errMsg {
+      color: red !important;
+      font-size: 10pt;
+      text-align: left;
     }
   }
 }

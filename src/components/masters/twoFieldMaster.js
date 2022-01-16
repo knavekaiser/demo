@@ -151,7 +151,12 @@ const TwoFieldMasterForm = ({
   clearForm,
   twoFieldMasters,
 }) => {
-  const { handleSubmit, register, reset } = useForm({ ...edit });
+  const {
+    handleSubmit,
+    register,
+    reset,
+    formState: { errors },
+  } = useForm({ ...edit });
   const [loading, setLoading] = useState(false);
   useEffect(() => {
     reset({ ...edit });
@@ -196,7 +201,12 @@ const TwoFieldMasterForm = ({
           });
       })}
     >
-      <Input name="name" register={register} required={true} />
+      <Input
+        {...register("name", {
+          required: "Please enter a name",
+        })}
+        error={errors.name}
+      />
       <div className={s.btns}>
         <button className="btn secondary" type="submit" disabled={loading}>
           {edit ? <FaCheck /> : <FaPlus />}
@@ -353,7 +363,13 @@ const TwoFieldMasterDetailForm = ({
   clearForm,
   twoFieldMasterDetails,
 }) => {
-  const { handleSubmit, register, reset, watch } = useForm({ ...edit });
+  const {
+    handleSubmit,
+    register,
+    reset,
+    watch,
+    formState: { errors },
+  } = useForm({ ...edit });
   const [loading, setLoading] = useState(false);
   useEffect(() => {
     reset({ showToggle: true, ...edit });
@@ -399,10 +415,10 @@ const TwoFieldMasterDetailForm = ({
       })}
     >
       <Input
-        register={register}
-        required={true}
-        name="name"
-        placeholder="Enter"
+        {...register("name", {
+          required: "Please enter a name",
+        })}
+        error={errors.name}
       />
       <Toggle
         name="showToggle"

@@ -111,7 +111,12 @@ export default function Department() {
   );
 }
 const DepartmentForm = ({ edit, onSuccess, clearForm, departments }) => {
-  const { handleSubmit, register, reset } = useForm({ ...edit });
+  const {
+    handleSubmit,
+    register,
+    reset,
+    formState: { errors },
+  } = useForm({ ...edit });
   const [loading, setLoading] = useState(false);
   useEffect(() => {
     reset({ ...edit });
@@ -157,10 +162,10 @@ const DepartmentForm = ({ edit, onSuccess, clearForm, departments }) => {
       })}
     >
       <Input
-        register={register}
-        name="name"
-        required={true}
-        placeholder="Enter"
+        {...register("name", {
+          required: "Please enter a name",
+        })}
+        error={errors.name}
       />
       {
         //   <Input

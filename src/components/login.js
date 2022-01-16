@@ -9,7 +9,11 @@ import s from "./login.module.scss";
 export default function Login({}) {
   const { user, setUser } = useContext(SiteContext);
   const [users, setUsers] = useState([]);
-  const { handleSubmit, register } = useForm();
+  const {
+    handleSubmit,
+    register,
+    formState: { errors },
+  } = useForm();
   const navigate = useNavigate();
   useEffect(() => {
     if (user) {
@@ -22,6 +26,9 @@ export default function Login({}) {
         if (users._embedded.user) {
           setUsers(users._embedded.user);
         }
+      })
+      .catch((err) => {
+        Prompt({ type: "error", message: err.message });
       });
   }, []);
   return (
@@ -36,7 +43,7 @@ export default function Login({}) {
             );
             if (_user) {
               setUser(_user);
-              navigate("/");
+              navigate("/incident-report");
             } else {
               Prompt({
                 type: "error",
@@ -47,18 +54,22 @@ export default function Login({}) {
         >
           <h1>Sign In</h1>
           <Input
-            name="email"
-            register={register}
-            type="email"
-            required={true}
             label="Email"
+            {...register("email", {
+              required: "Plase provide an email address",
+              pattern: {
+                value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                message: "Invalid email address",
+              },
+            })}
+            error={errors.email}
           />
           <Input
-            name="password"
-            register={register}
-            required={true}
             type="password"
-            label="Password"
+            {...register("password", {
+              required: "Plase enter your password",
+            })}
+            error={errors.password}
           />
           <button className="btn w-100">Sign in</button>
         </form>

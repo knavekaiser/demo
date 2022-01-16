@@ -19,7 +19,7 @@
         grid-column: 1/-1;
         form {
           display: grid;
-          align-items: center;
+          align-items: flex-start;
           grid-gap: 0.5rem;
           .btns {
             grid-column: -1/-2;
@@ -131,7 +131,7 @@
         width: 100%;
         form {
           display: grid;
-          align-items: center;
+          align-items: flex-start;
           grid-gap: 1rem;
           section {
             flex: 1;
@@ -182,7 +182,7 @@
   .locations {
     form {
       display: grid;
-      align-items: center;
+      align-items: flex-start;
       grid-gap: 0.5rem;
       .btns {
         grid-column: -1/-2;
@@ -199,7 +199,7 @@
       grid-column: 1/-1;
       form {
         display: grid;
-        align-items: center;
+        align-items: flex-start;
         grid-gap: 0.5rem;
         .btns {
           grid-column: -1/-2;
@@ -283,7 +283,7 @@
         form {
           grid-template-columns: 1fr max-content;
           display: grid;
-          align-items: center;
+          align-items: flex-start;
           grid-gap: 0.5rem;
           .btns {
             grid-column: -1/-2;
