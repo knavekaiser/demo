@@ -163,7 +163,7 @@ const DepartmentForm = ({ edit, onSuccess, clearForm, departments }) => {
     >
       <Input
         {...register("name", {
-          required: "Please enter a name",
+          required: "Please enter a Name",
         })}
         error={errors.name}
       />

@@ -50,8 +50,7 @@
   .errIcon {
     position: absolute;
     right: 4px;
-    top: 53%;
-    // top: 3.05rem;
+    top: 58%;
     color: red;
     font-size: 0.8em;
     pointer-events: none;
@@ -340,11 +339,12 @@
         border-color: red;
       }
     }
-    .errMsg {
-      color: red !important;
-      font-size: 10pt;
-      text-align: left;
-    }
+  }
+  .errMsg {
+    color: red !important;
+    font-size: 10pt;
+    text-align: left;
+    display: block;
   }
 }
 .comboboxModal {

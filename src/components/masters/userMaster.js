@@ -174,6 +174,7 @@ const UserForm = ({ edit, onSuccess, clearForm, departments, users, role }) => {
     watch,
     setValue,
     formState: { errors },
+    clearErrors,
   } = useForm({
     ...edit,
     ...(edit?.dob && { dob: moment({ time: edit.dob, format: "YYYY-MM-DD" }) }),
@@ -236,7 +237,7 @@ const UserForm = ({ edit, onSuccess, clearForm, departments, users, role }) => {
     >
       <Input
         {...register("name", {
-          required: "Please enter a name",
+          required: "Please enter a Name",
         })}
         placeholder="Enter"
         error={errors.name}
@@ -246,16 +247,20 @@ const UserForm = ({ edit, onSuccess, clearForm, departments, users, role }) => {
         register={register}
         setValue={setValue}
         watch={watch}
-        required={true}
+        formOptions={{
+          required: "Gender",
+        }}
         options={[
           { value: "male", label: "Male" },
           { value: "female", label: "Female" },
           { value: "other", label: "Other" },
         ]}
+        error={errors.gender}
+        clearErrors={clearErrors}
       />
       <Input
         {...register("dob", {
-          required: "Date of birth",
+          required: "Date of Birth",
         })}
         type="date"
         error={errors.dob}
@@ -272,7 +277,7 @@ const UserForm = ({ edit, onSuccess, clearForm, departments, users, role }) => {
       />
       <Input
         {...register("contact", {
-          required: "Enter a phone number",
+          required: "Enter a Phone Number",
         })}
         error={errors.contact}
         placeholder="Enter"
@@ -281,7 +286,7 @@ const UserForm = ({ edit, onSuccess, clearForm, departments, users, role }) => {
       />
       <Input
         {...register("email", {
-          required: "Please enter an email address",
+          required: "Please enter an Email Address",
           pattern: {
             value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
             message: "invalid email address",
@@ -294,7 +299,7 @@ const UserForm = ({ edit, onSuccess, clearForm, departments, users, role }) => {
       />
       <Input
         {...register("password", {
-          required: "Please enter a password",
+          required: "Please enter a Password",
         })}
         error={errors.password}
         type="password"
@@ -303,20 +308,28 @@ const UserForm = ({ edit, onSuccess, clearForm, departments, users, role }) => {
       />
       <Combobox
         register={register}
-        required={true}
         name="department"
         setValue={setValue}
         watch={watch}
         options={departments}
+        formOptions={{
+          required: "Select Department",
+        }}
+        error={errors.department}
+        clearErrors={clearErrors}
       />
       <Combobox
         register={register}
-        required={true}
+        formOptions={{
+          required: "Select Role",
+        }}
         placeholder="Select"
         name="role"
         setValue={setValue}
         watch={watch}
         options={role}
+        error={errors.department}
+        clearErrors={clearErrors}
       />
       <div className={s.btns}>
         <button className="btn secondary" type="submit" disabled={loading}>

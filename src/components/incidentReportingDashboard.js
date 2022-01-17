@@ -11,9 +11,10 @@ import {
 } from "react-icons/bs";
 import { GoPerson } from "react-icons/go";
 import { Tabs, Input, Combobox, Table, TableActions, Moment } from "./elements";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { Modal, Prompt } from "./modal";
+import paths from "./path";
 import s from "./incidentReportingDashboard.module.scss";
 
 const incidentType = [
@@ -46,21 +47,32 @@ function IncidentReportingDashboard() {
       </header>
       <Tabs
         tabs={[
-          { label: "My Dashboard", path: "my-dashboard" },
-          { label: "Quality Dashboard", path: "quality-dashboard" },
+          { label: "My Dashboard", path: paths.incidentDashboard.myDashboard },
+          {
+            label: "Quality Dashboard",
+            path: paths.incidentDashboard.qualityDashboard,
+          },
         ]}
       />
       <Routes>
-        <Route path="my-dashboard/*" element={<MyDashboard />} />
-        <Route path="quality-dashboard/*" element={<QualityDashboard />} />
+        <Route
+          path={paths.incidentDashboard.myDashboard + "/*"}
+          element={<MyDashboard />}
+        />
+        <Route
+          path={paths.incidentDashboard.qualityDashboard + "/*"}
+          element={<QualityDashboard />}
+        />
       </Routes>
     </div>
   );
 }
 const MyDashboard = ({}) => {
+  const location = useLocation();
   const [parameters, setParameters] = useState(null);
   const [incidents, setIncidents] = useState([]);
   const [filters, setFilters] = useState({});
+  const [focus, setFocus] = useState(null);
   const navigate = useNavigate();
   useEffect(() => {
     Promise.all([
@@ -76,6 +88,9 @@ const MyDashboard = ({}) => {
       }
       setParameters(_parameters);
     });
+    if (location.state?.focus) {
+      setFocus(location.state.focus);
+    }
   }, []);
   useEffect(() => {
     if (Object.entries(filters).length) {
@@ -156,7 +171,11 @@ const MyDashboard = ({}) => {
         ]}
       >
         {incidents.map((inc) => (
-          <tr key={inc.id}>
+          <tr
+            key={inc.id}
+            className={focus === inc.id ? s.focus : ""}
+            onClick={() => setFocus(inc.id)}
+          >
             <td>{inc.sequence}</td>
             <td>
               <Moment format="DD/MM/YYYY hh:mm">{inc.reportingDate}</Moment>
@@ -197,7 +216,12 @@ const MyDashboard = ({}) => {
                         label: "Review IR",
                         callBack: () => {
                           navigate("/incident-report", {
-                            state: { edit: inc, readOnly: true },
+                            state: {
+                              edit: inc,
+                              readOnly: true,
+                              focus: inc.id,
+                              from: location.pathname,
+                            },
                           });
                         },
                       },
@@ -208,7 +232,11 @@ const MyDashboard = ({}) => {
                         label: "Edit",
                         callBack: () => {
                           navigate("/incident-report", {
-                            state: { edit: inc },
+                            state: {
+                              edit: inc,
+                              focus: inc.id,
+                              from: location.pathname,
+                            },
                           });
                         },
                       },

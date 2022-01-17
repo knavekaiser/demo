@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
+import { SiteContext } from "../SiteContext";
 import { Link } from "react-router-dom";
 import { FaInfoCircle, FaRegTrashAlt, FaPlus } from "react-icons/fa";
 import { BiChevronsDown, BiSearch } from "react-icons/bi";
@@ -14,11 +15,12 @@ import {
   Chip,
   Table,
   TableActions,
+  Checkbox,
   moment,
 } from "./elements";
 import { Prompt } from "./modal";
 import { useForm, FormProvider, useFormContext } from "react-hook-form";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import s from "./incidentReporting.module.scss";
 
 export const ConnectForm = ({ children }) => {
@@ -26,8 +28,11 @@ export const ConnectForm = ({ children }) => {
   return children({ ...methods });
 };
 export default function IncidentReporting() {
+  const { user } = useContext(SiteContext);
   const location = useLocation();
-  const methods = useForm();
+  const navigate = useNavigate();
+  const methods = useForm({ defaultValues: { reportedBy: user.id } });
+  const [edit, setEdit] = useState(null);
   const [readOnly, setReadOnly] = useState(false);
   const [parameters, setParameters] = useState(null);
   const [actionsTaken, setActionsTaken] = useState([
@@ -51,11 +56,17 @@ export default function IncidentReporting() {
       date: "2021-12-21T10:17:12.514Z",
     },
   ]);
-  const involvedDept = methods.watch("departmentInvolved");
+  const [anonymous, setAnonymous] = useState(false);
+  const involvedDept = methods.watch("deptsLookupMultiselect");
   useEffect(() => {
-    if (location.state) {
+    if (location.state?.edit) {
       const { edit, readOnly } = location.state;
       if (readOnly) setReadOnly(true);
+      setEdit(edit);
+    }
+  }, [location]);
+  useEffect(() => {
+    if (edit) {
       const _edit = {
         ...edit,
         incident_Date_Time: moment({
@@ -68,11 +79,12 @@ export default function IncidentReporting() {
         }),
         preventability: edit.preventability?.toString() || "",
         typeofInci: edit.typeofInci?.toString() || "",
+        deptsLookupMultiselect:
+          edit.deptsLookupMultiselect?.split(",").map((item) => +item) || "",
       };
       methods.reset(_edit);
-      location.state = null;
     }
-  }, [location]);
+  }, [edit]);
   useEffect(() => {
     Promise.all([
       fetch(`${process.env.REACT_APP_HOST}/location`).then((res) => res.json()),
@@ -102,9 +114,22 @@ export default function IncidentReporting() {
     <div className={s.container} data-testid="incidentReportingForm">
       <header>
         <h3>REPORT AN INCIDENT {readOnly && <span>(View)</span>}</h3>
-        <span className={s.note}>
-          <FaInfoCircle /> There is a blame free reporting culture. No punitive
-          measure will be taken against any staff reporting any incident.
+        <span className={s.subHead}>
+          <span className={s.note}>
+            <FaInfoCircle /> There is a blame free reporting culture. No
+            punitive measure will be taken against any staff reporting any
+            incident.
+          </span>
+          <section>
+            <input
+              type="checkbox"
+              id="anonymous"
+              name="anonymous"
+              checked={anonymous}
+              onChange={(e) => setAnonymous(!anonymous)}
+            />
+            <label htmlFor="anonymous">Report Anonymously</label>
+          </section>
         </span>
       </header>
       <FormProvider {...methods}>
@@ -115,22 +140,42 @@ export default function IncidentReporting() {
             const postData = () => {
               fetch(
                 `${process.env.REACT_APP_HOST}/IncidentReport${
-                  location.state?.edit ? `/${location.state.edit.id}` : ""
+                  edit ? `/${edit.id}` : ""
                 }`,
                 {
-                  method: location.state?.edit ? "PUT" : "POST",
+                  method: edit ? "PUT" : "POST",
                   headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify(data),
+                  body: JSON.stringify({
+                    ...data,
+                    deptsLookupMultiselect:
+                      data.deptsLookupMultiselect?.join(",") || "",
+                    ...(anonymous && {
+                      reportedBy: undefined,
+                      userDept: undefined,
+                    }),
+                  }),
                 }
               )
                 .then((res) => res.json())
                 .then((data) => {
                   if (data.id) {
+                    if (edit) {
+                      navigate(location.state.from, {
+                        state: { focus: location.state.focus },
+                      });
+                      return;
+                    }
                     Prompt({
                       type: "success",
                       message: "Incident was successfully reported.",
                     });
                     methods.reset();
+                  }
+                  if (data.cause) {
+                    Prompt({
+                      type: "error",
+                      message: data.message,
+                    });
                   }
                 })
                 .catch((err) => {
@@ -384,44 +429,35 @@ export default function IncidentReporting() {
                 className={s.description}
               />
               <section className={s.departments}>
-                {
-                  //   <Input
-                  //   {...methods.register(
-                  //     "deptInvolved"
-                  //     // { required: "Please enter patient name", }
-                  //   )}
-                  //   error={methods.formState.errors.deptInvolved}
-                  //   label="Department Involved"
-                  //   // icon={<BiSearch />}
-                  //   className={s.search}
-                  // />
-                }
                 <Combobox
                   label="Department Involved"
-                  name="departmentInvolved"
+                  name="deptsLookupMultiselect"
                   register={methods.register}
                   watch={methods.watch}
                   setValue={methods.setValue}
                   multiple={true}
-                  options={parameters?.departments}
+                  options={parameters?.departments || []}
                   className={s.search}
                 />
-                {involvedDept?.map?.((department) => (
-                  <Chip
-                    key={department}
-                    label={
-                      parameters.departments.find(
-                        (dept) => dept.value === department
-                      )?.label || department
-                    }
-                    remove={() => {
-                      methods.setValue(
-                        "departmentInvolved",
-                        involvedDept.filter((item) => item !== department)
-                      );
-                    }}
-                  />
-                ))}
+                {involvedDept?.map &&
+                  involvedDept.map((department) => (
+                    <Chip
+                      key={department}
+                      label={
+                        parameters?.departments.find(
+                          (dept) => dept.value === +department
+                        )?.label || department
+                      }
+                      remove={() => {
+                        methods.setValue(
+                          "deptsLookupMultiselect",
+                          involvedDept.filter(
+                            (item) => item.toString() !== department.toString()
+                          )
+                        );
+                      }}
+                    />
+                  ))}
               </section>
             </div>
           </Box>
@@ -596,9 +632,14 @@ export default function IncidentReporting() {
                 <FileInput label="Upload" />
                 <Input
                   label="Incident Reported by"
+                  disabled={true}
                   {...methods.register("reportedBy")}
                 />
-                <Input label="Department" {...methods.register("department")} />
+                <Input
+                  label="Department"
+                  disabled={anonymous}
+                  {...methods.register("department")}
+                />
                 <Input
                   label="Head of the department"
                   placeholder="Enter"
@@ -614,7 +655,39 @@ export default function IncidentReporting() {
                   className="btn secondary w-100"
                   type="button"
                   onClick={() => {
-                    methods.reset();
+                    setEdit(null);
+                    methods.reset({
+                      id: "",
+                      action: "",
+                      witness: "",
+                      status: "",
+                      department: "",
+                      userDept: "",
+                      reportingDate: "",
+                      location: "",
+                      sequence: "",
+                      template: "",
+                      incident_Date_Time: "",
+                      locationDetailsEntry: "",
+                      patientYesOrNo: "",
+                      patientname: "",
+                      complaintDatetime: "",
+                      complaintIdEntry: "",
+                      typeofInci: "",
+                      inciCateg: "",
+                      inciSubCat: "",
+                      personAffected: "",
+                      inciDescription: "",
+                      deptsLookupMultiselect: "",
+                      contribFactorYesOrNo: "",
+                      contribFactor: "",
+                      preventability: "",
+                      incidentNotification: "",
+                      upload: "",
+                      incidentReportedDept: "",
+                      headofDepart: "",
+                      reportedBy: "",
+                    });
                     methods.clearErrors();
                   }}
                   disabled={readOnly}

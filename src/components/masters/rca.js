@@ -194,7 +194,7 @@ const RcaForm = ({ edit, onSuccess, clearForm, rcas }) => {
     >
       <Input
         {...register("name", {
-          required: "Please enter a name",
+          required: "Please enter a Name",
         })}
         error={errors.name}
       />
@@ -380,7 +380,7 @@ const RcaCauseForm = ({ edit, rcaId, onSuccess, clearForm, rcaCauses }) => {
     >
       <Input
         {...register("name", {
-          required: "Please enter a name",
+          required: "Please enter a Cause",
         })}
         error={errors.name}
       />

@@ -17,6 +17,7 @@ import IncidentReportingDashboard from "./incidentReportingDashboard";
 import OtherPages from "./otherPages";
 import Masters from "./masters/index";
 import IrConfig from "./irConfig/index";
+import paths from "./path";
 import s from "./dashboard.module.scss";
 
 export const Accordion = ({ label, basePath, items, className }) => {
@@ -99,10 +100,10 @@ function Dashboard() {
         <ul className={s.links}>
           <li
             className={`${s.sidebarItem} ${
-              location.pathname.startsWith("/incident-report") ? s.active : ""
+              location.pathname.startsWith(paths.incidentReport) ? s.active : ""
             }`}
           >
-            <Link to="/incident-report">
+            <Link to={paths.incidentReport}>
               <span className={s.label}>
                 <BsHexagonHalf className={s.icon} />{" "}
                 <span className={s.text}>Incident Reporting</span>
@@ -111,12 +112,14 @@ function Dashboard() {
           </li>
           <li
             className={`${s.sidebarItem} ${
-              location.pathname.startsWith("/incident-dashboard")
+              location.pathname.startsWith(paths.incidentDashboard.basePath)
                 ? s.active
                 : ""
             }`}
           >
-            <Link to="/incident-dashboard/my-dashboard">
+            <Link
+              to={`${paths.incidentDashboard.basePath}/${paths.incidentDashboard.myDashboard}`}
+            >
               <span className={s.label}>
                 <BsHexagonHalf className={s.icon} />{" "}
                 <span className={s.text}>Incident Dashboard</span>
@@ -125,10 +128,10 @@ function Dashboard() {
           </li>
           <li
             className={`${s.sidebarItem} ${
-              location.pathname.startsWith("/capa-dashboard") ? s.active : ""
+              location.pathname.startsWith(paths.capaReport) ? s.active : ""
             }`}
           >
-            <Link to="/capa-dashboard">
+            <Link to={paths.capaReport}>
               <span className={s.label}>
                 <BsHexagonHalf className={s.icon} />{" "}
                 <span className={s.text}>CAPA Reporting</span>
@@ -137,10 +140,10 @@ function Dashboard() {
           </li>
           <li
             className={`${s.sidebarItem} ${
-              location.pathname.startsWith("/reports") ? s.active : ""
+              location.pathname.startsWith(paths.reports) ? s.active : ""
             }`}
           >
-            <Link to="/reports">
+            <Link to={paths.reports}>
               <span className={s.label}>
                 <BsHexagonHalf className={s.icon} />{" "}
                 <span className={s.text}>Reports</span>
@@ -152,14 +155,25 @@ function Dashboard() {
               <BsHexagonHalf className={s.icon} />{" "}
               <span className={s.text}>IR Configuration</span>
             </span>
-            basePath="/irConfiguration"
+            basePath={paths.irConfig.basePath}
             className={`${s.sidebarItem} ${
-              location.pathname.startsWith("/irConfiguration") ? s.active : ""
+              location.pathname.startsWith(paths.irConfig.basePath)
+                ? s.active
+                : ""
             }`}
             items={[
-              { label: <>Main Configuration</>, path: "mainConfig" },
-              { label: <>User Permission</>, path: "userPermission" },
-              { label: <>IR Data Analytics</>, path: "irDataAnalytics" },
+              {
+                label: <>Main Configuration</>,
+                path: paths.irConfig.mainConfig,
+              },
+              {
+                label: <>User Permission</>,
+                path: paths.irConfig.userPermission,
+              },
+              {
+                label: <>IR Data Analytics</>,
+                path: paths.irConfig.irDataAnalytics,
+              },
             ]}
           />
           <Accordion
@@ -167,36 +181,54 @@ function Dashboard() {
               <BsHexagonHalf className={s.icon} />{" "}
               <span className={s.text}>Masters</span>
             </span>
-            basePath="/masters"
+            basePath={paths.masters.basePath}
             className={`${s.sidebarItem} ${
-              location.pathname.startsWith("/masters") ? s.active : ""
+              location.pathname.startsWith(paths.masters.basePath)
+                ? s.active
+                : ""
             }`}
             items={[
-              { label: <>Location</>, path: "location" },
-              { label: <>Department</>, path: "department" },
+              { label: <>Location</>, path: paths.masters.location },
+              { label: <>Department</>, path: paths.masters.department },
               {
                 label: <>Category & Sub Category</>,
-                path: "categoryAndSubCategory",
+                path: paths.masters.category,
               },
-              { label: <>User Master</>, path: "userMaster" },
-              { label: <>Risk Assessment</>, path: "riskAssessment" },
-              { label: <>Person Affected</>, path: "personAffected" },
-              { label: <>Two Field Master</>, path: "twoFieldMaster" },
-              { label: <>Contributing Factor</>, path: "contributingFactor" },
-              { label: <>RCA Master</>, path: "rca" },
+              { label: <>User Master</>, path: paths.masters.userMaster },
+              {
+                label: <>Risk Assessment</>,
+                path: paths.masters.riskAssessment,
+              },
+              {
+                label: <>Person Affected</>,
+                path: paths.masters.personAffected,
+              },
+              {
+                label: <>Two Field Master</>,
+                path: paths.masters.twoFieldMaster,
+              },
+              {
+                label: <>Contributing Factor</>,
+                path: paths.masters.contributingFactor,
+              },
+              { label: <>RCA Master</>, path: paths.masters.rca },
             ]}
           />
         </ul>
       </div>
       <main>
         <Routes>
-          <Route path="/incident-report" element={<IncidentReport />} />
+          <Route path={paths.incidentReport} element={<IncidentReport />} />
           <Route
-            path="/incident-dashboard/*"
+            path={paths.incidentDashboard.basePath + "/*"}
             element={<IncidentReportingDashboard />}
           />
-          <Route path="/irConfiguration/*" element={<IrConfig />} />
-          <Route path="/masters/*" index element={<Masters />} />
+          <Route path={paths.irConfig.basePath + "/*"} element={<IrConfig />} />
+          <Route
+            path={paths.masters.basePath + "/*"}
+            index
+            element={<Masters />}
+          />
           <Route path="/:other" element={<OtherPages />} />
           <Route path="/*" element={<IncidentReport />} />
         </Routes>

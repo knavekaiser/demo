@@ -223,7 +223,7 @@ const ContributingFactorForm = ({
     >
       <Input
         {...register("name", {
-          required: "Please enter a name",
+          required: "Please enter a Name",
         })}
         error={errors.name}
       />
@@ -424,7 +424,7 @@ const ContributingFactorDetailForm = ({
     >
       <Input
         {...register("name", {
-          required: "Please enter a name",
+          required: "Please enter a Name",
         })}
         error={errors.name}
       />

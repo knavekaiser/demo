@@ -341,10 +341,7 @@ export const Combobox = ({
                     }`,
                   ""
                 ))}
-          {Array.isArray(options) &&
-            options.length > 1 &&
-            (!selected || selected?.length < 1) &&
-            (placeholder || "Select")}
+          {!selected?.toString().length && (placeholder || "Select")}
         </p>
         <input
           data-testid="combobox-input"

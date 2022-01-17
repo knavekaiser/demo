@@ -184,6 +184,9 @@ button {
         color: $red;
       }
     }
+    p {
+      overflow-wrap: anywhere;
+    }
     .actions {
       justify-content: center;
       display: flex;
