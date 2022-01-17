@@ -330,7 +330,7 @@ export const Combobox = ({
             "No options provided"}
           {selected &&
             ["string", "number"].includes(typeof selected) &&
-            options.find(({ value }) => value === selected)?.label}
+            options?.find(({ value }) => value === selected)?.label}
           {Array.isArray(selected) &&
             (selected.length > 3
               ? `${selected.length} items selected`
@@ -343,7 +343,7 @@ export const Combobox = ({
                 ))}
           {Array.isArray(options) &&
             options.length > 1 &&
-            !selected &&
+            (!selected || selected?.length < 1) &&
             (placeholder || "Select")}
         </p>
         <input
@@ -433,6 +433,8 @@ const ComboboxList = ({
   const keyDownHandler = useCallback(
     (e) => {
       e.preventDefault();
+      if (e.keyCode === 9) {
+      }
       if (e.keyCode === 27) {
         setOpen(false);
         return;
@@ -442,41 +444,21 @@ const ComboboxList = ({
         return;
       }
       if (e.keyCode === 38 || e.keyCode === 40) {
-        if (multiple) {
-        } else {
-          const index = options.findIndex(({ label, value }) => {
-            return (
-              value === selected ||
-              (selected?.some && selected.some((s) => s === value))
-            );
-          });
-          const _hover = hover !== undefined ? hover : index;
-          if (e.keyCode === 38) {
-            setHover(Math.max(_hover - 1, 0));
-          } else if (e.keyCode === 40) {
-            setHover(Math.min(_hover + 1, options.length - 1));
-          }
-
-          // if (hover > -1) {
-          //   if (index > 0 && e.keyCode === 38) {
-          //     setHover(index - 1);
-          //   } else if (index < options.length - 1 && e.keyCode === 40) {
-          //     setHover(index + 1);
-          //   }
-          // } else {
-          //   setHover((prev) => {
-          //     console.log(prev);
-          //     if (prev - 1 >= 0 && e.keyCode === 38) {
-          //       return prev - 1;
-          //     } else if (prev + 1 <= options.length - 1 && e.keyCode === 40) {
-          //       return prev + 1;
-          //     }
-          //   });
-          // }
+        const index = options.findIndex(({ label, value }) => {
+          return (
+            value === selected ||
+            (selected?.some && selected.some((s) => s === value))
+          );
+        });
+        const _hover = hover !== undefined ? hover : index;
+        if (e.keyCode === 38) {
+          setHover(Math.max(_hover - 1, 0));
+        } else if (e.keyCode === 40) {
+          setHover(Math.min(_hover + 1, options.length - 1));
         }
       }
     },
-    [hover]
+    [hover, selected]
   );
   useEffect(() => {
     document.addEventListener("keydown", keyDownHandler);
@@ -485,7 +467,12 @@ const ComboboxList = ({
     };
   }, [hover]);
   return (
-    <ul ref={ul} className={s.options} data-testid="combobox-options">
+    <ul
+      ref={ul}
+      className={s.options}
+      data-testid="combobox-options"
+      onMouseMove={() => setHover(null)}
+    >
       {options.map(({ label, value }, i) => (
         <li
           key={i}

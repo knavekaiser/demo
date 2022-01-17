@@ -361,6 +361,7 @@
       position: relative;
       input {
         cursor: pointer;
+        margin-right: 6px;
       }
       padding: 8px;
       &:not(:last-child) {
@@ -438,6 +439,7 @@
   }
   tbody {
     overflow-y: auto !important;
+    overflow-x: hidden !important;
     tr {
       border: 1px solid #b7b7b7;
       border-top: none;
@@ -459,6 +461,7 @@
   grid-gap: 6px;
   width: max-content;
   margin-left: auto;
+  margin-right: 6px;
   .btn {
     padding: 1px 2px;
     padding-right: 1px;

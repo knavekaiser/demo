@@ -14,9 +14,11 @@ import {
   Chip,
   Table,
   TableActions,
+  moment,
 } from "./elements";
 import { Prompt } from "./modal";
 import { useForm, FormProvider, useFormContext } from "react-hook-form";
+import { useLocation } from "react-router-dom";
 import s from "./incidentReporting.module.scss";
 
 export const ConnectForm = ({ children }) => {
@@ -24,10 +26,10 @@ export const ConnectForm = ({ children }) => {
   return children({ ...methods });
 };
 export default function IncidentReporting() {
+  const location = useLocation();
   const methods = useForm();
+  const [readOnly, setReadOnly] = useState(false);
   const [parameters, setParameters] = useState(null);
-  const [departments, setDepartments] = useState(["Pharmacy", "Nursing"]);
-  const [preventability, setPreventability] = useState("Not assessed");
   const [actionsTaken, setActionsTaken] = useState([
     {
       action:
@@ -49,10 +51,35 @@ export default function IncidentReporting() {
       date: "2021-12-21T10:17:12.514Z",
     },
   ]);
+  const involvedDept = methods.watch("departmentInvolved");
+  useEffect(() => {
+    if (location.state) {
+      const { edit, readOnly } = location.state;
+      if (readOnly) setReadOnly(true);
+      const _edit = {
+        ...edit,
+        incident_Date_Time: moment({
+          format: "YYYY-MM-DDThh:mm",
+          time: edit.incident_Date_Time,
+        }),
+        complaintDatetime: moment({
+          format: "YYYY-MM-DDThh:mm",
+          time: edit.complaintDatetime,
+        }),
+        preventability: edit.preventability?.toString() || "",
+        typeofInci: edit.typeofInci?.toString() || "",
+      };
+      methods.reset(_edit);
+      location.state = null;
+    }
+  }, [location]);
   useEffect(() => {
     Promise.all([
       fetch(`${process.env.REACT_APP_HOST}/location`).then((res) => res.json()),
-    ]).then(([location]) => {
+      fetch(`${process.env.REACT_APP_HOST}/department`).then((res) =>
+        res.json()
+      ),
+    ]).then(([location, department]) => {
       const _parameters = { ...parameters };
       if (location?._embedded.location) {
         _parameters.locations = location._embedded.location.map((item) => ({
@@ -60,13 +87,21 @@ export default function IncidentReporting() {
           value: item.id,
         }));
       }
+      if (department?._embedded.department) {
+        _parameters.departments = department._embedded.department.map(
+          (item) => ({
+            label: item.name,
+            value: item.id,
+          })
+        );
+      }
       setParameters(_parameters);
     });
   }, []);
   return (
     <div className={s.container} data-testid="incidentReportingForm">
       <header>
-        <h3>REPORT AN INCIDENT</h3>
+        <h3>REPORT AN INCIDENT {readOnly && <span>(View)</span>}</h3>
         <span className={s.note}>
           <FaInfoCircle /> There is a blame free reporting culture. No punitive
           measure will be taken against any staff reporting any incident.
@@ -75,13 +110,19 @@ export default function IncidentReporting() {
       <FormProvider {...methods}>
         <form
           className={s.content}
+          style={readOnly ? { pointerEvents: "none" } : {}}
           onSubmit={methods.handleSubmit((data) => {
             const postData = () => {
-              fetch(`${process.env.REACT_APP_HOST}/IncidentReport`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(data),
-              })
+              fetch(
+                `${process.env.REACT_APP_HOST}/IncidentReport${
+                  location.state?.edit ? `/${location.state.edit.id}` : ""
+                }`,
+                {
+                  method: location.state?.edit ? "PUT" : "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(data),
+                }
+              )
                 .then((res) => res.json())
                 .then((data) => {
                   if (data.id) {
@@ -91,6 +132,12 @@ export default function IncidentReporting() {
                     });
                     methods.reset();
                   }
+                })
+                .catch((err) => {
+                  Prompt({
+                    type: "error",
+                    message: err.message,
+                  });
                 });
             };
             if (data.status === "Submitted") {
@@ -109,7 +156,7 @@ export default function IncidentReporting() {
             <div className={s.boxContent}>
               <Input
                 {...methods.register("incident_Date_Time", {
-                  required: "Please select incident date",
+                  required: "Please select Incident Date",
                   validate: (v) =>
                     new Date(v) < new Date() ||
                     "Can not select date from future",
@@ -129,7 +176,7 @@ export default function IncidentReporting() {
               />
               <Input
                 {...methods.register("locationDetailsEntry", {
-                  required: "Please enter location detail",
+                  required: "Please enter Location Detail",
                 })}
                 error={methods.formState.errors.locationDetailsEntry}
                 label={
@@ -147,7 +194,7 @@ export default function IncidentReporting() {
               />
               <Input
                 {...methods.register("patientname", {
-                  required: "Please enter patient name",
+                  required: "Please enter Patient Name",
                 })}
                 error={methods.formState.errors.patientname}
                 label="Patient name / UHID"
@@ -155,17 +202,20 @@ export default function IncidentReporting() {
               />
               <Input
                 {...methods.register("complaintDatetime", {
-                  required: "Please select complient date",
+                  required: "Please select Complaint Date",
+                  validate: (v) =>
+                    new Date(v) < new Date() ||
+                    "Can not select date from future",
                 })}
                 error={methods.formState.errors.complaintDatetime}
                 label="Complaint Date & Time"
                 type="datetime-local"
               />
               <Input
-                {...methods.register("comlientId", {
-                  required: "Please enter comlient ID",
+                {...methods.register("complaintIdEntry", {
+                  required: "Please enter Comlient ID",
                 })}
-                error={methods.formState.errors.comlientId}
+                error={methods.formState.errors.complaintIdEntry}
                 label="Complaint ID"
               />
             </div>
@@ -175,143 +225,146 @@ export default function IncidentReporting() {
               <Radio
                 register={methods.register}
                 formOptions={{
-                  required: "Please select a type of incident",
+                  required: "Please select a Type of Incident",
                 }}
                 name="typeofInci"
                 options={[
                   {
                     label: "Unsafe condition",
-                    value: "1",
-                    hint:
-                      "Any potential safety event that did not reach the patient.",
+                    value: 1,
+                    // hint:
+                    //   "Any potential safety event that did not reach the patient.",
                   },
                   {
                     label: "No Harm",
-                    value: "2",
-                    hint:
-                      "Any potential safety event that did not reach the patient.",
+                    value: 2,
+                    // hint:
+                    //   "Any potential safety event that did not reach the patient.",
                   },
                   {
                     label: "Near Miss",
-                    value: "4",
-                    hint:
-                      "Any potential safety event that did not reach the patient.",
+                    value: 4,
+                    // hint:
+                    //   "Any potential safety event that did not reach the patient.",
                   },
                   {
                     label: "Adverse Event",
-                    value: "7",
-                    hint:
-                      "Any potential safety event that did not reach the patient.",
+                    value: 7,
+                    // hint:
+                    //   "Any potential safety event that did not reach the patient.",
                   },
                   {
                     label: "Sentinel Event",
-                    value: "0",
-                    hint:
-                      "Any potential safety event that did not reach the patient.",
+                    value: 0,
+                    // hint:
+                    //   "Any potential safety event that did not reach the patient.",
                   },
                 ]}
                 error={methods.formState.errors.typeofInci}
               />
-              <table className={s.adverseEvent} cellSpacing={0} cellPadding={0}>
-                <thead>
-                  <tr>
-                    <th>ADVERSE EVENT</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td className={s.label}>
-                      Degree of harm to the patient / resident
-                    </td>
-                    <td>
-                      <Radio
-                        options={[
-                          {
-                            label: "Unsafe condition",
-                            value: "unsafeCondtion",
-                          },
-                          {
-                            label: "No Harm",
-                            value: "noHarm",
-                          },
-                          {
-                            label: "Near Miss",
-                            value: "nearMiss",
-                          },
-                          {
-                            label: "Adverse Event",
-                            value: "adverseEvent",
-                          },
-                          {
-                            label: "Sentinel Event",
-                            value: "sentinelEvent",
-                          },
-                        ]}
-                      />
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className={s.label}>
-                      Duration of harm to the patient / resident
-                    </td>
-                    <td>
-                      <Radio
-                        options={[
-                          {
-                            label:
-                              "Permanent: Not expected to revert to approximately normal. (ie. patient's baseline)",
-                            value: "parmanent",
-                            disabled: true,
-                          },
-                          {
-                            label:
-                              "Temporary: Expected to revert to approximately normal. (ie. patient's baseline)",
-                            value: "temporary",
-                          },
-                        ]}
-                      />
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className={s.label}>
-                      Notification of the patient / resident
-                    </td>
-                    <td>
-                      <Radio
-                        options={[
-                          {
-                            label: "Was notified",
-                            value: "notified",
-                          },
-                          {
-                            label: "Not notified",
-                            value: "notNotified",
-                          },
-                        ]}
-                      />
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className={s.label}>
-                      Increased length of stay expected due to incident
-                    </td>
-                    <td>
-                      <Radio
-                        options={[
-                          {
-                            label: "Yes",
-                            value: "yes",
-                          },
-                          {
-                            label: "No",
-                            value: "no",
-                          },
-                        ]}
-                      />
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+              {
+                //   <table className={s.adverseEvent} cellSpacing={0} cellPadding={0}>
+                //   <thead>
+                //     <tr>
+                //       <th>ADVERSE EVENT</th>
+                //     </tr>
+                //   </thead>
+                //   <tbody>
+                //     <tr>
+                //       <td className={s.label}>
+                //         Degree of harm to the patient / resident
+                //       </td>
+                //       <td>
+                //         <Radio
+                //           options={[
+                //             {
+                //               label: "Unsafe condition",
+                //               value: "unsafeCondtion",
+                //             },
+                //             {
+                //               label: "No Harm",
+                //               value: "noHarm",
+                //             },
+                //             {
+                //               label: "Near Miss",
+                //               value: "nearMiss",
+                //             },
+                //             {
+                //               label: "Adverse Event",
+                //               value: "adverseEvent",
+                //             },
+                //             {
+                //               label: "Sentinel Event",
+                //               value: "sentinelEvent",
+                //             },
+                //           ]}
+                //         />
+                //       </td>
+                //     </tr>
+                //     <tr>
+                //       <td className={s.label}>
+                //         Duration of harm to the patient / resident
+                //       </td>
+                //       <td>
+                //         <Radio
+                //           options={[
+                //             {
+                //               label:
+                //                 "Permanent: Not expected to revert to approximately normal. (ie. patient's baseline)",
+                //               value: "parmanent",
+                //               disabled: true,
+                //             },
+                //             {
+                //               label:
+                //                 "Temporary: Expected to revert to approximately normal. (ie. patient's baseline)",
+                //               value: "temporary",
+                //             },
+                //           ]}
+                //         />
+                //       </td>
+                //     </tr>
+                //     <tr>
+                //       <td className={s.label}>
+                //         Notification of the patient / resident
+                //       </td>
+                //       <td>
+                //         <Radio
+                //           options={[
+                //             {
+                //               label: "Was notified",
+                //               value: "notified",
+                //             },
+                //             {
+                //               label: "Not notified",
+                //               value: "notNotified",
+                //             },
+                //           ]}
+                //         />
+                //       </td>
+                //     </tr>
+                //     <tr>
+                //       <td className={s.label}>
+                //         Increased length of stay expected due to incident
+                //       </td>
+                //       <td>
+                //         <Radio
+                //           options={[
+                //             {
+                //               label: "Yes",
+                //               value: "yes",
+                //             },
+                //             {
+                //               label: "No",
+                //               value: "no",
+                //             },
+                //           ]}
+                //         />
+                //       </td>
+                //     </tr>
+                //   </tbody>
+                // </table>
+              }
+              <div className={s.placeholder}>Placeholder</div>
             </div>
           </Box>
           <Box label="INCIDENT CATEGORY" collapsable={true}>
@@ -324,25 +377,50 @@ export default function IncidentReporting() {
             <div className={s.incidentDescription}>
               <Textarea
                 {...methods.register("inciDescription", {
-                  required: "Please enter incident description",
+                  required: "Please enter Incident Description",
                 })}
                 error={methods.formState.errors.inciDescription}
                 label="Incident Description"
                 className={s.description}
               />
               <section className={s.departments}>
-                <Input
-                  {...methods.register(
-                    "deptInvolved"
-                    // { required: "Please enter patient name", }
-                  )}
-                  error={methods.formState.errors.deptInvolved}
+                {
+                  //   <Input
+                  //   {...methods.register(
+                  //     "deptInvolved"
+                  //     // { required: "Please enter patient name", }
+                  //   )}
+                  //   error={methods.formState.errors.deptInvolved}
+                  //   label="Department Involved"
+                  //   // icon={<BiSearch />}
+                  //   className={s.search}
+                  // />
+                }
+                <Combobox
                   label="Department Involved"
-                  // icon={<BiSearch />}
+                  name="departmentInvolved"
+                  register={methods.register}
+                  watch={methods.watch}
+                  setValue={methods.setValue}
+                  multiple={true}
+                  options={parameters?.departments}
                   className={s.search}
                 />
-                {departments.map((department) => (
-                  <Chip key={department} label={department} />
+                {involvedDept?.map?.((department) => (
+                  <Chip
+                    key={department}
+                    label={
+                      parameters.departments.find(
+                        (dept) => dept.value === department
+                      )?.label || department
+                    }
+                    remove={() => {
+                      methods.setValue(
+                        "departmentInvolved",
+                        involvedDept.filter((item) => item !== department)
+                      );
+                    }}
+                  />
                 ))}
               </section>
             </div>
@@ -356,19 +434,19 @@ export default function IncidentReporting() {
                   columns={[{ label: "Preventability of incident" }]}
                 >
                   {[
-                    { label: "Likely could have been prevented" },
-                    { label: "Likely could not have been prevented" },
-                    { label: "Not assessed" },
+                    { value: 1, label: "Likely could have been prevented" },
+                    { value: 2, label: "Likely could not have been prevented" },
+                    { value: 3, label: "Not assessed" },
                   ].map((item) => (
                     <tr key={item.label}>
                       <td>
                         <input
-                          id={"preventability" + item.label}
+                          id={"preventability" + item.value}
                           type="radio"
-                          checked={preventability === item.label}
-                          onChange={(e) => setPreventability(item.label)}
+                          {...methods.register("preventability")}
+                          value={item.value}
                         />{" "}
-                        <label htmlFor={"preventability" + item.label}>
+                        <label htmlFor={"preventability" + item.value}>
                           {item.label}
                         </label>
                       </td>
@@ -516,8 +594,11 @@ export default function IncidentReporting() {
               </div>
               <div className={s.fieldWrapper}>
                 <FileInput label="Upload" />
-                <Input label="Incident Reported by" />
-                <Input label="Department" />
+                <Input
+                  label="Incident Reported by"
+                  {...methods.register("reportedBy")}
+                />
+                <Input label="Department" {...methods.register("department")} />
                 <Input
                   label="Head of the department"
                   placeholder="Enter"
@@ -536,6 +617,7 @@ export default function IncidentReporting() {
                     methods.reset();
                     methods.clearErrors();
                   }}
+                  disabled={readOnly}
                 >
                   Clear
                 </button>
@@ -544,6 +626,7 @@ export default function IncidentReporting() {
                     methods.setValue("status", "Saved");
                   }}
                   className="btn secondary w-100"
+                  disabled={readOnly}
                 >
                   Save
                 </button>
@@ -552,6 +635,7 @@ export default function IncidentReporting() {
                     methods.setValue("status", "Submitted");
                   }}
                   className="btn w-100"
+                  disabled={readOnly}
                 >
                   Submit
                 </button>
@@ -589,11 +673,10 @@ export const IncidentCategory = () => {
             <div className={s.form}>
               <Combobox
                 label="Incident Category"
-                placeholder="Select"
                 name="inciCateg"
                 register={register}
                 formOptions={{
-                  required: "Please select a category",
+                  required: "Please select a Category",
                 }}
                 setValue={setValue}
                 watch={watch}
@@ -609,7 +692,6 @@ export const IncidentCategory = () => {
               />
               <Combobox
                 label="Incident Sub-category"
-                placeholder="Select"
                 name="inciSubCat"
                 register={register}
                 watch={watch}
@@ -623,13 +705,13 @@ export const IncidentCategory = () => {
                     })) || null
                 }
                 formOptions={{
-                  required: "Please select a subcategory",
+                  required: "Please select a Subcategory",
                 }}
                 error={errors.inciSubCat}
                 clearErrors={clearErrors}
               />
               <button className="btn secondary">
-                <FaPlus /> Add Template
+                <FaPlus /> Add Row
               </button>
             </div>
             <div className={s.placeholder}>Placeholder</div>

@@ -11,16 +11,32 @@ import {
 } from "react-icons/bs";
 import { GoPerson } from "react-icons/go";
 import { Tabs, Input, Combobox, Table, TableActions, Moment } from "./elements";
+import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import { Modal, Prompt } from "./modal";
 import s from "./incidentReportingDashboard.module.scss";
 
 const incidentType = [
-  undefined,
-  "Unsafe condition",
-  "No Harm",
-  "Near Miss",
-  "Adverse Event",
-  "Sentinel Event",
+  {
+    label: "Unsafe condition",
+    value: 1,
+  },
+  {
+    label: "No Harm",
+    value: 2,
+  },
+  {
+    label: "Near Miss",
+    value: 4,
+  },
+  {
+    label: "Adverse Event",
+    value: 7,
+  },
+  {
+    label: "Sentinel Event",
+    value: 0,
+  },
 ];
 function IncidentReportingDashboard() {
   return (
@@ -43,76 +59,50 @@ function IncidentReportingDashboard() {
 }
 const MyDashboard = ({}) => {
   const [parameters, setParameters] = useState(null);
-  const [incidents, setIncidents] = useState([
-    {
-      id: 1,
-      code: "40",
-      reportedAt: "2021-12-21T15:56:09.153Z",
-      incidentTime: "2021-12-21T15:56:09.153",
-      location: "OT",
-      category: "My Dashboard",
-      subCategory: "My Subdashboard",
-      incidentType: "Sentinel",
-      reportedBy: "John goodman",
-      irInvestigator: "Mike",
-      status: "Open",
-      tat: "5",
-    },
-    {
-      id: 2,
-      code: "40",
-      reportedAt: "2021-12-21T15:56:09.153Z",
-      incidentTime: "2021-12-21T15:56:09.153",
-      location: "OT",
-      category: "My Dashboard",
-      subCategory: "My Subdashboard",
-      incidentType: "Sentinel",
-      reportedBy: "John goodman",
-      irInvestigator: "Mike",
-      status: "Open",
-      tat: "5",
-    },
-    {
-      id: 3,
-      code: "40",
-      reportedAt: "2021-12-21T15:56:09.153Z",
-      incidentTime: "2021-12-21T15:56:09.153",
-      location: "OT",
-      category: "My Dashboard",
-      subCategory: "My Subdashboard",
-      incidentType: "Sentinel",
-      reportedBy: "John goodman",
-      irInvestigator: "Mike",
-      status: "Open",
-      tat: "5",
-    },
-  ]);
+  const [incidents, setIncidents] = useState([]);
   const [filters, setFilters] = useState({});
-  console.log(incidents);
+  const navigate = useNavigate();
   useEffect(() => {
     Promise.all([
       fetch(`${process.env.REACT_APP_HOST}/location`).then((res) => res.json()),
       fetch(`${process.env.REACT_APP_HOST}/category`).then((res) => res.json()),
-    ])
-      .then(([location, category]) => {
-        const _parameters = { ...parameters };
-        if (location?._embedded.location) {
-          _parameters.locations = location._embedded.location;
-        }
-        if (category?._embedded.category) {
-          _parameters.categories = category._embedded.category;
-        }
-        setParameters(_parameters);
-        return fetch(
-          `${process.env.REACT_APP_HOST}/IncidentReport`
-        ).then((res) => res.json());
-      })
-      .then((data) => {
-        if (data._embedded?.IncidentReport) {
-          setIncidents(data._embedded.IncidentReport);
-        }
-      });
+    ]).then(([location, category]) => {
+      const _parameters = { ...parameters };
+      if (location?._embedded.location) {
+        _parameters.locations = location._embedded.location;
+      }
+      if (category?._embedded.category) {
+        _parameters.categories = category._embedded.category;
+      }
+      setParameters(_parameters);
+    });
   }, []);
+  useEffect(() => {
+    if (Object.entries(filters).length) {
+      fetch(
+        `${
+          process.env.REACT_APP_HOST
+        }/IncidentReport/search?${new URLSearchParams({
+          ...filters,
+        }).toString()}`
+      )
+        .then((res) => res.json())
+        .then((data) => {
+          console.log(data);
+          // if (data._embedded?.IncidentReport) {
+          //   setIncidents(data._embedded.IncidentReport);
+          // }
+        });
+    } else {
+      fetch(`${process.env.REACT_APP_HOST}/IncidentReport`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data._embedded?.IncidentReport) {
+            setIncidents(data._embedded.IncidentReport);
+          }
+        });
+    }
+  }, [filters]);
   return (
     <div className={s.myDashboard}>
       <div className={s.reportCounts}>
@@ -143,7 +133,12 @@ const MyDashboard = ({}) => {
           ]}
         />
       </div>
-      <Filters onSubmit={(values) => setFilters(values)} />
+      <Filters
+        onSubmit={(values) => {
+          console.log(values);
+          setFilters(values);
+        }}
+      />
       <Table
         columns={[
           { label: "IR Code" },
@@ -185,18 +180,62 @@ const MyDashboard = ({}) => {
                 ?.subCategorys?.find((item) => item.id === inc.inciSubCat)
                 ?.name || inc.inciSubCat}
             </td>
-            <td>{incidentType[inc.typeofInci]}</td>
+            <td>
+              {incidentType.find(({ value }) => value === inc.typeofInci)
+                ?.label || [inc.typeofInci]}
+            </td>
             <td>{inc.reportedBy}</td>
             <td>{inc.irInvestigator}</td>
             <td>{inc.status}</td>
             <td>{inc.tat}</td>
             <TableActions
               actions={[
-                {
-                  icon: <FaRegEye />,
-                  label: "Review IR",
-                  callBack: () => {},
-                },
+                ...(inc.status === "Submitted"
+                  ? [
+                      {
+                        icon: <FaRegEye />,
+                        label: "Review IR",
+                        callBack: () => {
+                          navigate("/incident-report", {
+                            state: { edit: inc, readOnly: true },
+                          });
+                        },
+                      },
+                    ]
+                  : [
+                      {
+                        icon: <BsPencilFill />,
+                        label: "Edit",
+                        callBack: () => {
+                          navigate("/incident-report", {
+                            state: { edit: inc },
+                          });
+                        },
+                      },
+                      {
+                        icon: <FaRegTrashAlt />,
+                        label: "Delete",
+                        callBack: () => {
+                          Prompt({
+                            type: "confirmation",
+                            message:
+                              "Are you sure you want to delete this report?",
+                            callback: () => {
+                              fetch(
+                                `${process.env.REACT_APP_HOST}/IncidentReport/${inc.id}`,
+                                { method: "DELETE" }
+                              ).then((res) => {
+                                if (res.status === 204) {
+                                  setIncidents((prev) =>
+                                    prev.filter((ir) => ir.id !== inc.id)
+                                  );
+                                }
+                              });
+                            },
+                          });
+                        },
+                      },
+                    ]),
               ]}
             />
           </tr>
@@ -248,36 +287,54 @@ const ReportCount = ({ label, className, irs }) => {
 };
 const Filters = ({ onSubmit }) => {
   const { handleSubmit, register, watch, reset, setValue } = useForm();
-  const [categories, setCategories] = useState([
-    { id: 1, name: "cat 1" },
-    { id: 2, name: "cat 2" },
-    { id: 3, name: "cat 2" },
-  ]);
-  const [incidentType, setIncidentType] = useState([
-    { id: 1, name: "cat 1" },
-    { id: 2, name: "cat 2" },
-    { id: 3, name: "cat 2" },
-  ]);
+  const [categories, setCategories] = useState([]);
   const [irInvestigator, setIrInvestigator] = useState([
-    { id: 1, name: "cat 1" },
-    { id: 2, name: "cat 2" },
-    { id: 3, name: "cat 2" },
+    { id: "Saved", name: "Saved" },
+    { id: "Submitted", name: "Submitted" },
   ]);
+  useEffect(() => {
+    Promise.all([
+      fetch(`${process.env.REACT_APP_HOST}/category`).then((res) => res.json()),
+    ]).then(([category]) => {
+      if (category._embedded?.category) {
+        setCategories(
+          category._embedded.category.map(({ id, name }) => ({
+            value: id,
+            label: name,
+          }))
+        );
+      }
+    });
+  }, []);
   return (
     <form className={s.filters} onSubmit={handleSubmit(onSubmit)}>
-      <Input label="IR Code" {...register("incidentCode")} />
+      <Input label="IR Code" {...register("sequence")} />
       <Combobox
         label="Category"
         name="category"
         setValue={setValue}
         watch={watch}
         register={register}
-        options={categories.map((cat) => ({ value: cat.id, label: cat.name }))}
+        options={categories}
       />
       <section className={s.pair}>
         <label>Incident Date Range</label>
-        <Input type="date" placeholder="From" {...register("inciDate_from")} />
-        <Input type="date" placeholder="To" {...register("inciDate_to")} />
+        <Input
+          type="date"
+          placeholder="From"
+          {...register("inciDate_from", {
+            // validate: (v) =>
+            //   new Date(v) < new Date() || "Can not select date from future",
+          })}
+        />
+        <Input
+          type="date"
+          placeholder="To"
+          {...register("inciDate_to", {
+            // validate: (v) =>
+            //   new Date(v) < new Date() || "Can not select date from future",
+          })}
+        />
       </section>
       <section className={s.pair}>
         <label>Reporting Date Range</label>
@@ -294,10 +351,7 @@ const Filters = ({ onSubmit }) => {
         setValue={setValue}
         watch={watch}
         register={register}
-        options={incidentType.map((cat) => ({
-          value: cat.id,
-          label: cat.name,
-        }))}
+        options={incidentType}
       />
       <section className={s.pair}>
         <Combobox
@@ -337,7 +391,14 @@ const Filters = ({ onSubmit }) => {
         <button className="btn secondary">
           <BiSearch /> Search
         </button>
-        <button type="button" className={`btn clear ${s.clear}`}>
+        <button
+          type="button"
+          className={`btn clear ${s.clear}`}
+          onClick={() => {
+            reset();
+            onSubmit({});
+          }}
+        >
           Clear
         </button>
       </section>
@@ -346,51 +407,33 @@ const Filters = ({ onSubmit }) => {
 };
 
 const QualityDashboard = ({}) => {
-  const [incidents, setIncidents] = useState([
-    {
-      id: 1,
-      code: "40",
-      reportedAt: "2021-12-21T15:56:09.153Z",
-      incidentTime: "2021-12-21T15:56:09.153",
-      location: "OT",
-      category: "My Dashboard",
-      subCategory: "My Subdashboard",
-      incidentType: "Sentinel",
-      reportedBy: "John goodman",
-      irInvestigator: "Mike",
-      status: "Open",
-      tat: "5",
-    },
-    {
-      id: 2,
-      code: "40",
-      reportedAt: "2021-12-21T15:56:09.153Z",
-      incidentTime: "2021-12-21T15:56:09.153",
-      location: "OT",
-      category: "My Dashboard",
-      subCategory: "My Subdashboard",
-      incidentType: "Sentinel",
-      reportedBy: "John goodman",
-      irInvestigator: "Mike",
-      status: "Open",
-      tat: "5",
-    },
-    {
-      id: 3,
-      code: "40",
-      reportedAt: "2021-12-21T15:56:09.153Z",
-      incidentTime: "2021-12-21T15:56:09.153",
-      location: "OT",
-      category: "My Dashboard",
-      subCategory: "My Subdashboard",
-      incidentType: "Sentinel",
-      reportedBy: "John goodman",
-      irInvestigator: "Mike",
-      status: "Open",
-      tat: "5",
-    },
-  ]);
+  const [parameters, setParameters] = useState(null);
+  const [incidents, setIncidents] = useState([]);
   const [filters, setFilters] = useState({});
+  useEffect(() => {
+    Promise.all([
+      fetch(`${process.env.REACT_APP_HOST}/location`).then((res) => res.json()),
+      fetch(`${process.env.REACT_APP_HOST}/category`).then((res) => res.json()),
+    ])
+      .then(([location, category]) => {
+        const _parameters = { ...parameters };
+        if (location?._embedded.location) {
+          _parameters.locations = location._embedded.location;
+        }
+        if (category?._embedded.category) {
+          _parameters.categories = category._embedded.category;
+        }
+        setParameters(_parameters);
+        return fetch(
+          `${process.env.REACT_APP_HOST}/IncidentReport`
+        ).then((res) => res.json());
+      })
+      .then((data) => {
+        if (data._embedded?.IncidentReport) {
+          setIncidents(data._embedded.IncidentReport);
+        }
+      });
+  }, []);
   return (
     <div className={s.qualityDashboard}>
       <Filters onSubmit={(values) => setFilters(values)} />
@@ -412,17 +455,33 @@ const QualityDashboard = ({}) => {
       >
         {incidents.map((inc) => (
           <tr key={inc.id}>
-            <td>{inc.code}</td>
+            <td>{inc.sequence}</td>
             <td>
-              <Moment format="DD/MM/YYYY hh:mm">{inc.reportedAt}</Moment>
+              <Moment format="DD/MM/YYYY hh:mm">{inc.reportingDate}</Moment>
             </td>
             <td>
-              <Moment format="DD/MM/YYYY hh:mm">{inc.incidentTime}</Moment>
+              <Moment format="DD/MM/YYYY hh:mm">
+                {inc.incident_Date_Time}
+              </Moment>
             </td>
-            <td>{inc.location}</td>
-            <td>{inc.category}</td>
-            <td>{inc.subCategory}</td>
-            <td>{inc.incidentType}</td>
+            <td>
+              {parameters?.locations.find((item) => item.id === inc.location)
+                ?.name || inc.location}
+            </td>
+            <td>
+              {parameters?.categories.find((item) => item.id === inc.inciCateg)
+                ?.name || inc.inciCateg}
+            </td>
+            <td>
+              {parameters?.categories
+                .find((item) => item.id === inc.inciCateg)
+                ?.subCategorys?.find((item) => item.id === inc.inciSubCat)
+                ?.name || inc.inciSubCat}
+            </td>
+            <td>
+              {incidentType.find(({ value }) => value === inc.typeofInci)
+                ?.label || [inc.typeofInci]}
+            </td>
             <td>{inc.reportedBy}</td>
             <td>{inc.irInvestigator}</td>
             <td>{inc.status}</td>

@@ -66,6 +66,7 @@ export default function Login({}) {
           />
           <Input
             type="password"
+            label="Password"
             {...register("password", {
               required: "Plase enter your password",
             })}

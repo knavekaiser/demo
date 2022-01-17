@@ -55,7 +55,20 @@
     &.collaped {
       ul {
         overflow: hidden;
-        width: 0;
+        width: min-content;
+        li {
+          .label {
+            .text {
+              display: none;
+            }
+          }
+          .arrow {
+            display: none !important;
+          }
+          ul {
+            display: none;
+          }
+        }
       }
       .collapseBtn {
         svg {
@@ -87,10 +100,18 @@
             font-weight: 600;
           }
         }
+        .label {
+          display: flex;
+          align-items: center;
+          grid-gap: 8px;
+          .icon {
+            font-size: 15pt;
+          }
+        }
         a {
           display: block;
           border-left: 3px solid #2f3545;
-          padding: 0.5rem 6px;
+          padding: 8px 10px;
         }
         border-bottom: 1px solid #292f43;
       }

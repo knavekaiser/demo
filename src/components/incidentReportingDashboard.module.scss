@@ -1,10 +1,14 @@
 main {
-  max-height: 100vh;
+  max-height: calc(100vh - 50px);
 }
 .container {
-  max-width: 85rem;
+  // max-width: 85rem;
+  max-width: 100rem;
   display: grid;
   grid-gap: 0.5rem;
+  overflow: hidden;
+  grid-template-rows: min-content min-content 1fr;
+  // overflow: hidden;
   header {
     h3 {
       padding: 0 8px;
@@ -14,12 +18,13 @@ main {
   }
   .myDashboard,
   .qualityDashboard {
+    display: grid;
     .filters {
       background: #d7dff4;
       display: grid;
       padding: 10px;
       border: 1px solid #b7b7b7;
-      grid-template-columns: 1fr 1fr 1fr 1fr;
+      grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
       grid-gap: 1rem;
       align-items: center;
       margin-bottom: 0.75rem;
@@ -81,6 +86,13 @@ main {
     }
   }
   .myDashboard {
+    display: grid;
+    grid-template-rows: min-content min-content 1fr min-content;
+    table {
+      tbody {
+        max-height: calc(100vh - 500px);
+      }
+    }
     .reportCounts {
       display: flex;
       grid-gap: 1rem;

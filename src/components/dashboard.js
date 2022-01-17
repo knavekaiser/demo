@@ -8,7 +8,7 @@ import {
 } from "react-router-dom";
 import { BiChevronLeft, BiPowerOff } from "react-icons/bi";
 import { SiteContext } from "../SiteContext";
-import { BsChevronRight } from "react-icons/bs";
+import { BsChevronRight, BsHexagonHalf } from "react-icons/bs";
 import { IoKeyOutline } from "react-icons/io5";
 import { FaRegBell } from "react-icons/fa";
 import { Combobox } from "./elements";
@@ -28,7 +28,7 @@ export const Accordion = ({ label, basePath, items, className }) => {
       } ${className || ""}`}
     >
       <Link className={s.accordionLabel} to={`${basePath}/${items[0]?.path}`}>
-        {label} <BsChevronRight />
+        {label} <BsChevronRight className={s.arrow} />
       </Link>
       {location.pathname.startsWith(basePath) && (
         <ul className={s.submenu}>
@@ -102,7 +102,12 @@ function Dashboard() {
               location.pathname.startsWith("/incident-report") ? s.active : ""
             }`}
           >
-            <Link to="/incident-report">Incident Reporting</Link>
+            <Link to="/incident-report">
+              <span className={s.label}>
+                <BsHexagonHalf className={s.icon} />{" "}
+                <span className={s.text}>Incident Reporting</span>
+              </span>
+            </Link>
           </li>
           <li
             className={`${s.sidebarItem} ${
@@ -112,7 +117,10 @@ function Dashboard() {
             }`}
           >
             <Link to="/incident-dashboard/my-dashboard">
-              Incident Dashboard
+              <span className={s.label}>
+                <BsHexagonHalf className={s.icon} />{" "}
+                <span className={s.text}>Incident Dashboard</span>
+              </span>
             </Link>
           </li>
           <li
@@ -120,17 +128,30 @@ function Dashboard() {
               location.pathname.startsWith("/capa-dashboard") ? s.active : ""
             }`}
           >
-            <Link to="/capa-dashboard">CAPA Reporting</Link>
+            <Link to="/capa-dashboard">
+              <span className={s.label}>
+                <BsHexagonHalf className={s.icon} />{" "}
+                <span className={s.text}>CAPA Reporting</span>
+              </span>
+            </Link>
           </li>
           <li
             className={`${s.sidebarItem} ${
               location.pathname.startsWith("/reports") ? s.active : ""
             }`}
           >
-            <Link to="/reports">Reports</Link>
+            <Link to="/reports">
+              <span className={s.label}>
+                <BsHexagonHalf className={s.icon} />{" "}
+                <span className={s.text}>Reports</span>
+              </span>
+            </Link>
           </li>
           <Accordion
-            label="IR Configuration"
+            label=<span className={s.label}>
+              <BsHexagonHalf className={s.icon} />{" "}
+              <span className={s.text}>IR Configuration</span>
+            </span>
             basePath="/irConfiguration"
             className={`${s.sidebarItem} ${
               location.pathname.startsWith("/irConfiguration") ? s.active : ""
@@ -142,7 +163,10 @@ function Dashboard() {
             ]}
           />
           <Accordion
-            label="Masters"
+            label=<span className={s.label}>
+              <BsHexagonHalf className={s.icon} />{" "}
+              <span className={s.text}>Masters</span>
+            </span>
             basePath="/masters"
             className={`${s.sidebarItem} ${
               location.pathname.startsWith("/masters") ? s.active : ""
