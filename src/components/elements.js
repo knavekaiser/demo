@@ -341,7 +341,9 @@ export const Combobox = ({
                     }`,
                   ""
                 ))}
-          {!selected?.toString().length && (placeholder || "Select")}
+          {options?.length > 1 && (
+            <>{!selected?.toString().length && (placeholder || "Select")}</>
+          )}
         </p>
         <input
           data-testid="combobox-input"
@@ -498,25 +500,19 @@ const ComboboxList = ({
     </ul>
   );
 };
-export const Checkbox = ({ register, name, label, required, readOnly }) => {
+export const Checkbox = forwardRef(({ label, readOnly, ...rest }, ref) => {
   const id = useRef(Math.random().toString(36).substr(-8));
   return (
-    <section className={s.checkbox} data-testid="checkbox-input">
-      <input
-        {...register(name)}
-        id={id.current}
-        required={required}
-        type="checkbox"
-        {...(readOnly && {
-          onClick: (e) => {
-            e.preventDefault();
-          },
-        })}
-      />
+    <section
+      className={s.checkbox}
+      style={readOnly ? { pointerEvents: "none" } : {}}
+      data-testid="checkbox-input"
+    >
+      <input ref={ref} id={id.current} type="checkbox" {...rest} />
       {label && <label htmlFor={id.current}>{label}</label>}
     </section>
   );
-};
+});
 
 export const Tabs = ({ tabs, className }) => {
   const location = useLocation();

@@ -444,11 +444,6 @@ const SubCategoryForm = ({
   const [showReportableForm, setShowReportableForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const reportable = watch("reportable");
-  // useEffect(() => {
-  //   if (reportable) {
-  //     setShowReportableForm(true);
-  //   }
-  // }, [reportable]);
   useEffect(() => {
     reset({ status: true, ...edit });
   }, [edit]);
@@ -508,11 +503,10 @@ const SubCategoryForm = ({
           type="number"
           error={errors.name}
         />
-        <Checkbox register={register} name="sentinel" />
+        <Checkbox {...register("sentinel")} />
         <Checkbox
-          register={register}
-          name="reportStatus"
-          readOnly={edit && edit.reportable?.length > 0}
+          {...register("reportStatus")}
+          readOnly={edit?.reportable?.length > 0}
         />
         <Toggle
           register={register}
@@ -741,7 +735,10 @@ const ReportableInlineForm = ({
         setValue={setValue}
         options={reportTo}
       />
-      <Textarea name="reporting_instructions" register={register} />
+      <Textarea
+        name="reporting_instructions"
+        {...register("reporting_instructions")}
+      />
       <div className={s.btns}>
         <button className="btn secondary" type="submit" disabled={loading}>
           {edit ? <FaCheck /> : <FaPlus />}

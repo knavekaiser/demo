@@ -222,6 +222,9 @@ main {
       display: grid;
       grid-gap: 1rem 2rem;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      & > * {
+        max-width: 20rem;
+      }
     }
     .btns {
       display: flex;

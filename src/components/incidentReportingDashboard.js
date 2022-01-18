@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
+import { SiteContext } from "../SiteContext";
 import { Routes, Route } from "react-router-dom";
 import { FaInfoCircle, FaRegTrashAlt, FaPlus, FaRegEye } from "react-icons/fa";
 import { BiSearch } from "react-icons/bi";
@@ -10,7 +11,16 @@ import {
   BsFillExclamationTriangleFill,
 } from "react-icons/bs";
 import { GoPerson } from "react-icons/go";
-import { Tabs, Input, Combobox, Table, TableActions, Moment } from "./elements";
+import {
+  Tabs,
+  Input,
+  Combobox,
+  Table,
+  TableActions,
+  Moment,
+  Checkbox,
+  moment,
+} from "./elements";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { Modal, Prompt } from "./modal";
@@ -67,7 +77,8 @@ function IncidentReportingDashboard() {
     </div>
   );
 }
-const MyDashboard = ({}) => {
+const MyDashboard = () => {
+  const { user } = useContext(SiteContext);
   const location = useLocation();
   const [parameters, setParameters] = useState(null);
   const [incidents, setIncidents] = useState([]);
@@ -97,16 +108,15 @@ const MyDashboard = ({}) => {
       fetch(
         `${
           process.env.REACT_APP_HOST
-        }/IncidentReport/search?${new URLSearchParams({
+        }/IncidentReport/search/byDetails?${new URLSearchParams({
           ...filters,
         }).toString()}`
       )
         .then((res) => res.json())
         .then((data) => {
-          console.log(data);
-          // if (data._embedded?.IncidentReport) {
-          //   setIncidents(data._embedded.IncidentReport);
-          // }
+          if (data._embedded?.IncidentReport) {
+            setIncidents(data._embedded.IncidentReport);
+          }
         });
     } else {
       fetch(`${process.env.REACT_APP_HOST}/IncidentReport`)
@@ -150,8 +160,16 @@ const MyDashboard = ({}) => {
       </div>
       <Filters
         onSubmit={(values) => {
+          const _filters = {};
+          for (var field in values) {
+            if (values[field]) _filters[field] = values[field];
+          }
           console.log(values);
-          setFilters(values);
+          if (values.userId) {
+            _filters.userId = user.id;
+          }
+          console.log(_filters);
+          setFilters(_filters);
         }}
       />
       <Table
@@ -170,104 +188,111 @@ const MyDashboard = ({}) => {
           { label: "Actions" },
         ]}
       >
-        {incidents.map((inc) => (
-          <tr
-            key={inc.id}
-            className={focus === inc.id ? s.focus : ""}
-            onClick={() => setFocus(inc.id)}
-          >
-            <td>{inc.sequence}</td>
-            <td>
-              <Moment format="DD/MM/YYYY hh:mm">{inc.reportingDate}</Moment>
-            </td>
-            <td>
-              <Moment format="DD/MM/YYYY hh:mm">
-                {inc.incident_Date_Time}
-              </Moment>
-            </td>
-            <td>
-              {parameters?.locations.find((item) => item.id === inc.location)
-                ?.name || inc.location}
-            </td>
-            <td>
-              {parameters?.categories.find((item) => item.id === inc.inciCateg)
-                ?.name || inc.inciCateg}
-            </td>
-            <td>
-              {parameters?.categories
-                .find((item) => item.id === inc.inciCateg)
-                ?.subCategorys?.find((item) => item.id === inc.inciSubCat)
-                ?.name || inc.inciSubCat}
-            </td>
-            <td>
-              {incidentType.find(({ value }) => value === inc.typeofInci)
-                ?.label || [inc.typeofInci]}
-            </td>
-            <td>{inc.reportedBy}</td>
-            <td>{inc.irInvestigator}</td>
-            <td>{inc.status}</td>
-            <td>{inc.tat}</td>
-            <TableActions
-              actions={[
-                ...(inc.status === "Submitted"
-                  ? [
-                      {
-                        icon: <FaRegEye />,
-                        label: "Review IR",
-                        callBack: () => {
-                          navigate("/incident-report", {
-                            state: {
-                              edit: inc,
-                              readOnly: true,
-                              focus: inc.id,
-                              from: location.pathname,
-                            },
-                          });
+        {incidents
+          .sort((a, b) =>
+            new Date(a.incident_Date_Time) > new Date(b.incident_Date_Time)
+              ? -1
+              : 1
+          )
+          .map((inc) => (
+            <tr
+              key={inc.id}
+              className={focus === inc.id ? s.focus : ""}
+              onClick={() => setFocus(inc.id)}
+            >
+              <td>{inc.sequence}</td>
+              <td>
+                <Moment format="DD/MM/YYYY hh:mm">{inc.reportingDate}</Moment>
+              </td>
+              <td>
+                <Moment format="DD/MM/YYYY hh:mm">
+                  {inc.incident_Date_Time}
+                </Moment>
+              </td>
+              <td>
+                {parameters?.locations.find((item) => item.id === inc.location)
+                  ?.name || inc.location}
+              </td>
+              <td>
+                {parameters?.categories.find(
+                  (item) => item.id === inc.inciCateg
+                )?.name || inc.inciCateg}
+              </td>
+              <td>
+                {parameters?.categories
+                  .find((item) => item.id === inc.inciCateg)
+                  ?.subCategorys?.find((item) => item.id === inc.inciSubCat)
+                  ?.name || inc.inciSubCat}
+              </td>
+              <td>
+                {incidentType.find(({ value }) => value === inc.typeofInci)
+                  ?.label || [inc.typeofInci]}
+              </td>
+              <td>{inc.reportedBy}</td>
+              <td>{inc.irInvestigator}</td>
+              <td>{inc.status}</td>
+              <td>{inc.tat}</td>
+              <TableActions
+                actions={[
+                  ...(inc.status === "Submitted"
+                    ? [
+                        {
+                          icon: <FaRegEye />,
+                          label: "Review IR",
+                          callBack: () => {
+                            navigate(paths.incidentReport, {
+                              state: {
+                                edit: inc,
+                                readOnly: true,
+                                focus: inc.id,
+                                from: location.pathname,
+                              },
+                            });
+                          },
                         },
-                      },
-                    ]
-                  : [
-                      {
-                        icon: <BsPencilFill />,
-                        label: "Edit",
-                        callBack: () => {
-                          navigate("/incident-report", {
-                            state: {
-                              edit: inc,
-                              focus: inc.id,
-                              from: location.pathname,
-                            },
-                          });
+                      ]
+                    : [
+                        {
+                          icon: <BsPencilFill />,
+                          label: "Edit",
+                          callBack: () => {
+                            navigate(paths.incidentReport, {
+                              state: {
+                                edit: inc,
+                                focus: inc.id,
+                                from: location.pathname,
+                              },
+                            });
+                          },
                         },
-                      },
-                      {
-                        icon: <FaRegTrashAlt />,
-                        label: "Delete",
-                        callBack: () => {
-                          Prompt({
-                            type: "confirmation",
-                            message:
-                              "Are you sure you want to delete this report?",
-                            callback: () => {
-                              fetch(
-                                `${process.env.REACT_APP_HOST}/IncidentReport/${inc.id}`,
-                                { method: "DELETE" }
-                              ).then((res) => {
-                                if (res.status === 204) {
-                                  setIncidents((prev) =>
-                                    prev.filter((ir) => ir.id !== inc.id)
-                                  );
-                                }
-                              });
-                            },
-                          });
+                        {
+                          icon: <FaRegTrashAlt />,
+                          label: "Delete",
+                          callBack: () => {
+                            Prompt({
+                              type: "confirmation",
+                              message:
+                                "Are you sure you want to delete this report?",
+                              callback: () => {
+                                fetch(
+                                  `${process.env.REACT_APP_HOST}/IncidentReport/${inc.id}`,
+                                  { method: "DELETE" }
+                                ).then((res) => {
+                                  if (res.status === 204) {
+                                    setIncidents((prev) =>
+                                      prev.filter((ir) => ir.id !== inc.id)
+                                    );
+                                  }
+                                });
+                              },
+                            });
+                          },
                         },
-                      },
-                    ]),
-              ]}
-            />
-          </tr>
-        ))}
+                      ]),
+                ]}
+              />
+            </tr>
+          ))}
       </Table>
       <div className={s.legend}>
         <span>
@@ -313,13 +338,10 @@ const ReportCount = ({ label, className, irs }) => {
     </div>
   );
 };
-const Filters = ({ onSubmit }) => {
+const Filters = ({ onSubmit, qualityDashboard }) => {
   const { handleSubmit, register, watch, reset, setValue } = useForm();
   const [categories, setCategories] = useState([]);
-  const [irInvestigator, setIrInvestigator] = useState([
-    { id: "Saved", name: "Saved" },
-    { id: "Submitted", name: "Submitted" },
-  ]);
+  const [irInvestigator, setIrInvestigator] = useState([]);
   useEffect(() => {
     Promise.all([
       fetch(`${process.env.REACT_APP_HOST}/category`).then((res) => res.json()),
@@ -339,7 +361,7 @@ const Filters = ({ onSubmit }) => {
       <Input label="IR Code" {...register("sequence")} />
       <Combobox
         label="Category"
-        name="category"
+        name="InciCateg"
         setValue={setValue}
         watch={watch}
         register={register}
@@ -350,15 +372,16 @@ const Filters = ({ onSubmit }) => {
         <Input
           type="date"
           placeholder="From"
-          {...register("inciDate_from", {
+          {...register("fromIncidentDateTime", {
             // validate: (v) =>
             //   new Date(v) < new Date() || "Can not select date from future",
           })}
+          max={moment({ format: "YYYY-MM-DDThh:mm", time: new Date() })}
         />
         <Input
           type="date"
           placeholder="To"
-          {...register("inciDate_to", {
+          {...register("toIncidentDateTime", {
             // validate: (v) =>
             //   new Date(v) < new Date() || "Can not select date from future",
           })}
@@ -369,9 +392,9 @@ const Filters = ({ onSubmit }) => {
         <Input
           type="date"
           placeholder="From"
-          {...register("reportDate_from")}
+          {...register("fromreportingDate")}
         />
-        <Input type="date" placeholder="To" {...register("reportDate_to")} />
+        <Input type="date" placeholder="To" {...register("toreportingDate")} />
       </section>
       <Combobox
         label="Incident Type"
@@ -400,21 +423,21 @@ const Filters = ({ onSubmit }) => {
           watch={watch}
           register={register}
           options={[
-            { value: "open", label: "Open" },
-            { value: "close", label: "Close" },
+            { label: "Saved", value: "Saved" },
+            { label: "Submitted", value: "Submitted" },
           ]}
         />
       </section>
-      <section className={`${s.pair} ${s.checkboxes}`}>
-        <section>
-          <input type="checkbox" id="my-irs" name="my-irs" />
-          <label htmlFor="my-irs">My IRs</label>
+      {!qualityDashboard && (
+        <section className={`${s.pair} ${s.checkboxes}`}>
+          <section>
+            <Checkbox label="My IRs" {...register("userId")} />
+          </section>
+          <section>
+            <Checkbox label="My Department IRs" {...register("myDept")} />
+          </section>
         </section>
-        <section>
-          <input type="checkbox" id="my-dep-irs" name="my-dep-irs" />
-          <label htmlFor="my-dep-irs">My Department IRs</label>
-        </section>
-      </section>
+      )}
       <section className={s.btns}>
         <button className="btn secondary">
           <BiSearch /> Search
@@ -434,7 +457,8 @@ const Filters = ({ onSubmit }) => {
   );
 };
 
-const QualityDashboard = ({}) => {
+const QualityDashboard = () => {
+  const { user } = useContext(SiteContext);
   const [parameters, setParameters] = useState(null);
   const [incidents, setIncidents] = useState([]);
   const [filters, setFilters] = useState({});
@@ -462,9 +486,48 @@ const QualityDashboard = ({}) => {
         }
       });
   }, []);
+  useEffect(() => {
+    if (Object.entries(filters).length) {
+      fetch(
+        `${
+          process.env.REACT_APP_HOST
+        }/IncidentReport/search/byDetails?${new URLSearchParams({
+          ...filters,
+        }).toString()}`
+      )
+        .then((res) => res.json())
+        .then((data) => {
+          if (data._embedded?.IncidentReport) {
+            setIncidents(data._embedded.IncidentReport);
+          }
+        });
+    } else {
+      fetch(`${process.env.REACT_APP_HOST}/IncidentReport`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data._embedded?.IncidentReport) {
+            setIncidents(data._embedded.IncidentReport);
+          }
+        });
+    }
+  }, [filters]);
   return (
     <div className={s.qualityDashboard}>
-      <Filters onSubmit={(values) => setFilters(values)} />
+      <Filters
+        onSubmit={(values) => {
+          const _filters = {};
+          for (var field in values) {
+            if (values[field]) _filters[field] = values[field];
+          }
+          console.log(values);
+          if (values.userId) {
+            _filters.userId = user.id;
+          }
+          console.log(_filters);
+          setFilters(_filters);
+        }}
+        qualityDashboard={true}
+      />
       <Table
         columns={[
           { label: "IR Code" },
@@ -481,90 +544,106 @@ const QualityDashboard = ({}) => {
           { label: "Actions" },
         ]}
       >
-        {incidents.map((inc) => (
-          <tr key={inc.id}>
-            <td>{inc.sequence}</td>
-            <td>
-              <Moment format="DD/MM/YYYY hh:mm">{inc.reportingDate}</Moment>
-            </td>
-            <td>
-              <Moment format="DD/MM/YYYY hh:mm">
-                {inc.incident_Date_Time}
-              </Moment>
-            </td>
-            <td>
-              {parameters?.locations.find((item) => item.id === inc.location)
-                ?.name || inc.location}
-            </td>
-            <td>
-              {parameters?.categories.find((item) => item.id === inc.inciCateg)
-                ?.name || inc.inciCateg}
-            </td>
-            <td>
-              {parameters?.categories
-                .find((item) => item.id === inc.inciCateg)
-                ?.subCategorys?.find((item) => item.id === inc.inciSubCat)
-                ?.name || inc.inciSubCat}
-            </td>
-            <td>
-              {incidentType.find(({ value }) => value === inc.typeofInci)
-                ?.label || [inc.typeofInci]}
-            </td>
-            <td>{inc.reportedBy}</td>
-            <td>{inc.irInvestigator}</td>
-            <td>{inc.status}</td>
-            <td>{inc.tat}</td>
-            <TableActions
-              actions={[
-                {
-                  icon: <BsPencilFill />,
-                  label: "Review IR",
-                  callBack: () => {},
-                },
-                {
-                  icon: <FaRegTrashAlt />,
-                  label: "Reportable Incident",
-                  callBack: () => {},
-                },
-                {
-                  icon: <FaRegTrashAlt />,
-                  label: "IR Approval",
-                  callBack: () => {},
-                },
-                {
-                  icon: <FaRegTrashAlt />,
-                  label: "IR Combine",
-                  callBack: () => {},
-                },
-                {
-                  icon: <FaRegTrashAlt />,
-                  label: "Assign IR",
-                  callBack: () => {},
-                },
-                {
-                  icon: <FaRegTrashAlt />,
-                  label: "IR Investigation",
-                  callBack: () => {},
-                },
-                {
-                  icon: <FaRegTrashAlt />,
-                  label: "CAPA",
-                  callBack: () => {},
-                },
-                {
-                  icon: <FaRegTrashAlt />,
-                  label: "IR Closure",
-                  callBack: () => {},
-                },
-                {
-                  icon: <FaRegTrashAlt />,
-                  label: "Cancel IR",
-                  callBack: () => {},
-                },
-              ]}
-            />
-          </tr>
-        ))}
+        {incidents
+          .sort((a, b) =>
+            new Date(a.incident_Date_Time) > new Date(b.incident_Date_Time)
+              ? -1
+              : 1
+          )
+          .map((inc) => (
+            <tr key={inc.id}>
+              <td>{inc.sequence}</td>
+              <td>
+                <Moment format="DD/MM/YYYY hh:mm">{inc.reportingDate}</Moment>
+              </td>
+              <td>
+                <Moment format="DD/MM/YYYY hh:mm">
+                  {inc.incident_Date_Time}
+                </Moment>
+              </td>
+              <td>
+                {parameters?.locations.find((item) => item.id === inc.location)
+                  ?.name || inc.location}
+              </td>
+              <td>
+                {parameters?.categories.find(
+                  (item) => item.id === inc.inciCateg
+                )?.name || inc.inciCateg}
+              </td>
+              <td>
+                {parameters?.categories
+                  .find((item) => item.id === inc.inciCateg)
+                  ?.subCategorys?.find((item) => item.id === inc.inciSubCat)
+                  ?.name || inc.inciSubCat}
+              </td>
+              <td>
+                {incidentType.find(({ value }) => value === inc.typeofInci)
+                  ?.label || [inc.typeofInci]}
+              </td>
+              <td>{inc.reportedBy}</td>
+              <td>{inc.irInvestigator}</td>
+              <td>{inc.status}</td>
+              <td>{inc.tat}</td>
+              <TableActions
+                actions={[
+                  ...(inc.status === "Submitted"
+                    ? [
+                        {
+                          icon: <BsPencilFill />,
+                          label: "Review IR",
+                          callBack: () => {},
+                        },
+                        {
+                          icon: <FaRegTrashAlt />,
+                          label: "Assign IR",
+                          callBack: () => {},
+                        },
+                        {
+                          icon: <FaRegTrashAlt />,
+                          label: "Cancel IR",
+                          callBack: () => {},
+                        },
+                        {
+                          icon: <FaRegTrashAlt />,
+                          label: "Reportable Incident",
+                          callBack: () => {},
+                        },
+                        {
+                          icon: <FaRegTrashAlt />,
+                          label: "Merge/Un-Merge IR",
+                          callBack: () => {},
+                        },
+                      ]
+                    : []),
+                  {
+                    icon: <FaRegTrashAlt />,
+                    label: "IR Approval",
+                    callBack: () => {},
+                  },
+                  {
+                    icon: <FaRegTrashAlt />,
+                    label: "IR Combine",
+                    callBack: () => {},
+                  },
+                  {
+                    icon: <FaRegTrashAlt />,
+                    label: "IR Investigation",
+                    callBack: () => {},
+                  },
+                  {
+                    icon: <FaRegTrashAlt />,
+                    label: "CAPA",
+                    callBack: () => {},
+                  },
+                  {
+                    icon: <FaRegTrashAlt />,
+                    label: "IR Closure",
+                    callBack: () => {},
+                  },
+                ]}
+              />
+            </tr>
+          ))}
       </Table>
       <div className={s.legend}>
         <span>

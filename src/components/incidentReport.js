@@ -58,6 +58,7 @@ export default function IncidentReporting() {
   ]);
   const [anonymous, setAnonymous] = useState(false);
   const involvedDept = methods.watch("deptsLookupMultiselect");
+  const patientComplaint = methods.watch("patientYesOrNo");
   useEffect(() => {
     if (location.state?.edit) {
       const { edit, readOnly } = location.state;
@@ -188,8 +189,9 @@ export default function IncidentReporting() {
             if (data.status === "Submitted") {
               Prompt({
                 type: "confirmation",
-                message:
-                  "Once submitted , IR’s cannot be edited. Are you sure you want to continue",
+                message: anonymous
+                  ? "This incident will be submitted as Anonymous report. You will not be able to view or track the IR status. Do you wish to continue"
+                  : "Once submitted, IR’s cannot be edited. Are you sure you want to continue",
                 callback: postData,
               });
             } else {
@@ -237,32 +239,36 @@ export default function IncidentReporting() {
                 setValue={methods.setValue}
                 label="Patient Complaint"
               />
-              <Input
-                {...methods.register("patientname", {
-                  required: "Please enter Patient Name",
-                })}
-                error={methods.formState.errors.patientname}
-                label="Patient name / UHID"
-                // icon={<BiSearch />}
-              />
-              <Input
-                {...methods.register("complaintDatetime", {
-                  required: "Please select Complaint Date",
-                  validate: (v) =>
-                    new Date(v) < new Date() ||
-                    "Can not select date from future",
-                })}
-                error={methods.formState.errors.complaintDatetime}
-                label="Complaint Date & Time"
-                type="datetime-local"
-              />
-              <Input
-                {...methods.register("complaintIdEntry", {
-                  required: "Please enter Comlient ID",
-                })}
-                error={methods.formState.errors.complaintIdEntry}
-                label="Complaint ID"
-              />
+              {patientComplaint && (
+                <>
+                  <Input
+                    {...methods.register("patientname", {
+                      required: "Please enter Patient Name",
+                    })}
+                    error={methods.formState.errors.patientname}
+                    label="Patient name / UHID"
+                    // icon={<BiSearch />}
+                  />
+                  <Input
+                    {...methods.register("complaintDatetime", {
+                      required: "Please select Complaint Date",
+                      validate: (v) =>
+                        new Date(v) < new Date() ||
+                        "Can not select date from future",
+                    })}
+                    error={methods.formState.errors.complaintDatetime}
+                    label="Complaint Date & Time"
+                    type="datetime-local"
+                  />
+                  <Input
+                    {...methods.register("complaintIdEntry", {
+                      required: "Please enter Comlient ID",
+                    })}
+                    error={methods.formState.errors.complaintIdEntry}
+                    label="Complaint ID"
+                  />
+                </>
+              )}
             </div>
           </Box>
           <Box label="TYPE OF INCIDENT" collapsable={true}>
@@ -630,21 +636,26 @@ export default function IncidentReporting() {
               </div>
               <div className={s.fieldWrapper}>
                 <FileInput label="Upload" />
-                <Input
-                  label="Incident Reported by"
-                  disabled={true}
-                  {...methods.register("reportedBy")}
-                />
-                <Input
-                  label="Department"
-                  disabled={anonymous}
-                  {...methods.register("department")}
-                />
-                <Input
-                  label="Head of the department"
-                  placeholder="Enter"
-                  {...methods.register("headofDepart")}
-                />
+                {!anonymous && (
+                  <>
+                    <Input
+                      label="Incident Reported by"
+                      value={user.name}
+                      readOnly={true}
+                    />
+                    <Input
+                      label="Department"
+                      disabled={anonymous}
+                      {...methods.register("department")}
+                    />
+                    <Combobox
+                      label="Head of the department"
+                      placeholder="Enter"
+                      name="headofDepart"
+                      register={methods.register}
+                    />
+                  </>
+                )}
               </div>
               <input
                 style={{ display: "none" }}
@@ -699,7 +710,7 @@ export default function IncidentReporting() {
                     methods.setValue("status", "Saved");
                   }}
                   className="btn secondary w-100"
-                  disabled={readOnly}
+                  disabled={readOnly || anonymous}
                 >
                   Save
                 </button>

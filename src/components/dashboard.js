@@ -52,7 +52,7 @@ export const Accordion = ({ label, basePath, items, className }) => {
 };
 
 function Dashboard() {
-  const { setUser } = useContext(SiteContext);
+  const { user, setUser } = useContext(SiteContext);
   const location = useLocation();
   const navigate = useNavigate();
   const [collaped, setCollapsed] = useState(false);
@@ -72,6 +72,12 @@ function Dashboard() {
               { value: 1, label: "Front Desk 3" },
             ]}
           />
+          <span>
+            Logged in as:{" "}
+            <span style={{ fontWeight: "600", color: "#3450a3" }}>
+              {user.name}
+            </span>
+          </span>
           <div className={s.actions}>
             <button>
               <IoKeyOutline />

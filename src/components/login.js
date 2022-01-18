@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { Input } from "./elements";
 import { Prompt } from "./modal";
 import s from "./login.module.scss";
+import paths from "./path";
 
 export default function Login({}) {
   const { user, setUser } = useContext(SiteContext);
@@ -43,7 +44,7 @@ export default function Login({}) {
             );
             if (_user) {
               setUser(_user);
-              navigate("/incident-report");
+              navigate(paths.incidentReport);
             } else {
               Prompt({
                 type: "error",
