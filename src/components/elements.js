@@ -597,7 +597,10 @@ export const TableActions = ({ actions }) => {
           <button
             key={action.label}
             className="clear"
-            onClick={action.callBack}
+            onClick={() => {
+              setOpen(false);
+              action.callBack();
+            }}
           >
             {action.icon} {action.label}
           </button>

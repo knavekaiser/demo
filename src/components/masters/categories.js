@@ -39,7 +39,7 @@ export default function Categories() {
   return (
     <div className={s.container}>
       <header>
-        <h3>CATEGORY & SUB CATEGORY MASTER</h3>
+        <h3>CATEGORY & SUBCATEGORY MASTER</h3>
       </header>
       <div className={`${s.content} ${s.parent_child}`}>
         {
@@ -227,7 +227,7 @@ const SubCategories = ({
 }) => {
   const [edit, setEdit] = useState(null);
   const [addReporable, setAddReportable] = useState(false);
-  // <Box label="SUB CATEGORY DETAILS">
+  // <Box label="SUBCATEGORY DETAILS">
   // </Box>
   return (
     <div className={`${s.subCategory} ${s.child}`}>
@@ -248,7 +248,7 @@ const SubCategories = ({
       </div>
       <Table
         columns={[
-          { label: "Sub Category" },
+          { label: "Subcategory" },
           { label: "Template" },
           { label: "Sentinel" },
           { label: "Reportable" },

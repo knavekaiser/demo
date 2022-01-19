@@ -168,6 +168,9 @@ const MyDashboard = () => {
           if (values.userId) {
             _filters.userId = user.id;
           }
+          if (values.department) {
+            _filters.department = user.department;
+          }
           console.log(_filters);
           setFilters(_filters);
         }}
@@ -434,7 +437,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
             <Checkbox label="My IRs" {...register("userId")} />
           </section>
           <section>
-            <Checkbox label="My Department IRs" {...register("myDept")} />
+            <Checkbox label="My Department IRs" {...register("department")} />
           </section>
         </section>
       )}
@@ -462,18 +465,27 @@ const QualityDashboard = () => {
   const [parameters, setParameters] = useState(null);
   const [incidents, setIncidents] = useState([]);
   const [filters, setFilters] = useState({});
+  const [assign, setAssign] = useState(null);
   useEffect(() => {
     Promise.all([
       fetch(`${process.env.REACT_APP_HOST}/location`).then((res) => res.json()),
       fetch(`${process.env.REACT_APP_HOST}/category`).then((res) => res.json()),
+      fetch(`${process.env.REACT_APP_HOST}/user`).then((res) => res.json()),
     ])
-      .then(([location, category]) => {
+      .then(([location, category, user]) => {
         const _parameters = { ...parameters };
         if (location?._embedded.location) {
           _parameters.locations = location._embedded.location;
         }
         if (category?._embedded.category) {
           _parameters.categories = category._embedded.category;
+        }
+        console.log(user);
+        if (user?._embedded.user) {
+          _parameters.users = user._embedded.user.map((user) => ({
+            label: user.name,
+            value: user.id,
+          }));
         }
         setParameters(_parameters);
         return fetch(
@@ -520,10 +532,6 @@ const QualityDashboard = () => {
             if (values[field]) _filters[field] = values[field];
           }
           console.log(values);
-          if (values.userId) {
-            _filters.userId = user.id;
-          }
-          console.log(_filters);
           setFilters(_filters);
         }}
         qualityDashboard={true}
@@ -578,7 +586,7 @@ const QualityDashboard = () => {
               </td>
               <td>
                 {incidentType.find(({ value }) => value === inc.typeofInci)
-                  ?.label || [inc.typeofInci]}
+                  ?.label || inc.typeofInci}
               </td>
               <td>{inc.reportedBy}</td>
               <td>{inc.irInvestigator}</td>
@@ -596,7 +604,7 @@ const QualityDashboard = () => {
                         {
                           icon: <FaRegTrashAlt />,
                           label: "Assign IR",
-                          callBack: () => {},
+                          callBack: () => setAssign(inc),
                         },
                         {
                           icon: <FaRegTrashAlt />,
@@ -671,7 +679,85 @@ const QualityDashboard = () => {
           Patient Complient
         </span>
       </div>
+      <Modal
+        head={true}
+        label="ASSIGN IR"
+        open={assign}
+        setOpen={setAssign}
+        className={s.assignModal}
+      >
+        <div className={s.content}>
+          <ul className={s.irDetail}>
+            <li>IR Code: {assign?.sequence}</li>
+            <li>
+              Incident Date & Time:{" "}
+              <Moment format="DD/MM/YYYY HH:mm">
+                {assign?.incident_Date_Time}
+              </Moment>
+            </li>
+            <li>
+              Incidnet Type:
+              {incidentType.find(({ value }) => value === assign?.typeofInci)
+                ?.label || assign?.typeofInci}
+            </li>
+            <li>
+              Category:
+              {parameters?.categories.find(
+                (item) => item.id === assign?.inciCateg
+              )?.name || assign?.inciCateg}
+            </li>
+            <li>
+              Location:{" "}
+              {parameters?.locations.find(
+                (item) => item.id === assign?.location
+              )?.name || assign?.location}
+            </li>
+            <li>
+              Sub Category:
+              {parameters?.categories
+                .find((item) => item.id === assign?.inciCateg)
+                ?.subCategorys?.find((item) => item.id === assign?.inciSubCat)
+                ?.name || assign?.inciSubCat}
+            </li>
+          </ul>
+          <AssignForm
+            assign={assign}
+            users={parameters?.users}
+            setAssign={setAssign}
+          />
+        </div>
+      </Modal>
     </div>
+  );
+};
+const AssignForm = ({ assign, users, setAssign }) => {
+  const { handleSubmit, register, reset, watch, setValue } = useForm();
+  return (
+    <form
+      onSubmit={handleSubmit((data) => {
+        console.log(data);
+      })}
+    >
+      <Combobox
+        className={s.userCombo}
+        label="Select User to assign:"
+        name="user"
+        register={register}
+        setValue={setValue}
+        watch={watch}
+        options={users}
+      />
+      <section className={s.btns}>
+        <button
+          className="btn secondary ghost w-100"
+          type="button"
+          onClick={() => setAssign(null)}
+        >
+          Close
+        </button>
+        <button className="btn w-100">Assign</button>
+      </section>
+    </form>
   );
 };
 

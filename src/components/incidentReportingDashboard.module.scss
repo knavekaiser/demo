@@ -12,8 +12,8 @@ main {
   header {
     h3 {
       padding: 0 8px;
-      font-weight: 500;
-      margin-bottom: 0.5rem;
+      font-weight: bold;
+      font-size: 14px;
     }
   }
   .myDashboard,
@@ -140,6 +140,36 @@ main {
             color: rgba(0, 0, 0, 0.6);
           }
         }
+      }
+    }
+  }
+}
+.assignModal {
+  .content {
+    padding: 10px 20px;
+    padding-bottom: 20px;
+    .irDetail {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-gap: 0.5rem;
+      font-size: 14px;
+      font-weight: 600;
+      background: rgb(246, 246, 246);
+      padding: 10px 15px;
+    }
+    form {
+      .userCombo {
+        margin: 1rem 0;
+        display: flex;
+        align-items: center;
+        grid-gap: 6px;
+      }
+      // display: grid;
+      // justify-content: center;
+      .btns {
+        display: flex;
+        justify-content: center;
+        grid-gap: 10px;
       }
     }
   }

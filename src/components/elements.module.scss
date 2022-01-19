@@ -215,7 +215,7 @@
 }
 .toggle {
   background: #bfbfbf;
-  width: 2.3rem;
+  width: 2.15rem;
   border-radius: 2rem;
   padding: 2px;
   cursor: pointer;
@@ -225,8 +225,8 @@
   .ball {
     display: block;
     background: white;
-    height: 1rem;
-    width: 1rem;
+    height: 15px;
+    width: 15px;
     border-radius: 50%;
     position: relative;
     margin: auto;
@@ -417,20 +417,19 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
     align-items: center;
-    font-size: 12pt;
     color: #363843;
     padding: 4px 8px;
-    grid-gap: 0.5rem;
+    grid-gap: 20px;
   }
   thead {
     background: #647299;
     tr {
-      padding: 5px 8px;
+      padding: 6.5px 8px;
+      font-size: 12px;
+      font-weight: bold;
     }
     th {
       color: white;
-      font-weight: 400;
-      // font-size: 13px;
       text-align: left;
       &:last-child {
         text-align: right;
@@ -441,6 +440,7 @@
     overflow-y: auto !important;
     overflow-x: hidden !important;
     tr {
+      font-size: 13px;
       border: 1px solid #b7b7b7;
       border-top: none;
       &:nth-child(even) {
@@ -458,10 +458,8 @@
 
 .tableActions {
   display: flex;
+  justify-content: center;
   grid-gap: 6px;
-  width: max-content;
-  margin-left: auto;
-  margin-right: 6px;
   .btn {
     padding: 1px 2px;
     padding-right: 1px;
@@ -506,5 +504,16 @@
   .fill {
     background: #3f5083;
     flex: 1;
+  }
+}
+
+@media only screen and (min-width: 1366px) {
+  .table {
+    thead {
+      tr {
+        padding: 5.5px 8px;
+        font-size: 14px;
+      }
+    }
   }
 }

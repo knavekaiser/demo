@@ -8,10 +8,18 @@ import {
 } from "react-router-dom";
 import { BiChevronLeft, BiPowerOff } from "react-icons/bi";
 import { SiteContext } from "../SiteContext";
-import { BsChevronRight, BsHexagonHalf } from "react-icons/bs";
+import { BsChevronRight } from "react-icons/bs";
 import { IoKeyOutline } from "react-icons/io5";
 import { FaRegBell } from "react-icons/fa";
 import { Combobox } from "./elements";
+import {
+  IncidentReportIcon,
+  IncidentDashboardIcon,
+  CapaIcon,
+  ReportsIcon,
+  IrConfigIcon,
+  MastersIcon,
+} from "./svgs";
 import IncidentReport from "./incidentReport";
 import IncidentReportingDashboard from "./incidentReportingDashboard";
 import OtherPages from "./otherPages";
@@ -111,7 +119,7 @@ function Dashboard() {
           >
             <Link to={paths.incidentReport}>
               <span className={s.label}>
-                <BsHexagonHalf className={s.icon} />{" "}
+                <IncidentReportIcon className={s.icon} />{" "}
                 <span className={s.text}>Incident Reporting</span>
               </span>
             </Link>
@@ -127,7 +135,7 @@ function Dashboard() {
               to={`${paths.incidentDashboard.basePath}/${paths.incidentDashboard.myDashboard}`}
             >
               <span className={s.label}>
-                <BsHexagonHalf className={s.icon} />{" "}
+                <IncidentDashboardIcon className={s.icon} />{" "}
                 <span className={s.text}>Incident Dashboard</span>
               </span>
             </Link>
@@ -139,7 +147,7 @@ function Dashboard() {
           >
             <Link to={paths.capaReport}>
               <span className={s.label}>
-                <BsHexagonHalf className={s.icon} />{" "}
+                <CapaIcon className={s.icon} />{" "}
                 <span className={s.text}>CAPA Reporting</span>
               </span>
             </Link>
@@ -151,14 +159,14 @@ function Dashboard() {
           >
             <Link to={paths.reports}>
               <span className={s.label}>
-                <BsHexagonHalf className={s.icon} />{" "}
+                <ReportsIcon className={s.icon} />{" "}
                 <span className={s.text}>Reports</span>
               </span>
             </Link>
           </li>
           <Accordion
             label=<span className={s.label}>
-              <BsHexagonHalf className={s.icon} />{" "}
+              <IrConfigIcon className={s.icon} />{" "}
               <span className={s.text}>IR Configuration</span>
             </span>
             basePath={paths.irConfig.basePath}
@@ -184,7 +192,7 @@ function Dashboard() {
           />
           <Accordion
             label=<span className={s.label}>
-              <BsHexagonHalf className={s.icon} />{" "}
+              <MastersIcon className={s.icon} />{" "}
               <span className={s.text}>Masters</span>
             </span>
             basePath={paths.masters.basePath}

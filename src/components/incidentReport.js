@@ -31,7 +31,7 @@ export default function IncidentReporting() {
   const { user } = useContext(SiteContext);
   const location = useLocation();
   const navigate = useNavigate();
-  const methods = useForm({ defaultValues: { reportedBy: user.id } });
+  const methods = useForm();
   const [edit, setEdit] = useState(null);
   const [readOnly, setReadOnly] = useState(false);
   const [parameters, setParameters] = useState(null);
@@ -147,13 +147,23 @@ export default function IncidentReporting() {
                   method: edit ? "PUT" : "POST",
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({
+                    contribFactorYesOrNo: true,
+                    contribFactor: 3,
+                    template: "52121",
                     ...data,
                     deptsLookupMultiselect:
                       data.deptsLookupMultiselect?.join(",") || "",
-                    ...(anonymous && {
-                      reportedBy: undefined,
-                      userDept: undefined,
-                    }),
+                    ...(anonymous
+                      ? {
+                          userId: undefined,
+                          department: undefined,
+                        }
+                      : {
+                          userId: user.id,
+                          department: user.department,
+                        }),
+                    headofDepart: "123",
+                    incidentReportedDept: "1212",
                   }),
                 }
               )
@@ -243,7 +253,7 @@ export default function IncidentReporting() {
                 <>
                   <Input
                     {...methods.register("patientname", {
-                      required: "Please enter Patient Name",
+                      // required: "Please enter Patient Name",
                     })}
                     error={methods.formState.errors.patientname}
                     label="Patient name / UHID"
@@ -251,10 +261,10 @@ export default function IncidentReporting() {
                   />
                   <Input
                     {...methods.register("complaintDatetime", {
-                      required: "Please select Complaint Date",
-                      validate: (v) =>
-                        new Date(v) < new Date() ||
-                        "Can not select date from future",
+                      // required: "Please select Complaint Date",
+                      // validate: (v) =>
+                      //   new Date(v) < new Date() ||
+                      //   "Can not select date from future",
                     })}
                     error={methods.formState.errors.complaintDatetime}
                     label="Complaint Date & Time"
@@ -262,7 +272,7 @@ export default function IncidentReporting() {
                   />
                   <Input
                     {...methods.register("complaintIdEntry", {
-                      required: "Please enter Comlient ID",
+                      // required: "Please enter Comlient ID",
                     })}
                     error={methods.formState.errors.complaintIdEntry}
                     label="Complaint ID"
@@ -470,7 +480,11 @@ export default function IncidentReporting() {
           <Box label="CONTRIBUTING FACTORS" collapsable={true}>
             <div className={s.contributingFactor}>
               <div className={s.placeholder}>Placeholder</div>
-              <div className={s.preventabilityWrapper}>
+              <div
+                className={`${s.preventabilityWrapper} ${
+                  methods.formState.errors.preventability ? s.err : ""
+                }`}
+              >
                 <Table
                   className={s.preventability}
                   columns={[{ label: "Preventability of incident" }]}
@@ -485,7 +499,9 @@ export default function IncidentReporting() {
                         <input
                           id={"preventability" + item.value}
                           type="radio"
-                          {...methods.register("preventability")}
+                          {...methods.register("preventability", {
+                            required: "Please select one",
+                          })}
                           value={item.value}
                         />{" "}
                         <label htmlFor={"preventability" + item.value}>
@@ -495,6 +511,11 @@ export default function IncidentReporting() {
                     </tr>
                   ))}
                 </Table>
+                {methods.formState.errors.preventability && (
+                  <span className={s.errMsg}>
+                    {methods.formState.errors.preventability.message}
+                  </span>
+                )}
               </div>
               <div className={s.actionWrapper}>
                 <h4>Immediate Action taken</h4>
@@ -551,7 +572,7 @@ export default function IncidentReporting() {
                   className={s.witnesses}
                   columns={[
                     { label: "Name" },
-                    { label: "Departemnt" },
+                    { label: "Department" },
                     { label: "Action" },
                   ]}
                 >
@@ -594,7 +615,7 @@ export default function IncidentReporting() {
                   className={s.notified}
                   columns={[
                     { label: "Name" },
-                    { label: "Departemnt" },
+                    { label: "Department" },
                     { label: "Date & Time" },
                     { label: "Action" },
                   ]}
@@ -645,8 +666,8 @@ export default function IncidentReporting() {
                     />
                     <Input
                       label="Department"
-                      disabled={anonymous}
-                      {...methods.register("department")}
+                      value={user.department}
+                      readOnly={true}
                     />
                     <Combobox
                       label="Head of the department"
@@ -697,7 +718,7 @@ export default function IncidentReporting() {
                       upload: "",
                       incidentReportedDept: "",
                       headofDepart: "",
-                      reportedBy: "",
+                      userId: "",
                     });
                     methods.clearErrors();
                   }}
@@ -813,6 +834,7 @@ export const Box = ({ label, children, className, collapsable }) => {
         <h4>{label}</h4>
         {collapsable && (
           <button
+            type="button"
             style
             className="clear"
             style={open ? { transform: `rotate(180deg)` } : {}}

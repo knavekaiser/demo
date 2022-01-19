@@ -87,14 +87,19 @@
         border-radius: 1rem;
       }
       display: grid;
-      font-size: 12pt;
+      font-size: 11pt;
       width: 240px;
       .sidebarItem {
         padding-right: 10px;
+        .icon {
+          height: 18px;
+          width: 18px;
+        }
         &:hover {
           background: #252a3d;
         }
         &.active {
+          background: #252a3d;
           & > a {
             border-left-color: #0897c3;
             font-weight: 600;
@@ -130,7 +135,7 @@
       &.open {
         background: #252a3d;
         .accordionLabel {
-          svg {
+          .arrow {
             display: grid;
             transform: rotate(90deg) !important;
           }

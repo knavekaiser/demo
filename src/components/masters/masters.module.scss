@@ -6,10 +6,28 @@
   header {
     h3 {
       padding: 0 8px;
-      font-weight: 500;
+      font-weight: bold;
+      font-size: 14px;
     }
   }
   max-width: calc(100vw - (240px + 16px));
+  .inlineForm {
+    form {
+      display: grid !important;
+      align-items: center;
+      grid-gap: 20px;
+      .btns {
+        display: flex;
+        grid-column: -1/-2;
+        grid-gap: 0.5rem;
+        justify-content: center;
+        button {
+          border-radius: 4px;
+          font-size: 14px;
+        }
+      }
+    }
+  }
   .content {
     display: grid;
     grid-gap: 1.5rem;
@@ -18,13 +36,6 @@
       .inlineForm {
         grid-column: 1/-1;
         form {
-          display: grid;
-          align-items: flex-start;
-          grid-gap: 0.5rem;
-          .btns {
-            grid-column: -1/-2;
-            justify-content: flex-end;
-          }
           .addBtn {
             color: #3450a3;
             align-items: center;
@@ -52,6 +63,7 @@
             max-height: calc(100vh - (50px + 25px + 45px + 70px));
           }
           tr {
+            grid-template-columns: 1fr 3rem;
             .inlineForm {
               form {
                 grid-template-columns: 1fr max-content;
@@ -84,7 +96,7 @@
             max-height: calc(100vh - (50px + 25px + 45px + 70px));
           }
           tr {
-            grid-template-columns: minmax(15rem, 20rem) 4rem;
+            grid-template-columns: minmax(15rem, 20rem) 3rem;
             form {
               grid-template-columns: 1fr max-content;
             }
@@ -104,7 +116,7 @@
           }
           tr,
           .inlineForm form {
-            grid-template-columns: minmax(10rem, 20rem) minmax(10rem, 20rem) 5rem 6rem 3rem 4rem !important;
+            grid-template-columns: minmax(10rem, 20rem) minmax(10rem, 20rem) 5rem 6rem 3rem 3rem !important;
           }
           .reportableBtn {
             cursor: pointer;
@@ -158,21 +170,18 @@
         }
       }
     }
-
-    // .personAffected,
-    // .contributingFactors,
     .rca {
       tr,
       .inlineForm form {
-        grid-template-columns: 1fr 3rem max-content !important;
+        grid-template-columns: 1fr 2.5rem 3rem !important;
       }
     }
     .twoFieldMasterDetail {
       .inlineForm form {
-        grid-template-columns: 1fr 3rem 4rem !important;
+        grid-template-columns: 1fr 3rem 3rem !important;
       }
       tr {
-        grid-template-columns: clamp(5rem, 50%, 20rem) 3rem 4rem !important;
+        grid-template-columns: clamp(5rem, 50%, 20rem) 3rem 3rem !important;
       }
     }
     .personAffectedDetails {
@@ -185,8 +194,8 @@
   .locations {
     form {
       display: grid;
-      align-items: flex-start;
-      grid-gap: 0.5rem;
+      align-items: center;
+      grid-gap: 20px;
       .btns {
         grid-column: -1/-2;
       }
@@ -202,8 +211,6 @@
       grid-column: 1/-1;
       form {
         display: grid;
-        align-items: flex-start;
-        grid-gap: 0.5rem;
         .btns {
           grid-column: -1/-2;
         }
@@ -211,7 +218,7 @@
     }
     tr,
     form {
-      grid-template-columns: 12rem 5rem 10rem 8rem 10rem 15rem 10rem 10rem 10rem 4rem;
+      grid-template-columns: 12rem 5rem 10rem 8rem 10rem 15rem 10rem 10rem 10rem 3rem;
     }
     tr {
       .moreRoles {
@@ -262,7 +269,7 @@
     form {
       display: grid;
       align-items: center;
-      grid-gap: 0.5rem;
+      grid-gap: 20px;
     }
     tr,
     form {
@@ -272,26 +279,14 @@
       }
     }
   }
-  .btns {
-    grid-column: 1/-1;
-    display: flex;
-    grid-gap: 0.5rem;
-    justify-content: center;
-  }
   .departments {
     max-width: 25rem;
     tr {
+      grid-template-columns: 1fr max-content;
       .inlineForm {
         grid-column: 1/-1;
         form {
           grid-template-columns: 1fr max-content;
-          display: grid;
-          align-items: flex-start;
-          grid-gap: 0.5rem;
-          .btns {
-            grid-column: -1/-2;
-            justify-content: flex-end;
-          }
         }
       }
     }
@@ -320,22 +315,13 @@
     padding: 10px;
     tr,
     .inlineForm form {
-      display: grid;
       grid-template-columns: 15rem 1fr max-content;
-      grid-gap: 0.5rem;
     }
     .inlineForm {
       grid-column: 1/-1;
       textarea {
         min-height: 30px !important;
         height: min-content !important;
-      }
-      form {
-        align-items: flex-start;
-        .btns {
-          display: flex;
-          grid-gap: 0.5rem;
-        }
       }
     }
   }

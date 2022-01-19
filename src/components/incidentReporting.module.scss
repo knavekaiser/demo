@@ -9,7 +9,8 @@ main {
   header {
     h3 {
       padding: 0 8px;
-      font-weight: 500;
+      font-weight: bold;
+      font-size: 14px;
       margin-bottom: 0.5rem;
     }
     .subHead {
@@ -178,6 +179,17 @@ main {
             text-align: left;
           }
         }
+      }
+    }
+    .preventabilityWrapper {
+      &.err {
+        table {
+          border: 1px solid red;
+        }
+      }
+      .errMsg {
+        font-size: 10pt;
+        color: red;
       }
     }
     h4 {
