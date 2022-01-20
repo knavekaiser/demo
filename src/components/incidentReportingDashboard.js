@@ -480,12 +480,13 @@ const QualityDashboard = () => {
         if (category?._embedded.category) {
           _parameters.categories = category._embedded.category;
         }
-        console.log(user);
         if (user?._embedded.user) {
-          _parameters.users = user._embedded.user.map((user) => ({
-            label: user.name,
-            value: user.id,
-          }));
+          _parameters.users = user._embedded.user
+            .filter((user) => user.role === 12)
+            .map((user) => ({
+              label: user.name,
+              value: user.id,
+            }));
         }
         setParameters(_parameters);
         return fetch(
@@ -724,18 +725,52 @@ const QualityDashboard = () => {
             assign={assign}
             users={parameters?.users}
             setAssign={setAssign}
+            onSuccess={(incident) => {
+              setIncidents((prev) =>
+                prev.map((inc) => (inc.id === incident.id ? incident : inc))
+              );
+            }}
           />
         </div>
       </Modal>
     </div>
   );
 };
-const AssignForm = ({ assign, users, setAssign }) => {
-  const { handleSubmit, register, reset, watch, setValue } = useForm();
+const AssignForm = ({ assign, users, setAssign, onSuccess }) => {
+  const [loading, setLoading] = useState(false);
+  const {
+    handleSubmit,
+    register,
+    reset,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm();
   return (
     <form
       onSubmit={handleSubmit((data) => {
-        console.log(data);
+        setLoading(true);
+        fetch(`${process.env.REACT_APP_HOST}/IncidentReport/${assign.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...assign,
+            irInvestigator: data.user,
+            status: "Assigned",
+          }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            setLoading(false);
+            if (data.id) {
+              setAssign(null);
+              onSuccess(data);
+            }
+          })
+          .catch((err) => {
+            setLoading(false);
+            console.log(err);
+          });
       })}
     >
       <Combobox
@@ -743,6 +778,10 @@ const AssignForm = ({ assign, users, setAssign }) => {
         label="Select User to assign:"
         name="user"
         register={register}
+        formOptions={{
+          required: "Select an Investigator",
+        }}
+        error={errors.user}
         setValue={setValue}
         watch={watch}
         options={users}
@@ -755,7 +794,9 @@ const AssignForm = ({ assign, users, setAssign }) => {
         >
           Close
         </button>
-        <button className="btn w-100">Assign</button>
+        <button className="btn w-100" disabled={loading}>
+          Assign
+        </button>
       </section>
     </form>
   );

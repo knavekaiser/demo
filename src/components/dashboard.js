@@ -226,6 +226,10 @@ function Dashboard() {
                 path: paths.masters.contributingFactor,
               },
               { label: <>RCA Master</>, path: paths.masters.rca },
+              {
+                label: <>IR Code Configuration</>,
+                path: paths.masters.irCodeConfig,
+              },
             ]}
           />
         </ul>

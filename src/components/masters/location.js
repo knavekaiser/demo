@@ -18,7 +18,7 @@ import { Modal, Prompt } from "../modal";
 import { useForm } from "react-hook-form";
 import s from "./masters.module.scss";
 
-export default function Categories() {
+export default function Location() {
   const [locations, setLocations] = useState([]);
   const [locationTypes, setLocationTypes] = useState(null);
   const [edit, setEdit] = useState(null);

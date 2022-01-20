@@ -128,6 +128,7 @@
     }
     .masters,
     .mastersDetails,
+    .irCodeConfig,
     .locations {
       .head {
         max-width: 25rem;
@@ -192,17 +193,31 @@
     }
   }
   .locations {
-    form {
-      display: grid;
-      align-items: center;
-      grid-gap: 20px;
-      .btns {
-        grid-column: -1/-2;
-      }
-    }
     tr,
     form {
       grid-template-columns: 15rem 15rem 3rem 3rem;
+    }
+  }
+  .irCodeConfig {
+    width: max-content;
+    tr,
+    form {
+      grid-template-columns: 3rem 10rem 10rem;
+    }
+    tr {
+      .handle {
+        font-size: 1.5rem;
+        cursor: grab;
+        &:active {
+          cursor: grabbing !important;
+        }
+      }
+    }
+    .btns {
+      margin-top: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
   }
   .users {

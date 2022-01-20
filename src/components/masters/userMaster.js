@@ -29,7 +29,7 @@ export default function UserMaster() {
     role: [
       { value: 8, label: "IR Admin" },
       { value: 9, label: "Incident Reporter" },
-      { value: 10, label: "IR Investigative" },
+      { value: 10, label: "IR Investigator" },
       { value: 11, label: "Incident Manager" },
       { value: 12, label: "Head of the Department" },
     ],

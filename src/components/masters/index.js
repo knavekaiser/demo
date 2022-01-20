@@ -7,6 +7,7 @@ import UserMaster from "./userMaster";
 import RiskAssessments from "./ram";
 import TwoFieldMaster from "./twoFieldMaster";
 import ContributingFactor from "./contributingFactor";
+import IrCodeConfig from "./irCodeConfig";
 import paths from "../path";
 import Rca from "./rca";
 
@@ -28,6 +29,7 @@ export default function Masters() {
         element={<ContributingFactor />}
       />
       <Route path={paths.masters.rca} element={<Rca />} />
+      <Route path={paths.masters.irCodeConfig} element={<IrCodeConfig />} />
       <Route path="/*" element={<h4 data-testid="masters">404</h4>} />
     </Routes>
   );

@@ -12,6 +12,7 @@ import { BsFillGearFill, BsFillExclamationTriangleFill } from "react-icons/bs";
 import { Link, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { Modal } from "./modal";
+import Sortable from "sortablejs";
 import s from "./elements.module.scss";
 
 export const Input = forwardRef(
@@ -319,14 +320,14 @@ export const Combobox = ({
       <div
         className={s.field}
         onClick={() => {
-          if (Array.isArray(options) && options.length > 1) {
+          if (Array.isArray(options) && options.length > 0) {
             setOpen(true);
           }
         }}
         ref={container}
       >
         <p className={`${s.displayValue} ${!selected ? s.placeholder : ""}`}>
-          {!(Array.isArray(options) && options.length > 1) &&
+          {!(Array.isArray(options) && options.length > 0) &&
             "No options provided"}
           {selected &&
             ["string", "number"].includes(typeof selected) &&
@@ -341,7 +342,7 @@ export const Combobox = ({
                     }`,
                   ""
                 ))}
-          {options?.length > 1 && (
+          {options?.length > 0 && (
             <>{!selected?.toString().length && (placeholder || "Select")}</>
           )}
         </p>
@@ -531,9 +532,20 @@ export const Tabs = ({ tabs, className }) => {
     </div>
   );
 };
-export const Table = ({ columns, className, children }) => {
+export const Table = ({ columns, className, children, sortable }) => {
+  const tbody = useRef();
   const table = useRef();
   const [style, setStyle] = useState({});
+  useEffect(() => {
+    if (sortable) {
+      Sortable.create(tbody.current, {
+        animation: 250,
+        easing: "ease-in-out",
+        removeCloneOnHide: true,
+        ...sortable,
+      });
+    }
+  }, []);
   return (
     <table
       ref={table}
@@ -548,7 +560,7 @@ export const Table = ({ columns, className, children }) => {
           ))}
         </tr>
       </thead>
-      <tbody>{children}</tbody>
+      <tbody ref={tbody}>{children}</tbody>
     </table>
   );
 };

@@ -24,5 +24,6 @@ export default {
     twoFieldMaster: "twoFieldMaster",
     contributingFactor: "contributingFactor",
     rca: "rca",
+    irCodeConfig: "irCodeConfig",
   },
 };

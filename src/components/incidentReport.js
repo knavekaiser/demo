@@ -74,9 +74,9 @@ export default function IncidentReporting() {
           format: "YYYY-MM-DDThh:mm",
           time: edit.incident_Date_Time,
         }),
-        complaintDatetime: moment({
+        complaIntegerDatetime: moment({
           format: "YYYY-MM-DDThh:mm",
-          time: edit.complaintDatetime,
+          time: edit.complaIntegerDatetime,
         }),
         preventability: edit.preventability?.toString() || "",
         typeofInci: edit.typeofInci?.toString() || "",
@@ -92,7 +92,8 @@ export default function IncidentReporting() {
       fetch(`${process.env.REACT_APP_HOST}/department`).then((res) =>
         res.json()
       ),
-    ]).then(([location, department]) => {
+      fetch(`${process.env.REACT_APP_HOST}/user`).then((res) => res.json()),
+    ]).then(([location, department, user]) => {
       const _parameters = { ...parameters };
       if (location?._embedded.location) {
         _parameters.locations = location._embedded.location.map((item) => ({
@@ -107,6 +108,14 @@ export default function IncidentReporting() {
             value: item.id,
           })
         );
+      }
+      if (user?._embedded.user) {
+        _parameters.hods = user._embedded.user
+          .filter((user) => user.role === 12)
+          .map((item) => ({
+            label: item.name,
+            value: item.id,
+          }));
       }
       setParameters(_parameters);
     });
@@ -225,7 +234,6 @@ export default function IncidentReporting() {
               <Combobox
                 label="Location of incident"
                 name="location"
-                required={true}
                 register={methods.register}
                 setValue={methods.setValue}
                 watch={methods.watch}
@@ -260,7 +268,7 @@ export default function IncidentReporting() {
                     // icon={<BiSearch />}
                   />
                   <Input
-                    {...methods.register("complaintDatetime", {
+                    {...methods.register("complaIntegerDatetime", {
                       // required: "Please select Complaint Date",
                       // validate: (v) =>
                       //   new Date(v) < new Date() ||
@@ -271,7 +279,7 @@ export default function IncidentReporting() {
                     type="datetime-local"
                   />
                   <Input
-                    {...methods.register("complaintIdEntry", {
+                    {...methods.register("complaIntegerIdEntry", {
                       // required: "Please enter Comlient ID",
                     })}
                     error={methods.formState.errors.complaintIdEntry}
@@ -674,6 +682,13 @@ export default function IncidentReporting() {
                       placeholder="Enter"
                       name="headofDepart"
                       register={methods.register}
+                      formOptions={{
+                        required: "Please select a Head of the Department",
+                      }}
+                      options={parameters?.hods}
+                      watch={methods.watch}
+                      setValue={methods.setValue}
+                      error={methods.formState.errors.headofDepart}
                     />
                   </>
                 )}
