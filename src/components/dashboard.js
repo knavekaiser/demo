@@ -60,7 +60,7 @@ export const Accordion = ({ label, basePath, items, className }) => {
 };
 
 function Dashboard() {
-  const { user, setUser } = useContext(SiteContext);
+  const { user, setUser, setRole, checkPermission } = useContext(SiteContext);
   const location = useLocation();
   const navigate = useNavigate();
   const [collaped, setCollapsed] = useState(false);
@@ -96,6 +96,7 @@ function Dashboard() {
             <button
               onClick={() => {
                 setUser(null);
+                setRole(null);
                 navigate("/login");
               }}
             >
@@ -190,48 +191,50 @@ function Dashboard() {
               },
             ]}
           />
-          <Accordion
-            label=<span className={s.label}>
-              <MastersIcon className={s.icon} />{" "}
-              <span className={s.text}>Masters</span>
-            </span>
-            basePath={paths.masters.basePath}
-            className={`${s.sidebarItem} ${
-              location.pathname.startsWith(paths.masters.basePath)
-                ? s.active
-                : ""
-            }`}
-            items={[
-              { label: <>Location</>, path: paths.masters.location },
-              { label: <>Department</>, path: paths.masters.department },
-              {
-                label: <>Category & Sub Category</>,
-                path: paths.masters.category,
-              },
-              { label: <>User Master</>, path: paths.masters.userMaster },
-              {
-                label: <>Risk Assessment</>,
-                path: paths.masters.riskAssessment,
-              },
-              {
-                label: <>Person Affected</>,
-                path: paths.masters.personAffected,
-              },
-              {
-                label: <>Two Field Master</>,
-                path: paths.masters.twoFieldMaster,
-              },
-              {
-                label: <>Contributing Factor</>,
-                path: paths.masters.contributingFactor,
-              },
-              { label: <>RCA Master</>, path: paths.masters.rca },
-              {
-                label: <>IR Code Configuration</>,
-                path: paths.masters.irCodeConfig,
-              },
-            ]}
-          />
+          {checkPermission({ roleId: 8, permission: "IR Master" }) && (
+            <Accordion
+              label=<span className={s.label}>
+                <MastersIcon className={s.icon} />{" "}
+                <span className={s.text}>Masters</span>
+              </span>
+              basePath={paths.masters.basePath}
+              className={`${s.sidebarItem} ${
+                location.pathname.startsWith(paths.masters.basePath)
+                  ? s.active
+                  : ""
+              }`}
+              items={[
+                { label: <>Location</>, path: paths.masters.location },
+                { label: <>Department</>, path: paths.masters.department },
+                {
+                  label: <>Category & Sub Category</>,
+                  path: paths.masters.category,
+                },
+                { label: <>User Master</>, path: paths.masters.userMaster },
+                {
+                  label: <>Risk Assessment</>,
+                  path: paths.masters.riskAssessment,
+                },
+                {
+                  label: <>Person Affected</>,
+                  path: paths.masters.personAffected,
+                },
+                {
+                  label: <>Two Field Master</>,
+                  path: paths.masters.twoFieldMaster,
+                },
+                {
+                  label: <>Contributing Factor</>,
+                  path: paths.masters.contributingFactor,
+                },
+                { label: <>RCA Master</>, path: paths.masters.rca },
+                {
+                  label: <>IR Code Configuration</>,
+                  path: paths.masters.irCodeConfig,
+                },
+              ]}
+            />
+          )}
         </ul>
       </div>
       <main>

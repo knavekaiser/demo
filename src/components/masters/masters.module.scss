@@ -12,15 +12,16 @@
   }
   max-width: calc(100vw - (240px + 16px));
   .inlineForm {
+    grid-column: 1/-1;
     form {
       display: grid !important;
+      grid-template-columns: 1fr minmax(3rem, max-content);
       align-items: center;
       grid-gap: 20px;
       .btns {
         display: flex;
         grid-column: -1/-2;
         grid-gap: 0.5rem;
-        justify-content: center;
         button {
           border-radius: 4px;
           font-size: 14px;
@@ -33,18 +34,6 @@
     grid-gap: 1.5rem;
     grid-template-columns: clamp(20rem, 25rem, 25rem) 1fr;
     &.parent_child {
-      .inlineForm {
-        grid-column: 1/-1;
-        form {
-          .addBtn {
-            color: #3450a3;
-            align-items: center;
-            grid-gap: 4px;
-            font-weight: 600;
-            text-decoration: underline;
-          }
-        }
-      }
       table {
         tbody {
           tr:first-child {
@@ -66,7 +55,7 @@
             grid-template-columns: 1fr 3rem;
             .inlineForm {
               form {
-                grid-template-columns: 1fr max-content;
+                grid-template-columns: 1fr minmax(3rem, max-content);
               }
             }
             td:not(.inlineForm) {
@@ -86,9 +75,10 @@
         display: grid;
         grid-auto-rows: max-content;
         .head {
+          min-height: 38px;
           span {
             display: block;
-            padding-bottom: 0.5rem;
+            // padding-bottom: 0.5rem;
           }
         }
         table {
@@ -98,7 +88,7 @@
           tr {
             grid-template-columns: minmax(15rem, 20rem) 3rem;
             form {
-              grid-template-columns: 1fr max-content;
+              grid-template-columns: 1fr minmax(3rem, max-content);
             }
           }
         }
@@ -141,21 +131,6 @@
           grid-gap: 0.5rem;
         }
         margin-bottom: 0.5rem;
-      }
-      .inlineForm {
-        grid-column: 1/-1;
-        width: 100%;
-        form {
-          display: grid;
-          align-items: flex-start;
-          grid-gap: 1rem;
-          section {
-            flex: 1;
-          }
-          .btns {
-            grid-column: -1/-2 !important;
-          }
-        }
       }
     }
     .mastersDetails {
@@ -296,14 +271,9 @@
   }
   .departments {
     max-width: 25rem;
-    tr {
-      grid-template-columns: 1fr max-content;
-      .inlineForm {
-        grid-column: 1/-1;
-        form {
-          grid-template-columns: 1fr max-content;
-        }
-      }
+    tr,
+    .inlineForm form {
+      grid-template-columns: 1fr minmax(3rem, max-content);
     }
   }
 }

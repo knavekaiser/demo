@@ -11,15 +11,42 @@ import { Modal, Prompt } from "../modal";
 import { useForm } from "react-hook-form";
 import s from "./masters.module.scss";
 
-const periods = [
-  { label: "MM", value: "MM" },
-  { label: "MM/YY", value: "MM/YYYY" },
-  { label: "YY", value: "YY" },
+const _periods = [
+  { label: "MM", value: "/MM" },
+  { label: "MM/YYYY", value: "/MM/YYYY" },
+  { label: "YYYY", value: "/YYYY" },
 ];
 export default function IrCodeConfig() {
+  const [periods, setPeriods] = useState();
   const [codeConfig, setCodeConfig] = useState([]);
   const [edit, setEdit] = useState(null);
-  const { handleSubmit, register, watch, setValue, reset } = useForm();
+  const {
+    handleSubmit,
+    register,
+    watch,
+    setValue,
+    setValues,
+    reset,
+  } = useForm();
+  const receed = watch("receed");
+  const period = watch("period");
+  useEffect(() => {
+    if (receed === "M" && period === "/YYYY") {
+      setValue("period", "/MM");
+    }
+    if (receed === "M") {
+      setPeriods([
+        { label: "MM", value: "/MM" },
+        { label: "MM/YYYY", value: "/MM/YYYY" },
+      ]);
+    } else {
+      setPeriods([
+        { label: "MM", value: "/MM" },
+        { label: "MM/YYYY", value: "/MM/YYYY" },
+        { label: "YYYY", value: "/YYYY" },
+      ]);
+    }
+  }, [receed]);
   useEffect(() => {
     fetch(`${process.env.REACT_APP_HOST}/sequence`)
       .then((res) => res.json())
@@ -29,7 +56,7 @@ export default function IrCodeConfig() {
             .split(",")
             .map((item) => +item);
           const fields = {
-            staticCode: { label: "Static Code", order: 0 },
+            receed: { label: "Reseed", order: 0 },
             prefix: { label: "Prefix", order: 1 },
             period: { label: "Period", order: 2 },
             irCode: { label: "IR Code", order: 3 },
@@ -51,7 +78,7 @@ export default function IrCodeConfig() {
             period: data._embedded.sequence[0].period,
             prefix: data._embedded.sequence[0].prefix,
             suffix: data._embedded.sequence[0].suffix,
-            staticCode: data._embedded.sequence[0].staticCode,
+            receed: data._embedded.sequence[0].receed,
             sequence: data._embedded.sequence[0].sequence,
           });
         }
@@ -128,17 +155,44 @@ export default function IrCodeConfig() {
             }}
           >
             {codeConfig.map((c) => {
+              if (c.field === "receed") {
+                return (
+                  <tr key={c.field} style={{ pointerEvents: "none" }}>
+                    <td style={{ current: "grab" }} />
+                    <td>{c.label}</td>
+                    <td style={{ pointerEvents: "auto" }}>
+                      <Combobox
+                        options={[
+                          { label: "Monthly", value: "M" },
+                          { label: "January", value: "01" },
+                          { label: "February", value: "02" },
+                          { label: "March", value: "03" },
+                          { label: "April", value: "04" },
+                          { label: "May", value: "05" },
+                          { label: "June", value: "06" },
+                          { label: "July", value: "07" },
+                          { label: "August", value: "08" },
+                          { label: "September", value: "09" },
+                          { label: "October", value: "10" },
+                          { label: "November", value: "11" },
+                          { label: "December", value: "12" },
+                        ]}
+                        formOptions={{
+                          required: "Select reseed",
+                        }}
+                        name="receed"
+                        register={register}
+                        setValue={setValue}
+                        watch={watch}
+                      />
+                    </td>
+                  </tr>
+                );
+              }
               return (
-                <tr
-                  key={c.field}
-                  style={
-                    c.field === "staticCode" ? { pointerEvents: "none" } : {}
-                  }
-                >
+                <tr key={c.field}>
                   <td style={{ current: "grab" }}>
-                    {c.field !== "staticCode" ? (
-                      <IoReorderTwoOutline className={`handle ${s.handle}`} />
-                    ) : null}
+                    <IoReorderTwoOutline className={`handle ${s.handle}`} />
                   </td>
                   <td>{c.label}</td>
                   <td>

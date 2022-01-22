@@ -293,6 +293,7 @@ const UserForm = ({ edit, onSuccess, clearForm, departments, users, role }) => {
           },
         })}
         error={errors.email}
+        autoComplete="newUser"
         placeholder="Enter"
         readOnly={edit}
         tabIndex={edit ? "0" : "1"}
@@ -302,6 +303,7 @@ const UserForm = ({ edit, onSuccess, clearForm, departments, users, role }) => {
           required: "Please enter a Password",
         })}
         error={errors.password}
+        autoComplete="new-password"
         type="password"
         name="password"
         placeholder="Enter"
@@ -328,7 +330,7 @@ const UserForm = ({ edit, onSuccess, clearForm, departments, users, role }) => {
         setValue={setValue}
         watch={watch}
         options={role}
-        error={errors.department}
+        error={errors.role}
         clearErrors={clearErrors}
       />
       <div className={s.btns}>

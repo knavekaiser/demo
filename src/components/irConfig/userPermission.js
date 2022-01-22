@@ -11,6 +11,8 @@ import s from "./config.module.scss";
 
 export default function UserPermission() {
   const permissionRef = useRef(null);
+  const { checkPermission, user, role, setRole } = useContext(SiteContext);
+  const [userPermission, setUserPermission] = useState(null);
   const [permissions, setPermissions] = useState([
     {
       id: 8,
@@ -77,7 +79,6 @@ export default function UserPermission() {
       },
     },
   ]);
-  const [userPermission, setUserPermission] = useState(null);
   const fetchUserPermissions = useCallback(() => {
     fetch(`${process.env.REACT_APP_HOST}/userPermission`)
       .then((res) => res.json())
@@ -164,6 +165,12 @@ export default function UserPermission() {
                 )
               )
                 .then((data) => {
+                  const currentUserUpdate = data.find(
+                    (item) => item.id === user.role
+                  );
+                  if (currentUserUpdate) {
+                    setRole(currentUserUpdate);
+                  }
                   fetchUserPermissions();
                   Prompt({
                     type: "information",

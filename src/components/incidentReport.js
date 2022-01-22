@@ -93,7 +93,7 @@ export default function IncidentReporting() {
         res.json()
       ),
       fetch(`${process.env.REACT_APP_HOST}/user`).then((res) => res.json()),
-    ]).then(([location, department, user]) => {
+    ]).then(([location, department, users]) => {
       const _parameters = { ...parameters };
       if (location?._embedded.location) {
         _parameters.locations = location._embedded.location.map((item) => ({
@@ -109,9 +109,9 @@ export default function IncidentReporting() {
           })
         );
       }
-      if (user?._embedded.user) {
-        _parameters.hods = user._embedded.user
-          .filter((user) => user.role === 12)
+      if (users?._embedded.user) {
+        _parameters.hods = users._embedded.user
+          .filter((u) => u.role === 12 && u.department === user.department)
           .map((item) => ({
             label: item.name,
             value: item.id,
@@ -689,6 +689,7 @@ export default function IncidentReporting() {
                       watch={methods.watch}
                       setValue={methods.setValue}
                       error={methods.formState.errors.headofDepart}
+                      clearErrors={methods.clearErrors}
                     />
                   </>
                 )}

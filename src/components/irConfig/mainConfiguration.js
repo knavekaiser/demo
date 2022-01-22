@@ -220,10 +220,7 @@ export default function MainConfig() {
           ))}
         </Table>
         <div className={s.infoForm}>
-          <Input
-            label="Information for type of incident"
-            value={incidentTypeInfo}
-          />
+          <Input label="Information for type of incident" />
           <section>
             <input type="checkbox" id="sendThank" />
             <label htmlFor="sendThank">

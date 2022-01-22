@@ -143,6 +143,14 @@ main {
       }
     }
   }
+  .qualityDashboard {
+    grid-template-rows: min-content 1fr min-content;
+    table {
+      tbody {
+        max-height: calc(100vh - 395px);
+      }
+    }
+  }
 }
 .assignModal {
   .content {

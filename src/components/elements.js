@@ -9,6 +9,7 @@ import React, {
 import { IoIosClose } from "react-icons/io";
 import { FaUpload, FaSortDown } from "react-icons/fa";
 import { BsFillGearFill, BsFillExclamationTriangleFill } from "react-icons/bs";
+import { GoCalendar } from "react-icons/go";
 import { Link, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { Modal } from "./modal";
@@ -16,7 +17,8 @@ import Sortable from "sortablejs";
 import s from "./elements.module.scss";
 
 export const Input = forwardRef(
-  ({ className, label, icon, error, ...rest }, ref) => {
+  ({ className, label, icon, error, type, ...rest }, ref) => {
+    const _id = useRef(Math.random().toString(32).substr(-8));
     return (
       <section
         className={`${s.input} ${className || ""} ${error ? s.err : ""}`}
@@ -25,6 +27,8 @@ export const Input = forwardRef(
         <div className={s.wrapper}>
           <input
             ref={ref}
+            type={type || "text"}
+            id={rest.id || _id.current}
             {...rest}
             placeholder={rest.placeholder || "Enter"}
           />
@@ -34,6 +38,11 @@ export const Input = forwardRef(
             </span>
           )}
           {error && <span className={s.errMsg}>{error.message}</span>}
+          {["date", "datetime-local"].includes(type) && (
+            <label htmlFor={rest.id || _id.current} className={s.calenderIcon}>
+              <GoCalendar />
+            </label>
+          )}
           {icon && icon}
         </div>
       </section>
@@ -313,22 +322,21 @@ export const Combobox = ({
     <section
       data-testid="combobox-container"
       className={`${s.combobox} ${className || ""} ${open ? s.open : ""} ${
-        !(Array.isArray(options) && options.length > 1) ? s.noOptions : ""
+        !(Array.isArray(options) && options.length) ? s.noOptions : ""
       } ${error ? s.err : ""}`}
     >
       {label && <label data-testid="combobox-label">{label}</label>}
       <div
         className={s.field}
         onClick={() => {
-          if (Array.isArray(options) && options.length > 0) {
+          if (Array.isArray(options) && options.length) {
             setOpen(true);
           }
         }}
         ref={container}
       >
         <p className={`${s.displayValue} ${!selected ? s.placeholder : ""}`}>
-          {!(Array.isArray(options) && options.length > 0) &&
-            "No options provided"}
+          {!(Array.isArray(options) && options.length) && "No options provided"}
           {selected &&
             ["string", "number"].includes(typeof selected) &&
             options?.find(({ value }) => value === selected)?.label}
@@ -342,7 +350,7 @@ export const Combobox = ({
                     }`,
                   ""
                 ))}
-          {options?.length > 0 && (
+          {options?.length && (
             <>{!selected?.toString().length && (placeholder || "Select")}</>
           )}
         </p>
@@ -532,7 +540,7 @@ export const Tabs = ({ tabs, className }) => {
     </div>
   );
 };
-export const Table = ({ columns, className, children, sortable }) => {
+export const Table = ({ columns, className, children, sortable, actions }) => {
   const tbody = useRef();
   const table = useRef();
   const [style, setStyle] = useState({});
@@ -549,7 +557,7 @@ export const Table = ({ columns, className, children, sortable }) => {
   return (
     <table
       ref={table}
-      className={`${s.table} ${className || ""}`}
+      className={`${s.table} ${className || ""} ${actions ? s.actions : ""}`}
       cellPadding={0}
       cellSpacing={0}
     >

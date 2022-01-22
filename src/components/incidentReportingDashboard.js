@@ -190,6 +190,7 @@ const MyDashboard = () => {
           { label: "TAT" },
           { label: "Actions" },
         ]}
+        actions={true}
       >
         {incidents
           .sort((a, b) =>
@@ -552,6 +553,7 @@ const QualityDashboard = () => {
           { label: "TAT" },
           { label: "Actions" },
         ]}
+        actions={true}
       >
         {incidents
           .sort((a, b) =>
