@@ -604,21 +604,25 @@ const QualityDashboard = () => {
                           roleId: 11,
                           permission: "Assign IRs",
                         })
-                          ? {
-                              icon: <FaRegTrashAlt />,
-                              label: "Assign IR",
-                              callBack: () => setAssign(inc),
-                            }
+                          ? [
+                              {
+                                icon: <FaRegTrashAlt />,
+                                label: "Assign IR",
+                                callBack: () => setAssign(inc),
+                              },
+                            ]
                           : []),
                         ...(checkPermission({
                           roleId: [11, 10],
                           permission: "Cancel IRs",
                         })
-                          ? {
-                              icon: <FaRegTrashAlt />,
-                              label: "Cancel IR",
-                              callBack: () => {},
-                            }
+                          ? [
+                              {
+                                icon: <FaRegTrashAlt />,
+                                label: "Cancel IR",
+                                callBack: () => {},
+                              },
+                            ]
                           : []),
                         {
                           icon: <FaRegTrashAlt />,
@@ -636,11 +640,13 @@ const QualityDashboard = () => {
                     roleId: [11, 12],
                     permission: "Approve IRs",
                   })
-                    ? {
-                        icon: <FaRegTrashAlt />,
-                        label: "IR Approval",
-                        callBack: () => {},
-                      }
+                    ? [
+                        {
+                          icon: <FaRegTrashAlt />,
+                          label: "IR Approval",
+                          callBack: () => {},
+                        },
+                      ]
                     : []),
                   {
                     icon: <FaRegTrashAlt />,
