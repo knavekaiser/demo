@@ -116,6 +116,9 @@ export default function IncidentReporting() {
             label: item.name,
             value: item.id,
           }));
+        if (!edit && _parameters.hods?.length === 1) {
+          methods.setValue("headofDepart", _parameters.hods[0].value);
+        }
       }
       setParameters(_parameters);
     });
@@ -161,7 +164,7 @@ export default function IncidentReporting() {
                     template: "52121",
                     ...data,
                     deptsLookupMultiselect:
-                      data.deptsLookupMultiselect?.join(",") || "",
+                      data.deptsLookupMultiselect?.join?.(",") || "",
                     ...(anonymous
                       ? {
                           userId: undefined,
@@ -235,14 +238,17 @@ export default function IncidentReporting() {
                 label="Location of incident"
                 name="location"
                 register={methods.register}
+                formOptions={{
+                  required: "Please select a location",
+                }}
                 setValue={methods.setValue}
                 watch={methods.watch}
+                error={methods.formState.errors.location}
                 options={parameters?.locations}
+                clearErrors={methods.clearErrors}
               />
               <Input
-                {...methods.register("locationDetailsEntry", {
-                  required: "Please enter Location Detail",
-                })}
+                {...methods.register("locationDetailsEntry")}
                 error={methods.formState.errors.locationDetailsEntry}
                 label={
                   <>
@@ -527,52 +533,10 @@ export default function IncidentReporting() {
               </div>
               <div className={s.actionWrapper}>
                 <h4>Immediate Action taken</h4>
-                <Table
-                  columns={[
-                    { label: "Action taken" },
-                    { label: "Action Taken By" },
-                    { label: "Date & Time" },
-                    { label: "Action" },
-                  ]}
-                  className={s.actionTaken}
-                >
-                  <tr>
-                    <td className={s.inlineForm}>
-                      <div>
-                        <Textarea placeholder="Enter" />
-                        <Input placeholder="Enter" icon={<BiSearch />} />
-                        <Input
-                          type="datetime-local"
-                          max={new Date().toISOString().slice(0, 16)}
-                        />
-                        <button className="btn secondary">
-                          <AiOutlinePlus />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                  {actionsTaken.map((action, i) => (
-                    <tr key={i}>
-                      <td>{action.action}</td>
-                      <td>{action.actionTakenBy.name}</td>
-                      <td>{action.date}</td>
-                      <TableActions
-                        actions={[
-                          {
-                            icon: <BsPencilFill />,
-                            label: "Edit",
-                            callBack: () => console.log("edit", action.code),
-                          },
-                          {
-                            icon: <FaRegTrashAlt />,
-                            label: "Delete",
-                            callBack: () => console.log("delete", action.code),
-                          },
-                        ]}
-                      />
-                    </tr>
-                  ))}
-                </Table>
+                <ActionTaken
+                  actionsTaken={actionsTaken}
+                  setActionsTaken={setActionsTaken}
+                />
               </div>
               <div>
                 <h4>Incident witnessed by</h4>
@@ -664,7 +628,7 @@ export default function IncidentReporting() {
                 </Table>
               </div>
               <div className={s.fieldWrapper}>
-                <FileInput label="Upload" />
+                <FileInput label="Upload" multiple={true} />
                 {!anonymous && (
                   <>
                     <Input
@@ -674,7 +638,11 @@ export default function IncidentReporting() {
                     />
                     <Input
                       label="Department"
-                      value={user.department}
+                      value={
+                        parameters?.departments?.find(
+                          (item) => item.value === user.department
+                        )?.label || ""
+                      }
                       readOnly={true}
                     />
                     <Combobox
@@ -840,6 +808,77 @@ export const IncidentCategory = () => {
         );
       }}
     </ConnectForm>
+  );
+};
+export const ActionTaken = ({ actionsTaken, setActionsTaken }) => {
+  const [edit, setEdit] = useState(null);
+  return (
+    <Table
+      columns={[
+        { label: "Action taken" },
+        { label: "Action Taken By" },
+        { label: "Date & Time" },
+        { label: "Action" },
+      ]}
+      className={s.actionTaken}
+    >
+      <tr>
+        <td className={s.inlineForm}>
+          <ActionTakenForm
+            edit={edit}
+            onSuccess={(newAction) => {
+              console.log("Action taken", newAction);
+            }}
+          />
+        </td>
+      </tr>
+      {actionsTaken.map((action, i) => (
+        <tr key={i}>
+          <td>{action.action}</td>
+          <td>{action.actionTakenBy.name}</td>
+          <td>{action.date}</td>
+          <TableActions
+            actions={[
+              {
+                icon: <BsPencilFill />,
+                label: "Edit",
+                callBack: () => console.log("edit", action.code),
+              },
+              {
+                icon: <FaRegTrashAlt />,
+                label: "Delete",
+                callBack: () => console.log("delete", action.code),
+              },
+            ]}
+          />
+        </tr>
+      ))}
+    </Table>
+  );
+};
+const ActionTakenForm = ({ edit, onSuccess }) => {
+  const {
+    handleSubmit: handleSubmit2,
+    register: register2,
+    reset: reset2,
+  } = useForm();
+  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    reset2({ ...edit });
+  }, [edit]);
+  return (
+    <div>
+      <Textarea placeholder="Enter" {...register2("action")} />
+      <Input placeholder="Enter" icon={<BiSearch />} {...register2("user")} />
+      <Input
+        type="datetime-local"
+        {...register2("dateTime")}
+        max={new Date().toISOString().slice(0, 16)}
+      />
+      <button className="btn secondary">
+        <AiOutlinePlus />
+      </button>
+    </div>
   );
 };
 export const Box = ({ label, children, className, collapsable }) => {

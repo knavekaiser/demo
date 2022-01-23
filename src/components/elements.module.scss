@@ -11,6 +11,9 @@
   }
   .wrapper {
     position: relative;
+    .field {
+      position: relative;
+    }
   }
   input,
   textarea {

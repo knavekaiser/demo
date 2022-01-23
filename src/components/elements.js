@@ -25,24 +25,29 @@ export const Input = forwardRef(
       >
         {label && <label>{label}</label>}
         <div className={s.wrapper}>
-          <input
-            ref={ref}
-            type={type || "text"}
-            id={rest.id || _id.current}
-            {...rest}
-            placeholder={rest.placeholder || "Enter"}
-          />
+          <span className={s.field}>
+            <input
+              ref={ref}
+              type={type || "text"}
+              id={rest.id || _id.current}
+              {...rest}
+              placeholder={rest.placeholder || "Enter"}
+            />
+            {["date", "datetime-local"].includes(type) && (
+              <label
+                htmlFor={rest.id || _id.current}
+                className={s.calenderIcon}
+              >
+                <GoCalendar />
+              </label>
+            )}
+          </span>
           {error && (
             <span className={s.errIcon}>
               <BsFillExclamationTriangleFill />
             </span>
           )}
           {error && <span className={s.errMsg}>{error.message}</span>}
-          {["date", "datetime-local"].includes(type) && (
-            <label htmlFor={rest.id || _id.current} className={s.calenderIcon}>
-              <GoCalendar />
-            </label>
-          )}
           {icon && icon}
         </div>
       </section>
@@ -350,7 +355,7 @@ export const Combobox = ({
                     }`,
                   ""
                 ))}
-          {options?.length && (
+          {options?.length > 0 && (
             <>{!selected?.toString().length && (placeholder || "Select")}</>
           )}
         </p>
