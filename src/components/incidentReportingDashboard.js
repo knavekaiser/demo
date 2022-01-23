@@ -347,13 +347,21 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
   useEffect(() => {
     Promise.all([
       fetch(`${process.env.REACT_APP_HOST}/category`).then((res) => res.json()),
-    ]).then(([category]) => {
+      fetch(`${process.env.REACT_APP_HOST}/user`).then((res) => res.json()),
+    ]).then(([category, users]) => {
       if (category._embedded?.category) {
         setCategories(
           category._embedded.category.map(({ id, name }) => ({
             value: id,
             label: name,
           }))
+        );
+      }
+      if (users._embedded?.user) {
+        setIrInvestigator(
+          users._embedded.user
+            .filter((user) => user.role === 10)
+            .map((user) => ({ label: user.name, value: user.id }))
         );
       }
     });
@@ -413,10 +421,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
           setValue={setValue}
           watch={watch}
           register={register}
-          options={irInvestigator.map((cat) => ({
-            value: cat.id,
-            label: cat.name,
-          }))}
+          options={irInvestigator}
         />
         <Combobox
           label="Status"
