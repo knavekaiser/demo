@@ -42,7 +42,7 @@ export default function UserPermission() {
       permissions: {
         "Access to view IR's": false,
         "Merge IRs": false,
-        "Cancel IR": false,
+        "Cancel IRs": false,
         "Update IR investigation for assigned IRs": false,
         "CAPA Dashboard - Update CAPA for assigned IRs": false,
         "CAPA Dashboard - access and update CAPA's marked responsible for": false,
@@ -60,7 +60,7 @@ export default function UserPermission() {
       role: "INCIDENT MANAGER",
       permissions: {
         "Approve IRs": false,
-        "Cancel IR": false,
+        "Cancel IRs": false,
         "Assign IRs": false,
         "Merge IRs": false,
         "CAPA dashboard - Access for CAPA's of all IRs": false,
@@ -73,9 +73,9 @@ export default function UserPermission() {
       id: 12,
       role: "HEAD OF THE DEPARTMENT",
       permissions: {
-        "Approve IR": false,
-        "Acknowledge IR": false,
-        "View Departments IR": false,
+        "Approve IRs": false,
+        "Acknowledge IRs": false,
+        "View Departments IRs": false,
       },
     },
   ]);

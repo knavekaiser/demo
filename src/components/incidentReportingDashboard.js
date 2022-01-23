@@ -194,9 +194,7 @@ const MyDashboard = () => {
       >
         {incidents
           .sort((a, b) =>
-            new Date(a.incident_Date_Time) > new Date(b.incident_Date_Time)
-              ? -1
-              : 1
+            new Date(a.reportingDate) > new Date(b.reportingDate) ? -1 : 1
           )
           .map((inc) => (
             <tr
@@ -462,7 +460,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
 };
 
 const QualityDashboard = () => {
-  const { user } = useContext(SiteContext);
+  const { user, checkPermission } = useContext(SiteContext);
   const [parameters, setParameters] = useState(null);
   const [incidents, setIncidents] = useState([]);
   const [filters, setFilters] = useState({});
@@ -557,9 +555,7 @@ const QualityDashboard = () => {
       >
         {incidents
           .sort((a, b) =>
-            new Date(a.incident_Date_Time) > new Date(b.incident_Date_Time)
-              ? -1
-              : 1
+            new Date(a.reportingDate) > new Date(b.reportingDate) ? -1 : 1
           )
           .map((inc) => (
             <tr key={inc.id}>
@@ -604,16 +600,26 @@ const QualityDashboard = () => {
                           label: "Review IR",
                           callBack: () => {},
                         },
-                        {
-                          icon: <FaRegTrashAlt />,
-                          label: "Assign IR",
-                          callBack: () => setAssign(inc),
-                        },
-                        {
-                          icon: <FaRegTrashAlt />,
-                          label: "Cancel IR",
-                          callBack: () => {},
-                        },
+                        ...(checkPermission({
+                          roleId: 11,
+                          permission: "Assign IRs",
+                        })
+                          ? {
+                              icon: <FaRegTrashAlt />,
+                              label: "Assign IR",
+                              callBack: () => setAssign(inc),
+                            }
+                          : []),
+                        ...(checkPermission({
+                          roleId: [11, 10],
+                          permission: "Cancel IRs",
+                        })
+                          ? {
+                              icon: <FaRegTrashAlt />,
+                              label: "Cancel IR",
+                              callBack: () => {},
+                            }
+                          : []),
                         {
                           icon: <FaRegTrashAlt />,
                           label: "Reportable Incident",
@@ -626,11 +632,16 @@ const QualityDashboard = () => {
                         },
                       ]
                     : []),
-                  {
-                    icon: <FaRegTrashAlt />,
-                    label: "IR Approval",
-                    callBack: () => {},
-                  },
+                  ...(checkPermission({
+                    roleId: [11, 12],
+                    permission: "Approve IRs",
+                  })
+                    ? {
+                        icon: <FaRegTrashAlt />,
+                        label: "IR Approval",
+                        callBack: () => {},
+                      }
+                    : []),
                   {
                     icon: <FaRegTrashAlt />,
                     label: "IR Combine",
