@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useCallback } from "react";
 import { SiteContext } from "../SiteContext";
 import { Link } from "react-router-dom";
-import { FaInfoCircle, FaRegTrashAlt, FaPlus } from "react-icons/fa";
+import { FaInfoCircle, FaRegTrashAlt, FaPlus, FaCheck } from "react-icons/fa";
+import { IoClose } from "react-icons/io5";
 import { BiChevronsDown, BiSearch } from "react-icons/bi";
 import { AiOutlinePlus } from "react-icons/ai";
 import { BsPencilFill } from "react-icons/bs";
@@ -17,6 +18,7 @@ import {
   TableActions,
   Checkbox,
   moment,
+  Moment,
 } from "./elements";
 import { Prompt } from "./modal";
 import { useForm, FormProvider, useFormContext } from "react-hook-form";
@@ -35,30 +37,118 @@ export default function IncidentReporting() {
   const [edit, setEdit] = useState(null);
   const [readOnly, setReadOnly] = useState(false);
   const [parameters, setParameters] = useState(null);
-  const [actionsTaken, setActionsTaken] = useState([
-    {
-      action:
-        "Patient monitored for hour, vitals were stable and informed physician",
-      actionTakenBy: {
-        name: "Robert",
-        id: "asdfasddd",
-      },
-      date: "2021-12-21T10:17:12.514Z",
-    },
-  ]);
-  const [witnesses, setWitnesses] = useState([
-    { name: "Jossi", department: "Nursing" },
-  ]);
-  const [notified, setNotified] = useState([
-    {
-      name: "Heilena",
-      department: "Nursing",
-      date: "2021-12-21T10:17:12.514Z",
-    },
-  ]);
+  const [users, setUsers] = useState(null);
   const [anonymous, setAnonymous] = useState(false);
   const involvedDept = methods.watch("deptsLookupMultiselect");
   const patientComplaint = methods.watch("patientYesOrNo");
+  const submitForm = useCallback(
+    (data) => {
+      const postData = () => {
+        fetch(
+          `${process.env.REACT_APP_HOST}/IncidentReport${
+            edit ? `/${edit.id}` : ""
+          }`,
+          {
+            method: edit ? "PUT" : "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contribFactorYesOrNo: true,
+              contribFactor: 3,
+              template: "52121",
+              incidentReportedDept: 25,
+              ...data,
+              deptsLookupMultiselect:
+                data.deptsLookupMultiselect?.join?.(",") || "",
+              ...(anonymous
+                ? {
+                    userId: undefined,
+                    department: undefined,
+                  }
+                : {
+                    userId: user.id,
+                    department: user.department,
+                  }),
+            }),
+          }
+        )
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.id) {
+              if (edit) {
+                navigate(location.state.from, {
+                  state: { focus: location.state.focus },
+                });
+                return;
+              }
+              Prompt({
+                type: "success",
+                message: "Incident was successfully reported.",
+              });
+              resetForm();
+            }
+            if (data.cause) {
+              Prompt({
+                type: "error",
+                message: data.message,
+              });
+            }
+          })
+          .catch((err) => {
+            Prompt({
+              type: "error",
+              message: err.message,
+            });
+          });
+      };
+      if (data.status === "Submitted") {
+        Prompt({
+          type: "confirmation",
+          message: anonymous
+            ? "This incident will be submitted as Anonymous report. You will not be able to view or track the IR status. Do you wish to continue"
+            : "Once submitted, IR’s cannot be edited. Are you sure you want to continue",
+          callback: postData,
+        });
+      } else {
+        postData();
+      }
+    },
+    [edit, user]
+  );
+  const resetForm = useCallback(() => {
+    methods.reset({
+      id: "",
+      action: "",
+      witness: "",
+      status: "",
+      department: "",
+      userDept: "",
+      reportingDate: "",
+      location: "",
+      sequence: "",
+      template: "",
+      incident_Date_Time: "",
+      locationDetailsEntry: "",
+      patientYesOrNo: "",
+      patientname: "",
+      complaintDatetime: "",
+      complaintIdEntry: "",
+      typeofInci: "",
+      inciCateg: "",
+      inciSubCat: "",
+      personAffected: "",
+      inciDescription: "",
+      deptsLookupMultiselect: "",
+      contribFactorYesOrNo: "",
+      contribFactor: "",
+      preventability: "",
+      incidentNotification: "",
+      upload: "",
+      incidentReportedDept: "",
+      headofDepart:
+        parameters?.hods?.length === 1 ? parameters.hods[0].value : "",
+      userId: "",
+    });
+  }, [parameters]);
   useEffect(() => {
     if (location.state?.edit) {
       const { edit, readOnly } = location.state;
@@ -116,6 +206,10 @@ export default function IncidentReporting() {
             label: item.name,
             value: item.id,
           }));
+        _parameters.users = users._embedded.user.map((item) => ({
+          label: item.name,
+          value: item.id,
+        }));
         if (!edit && _parameters.hods?.length === 1) {
           methods.setValue("headofDepart", _parameters.hods[0].value);
         }
@@ -146,83 +240,15 @@ export default function IncidentReporting() {
         </span>
       </header>
       <FormProvider {...methods}>
-        <form
+        <div
           className={s.content}
           style={readOnly ? { pointerEvents: "none" } : {}}
-          onSubmit={methods.handleSubmit((data) => {
-            const postData = () => {
-              fetch(
-                `${process.env.REACT_APP_HOST}/IncidentReport${
-                  edit ? `/${edit.id}` : ""
-                }`,
-                {
-                  method: edit ? "PUT" : "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    contribFactorYesOrNo: true,
-                    contribFactor: 3,
-                    template: "52121",
-                    ...data,
-                    deptsLookupMultiselect:
-                      data.deptsLookupMultiselect?.join?.(",") || "",
-                    ...(anonymous
-                      ? {
-                          userId: undefined,
-                          department: undefined,
-                        }
-                      : {
-                          userId: user.id,
-                          department: user.department,
-                        }),
-                    headofDepart: "123",
-                    incidentReportedDept: "1212",
-                  }),
-                }
-              )
-                .then((res) => res.json())
-                .then((data) => {
-                  if (data.id) {
-                    if (edit) {
-                      navigate(location.state.from, {
-                        state: { focus: location.state.focus },
-                      });
-                      return;
-                    }
-                    Prompt({
-                      type: "success",
-                      message: "Incident was successfully reported.",
-                    });
-                    methods.reset();
-                  }
-                  if (data.cause) {
-                    Prompt({
-                      type: "error",
-                      message: data.message,
-                    });
-                  }
-                })
-                .catch((err) => {
-                  Prompt({
-                    type: "error",
-                    message: err.message,
-                  });
-                });
-            };
-            if (data.status === "Submitted") {
-              Prompt({
-                type: "confirmation",
-                message: anonymous
-                  ? "This incident will be submitted as Anonymous report. You will not be able to view or track the IR status. Do you wish to continue"
-                  : "Once submitted, IR’s cannot be edited. Are you sure you want to continue",
-                callback: postData,
-              });
-            } else {
-              postData();
-            }
-          })}
         >
           <Box label="INCIDENT DETAILS" collapsable={true}>
-            <div className={s.boxContent}>
+            <form
+              className={s.boxContent}
+              onSubmit={methods.handleSubmit(submitForm)}
+            >
               <Input
                 {...methods.register("incident_Date_Time", {
                   required: "Please select Incident Date",
@@ -293,7 +319,8 @@ export default function IncidentReporting() {
                   />
                 </>
               )}
-            </div>
+              <button style={{ display: "none" }}>submit</button>
+            </form>
           </Box>
           <Box label="TYPE OF INCIDENT" collapsable={true}>
             <div className={s.typeOfIncident}>
@@ -449,7 +476,10 @@ export default function IncidentReporting() {
             <div className={s.placeholder}>Placeholder</div>
           </Box>
           <Box label="INCIDENT DESCRIPTION" collapsable={true}>
-            <div className={s.incidentDescription}>
+            <form
+              className={s.incidentDescription}
+              onSubmit={methods.handleSubmit(submitForm)}
+            >
               <Textarea
                 {...methods.register("inciDescription", {
                   required: "Please enter Incident Description",
@@ -489,249 +519,148 @@ export default function IncidentReporting() {
                     />
                   ))}
               </section>
-            </div>
+              <button style={{ display: "none" }}>submit</button>
+            </form>
           </Box>
           <Box label="CONTRIBUTING FACTORS" collapsable={true}>
             <div className={s.contributingFactor}>
               <div className={s.placeholder}>Placeholder</div>
-              <div
-                className={`${s.preventabilityWrapper} ${
-                  methods.formState.errors.preventability ? s.err : ""
-                }`}
-              >
-                <Table
-                  className={s.preventability}
-                  columns={[{ label: "Preventability of incident" }]}
-                >
-                  {[
-                    { value: 1, label: "Likely could have been prevented" },
-                    { value: 2, label: "Likely could not have been prevented" },
-                    { value: 3, label: "Not assessed" },
-                  ].map((item) => (
-                    <tr key={item.label}>
-                      <td>
-                        <input
-                          id={"preventability" + item.value}
-                          type="radio"
-                          {...methods.register("preventability", {
-                            required: "Please select one",
-                          })}
-                          value={item.value}
-                        />{" "}
-                        <label htmlFor={"preventability" + item.value}>
-                          {item.label}
-                        </label>
-                      </td>
-                    </tr>
-                  ))}
-                </Table>
-                {methods.formState.errors.preventability && (
-                  <span className={s.errMsg}>
-                    {methods.formState.errors.preventability.message}
-                  </span>
-                )}
-              </div>
-              <div className={s.actionWrapper}>
-                <h4>Immediate Action taken</h4>
-                <ActionTaken
-                  actionsTaken={actionsTaken}
-                  setActionsTaken={setActionsTaken}
-                />
-              </div>
-              <div>
-                <h4>Incident witnessed by</h4>
-                <Table
-                  className={s.witnesses}
-                  columns={[
-                    { label: "Name" },
-                    { label: "Department" },
-                    { label: "Action" },
-                  ]}
-                >
-                  <tr>
-                    <td className={s.inlineForm}>
-                      <div>
-                        <Input placeholder="Search" icon={<BiSearch />} />
-                        <Input placeholder="Enter" icon={<BiSearch />} />
-                        <button className="btn secondary">
-                          <AiOutlinePlus />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                  {witnesses.map((witness, i) => (
-                    <tr key={i}>
-                      <td>{witness.name}</td>
-                      <td>{witness.department}</td>
-                      <TableActions
-                        actions={[
-                          {
-                            icon: <BsPencilFill />,
-                            label: "Edit",
-                            callBack: () => console.log("edit", witness.code),
-                          },
-                          {
-                            icon: <FaRegTrashAlt />,
-                            label: "Delete",
-                            callBack: () => console.log("delete", witness.code),
-                          },
-                        ]}
-                      />
-                    </tr>
-                  ))}
-                </Table>
-              </div>
-              <div>
-                <h4>Incident notified to</h4>
-                <Table
-                  className={s.notified}
-                  columns={[
-                    { label: "Name" },
-                    { label: "Department" },
-                    { label: "Date & Time" },
-                    { label: "Action" },
-                  ]}
-                >
-                  <tr>
-                    <td className={s.inlineForm}>
-                      <div>
-                        <Input placeholder="Search" icon={<BiSearch />} />
-                        <Input placeholder="Enter" icon={<BiSearch />} />
-                        <Input type="datetime-local" placeholder="Enter" />
-                        <button className="btn secondary">
-                          <AiOutlinePlus />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                  {notified.map((person, i) => (
-                    <tr key={i}>
-                      <td>{person.name}</td>
-                      <td>{person.department}</td>
-                      <td>{person.date}</td>
-                      <TableActions
-                        actions={[
-                          {
-                            icon: <BsPencilFill />,
-                            label: "Edit",
-                            callBack: () => console.log("edit", person.code),
-                          },
-                          {
-                            icon: <FaRegTrashAlt />,
-                            label: "Delete",
-                            callBack: () => console.log("delete", person.code),
-                          },
-                        ]}
-                      />
-                    </tr>
-                  ))}
-                </Table>
-              </div>
-              <div className={s.fieldWrapper}>
-                <FileInput label="Upload" multiple={true} />
-                {!anonymous && (
-                  <>
-                    <Input
-                      label="Incident Reported by"
-                      value={user.name}
-                      readOnly={true}
-                    />
-                    <Input
-                      label="Department"
-                      value={
-                        parameters?.departments?.find(
-                          (item) => item.value === user.department
-                        )?.label || ""
-                      }
-                      readOnly={true}
-                    />
-                    <Combobox
-                      label="Head of the department"
-                      placeholder="Enter"
-                      name="headofDepart"
-                      register={methods.register}
-                      formOptions={{
-                        required: "Please select a Head of the Department",
-                      }}
-                      options={parameters?.hods}
-                      watch={methods.watch}
-                      setValue={methods.setValue}
-                      error={methods.formState.errors.headofDepart}
-                      clearErrors={methods.clearErrors}
-                    />
-                  </>
-                )}
-              </div>
               <input
                 style={{ display: "none" }}
                 {...methods.register("status")}
               />
-              <div className={s.btns}>
-                <button
-                  className="btn secondary w-100"
-                  type="button"
-                  onClick={() => {
-                    setEdit(null);
-                    methods.reset({
-                      id: "",
-                      action: "",
-                      witness: "",
-                      status: "",
-                      department: "",
-                      userDept: "",
-                      reportingDate: "",
-                      location: "",
-                      sequence: "",
-                      template: "",
-                      incident_Date_Time: "",
-                      locationDetailsEntry: "",
-                      patientYesOrNo: "",
-                      patientname: "",
-                      complaintDatetime: "",
-                      complaintIdEntry: "",
-                      typeofInci: "",
-                      inciCateg: "",
-                      inciSubCat: "",
-                      personAffected: "",
-                      inciDescription: "",
-                      deptsLookupMultiselect: "",
-                      contribFactorYesOrNo: "",
-                      contribFactor: "",
-                      preventability: "",
-                      incidentNotification: "",
-                      upload: "",
-                      incidentReportedDept: "",
-                      headofDepart: "",
-                      userId: "",
-                    });
-                    methods.clearErrors();
-                  }}
-                  disabled={readOnly}
-                >
-                  Clear
-                </button>
-                <button
-                  onClick={() => {
-                    methods.setValue("status", "Saved");
-                  }}
-                  className="btn secondary w-100"
-                  disabled={readOnly || anonymous}
-                >
-                  Save
-                </button>
-                <button
-                  onClick={() => {
-                    methods.setValue("status", "Submitted");
-                  }}
-                  className="btn w-100"
-                  disabled={readOnly}
-                >
-                  Submit
-                </button>
-              </div>
             </div>
           </Box>
-        </form>
+          <form
+            className={`${s.preventabilityWrapper} ${
+              methods.formState.errors.preventability ? s.err : ""
+            }`}
+            onSubmit={methods.handleSubmit(submitForm)}
+          >
+            <Table
+              className={s.preventability}
+              columns={[{ label: "Preventability of incident" }]}
+            >
+              {[
+                { value: 1, label: "Likely could have been prevented" },
+                { value: 2, label: "Likely could not have been prevented" },
+                { value: 3, label: "Not assessed" },
+              ].map((item) => (
+                <tr key={item.label}>
+                  <td>
+                    <input
+                      id={"preventability" + item.value}
+                      type="radio"
+                      {...methods.register("preventability", {
+                        required: "Please select one",
+                      })}
+                      value={item.value}
+                    />{" "}
+                    <label htmlFor={"preventability" + item.value}>
+                      {item.label}
+                    </label>
+                  </td>
+                </tr>
+              ))}
+            </Table>
+            {methods.formState.errors.preventability && (
+              <span className={s.errMsg}>
+                {methods.formState.errors.preventability.message}
+              </span>
+            )}
+          </form>
+          <div className={s.tables}>
+            <div className={s.actionWrapper}>
+              <h4>Immediate Action taken</h4>
+              <ActionTaken
+                users={parameters?.users}
+                setValue={methods.setValue}
+              />
+            </div>
+            <div>
+              <h4>Incident witnessed by</h4>
+              <Witnesses
+                users={parameters?.users}
+                departments={parameters?.departments}
+              />
+            </div>
+            <div>
+              <h4>Incident notified to</h4>
+              <Notifications
+                users={parameters?.users}
+                departments={parameters?.departments}
+                setValue={methods.setValue}
+              />
+            </div>
+          </div>
+          <div className={s.fieldWrapper}>
+            <FileInput label="Upload" multiple={true} />
+            {!anonymous && (
+              <>
+                <Input
+                  label="Incident Reported by"
+                  value={user.name}
+                  readOnly={true}
+                />
+                <Input
+                  label="Department"
+                  value={
+                    parameters?.departments?.find(
+                      (item) => item.value === user.department
+                    )?.label || ""
+                  }
+                  readOnly={true}
+                />
+                <Combobox
+                  label="Head of the department"
+                  placeholder="Enter"
+                  name="headofDepart"
+                  register={methods.register}
+                  formOptions={{
+                    required: "Please select a Head of the Department",
+                  }}
+                  options={parameters?.hods}
+                  watch={methods.watch}
+                  setValue={methods.setValue}
+                  error={methods.formState.errors.headofDepart}
+                  clearErrors={methods.clearErrors}
+                />
+              </>
+            )}
+          </div>
+          <form className={s.btns} onSubmit={methods.handleSubmit(submitForm)}>
+            <button
+              className="btn secondary w-100"
+              type="button"
+              onClick={() => {
+                setEdit(null);
+                resetForm();
+                methods.clearErrors();
+              }}
+              disabled={readOnly}
+            >
+              Clear
+            </button>
+            <button
+              onClick={() => {
+                methods.setValue("status", "Saved");
+              }}
+              className="btn secondary w-100"
+              disabled={readOnly || anonymous}
+            >
+              Save
+            </button>
+            <button
+              onClick={() => {
+                methods.setValue("status", "Submitted");
+              }}
+              className="btn w-100"
+              disabled={readOnly}
+            >
+              Submit
+            </button>
+          </form>
+        </div>
       </FormProvider>
     </div>
   );
@@ -810,8 +739,14 @@ export const IncidentCategory = () => {
     </ConnectForm>
   );
 };
-export const ActionTaken = ({ actionsTaken, setActionsTaken }) => {
+
+export const ActionTaken = ({ users, setValue }) => {
   const [edit, setEdit] = useState(null);
+  const [actions, setActions] = useState([]);
+  useEffect(() => {
+    // setValue("")
+    console.log("SET ACTION TAKEN IN INCIDENT REPORT");
+  }, [actions]);
   return (
     <Table
       columns={[
@@ -825,29 +760,65 @@ export const ActionTaken = ({ actionsTaken, setActionsTaken }) => {
       <tr>
         <td className={s.inlineForm}>
           <ActionTakenForm
-            edit={edit}
+            {...(edit && { edit })}
+            key={edit ? "edit" : "add"}
             onSuccess={(newAction) => {
-              console.log("Action taken", newAction);
+              setActions((prev) => {
+                return prev.find((ac) => ac.id === newAction.id)
+                  ? prev.map((ac) => (ac.id === newAction.id ? newAction : ac))
+                  : [...prev, newAction];
+              });
+              setEdit(null);
             }}
+            clearForm={() => setEdit(null)}
+            actions={actions}
+            users={users}
+            setValue={setValue}
           />
         </td>
       </tr>
-      {actionsTaken.map((action, i) => (
+      {actions.map((action, i) => (
         <tr key={i}>
-          <td>{action.action}</td>
-          <td>{action.actionTakenBy.name}</td>
-          <td>{action.date}</td>
+          <td>{action.immedActionTaken}</td>
+          <td>
+            {users.find((user) => user.value === action.accessTakenBy)?.label ||
+              action.accessTakenBy}
+          </td>
+          <td>
+            <Moment format="DD/MM/YYYY hh:mm">{action.accessDateTime}</Moment>
+          </td>
           <TableActions
             actions={[
               {
                 icon: <BsPencilFill />,
                 label: "Edit",
-                callBack: () => console.log("edit", action.code),
+                callBack: () => setEdit(action),
               },
               {
                 icon: <FaRegTrashAlt />,
                 label: "Delete",
-                callBack: () => console.log("delete", action.code),
+                callBack: () =>
+                  Prompt({
+                    type: "confirmation",
+                    message: `Are you sure you want to remove Action?`,
+                    callback: () => {
+                      fetch(
+                        `${process.env.REACT_APP_HOST}/accessTaken/${action.id}`,
+                        { method: "DELETE" }
+                      ).then((res) => {
+                        if (res.status === 204) {
+                          setActions((prev) =>
+                            prev.filter((ac) => ac.id !== action.id)
+                          );
+                        } else if (res.status === 409) {
+                          Prompt({
+                            type: "error",
+                            message: "Something went wrong. Please try again.",
+                          });
+                        }
+                      });
+                    },
+                  }),
               },
             ]}
           />
@@ -856,31 +827,492 @@ export const ActionTaken = ({ actionsTaken, setActionsTaken }) => {
     </Table>
   );
 };
-const ActionTakenForm = ({ edit, onSuccess }) => {
+const ActionTakenForm = ({ edit, onSuccess, actions, users, clearForm }) => {
   const {
-    handleSubmit: handleSubmit2,
-    register: register2,
-    reset: reset2,
+    handleSubmit,
+    register,
+    reset,
+    watch,
+    setValue,
+    formState: { errors },
+    clearErrors,
   } = useForm();
   const [loading, setLoading] = useState(false);
-  useEffect(() => {
-    reset2({ ...edit });
-  }, [edit]);
+  useEffect(() => reset({ ...edit }), [edit]);
   return (
-    <div>
-      <Textarea placeholder="Enter" {...register2("action")} />
-      <Input placeholder="Enter" icon={<BiSearch />} {...register2("user")} />
+    <form
+      onSubmit={handleSubmit((data) => {
+        const url = `${process.env.REACT_APP_HOST}/accessTaken${
+          edit ? `/${edit.id}` : ""
+        }`;
+        if (
+          !edit &&
+          actions?.some(
+            (act) =>
+              act.immedActionTaken.trim().toLowerCase() ===
+              data.immedActionTaken.trim().toLowerCase()
+          )
+        ) {
+          Prompt({
+            type: "information",
+            message: `Action already exists.`,
+          });
+          return;
+        }
+        setLoading(true);
+        fetch(url, {
+          method: edit ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            setLoading(false);
+            if (data.id) {
+              onSuccess(data);
+              reset();
+            }
+          })
+          .catch((err) => {
+            setLoading(false);
+            Prompt({ type: "error", message: err.message });
+            console.log(err);
+          });
+      })}
+    >
+      <Textarea
+        placeholder="Enter"
+        {...register("immedActionTaken", { required: "Describe the Action" })}
+        error={errors.immedActionTaken}
+      />
+      <Combobox
+        options={users}
+        name="accessTakenBy"
+        register={register}
+        formOptions={{
+          required: "Action Taken By",
+        }}
+        setValue={setValue}
+        watch={watch}
+        error={errors.accessTakenBy}
+        clearErrors={clearErrors}
+      />
       <Input
         type="datetime-local"
-        {...register2("dateTime")}
+        {...register("accessDateTime", {
+          required: "Select Date & Time",
+        })}
         max={new Date().toISOString().slice(0, 16)}
+        error={errors.accessDateTime}
       />
-      <button className="btn secondary">
-        <AiOutlinePlus />
-      </button>
-    </div>
+      <div className={s.btns}>
+        <button className="btn secondary" type="submit" disabled={loading}>
+          {edit ? <FaCheck /> : <FaPlus />}
+        </button>
+        {edit && (
+          <button
+            type="button"
+            onClick={() => {
+              clearForm();
+            }}
+            className="btn secondary"
+          >
+            <IoClose />
+          </button>
+        )}
+      </div>
+    </form>
   );
 };
+
+export const Witnesses = ({ users, departments, setValue }) => {
+  const [edit, setEdit] = useState(null);
+  const [witnesses, setWitnesses] = useState([]);
+  useEffect(() => {
+    // setValue("")
+    console.log("SET WITNESSES TAKEN IN INCIDENT REPORT");
+  }, [witnesses]);
+  return (
+    <Table
+      columns={[
+        { label: "Name" },
+        { label: "Department" },
+        { label: "Action" },
+      ]}
+      className={s.witnesses}
+    >
+      <tr>
+        <td className={s.inlineForm}>
+          <WitnessesForm
+            {...(edit && { edit })}
+            key={edit ? "edit" : "add"}
+            onSuccess={(newWitness) => {
+              setWitnesses((prev) => {
+                return prev.find((wt) => wt.id === newWitness.id)
+                  ? prev.map((wt) =>
+                      wt.id === newWitness.id ? newWitness : wt
+                    )
+                  : [...prev, newWitness];
+              });
+              setEdit(null);
+            }}
+            clearForm={() => setEdit(null)}
+            witnesses={witnesses}
+            users={users}
+            departments={departments}
+            setValue={setValue}
+          />
+        </td>
+      </tr>
+      {witnesses.map((witness, i) => (
+        <tr key={i}>
+          <td>
+            {users.find((u) => u.value === witness.witnessName)?.label ||
+              witness.witnessName}
+          </td>
+          <td>
+            {departments.find((dept) => dept.value === witness.witnessDept)
+              ?.label || witness.witnessDept}
+          </td>
+          <TableActions
+            actions={[
+              {
+                icon: <BsPencilFill />,
+                label: "Edit",
+                callBack: () => setEdit(witness),
+              },
+              {
+                icon: <FaRegTrashAlt />,
+                label: "Delete",
+                callBack: () =>
+                  Prompt({
+                    type: "confirmation",
+                    message: `Are you sure you want to remove this witness?`,
+                    callback: () => {
+                      fetch(
+                        `${process.env.REACT_APP_HOST}/witness/${witness.id}`,
+                        { method: "DELETE" }
+                      ).then((res) => {
+                        if (res.status === 204) {
+                          setWitnesses((prev) =>
+                            prev.filter((wt) => wt.id !== witness.id)
+                          );
+                        } else if (res.status === 409) {
+                          Prompt({
+                            type: "error",
+                            message: "Something went wrong. Please try again.",
+                          });
+                        }
+                      });
+                    },
+                  }),
+              },
+            ]}
+          />
+        </tr>
+      ))}
+    </Table>
+  );
+};
+const WitnessesForm = ({
+  edit,
+  onSuccess,
+  witnesses,
+  users,
+  departments,
+  clearForm,
+}) => {
+  const {
+    handleSubmit,
+    register,
+    reset,
+    watch,
+    setValue,
+    formState: { errors },
+    clearErrors,
+  } = useForm();
+  const [loading, setLoading] = useState(false);
+  useEffect(() => reset({ ...edit }), [edit]);
+  return (
+    <form
+      onSubmit={handleSubmit((data) => {
+        const url = `${process.env.REACT_APP_HOST}/witness${
+          edit ? `/${edit.id}` : ""
+        }`;
+        if (
+          !edit &&
+          witnesses?.some((witness) => witness.witnessName === data.witnessName)
+        ) {
+          Prompt({
+            type: "information",
+            message: `Winess already selected.`,
+          });
+          return;
+        }
+        setLoading(true);
+        fetch(url, {
+          method: edit ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            setLoading(false);
+            if (data.id) {
+              onSuccess(data);
+              reset();
+            }
+          })
+          .catch((err) => {
+            setLoading(false);
+            Prompt({ type: "error", message: err.message });
+            console.log(err);
+          });
+      })}
+    >
+      <Combobox
+        options={users}
+        name="witnessName"
+        register={register}
+        formOptions={{
+          required: "Select a Witness",
+        }}
+        setValue={setValue}
+        watch={watch}
+        error={errors.witnessName}
+        clearErrors={clearErrors}
+      />
+      <Combobox
+        options={departments}
+        name="witnessDept"
+        register={register}
+        formOptions={{
+          required: "Select a Department",
+        }}
+        setValue={setValue}
+        watch={watch}
+        error={errors.witnessDept}
+        clearErrors={clearErrors}
+      />
+      <div className={s.btns}>
+        <button className="btn secondary" type="submit" disabled={loading}>
+          {edit ? <FaCheck /> : <FaPlus />}
+        </button>
+        {edit && (
+          <button
+            type="button"
+            onClick={() => {
+              clearForm();
+            }}
+            className="btn secondary"
+          >
+            <IoClose />
+          </button>
+        )}
+      </div>
+    </form>
+  );
+};
+
+export const Notifications = ({ users, departments, setValue }) => {
+  const [edit, setEdit] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+  useEffect(() => {
+    // setValue("")
+    console.log("SET NOTIFICATIONS TAKEN IN INCIDENT REPORT");
+  }, [notifications]);
+  return (
+    <Table
+      columns={[
+        { label: "Name" },
+        { label: "Department" },
+        { label: "Date & Time" },
+        { label: "Action" },
+      ]}
+      className={s.notified}
+    >
+      <tr>
+        <td className={s.inlineForm}>
+          <NotificationForm
+            {...(edit && { edit })}
+            key={edit ? "edit" : "add"}
+            onSuccess={(newNotification) => {
+              setNotifications((prev) => {
+                return prev.find((nt) => nt.id === newNotification.id)
+                  ? prev.map((nt) =>
+                      nt.id === newNotification.id ? newNotification : nt
+                    )
+                  : [...prev, newNotification];
+              });
+              setEdit(null);
+            }}
+            clearForm={() => setEdit(null)}
+            notifications={notifications}
+            users={users}
+            departments={departments}
+            setValue={setValue}
+          />
+        </td>
+      </tr>
+      {notifications.map((noti, i) => (
+        <tr key={i}>
+          <td>
+            {users.find((u) => u.value === noti.name)?.label || noti.name}
+          </td>
+          <td>
+            {departments.find((dept) => dept.value === noti.dept)?.label ||
+              noti.dept}
+          </td>
+          <td>
+            <Moment format="DD/MM/YYYY hh:mm">
+              {noti.notificationDateTime}
+            </Moment>
+          </td>
+          <TableActions
+            actions={[
+              {
+                icon: <BsPencilFill />,
+                label: "Edit",
+                callBack: () => setEdit(noti),
+              },
+              {
+                icon: <FaRegTrashAlt />,
+                label: "Delete",
+                callBack: () =>
+                  Prompt({
+                    type: "confirmation",
+                    message: `Are you sure you want to remove this notification?`,
+                    callback: () => {
+                      fetch(
+                        `${process.env.REACT_APP_HOST}/notification/${noti.id}`,
+                        { method: "DELETE" }
+                      ).then((res) => {
+                        if (res.status === 204) {
+                          setNotifications((prev) =>
+                            prev.filter((nt) => nt.id !== noti.id)
+                          );
+                        } else if (res.status === 409) {
+                          Prompt({
+                            type: "error",
+                            message: "Something went wrong. Please try again.",
+                          });
+                        }
+                      });
+                    },
+                  }),
+              },
+            ]}
+          />
+        </tr>
+      ))}
+    </Table>
+  );
+};
+const NotificationForm = ({
+  edit,
+  onSuccess,
+  notifications,
+  users,
+  departments,
+  clearForm,
+}) => {
+  const {
+    handleSubmit,
+    register,
+    reset,
+    watch,
+    setValue,
+    formState: { errors },
+    clearErrors,
+  } = useForm();
+  const [loading, setLoading] = useState(false);
+  useEffect(() => reset({ ...edit }), [edit]);
+  return (
+    <form
+      onSubmit={handleSubmit((data) => {
+        const url = `${process.env.REACT_APP_HOST}/notification${
+          edit ? `/${edit.id}` : ""
+        }`;
+        if (!edit && notifications?.some((noti) => noti.name === data.name)) {
+          Prompt({
+            type: "information",
+            message: `Person already selected.`,
+          });
+          return;
+        }
+        setLoading(true);
+        fetch(url, {
+          method: edit ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            setLoading(false);
+            if (data.id) {
+              onSuccess(data);
+              reset();
+            }
+          })
+          .catch((err) => {
+            setLoading(false);
+            Prompt({ type: "error", message: err.message });
+            console.log(err);
+          });
+      })}
+    >
+      <Combobox
+        options={users}
+        name="name"
+        register={register}
+        formOptions={{
+          required: "Select a Person",
+        }}
+        setValue={setValue}
+        watch={watch}
+        error={errors.name}
+        clearErrors={clearErrors}
+      />
+      <Combobox
+        options={departments}
+        name="dept"
+        register={register}
+        formOptions={{
+          required: "Select a Department",
+        }}
+        setValue={setValue}
+        watch={watch}
+        error={errors.dept}
+        clearErrors={clearErrors}
+      />
+      <Input
+        type="datetime-local"
+        {...register("notificationDateTime", {
+          required: "Select Date & Time",
+        })}
+        max={new Date().toISOString().slice(0, 16)}
+        error={errors.notificationDateTime}
+      />
+      <div className={s.btns}>
+        <button className="btn secondary" type="submit" disabled={loading}>
+          {edit ? <FaCheck /> : <FaPlus />}
+        </button>
+        {edit && (
+          <button
+            type="button"
+            onClick={() => {
+              clearForm();
+            }}
+            className="btn secondary"
+          >
+            <IoClose />
+          </button>
+        )}
+      </div>
+    </form>
+  );
+};
+
 export const Box = ({ label, children, className, collapsable }) => {
   const [open, setOpen] = useState(true);
   return (
