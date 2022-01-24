@@ -81,6 +81,7 @@ export default function UserMaster() {
             { label: "Role" },
             { label: "Action" },
           ]}
+          actions={true}
         >
           <tr>
             <td className={s.inlineForm}>

@@ -10,7 +10,8 @@
       font-size: 14px;
     }
   }
-  max-width: calc(100vw - (240px + 16px));
+  width: max-content;
+  max-width: 100%;
   .inlineForm {
     grid-column: 1/-1;
     form {
@@ -198,17 +199,12 @@
   .users {
     display: grid;
     .inlineForm {
-      grid-column: 1/-1;
-      form {
-        display: grid;
-        .btns {
-          grid-column: -1/-2;
-        }
-      }
+      border: none !important;
+      padding: 0 !important;
     }
     tr,
     form {
-      grid-template-columns: 12rem 5rem 10rem 8rem 10rem 15rem 10rem 10rem 10rem 3rem;
+      grid-template-columns: 12rem 5rem 10rem 8rem 10rem 15rem 10rem 10rem 10rem 4rem;
     }
     tr {
       .moreRoles {

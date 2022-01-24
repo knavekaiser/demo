@@ -503,6 +503,18 @@
         align-items: center;
       }
     }
+    td {
+      form {
+        & > :last-child {
+          border-left: 1px solid rgba(0, 0, 0, 0.1);
+          padding: 8px;
+          background: white;
+          position: sticky;
+          right: 0;
+          z-index: 20;
+        }
+      }
+    }
   }
 }
 
