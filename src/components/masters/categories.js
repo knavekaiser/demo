@@ -255,6 +255,7 @@ const SubCategories = ({
           { label: "Status" },
           { label: "Action" },
         ]}
+        actions={true}
       >
         <tr>
           <td className={s.inlineForm}>

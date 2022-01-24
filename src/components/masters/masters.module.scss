@@ -16,7 +16,7 @@
     grid-column: 1/-1;
     form {
       display: grid !important;
-      grid-template-columns: 1fr minmax(3rem, max-content);
+      grid-template-columns: 1fr minmax(4rem, max-content);
       align-items: center;
       grid-gap: 20px;
       .btns {
@@ -87,34 +87,33 @@
             max-height: calc(100vh - (50px + 25px + 45px + 70px));
           }
           tr {
-            grid-template-columns: minmax(15rem, 20rem) 3rem;
+            grid-template-columns: minmax(15rem, 20rem) 4rem;
             form {
-              grid-template-columns: 1fr minmax(3rem, max-content);
+              grid-template-columns: 1fr minmax(4rem, max-content);
             }
           }
         }
       }
     }
     .subCategory {
-      table {
-        tbody,
-        thead {
-          tr {
-            input[type="checkbox"] {
-              min-width: 20px;
-              min-height: 20px;
-            }
-          }
-          tr,
-          .inlineForm form {
-            grid-template-columns: minmax(10rem, 20rem) minmax(10rem, 20rem) 5rem 6rem 3rem 3rem !important;
-          }
-          .reportableBtn {
-            cursor: pointer;
-            color: $primary-color;
-            text-decoration: underline;
-          }
+      tr {
+        grid-template-columns: minmax(10rem, 20rem) minmax(10rem, 20rem) 5rem 6rem 3rem 4rem !important;
+        input[type="checkbox"] {
+          min-width: 20px;
+          min-height: 20px;
         }
+      }
+      .inlineForm {
+        border: none !important;
+        padding: 0 !important;
+        form {
+          grid-template-columns: minmax(10rem, 20rem) minmax(10rem, 20rem) 5rem 6rem 3rem 4rem !important;
+        }
+      }
+      .reportableBtn {
+        cursor: pointer;
+        color: $primary-color;
+        text-decoration: underline;
       }
     }
     .masters,
@@ -169,9 +168,14 @@
     }
   }
   .locations {
+    display: grid;
+    .inlineForm {
+      border: none !important;
+      padding: 0 !important;
+    }
     tr,
     form {
-      grid-template-columns: 15rem 15rem 3rem 3rem;
+      grid-template-columns: 15rem 15rem 3rem 4rem;
     }
   }
   .irCodeConfig {
@@ -252,17 +256,19 @@
     }
   }
   .ram {
+    display: grid;
     form {
       display: grid;
       align-items: center;
       grid-gap: 20px;
     }
+    .inlineForm {
+      border: none !important;
+      padding: 0 !important;
+    }
     tr,
     form {
-      grid-template-columns: 12rem 8rem 10rem 8rem 10rem 7rem 3rem;
-      .btns {
-        grid-column: -1/-2;
-      }
+      grid-template-columns: 12rem 8rem 10rem 8rem 10rem 7rem 4rem;
     }
   }
   .departments {

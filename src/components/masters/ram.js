@@ -87,6 +87,7 @@ export default function RiskAssessments() {
             { label: "Active/Inactive" },
             { label: "Action" },
           ]}
+          actions={true}
         >
           <tr>
             <td className={s.inlineForm}>
