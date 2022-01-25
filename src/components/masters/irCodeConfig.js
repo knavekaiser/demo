@@ -5,7 +5,7 @@ import { BiSearch } from "react-icons/bi";
 import { Box } from "../incidentReport";
 import { TiTick } from "react-icons/ti";
 import { IoIosClose } from "react-icons/io";
-import { IoClose, IoReorderTwoOutline } from "react-icons/io5";
+import { IoClose, IoReorderThreeOutline } from "react-icons/io5";
 import { Input, Combobox, Table, TableActions, Toggle } from "../elements";
 import { Modal, Prompt } from "../modal";
 import { useForm } from "react-hook-form";
@@ -192,7 +192,7 @@ export default function IrCodeConfig() {
               return (
                 <tr key={c.field}>
                   <td style={{ current: "grab" }}>
-                    <IoReorderTwoOutline className={`handle ${s.handle}`} />
+                    <IoReorderThreeOutline className={`handle ${s.handle}`} />
                   </td>
                   <td>{c.label}</td>
                   <td>

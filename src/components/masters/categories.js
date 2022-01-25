@@ -203,7 +203,13 @@ const CategoryForm = ({ edit, onSuccess, clearForm, categories }) => {
       />
       <div className={s.btns}>
         <button className="btn secondary" type="submit" disabled={loading}>
-          {edit ? <FaCheck /> : <FaPlus />}
+          {edit ? (
+            <FaCheck />
+          ) : (
+            <>
+              <FaPlus /> Add
+            </>
+          )}
         </button>
         {edit && (
           <button
@@ -517,7 +523,13 @@ const SubCategoryForm = ({
         />
         <div className={s.btns}>
           <button className="btn secondary" type="submit" disabled={loading}>
-            {edit ? <FaCheck /> : <FaPlus />}
+            {edit ? (
+              <FaCheck />
+            ) : (
+              <>
+                <FaPlus /> Add
+              </>
+            )}
           </button>
           {edit && (
             <button
@@ -742,7 +754,13 @@ const ReportableInlineForm = ({
       />
       <div className={s.btns}>
         <button className="btn secondary" type="submit" disabled={loading}>
-          {edit ? <FaCheck /> : <FaPlus />}
+          {edit ? (
+            <FaCheck />
+          ) : (
+            <>
+              <FaPlus /> Add
+            </>
+          )}
         </button>
         {edit && (
           <button

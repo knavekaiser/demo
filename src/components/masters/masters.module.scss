@@ -24,6 +24,9 @@
         grid-column: -1/-2;
         grid-gap: 0.5rem;
         button {
+          display: flex;
+          align-items: center;
+          grid-gap: 4px;
           border-radius: 4px;
           font-size: 14px;
         }
@@ -53,10 +56,10 @@
             max-height: calc(100vh - (50px + 25px + 45px + 70px));
           }
           tr {
-            grid-template-columns: 1fr 3rem;
+            grid-template-columns: 1fr 4rem;
             .inlineForm {
               form {
-                grid-template-columns: 1fr minmax(3rem, max-content);
+                grid-template-columns: 1fr minmax(4rem, max-content);
               }
             }
             td:not(.inlineForm) {
@@ -97,17 +100,13 @@
     }
     .subCategory {
       tr {
-        grid-template-columns: minmax(10rem, 20rem) minmax(10rem, 20rem) 5rem 6rem 3rem 4rem !important;
-        input[type="checkbox"] {
-          min-width: 20px;
-          min-height: 20px;
-        }
+        grid-template-columns: minmax(10rem, 20rem) minmax(10rem, 20rem) 5rem 6rem 3rem 5rem !important;
       }
       .inlineForm {
         border: none !important;
         padding: 0 !important;
         form {
-          grid-template-columns: minmax(10rem, 20rem) minmax(10rem, 20rem) 5rem 6rem 3rem 4rem !important;
+          grid-template-columns: minmax(10rem, 20rem) minmax(10rem, 20rem) 5rem 6rem 3rem 5rem !important;
         }
       }
       .reportableBtn {
@@ -118,8 +117,7 @@
     }
     .masters,
     .mastersDetails,
-    .irCodeConfig,
-    .locations {
+    .irCodeConfig {
       .head {
         max-width: 25rem;
         section {
@@ -149,8 +147,14 @@
     .rca {
       tr,
       .inlineForm form {
-        grid-template-columns: 1fr 2.5rem 3rem !important;
+        grid-template-columns: 1fr 2.5rem 4rem !important;
       }
+    }
+    .rcaDetail {
+      .head {
+        min-height: 30px !important;
+      }
+      margin-top: -30px;
     }
     .twoFieldMasterDetail {
       .inlineForm form {
@@ -175,7 +179,7 @@
     }
     tr,
     form {
-      grid-template-columns: 15rem 15rem 3rem 4rem;
+      grid-template-columns: 15rem 15rem 3rem 5rem;
     }
   }
   .irCodeConfig {
@@ -208,7 +212,7 @@
     }
     tr,
     form {
-      grid-template-columns: 12rem 5rem 10rem 8rem 10rem 15rem 10rem 10rem 10rem 4rem;
+      grid-template-columns: 12rem 5rem 10rem 8rem 10rem 15rem 10rem 10rem 10rem 5rem;
     }
     tr {
       .moreRoles {
@@ -268,11 +272,11 @@
     }
     tr,
     form {
-      grid-template-columns: 12rem 8rem 10rem 8rem 10rem 7rem 4rem;
+      grid-template-columns: 12rem 8rem 10rem 8rem 10rem 7rem 5rem;
     }
   }
   .departments {
-    max-width: 25rem;
+    width: 25rem;
     tr,
     .inlineForm form {
       grid-template-columns: 1fr minmax(3rem, max-content);
@@ -302,13 +306,20 @@
     padding: 10px;
     tr,
     .inlineForm form {
-      grid-template-columns: 15rem 1fr max-content;
+      display: grid;
+      grid-gap: 20px;
+      grid-template-columns: 15rem 1fr 4rem;
     }
     .inlineForm {
       grid-column: 1/-1;
       textarea {
         min-height: 30px !important;
         height: min-content !important;
+      }
+      .btns {
+        display: flex;
+        grid-gap: 6px;
+        align-items: center;
       }
     }
   }

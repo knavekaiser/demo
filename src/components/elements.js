@@ -601,7 +601,12 @@ export const TableActions = ({ actions }) => {
   return actions.length < 4 ? (
     <td className={s.tableActions} data-testid="tableActions">
       {actions.map((action) => (
-        <button key={action.label} className="clear" onClick={action.callBack}>
+        <button
+          key={action.label}
+          title={action.label}
+          className="clear"
+          onClick={action.callBack}
+        >
           {action.icon}
         </button>
       ))}
@@ -621,6 +626,7 @@ export const TableActions = ({ actions }) => {
         {actions.map((action) => (
           <button
             key={action.label}
+            title={action.label}
             className="clear"
             onClick={() => {
               setOpen(false);

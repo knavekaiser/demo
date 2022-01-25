@@ -209,7 +209,13 @@ const TwoFieldMasterForm = ({
       />
       <div className={s.btns}>
         <button className="btn secondary" type="submit" disabled={loading}>
-          {edit ? <FaCheck /> : <FaPlus />}
+          {edit ? (
+            <FaCheck />
+          ) : (
+            <>
+              <FaPlus /> Add
+            </>
+          )}
         </button>
         {edit && (
           <button
@@ -428,7 +434,13 @@ const TwoFieldMasterDetailForm = ({
       />
       <div className={s.btns}>
         <button className="btn secondary" type="submit" disabled={loading}>
-          {edit ? <FaCheck /> : <FaPlus />}
+          {edit ? (
+            <FaCheck />
+          ) : (
+            <>
+              <FaPlus /> Add
+            </>
+          )}
         </button>
         {edit && (
           <button

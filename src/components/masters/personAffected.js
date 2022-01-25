@@ -264,7 +264,13 @@ const PersonAffectedForm = ({
       }
       <div className={s.btns}>
         <button className="btn secondary" type="submit" disabled={loading}>
-          {edit ? <FaCheck /> : <FaPlus />}
+          {edit ? (
+            <FaCheck />
+          ) : (
+            <>
+              <FaPlus /> Add
+            </>
+          )}
         </button>
         {edit && (
           <button
@@ -370,7 +376,7 @@ const SinglePersonEffectedDetail = ({
   const immutable = useRef(["name", "age", "gender"]);
   return (
     <tr className={loading ? s.loading : ""}>
-      <td>
+      <td style={{ display: "flex", alignItems: "center", "grid-gap": "6px" }}>
         <input
           type="checkbox"
           checked={personAffected.show}
@@ -532,7 +538,13 @@ const PersonAffectedDetailForm = ({
       />
       <div className={s.btns}>
         <button className="btn secondary" type="submit" disabled={loading}>
-          {edit ? <FaCheck /> : <FaPlus />}
+          {edit ? (
+            <FaCheck />
+          ) : (
+            <>
+              <FaPlus /> Add
+            </>
+          )}
         </button>
         {edit && (
           <button

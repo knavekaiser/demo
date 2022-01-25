@@ -232,7 +232,13 @@ const ContributingFactorForm = ({
       }
       <div className={s.btns}>
         <button className="btn secondary" type="submit" disabled={loading}>
-          {edit ? <FaCheck /> : <FaPlus />}
+          {edit ? (
+            <FaCheck />
+          ) : (
+            <>
+              <FaPlus /> Add
+            </>
+          )}
         </button>
         {edit && (
           <button
@@ -430,7 +436,13 @@ const ContributingFactorDetailForm = ({
       />
       <div className={s.btns}>
         <button className="btn secondary" type="submit" disabled={loading}>
-          {edit ? <FaCheck /> : <FaPlus />}
+          {edit ? (
+            <FaCheck />
+          ) : (
+            <>
+              <FaPlus /> Add
+            </>
+          )}
         </button>
         {edit && (
           <button

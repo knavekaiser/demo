@@ -201,7 +201,13 @@ const RcaForm = ({ edit, onSuccess, clearForm, rcas }) => {
       <Toggle name="show" register={register} required={true} watch={watch} />
       <div className={s.btns}>
         <button className="btn secondary" type="submit" disabled={loading}>
-          {edit ? <FaCheck /> : <FaPlus />}
+          {edit ? (
+            <FaCheck />
+          ) : (
+            <>
+              <FaPlus /> Add
+            </>
+          )}
         </button>
         {edit && (
           <button
@@ -224,7 +230,7 @@ const RcaCauses = ({ rca: { id, name, rcaCauses }, setRcas }) => {
   // <Box label="RCA CAUSES">
   // </Box>
   return (
-    <div className={s.child}>
+    <div className={`${s.child} ${s.rcaDetail}`}>
       <div className={s.head}>
         <span className={s.rcaName}>
           Root Cause: <strong>{name}</strong>
@@ -386,7 +392,13 @@ const RcaCauseForm = ({ edit, rcaId, onSuccess, clearForm, rcaCauses }) => {
       />
       <div className={s.btns}>
         <button className="btn secondary" type="submit" disabled={loading}>
-          {edit ? <FaCheck /> : <FaPlus />}
+          {edit ? (
+            <FaCheck />
+          ) : (
+            <>
+              <FaPlus /> Add
+            </>
+          )}
         </button>
         {edit && (
           <button

@@ -298,7 +298,13 @@ const RiskAssessmentForm = ({ edit, onSuccess, parameters, clearForm }) => {
       <Toggle name="status" watch={watch} register={register} required={true} />
       <div className={s.btns}>
         <button className="btn secondary" type="submit" disabled={loading}>
-          {edit ? <FaCheck /> : <FaPlus />}
+          {edit ? (
+            <FaCheck />
+          ) : (
+            <>
+              <FaPlus /> Add
+            </>
+          )}
         </button>
         {edit && (
           <button
