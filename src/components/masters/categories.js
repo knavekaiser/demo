@@ -700,10 +700,12 @@ const ReportableInlineForm = ({
       .then((data) => {
         if (data.id) {
           setReportTo(
-            data.twoFieldMasterDetails.map((item) => ({
-              value: item.id,
-              label: item.name,
-            }))
+            data.twoFieldMasterDetails
+              .filter((item) => item.showToggle)
+              .map((item) => ({
+                value: item.id,
+                label: item.name,
+              }))
           );
         }
       })

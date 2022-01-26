@@ -78,6 +78,12 @@ main {
           .btns {
             display: flex;
             justify-content: flex-start;
+            button {
+              border-radius: 4px;
+              display: flex;
+              align-items: center;
+              grid-gap: 6px;
+            }
           }
         }
       }

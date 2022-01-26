@@ -279,7 +279,7 @@
     width: 25rem;
     tr,
     .inlineForm form {
-      grid-template-columns: 1fr minmax(3rem, max-content);
+      grid-template-columns: 1fr minmax(4rem, max-content);
     }
   }
 }
@@ -320,6 +320,12 @@
         display: flex;
         grid-gap: 6px;
         align-items: center;
+        button {
+          border-radius: 4px;
+          display: flex;
+          grid-gap: 6px;
+          align-items: center;
+        }
       }
     }
   }

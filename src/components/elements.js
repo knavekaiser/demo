@@ -417,7 +417,7 @@ const ComboboxList = ({
     })
   );
   const select = useCallback(
-    ({ label, value }) => {
+    ({ label, value, ...rest }) => {
       const _selectedItem = selected?.find?.((item) => item === value);
       if (_selectedItem) {
         setValue(
@@ -439,7 +439,7 @@ const ComboboxList = ({
         setOpen(false);
       }
       clearErrors?.(name);
-      onChange({ label, value });
+      onChange({ label, value, ...rest });
     },
     [selected]
   );
@@ -486,12 +486,12 @@ const ComboboxList = ({
       data-testid="combobox-options"
       onMouseMove={() => setHover(null)}
     >
-      {options.map(({ label, value }, i) => (
+      {options.map(({ label, value, ...rest }, i) => (
         <li
           key={i}
           onClick={(e) => {
             e.stopPropagation();
-            select({ label, value });
+            select({ label, value, ...rest });
           }}
           className={`${
             (selected?.find && selected.find((item) => item === value)) ||

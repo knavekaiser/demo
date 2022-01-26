@@ -57,6 +57,7 @@ export default function IncidentReporting() {
               template: "52121",
               incidentReportedDept: 25,
               ...data,
+              actionTakens: undefined,
               deptsLookupMultiselect:
                 data.deptsLookupMultiselect?.join?.(",") || "",
               ...(anonymous
@@ -147,8 +148,15 @@ export default function IncidentReporting() {
       headofDepart:
         parameters?.hods?.length === 1 ? parameters.hods[0].value : "",
       userId: "",
+      witness: [],
+      actionTaken: [],
+      notification: [],
+      updated: [],
     });
   }, [parameters]);
+  const witnesses = methods.watch("witness");
+  const actions = methods.watch("actionTaken");
+  const notifications = methods.watch("notification");
   useEffect(() => {
     if (location.state?.edit) {
       const { edit, readOnly } = location.state;
@@ -209,6 +217,7 @@ export default function IncidentReporting() {
         _parameters.users = users._embedded.user.map((item) => ({
           label: item.name,
           value: item.id,
+          department: item.department,
         }));
         if (!edit && _parameters.hods?.length === 1) {
           methods.setValue("headofDepart", _parameters.hods[0].value);
@@ -257,6 +266,7 @@ export default function IncidentReporting() {
                     "Can not select date from future",
                 })}
                 error={methods.formState.errors.incident_Date_Time}
+                max={new Date().toISOString().slice(0, 16)}
                 label="Incident Date & Time"
                 type="datetime-local"
               />
@@ -575,13 +585,16 @@ export default function IncidentReporting() {
               <ActionTaken
                 users={parameters?.users}
                 setValue={methods.setValue}
+                actions={actions || []}
               />
             </div>
             <div>
               <h4>Incident witnessed by</h4>
               <Witnesses
                 users={parameters?.users}
+                witnesses={witnesses || []}
                 departments={parameters?.departments}
+                setValue={methods.setValue}
               />
             </div>
             <div>
@@ -589,6 +602,7 @@ export default function IncidentReporting() {
               <Notifications
                 users={parameters?.users}
                 departments={parameters?.departments}
+                notifications={notifications || []}
                 setValue={methods.setValue}
               />
             </div>
@@ -740,13 +754,8 @@ export const IncidentCategory = () => {
   );
 };
 
-export const ActionTaken = ({ users, setValue }) => {
+export const ActionTaken = ({ actions, users, setValue }) => {
   const [edit, setEdit] = useState(null);
-  const [actions, setActions] = useState([]);
-  useEffect(() => {
-    // setValue("")
-    console.log("SET ACTION TAKEN IN INCIDENT REPORT");
-  }, [actions]);
   return (
     <Table
       columns={[
@@ -763,11 +772,19 @@ export const ActionTaken = ({ users, setValue }) => {
             {...(edit && { edit })}
             key={edit ? "edit" : "add"}
             onSuccess={(newAction) => {
-              setActions((prev) => {
-                return prev.find((ac) => ac.id === newAction.id)
-                  ? prev.map((ac) => (ac.id === newAction.id ? newAction : ac))
-                  : [...prev, newAction];
-              });
+              const newAcitons = actions.find(
+                (ac) =>
+                  ac.immedActionTaken?.trim().toLowerCase() ===
+                  newAction.immedActionTaken?.trim().toLowerCase()
+              )
+                ? actions.map((ac) =>
+                    ac.immedActionTaken?.trim().toLowerCase() ===
+                    newAction.immedActionTaken?.trim().toLowerCase()
+                      ? newAction
+                      : ac
+                  )
+                : [...actions, newAction];
+              setValue("actionTaken", newAcitons);
               setEdit(null);
             }}
             clearForm={() => setEdit(null)}
@@ -781,8 +798,8 @@ export const ActionTaken = ({ users, setValue }) => {
         <tr key={i}>
           <td>{action.immedActionTaken}</td>
           <td>
-            {users.find((user) => user.value === action.accessTakenBy)?.label ||
-              action.accessTakenBy}
+            {users?.find((user) => user.value === action.accessTakenBy)
+              ?.label || action.accessTakenBy}
           </td>
           <td>
             <Moment format="DD/MM/YYYY hh:mm">{action.accessDateTime}</Moment>
@@ -802,21 +819,12 @@ export const ActionTaken = ({ users, setValue }) => {
                     type: "confirmation",
                     message: `Are you sure you want to remove Action?`,
                     callback: () => {
-                      fetch(
-                        `${process.env.REACT_APP_HOST}/accessTaken/${action.id}`,
-                        { method: "DELETE" }
-                      ).then((res) => {
-                        if (res.status === 204) {
-                          setActions((prev) =>
-                            prev.filter((ac) => ac.id !== action.id)
-                          );
-                        } else if (res.status === 409) {
-                          Prompt({
-                            type: "error",
-                            message: "Something went wrong. Please try again.",
-                          });
-                        }
-                      });
+                      const newAcitons = actions.filter(
+                        (ac) =>
+                          ac.immedActionTaken.trim().toLowerCase() !==
+                          action.immedActionTaken.trim().toLowerCase()
+                      );
+                      setValue("actionTaken", newAcitons);
                     },
                   }),
               },
@@ -837,14 +845,10 @@ const ActionTakenForm = ({ edit, onSuccess, actions, users, clearForm }) => {
     formState: { errors },
     clearErrors,
   } = useForm();
-  const [loading, setLoading] = useState(false);
   useEffect(() => reset({ ...edit }), [edit]);
   return (
     <form
       onSubmit={handleSubmit((data) => {
-        const url = `${process.env.REACT_APP_HOST}/accessTaken${
-          edit ? `/${edit.id}` : ""
-        }`;
         if (
           !edit &&
           actions?.some(
@@ -859,25 +863,8 @@ const ActionTakenForm = ({ edit, onSuccess, actions, users, clearForm }) => {
           });
           return;
         }
-        setLoading(true);
-        fetch(url, {
-          method: edit ? "PUT" : "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
-        })
-          .then((res) => res.json())
-          .then((data) => {
-            setLoading(false);
-            if (data.id) {
-              onSuccess(data);
-              reset();
-            }
-          })
-          .catch((err) => {
-            setLoading(false);
-            Prompt({ type: "error", message: err.message });
-            console.log(err);
-          });
+        onSuccess(data);
+        reset();
       })}
     >
       <Textarea
@@ -906,8 +893,14 @@ const ActionTakenForm = ({ edit, onSuccess, actions, users, clearForm }) => {
         error={errors.accessDateTime}
       />
       <div className={s.btns}>
-        <button className="btn secondary" type="submit" disabled={loading}>
-          {edit ? <FaCheck /> : <FaPlus />}
+        <button className="btn secondary" type="submit">
+          {edit ? (
+            <FaCheck />
+          ) : (
+            <>
+              <FaPlus /> Add
+            </>
+          )}
         </button>
         {edit && (
           <button
@@ -925,13 +918,9 @@ const ActionTakenForm = ({ edit, onSuccess, actions, users, clearForm }) => {
   );
 };
 
-export const Witnesses = ({ users, departments, setValue }) => {
+// Remove everyting related to Edit
+export const Witnesses = ({ users, departments, witnesses, setValue }) => {
   const [edit, setEdit] = useState(null);
-  const [witnesses, setWitnesses] = useState([]);
-  useEffect(() => {
-    // setValue("")
-    console.log("SET WITNESSES TAKEN IN INCIDENT REPORT");
-  }, [witnesses]);
   return (
     <Table
       columns={[
@@ -947,40 +936,35 @@ export const Witnesses = ({ users, departments, setValue }) => {
             {...(edit && { edit })}
             key={edit ? "edit" : "add"}
             onSuccess={(newWitness) => {
-              setWitnesses((prev) => {
-                return prev.find((wt) => wt.id === newWitness.id)
-                  ? prev.map((wt) =>
-                      wt.id === newWitness.id ? newWitness : wt
-                    )
-                  : [...prev, newWitness];
-              });
+              const newWitnesses = witnesses.find(
+                (wt) => wt.witnessName === newWitness.witnessName
+              )
+                ? witnesses.map((wt) =>
+                    wt.witnessName === newWitness.witnessName ? newWitness : wt
+                  )
+                : [...witnesses, newWitness];
+              setValue("witness", newWitnesses);
               setEdit(null);
             }}
             clearForm={() => setEdit(null)}
             witnesses={witnesses}
             users={users}
             departments={departments}
-            setValue={setValue}
           />
         </td>
       </tr>
       {witnesses.map((witness, i) => (
         <tr key={i}>
           <td>
-            {users.find((u) => u.value === witness.witnessName)?.label ||
+            {users?.find((u) => u.value === witness.witnessName)?.label ||
               witness.witnessName}
           </td>
           <td>
-            {departments.find((dept) => dept.value === witness.witnessDept)
+            {departments?.find((dept) => dept.value === witness.witnessDept)
               ?.label || witness.witnessDept}
           </td>
           <TableActions
             actions={[
-              {
-                icon: <BsPencilFill />,
-                label: "Edit",
-                callBack: () => setEdit(witness),
-              },
               {
                 icon: <FaRegTrashAlt />,
                 label: "Delete",
@@ -989,21 +973,10 @@ export const Witnesses = ({ users, departments, setValue }) => {
                     type: "confirmation",
                     message: `Are you sure you want to remove this witness?`,
                     callback: () => {
-                      fetch(
-                        `${process.env.REACT_APP_HOST}/witness/${witness.id}`,
-                        { method: "DELETE" }
-                      ).then((res) => {
-                        if (res.status === 204) {
-                          setWitnesses((prev) =>
-                            prev.filter((wt) => wt.id !== witness.id)
-                          );
-                        } else if (res.status === 409) {
-                          Prompt({
-                            type: "error",
-                            message: "Something went wrong. Please try again.",
-                          });
-                        }
-                      });
+                      const newWitnesses = witnesses.filter(
+                        (wt) => wt.witnessName !== witness.witnessName
+                      );
+                      setValue("witness", newWitnesses);
                     },
                   }),
               },
@@ -1031,14 +1004,11 @@ const WitnessesForm = ({
     formState: { errors },
     clearErrors,
   } = useForm();
-  const [loading, setLoading] = useState(false);
   useEffect(() => reset({ ...edit }), [edit]);
+  const dept = watch("witnessDept");
   return (
     <form
       onSubmit={handleSubmit((data) => {
-        const url = `${process.env.REACT_APP_HOST}/witness${
-          edit ? `/${edit.id}` : ""
-        }`;
         if (
           !edit &&
           witnesses?.some((witness) => witness.witnessName === data.witnessName)
@@ -1049,29 +1019,16 @@ const WitnessesForm = ({
           });
           return;
         }
-        setLoading(true);
-        fetch(url, {
-          method: edit ? "PUT" : "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
-        })
-          .then((res) => res.json())
-          .then((data) => {
-            setLoading(false);
-            if (data.id) {
-              onSuccess(data);
-              reset();
-            }
-          })
-          .catch((err) => {
-            setLoading(false);
-            Prompt({ type: "error", message: err.message });
-            console.log(err);
-          });
+        onSuccess(data);
+        reset();
       })}
     >
       <Combobox
-        options={users}
+        options={
+          users?.filter(
+            (user) => !witnesses.some((u) => u.witnessName === user.value)
+          ) || []
+        }
         name="witnessName"
         register={register}
         formOptions={{
@@ -1081,22 +1038,23 @@ const WitnessesForm = ({
         watch={watch}
         error={errors.witnessName}
         clearErrors={clearErrors}
+        onChange={({ department }) => setValue("witnessDept", department)}
       />
-      <Combobox
-        options={departments}
-        name="witnessDept"
-        register={register}
-        formOptions={{
-          required: "Select a Department",
-        }}
-        setValue={setValue}
-        watch={watch}
-        error={errors.witnessDept}
-        clearErrors={clearErrors}
+      <Input
+        value={
+          departments?.find((dep) => dep.value === dept)?.label || dept || ""
+        }
+        readOnly={true}
       />
       <div className={s.btns}>
-        <button className="btn secondary" type="submit" disabled={loading}>
-          {edit ? <FaCheck /> : <FaPlus />}
+        <button className="btn secondary" type="submit">
+          {edit ? (
+            <FaCheck />
+          ) : (
+            <>
+              <FaPlus /> Add
+            </>
+          )}
         </button>
         {edit && (
           <button
@@ -1114,13 +1072,13 @@ const WitnessesForm = ({
   );
 };
 
-export const Notifications = ({ users, departments, setValue }) => {
+export const Notifications = ({
+  notifications,
+  users,
+  departments,
+  setValue,
+}) => {
   const [edit, setEdit] = useState(null);
-  const [notifications, setNotifications] = useState([]);
-  useEffect(() => {
-    // setValue("")
-    console.log("SET NOTIFICATIONS TAKEN IN INCIDENT REPORT");
-  }, [notifications]);
   return (
     <Table
       columns={[
@@ -1137,13 +1095,14 @@ export const Notifications = ({ users, departments, setValue }) => {
             {...(edit && { edit })}
             key={edit ? "edit" : "add"}
             onSuccess={(newNotification) => {
-              setNotifications((prev) => {
-                return prev.find((nt) => nt.id === newNotification.id)
-                  ? prev.map((nt) =>
-                      nt.id === newNotification.id ? newNotification : nt
-                    )
-                  : [...prev, newNotification];
-              });
+              const newNotifications = notifications.find(
+                (nt) => nt.name === newNotification.name
+              )
+                ? notifications.map((nt) =>
+                    nt.name === newNotification.name ? newNotification : nt
+                  )
+                : [...notifications, newNotification];
+              setValue("notification", newNotifications);
               setEdit(null);
             }}
             clearForm={() => setEdit(null)}
@@ -1157,10 +1116,10 @@ export const Notifications = ({ users, departments, setValue }) => {
       {notifications.map((noti, i) => (
         <tr key={i}>
           <td>
-            {users.find((u) => u.value === noti.name)?.label || noti.name}
+            {users?.find((u) => u.value === noti.name)?.label || noti.name}
           </td>
           <td>
-            {departments.find((dept) => dept.value === noti.dept)?.label ||
+            {departments?.find((dept) => dept.value === noti.dept)?.label ||
               noti.dept}
           </td>
           <td>
@@ -1183,21 +1142,10 @@ export const Notifications = ({ users, departments, setValue }) => {
                     type: "confirmation",
                     message: `Are you sure you want to remove this notification?`,
                     callback: () => {
-                      fetch(
-                        `${process.env.REACT_APP_HOST}/notification/${noti.id}`,
-                        { method: "DELETE" }
-                      ).then((res) => {
-                        if (res.status === 204) {
-                          setNotifications((prev) =>
-                            prev.filter((nt) => nt.id !== noti.id)
-                          );
-                        } else if (res.status === 409) {
-                          Prompt({
-                            type: "error",
-                            message: "Something went wrong. Please try again.",
-                          });
-                        }
-                      });
+                      const newNotifications = notifications.filter(
+                        (nt) => nt.name !== noti.name
+                      );
+                      setValue("notification", newNotifications);
                     },
                   }),
               },
@@ -1225,14 +1173,11 @@ const NotificationForm = ({
     formState: { errors },
     clearErrors,
   } = useForm();
-  const [loading, setLoading] = useState(false);
+  const dept = watch("dept");
   useEffect(() => reset({ ...edit }), [edit]);
   return (
     <form
       onSubmit={handleSubmit((data) => {
-        const url = `${process.env.REACT_APP_HOST}/notification${
-          edit ? `/${edit.id}` : ""
-        }`;
         if (!edit && notifications?.some((noti) => noti.name === data.name)) {
           Prompt({
             type: "information",
@@ -1240,25 +1185,8 @@ const NotificationForm = ({
           });
           return;
         }
-        setLoading(true);
-        fetch(url, {
-          method: edit ? "PUT" : "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
-        })
-          .then((res) => res.json())
-          .then((data) => {
-            setLoading(false);
-            if (data.id) {
-              onSuccess(data);
-              reset();
-            }
-          })
-          .catch((err) => {
-            setLoading(false);
-            Prompt({ type: "error", message: err.message });
-            console.log(err);
-          });
+        onSuccess(data);
+        reset();
       })}
     >
       <Combobox
@@ -1272,18 +1200,13 @@ const NotificationForm = ({
         watch={watch}
         error={errors.name}
         clearErrors={clearErrors}
+        onChange={({ department }) => setValue("dept", department)}
       />
-      <Combobox
-        options={departments}
-        name="dept"
-        register={register}
-        formOptions={{
-          required: "Select a Department",
-        }}
-        setValue={setValue}
-        watch={watch}
-        error={errors.dept}
-        clearErrors={clearErrors}
+      <Input
+        value={
+          departments?.find((dep) => dep.value === dept)?.label || dept || ""
+        }
+        readOnly={true}
       />
       <Input
         type="datetime-local"
@@ -1294,8 +1217,14 @@ const NotificationForm = ({
         error={errors.notificationDateTime}
       />
       <div className={s.btns}>
-        <button className="btn secondary" type="submit" disabled={loading}>
-          {edit ? <FaCheck /> : <FaPlus />}
+        <button className="btn secondary" type="submit">
+          {edit ? (
+            <FaCheck />
+          ) : (
+            <>
+              <FaPlus /> Add
+            </>
+          )}
         </button>
         {edit && (
           <button
