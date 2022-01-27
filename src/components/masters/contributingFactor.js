@@ -36,7 +36,7 @@ export default function ContributingFactor() {
       });
   }, []);
   return (
-    <div className={s.container}>
+    <div className={s.container} data-testid="contributingFactor">
       <header>
         <h3>CONTRIBUTING FACTORS</h3>
       </header>
@@ -264,7 +264,7 @@ const ContributingFactorDetail = ({
   // <Box label="CONTRIBUTING FACTOR DETAILS">
   // </Box>
   return (
-    <div className={s.child}>
+    <div className={s.child} data-testid="contributingFactorDetail">
       <div className={s.head}>
         <span className={s.contributingFactorName}>
           Contributing Factor: <strong>{name}</strong>

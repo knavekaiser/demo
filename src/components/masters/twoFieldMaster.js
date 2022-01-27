@@ -36,7 +36,7 @@ export default function TwoFieldMasters() {
       });
   }, []);
   return (
-    <div className={s.container}>
+    <div className={s.container} data-testid="twoFieldMasters">
       <header>
         <h3>TWO FIELD MASTER</h3>
       </header>
@@ -241,7 +241,10 @@ const TwoFieldMasterDetails = ({
   // <Box label="MASTER DETAILS">
   // </Box>
   return (
-    <div className={`${s.child} ${s.twoFieldMasterDetail}`}>
+    <div
+      className={`${s.child} ${s.twoFieldMasterDetail}`}
+      data-testid="twoFieldMasterDetails"
+    >
       <div className={s.head}>
         <span className={s.twoFieldMasterName}>
           Master name: <strong>{name}</strong>

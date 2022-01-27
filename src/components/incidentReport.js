@@ -43,7 +43,26 @@ export default function IncidentReporting() {
   const patientComplaint = methods.watch("patientYesOrNo");
   const submitForm = useCallback(
     (data) => {
-      const postData = () => {
+      const postData = async () => {
+        if (edit) {
+          // await fetch(
+          //   `${process.env.REACT_APP_HOST}/IncidentReport/${edit.id}`,
+          //   {
+          //     method: "PATCH",
+          //     headers: { "Content-Type": "application/json" },
+          //     body: JSON.stringify({
+          //       witness: [],
+          //       actionTaken: [],
+          //       notification: [],
+          //       updated: [],
+          //     }),
+          //   }
+          // )
+          //   .then((res) => res.json())
+          //   .then((data) => {
+          //     console.log(data);
+          //   });
+        }
         fetch(
           `${process.env.REACT_APP_HOST}/IncidentReport${
             edit ? `/${edit.id}` : ""
@@ -731,7 +750,8 @@ export const IncidentCategory = () => {
                 options={
                   categories
                     ?.find((c) => c.id === cat)
-                    ?.subCategorys?.map(({ id, name }) => ({
+                    ?.subCategorys?.filter((c) => c.status)
+                    .map(({ id, name }) => ({
                       value: id,
                       label: name,
                     })) || null
@@ -892,7 +912,7 @@ const ActionTakenForm = ({ edit, onSuccess, actions, users, clearForm }) => {
         max={new Date().toISOString().slice(0, 16)}
         error={errors.accessDateTime}
       />
-      <div className={s.btns}>
+      <div className={s.btns} data-testid="actionTakenBtns">
         <button className="btn secondary" type="submit">
           {edit ? (
             <FaCheck />
@@ -1046,7 +1066,7 @@ const WitnessesForm = ({
         }
         readOnly={true}
       />
-      <div className={s.btns}>
+      <div className={s.btns} data-testid="witnessBtns">
         <button className="btn secondary" type="submit">
           {edit ? (
             <FaCheck />
@@ -1216,7 +1236,7 @@ const NotificationForm = ({
         max={new Date().toISOString().slice(0, 16)}
         error={errors.notificationDateTime}
       />
-      <div className={s.btns}>
+      <div className={s.btns} data-testid="notificationBtns">
         <button className="btn secondary" type="submit">
           {edit ? (
             <FaCheck />

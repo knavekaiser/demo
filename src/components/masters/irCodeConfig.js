@@ -88,7 +88,7 @@ export default function IrCodeConfig() {
       });
   }, []);
   return (
-    <div className={s.container}>
+    <div className={s.container} data-testid="irCodeConfig">
       <header>
         <h3>IR CODE CONFIGURATION</h3>
       </header>
@@ -125,6 +125,9 @@ export default function IrCodeConfig() {
                 } else {
                   console.log(data);
                 }
+              })
+              .catch((err) => {
+                console.log(err);
               });
           })}
         >

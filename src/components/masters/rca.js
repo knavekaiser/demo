@@ -35,7 +35,7 @@ export default function Rcas() {
       });
   }, []);
   return (
-    <div className={s.container}>
+    <div className={s.container} data-testid="rca">
       <header>
         <h3>ROOT CAUSE MASTER</h3>
       </header>
@@ -230,7 +230,7 @@ const RcaCauses = ({ rca: { id, name, rcaCauses }, setRcas }) => {
   // <Box label="RCA CAUSES">
   // </Box>
   return (
-    <div className={`${s.child} ${s.rcaDetail}`}>
+    <div className={`${s.child} ${s.rcaDetail}`} data-testid="rcaDetail">
       <div className={s.head}>
         <span className={s.rcaName}>
           Root Cause: <strong>{name}</strong>

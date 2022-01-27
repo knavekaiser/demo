@@ -44,7 +44,7 @@ export default function PersonAffected() {
       });
   }, []);
   return (
-    <div className={s.container}>
+    <div className={s.container} data-testid="personAffected">
       <header>
         <h3>PERSON AFFECTED</h3>
       </header>
@@ -294,14 +294,17 @@ const PersonAffectedDetail = ({
 }) => {
   const [edit, setEdit] = useState(null);
   return (
-    <div className={`${s.child} ${s.personAffectedDetails}`}>
+    <div
+      className={`${s.child} ${s.personAffectedDetails}`}
+      data-testid="personAffectedDetail"
+    >
       <div className={s.head}>
         <span className={s.personAffectedName}>
           Person Affected: <strong>{name}</strong>
         </span>
       </div>
       <Table columns={[{ label: "Details" }, { label: "Action" }]}>
-        <tr>
+        <tr key="inlineForm">
           <td className={s.inlineForm}>
             <PersonAffectedDetailForm
               {...(edit && { edit })}
@@ -376,7 +379,7 @@ const SinglePersonEffectedDetail = ({
   const immutable = useRef(["name", "age", "gender"]);
   return (
     <tr className={loading ? s.loading : ""}>
-      <td style={{ display: "flex", alignItems: "center", "grid-gap": "6px" }}>
+      <td style={{ display: "flex", alignItems: "center", gridGap: "6px" }}>
         <input
           type="checkbox"
           checked={personAffected.show}

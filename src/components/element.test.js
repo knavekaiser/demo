@@ -14,24 +14,22 @@ import {
 import { render, screen, fireEvent } from "@testing-library/react";
 
 test("input", () => {
-  const component = render(
-    <Input type="text" placeholder="input-placeholder" />
-  );
-  const input = component.getByPlaceholderText("input-placeholder");
+  render(<Input type="text" placeholder="input-placeholder" />);
+  const input = screen.getByPlaceholderText("input-placeholder");
   expect(input.placeholder).toBe("input-placeholder");
 });
 test("FileInput", () => {
-  const component = render(<FileInput label="Files" />);
-  const input = component.getByTestId("fileInput");
+  render(<FileInput label="Files" />);
+  const input = screen.getByTestId("fileInput");
   expect(input.textContent).toBe("Files0 files selectedItem select");
 });
 test("Textarea", () => {
-  const component = render(<Textarea type="text" placeholder="textarea" />);
-  const textarea = component.getByPlaceholderText("textarea");
+  render(<Textarea type="text" placeholder="textarea" />);
+  const textarea = screen.getByPlaceholderText("textarea");
   expect(textarea.placeholder).toBe("textarea");
 });
 test("Radio", () => {
-  const component = render(
+  render(
     <Radio
       name="typeofInci"
       options={[
@@ -48,13 +46,13 @@ test("Radio", () => {
       ]}
     />
   );
-  const container = component.getByTestId("radioInput");
+  const container = screen.getByTestId("radioInput");
   expect(container.textContent).toBe(
     "Option 1Hint for option 1Option 2Hint for option 2"
   );
 });
 test("CustomRadio", () => {
-  const component = render(
+  render(
     <CustomRadio
       label="Custom Radio"
       options={[
@@ -69,50 +67,50 @@ test("CustomRadio", () => {
       ]}
     />
   );
-  const container = component.getByTestId("customRadioInput");
+  const container = screen.getByTestId("customRadioInput");
   expect(container.textContent).toBe("Custom RadioOption 1Option 2");
 });
 test("Switch", () => {
-  const component = render(<SwitchInput label="Switch" />);
-  const input = component.getByTestId("switchInput");
+  render(<SwitchInput label="Switch" />);
+  const input = screen.getByTestId("switchInput");
   expect(input.textContent).toBe("SwitchYesNo");
 });
 test("Toggle", () => {
-  const component = render(<Toggle label="Switch" />);
-  const input = component.getByTestId("toggleInput");
+  render(<Toggle label="Switch" />);
+  const input = screen.getByTestId("toggleInput");
   expect(input.textContent).toBe("");
 });
-// test("combobox", () => {
-//   const combo = render(
-//     <Combobox
-//       placeholder="Placeholder"
-//       options={[
-//         { value: "option1", label: "option 1" },
-//         { value: "option1", label: "option 2" },
-//         { value: "option1", label: "option 3" },
-//       ]}
-//     />
-//   );
-//
-//   const container = combo.getByTestId("combobox-container");
-//   expect(container.textContent).toBe("Placeholder");
-//
-//   const btn = combo.getByTestId("combobox-btn");
-//   fireEvent.click(btn);
-//
-//   const options2 = screen.getByTestId("combobox-option 2");
-//   expect(options2.textContent).toBe("option 2");
-//
-//   fireEvent.click(options2);
-//   expect(container.textContent).toBe("Placeholder");
-// });
+test("combobox", () => {
+  render(
+    <Combobox
+      placeholder="Placeholder"
+      options={[
+        { value: "option1", label: "option 1" },
+        { value: "option1", label: "option 2" },
+        { value: "option1", label: "option 3" },
+      ]}
+    />
+  );
+
+  const container = screen.getByTestId("combobox-container");
+  expect(container.textContent).toBe("Placeholder");
+
+  const btn = screen.getByTestId("combobox-btn");
+  fireEvent.click(btn);
+
+  // const options2 = screen.getByTestId("combobox-option 2");
+  // expect(options2.textContent).toBe("option 2");
+
+  // fireEvent.click(options2);
+  // expect(container.textContent).toBe("Placeholder");
+});
 test("Checkbox", () => {
-  const component = render(<Checkbox register={() => {}} label="Switch" />);
-  const time = component.getByTestId("checkbox-input");
+  render(<Checkbox label="Switch" />);
+  const time = screen.getByTestId("checkbox-input");
   expect(time.textContent).toBe("Switch");
 });
 test("TableActions", () => {
-  const component = render(
+  render(
     <table>
       <tbody>
         <tr>
@@ -126,7 +124,7 @@ test("TableActions", () => {
       </tbody>
     </table>
   );
-  const container = component.getByTestId("tableActions");
+  const container = screen.getByTestId("tableActions");
   expect(container.textContent).toBe("Icon 1Icon 2");
 });
 test("Moment", () => {
@@ -135,6 +133,6 @@ test("Moment", () => {
       {new Date("2021-05-12 13:45")}
     </Moment>
   );
-  const time = component.getByTestId("moment");
+  const time = screen.getByTestId("moment");
   expect(time.textContent).toBe("12/05/2021 Wed 01:45");
 });

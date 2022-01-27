@@ -34,7 +34,7 @@ export default function Department() {
       });
   }, []);
   return (
-    <div className={s.container}>
+    <div className={s.container} data-testid="departments">
       <header>
         <h3>DEPARTMENT MASTER</h3>
       </header>

@@ -49,7 +49,7 @@ export const Modal = forwardRef(
             {children}
           </div>
         </>,
-        document.querySelector("#portal") || document.createElement("div")
+        document.querySelector("#portal") || document.body
       );
     }
     return null;

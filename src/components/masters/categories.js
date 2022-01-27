@@ -37,7 +37,7 @@ export default function Categories() {
       });
   }, []);
   return (
-    <div className={s.container}>
+    <div className={s.container} data-testid="categories">
       <header>
         <h3>CATEGORY & SUBCATEGORY MASTER</h3>
       </header>
@@ -150,7 +150,7 @@ const CategoryForm = ({ edit, onSuccess, clearForm, categories }) => {
     register,
     reset,
     formState: { errors },
-  } = useForm({ ...edit });
+  } = useForm();
   const [loading, setLoading] = useState(false);
   useEffect(() => {
     reset({ ...edit });
@@ -236,7 +236,7 @@ const SubCategories = ({
   // <Box label="SUBCATEGORY DETAILS">
   // </Box>
   return (
-    <div className={`${s.subCategory} ${s.child}`}>
+    <div className={`${s.subCategory} ${s.child}`} data-testid="subcategories">
       <div className={s.head}>
         <span className={s.categoryName}>
           Category: <strong>{name}</strong>
@@ -334,7 +334,7 @@ const SubCategories = ({
         label="REPORTABLE EVENT"
         className={s.reportableForm}
       >
-        <div className={s.content}>
+        <div className={s.content} data-testid="reportables">
           <ReportableForm
             setCategories={setCategories}
             categoryId={id}
@@ -445,9 +445,7 @@ const SubCategoryForm = ({
     watch,
     setValue,
     formState: { errors },
-  } = useForm({
-    ...edit,
-  });
+  } = useForm();
   const [showReportableForm, setShowReportableForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const reportable = watch("reportable");
@@ -565,7 +563,7 @@ const SubCategoryForm = ({
   );
 };
 
-const ReportableForm = ({
+export const ReportableForm = ({
   categoryId,
   subCategoryId,
   _reportables,
@@ -689,9 +687,7 @@ const ReportableInlineForm = ({
   clearForm,
   subCategoryId,
 }) => {
-  const { handleSubmit, register, reset, watch, setValue } = useForm({
-    ...edit,
-  });
+  const { handleSubmit, register, reset, watch, setValue } = useForm();
   const [loading, setLoading] = useState(false);
   const [reportTo, setReportTo] = useState([]);
   useEffect(() => {
@@ -710,7 +706,7 @@ const ReportableInlineForm = ({
         }
       })
       .catch((err) => {
-        alert(err.message);
+        console.log(err);
       });
   }, []);
   useEffect(() => {

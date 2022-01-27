@@ -72,7 +72,7 @@ export default function RiskAssessments() {
       });
   }, []);
   return (
-    <div className={s.container}>
+    <div className={s.container} data-testid="riskAssessment">
       <header>
         <h3>RISK ASSESSMENT MASTER</h3>
       </header>
@@ -127,22 +127,20 @@ export default function RiskAssessments() {
           {risks.map((risk, i) => (
             <tr key={i}>
               <td>
-                {parameters?.["9"].find(
-                  (item) => item.value === risk.likelihood
-                )?.label || risk.likelihood}
+                {parameters["9"]?.find((item) => item.value === risk.likelihood)
+                  ?.label || risk.likelihood}
               </td>
               <td>
-                {parameters?.["2"].find((item) => item.value === risk.serverity)
+                {parameters["2"]?.find((item) => item.value === risk.serverity)
                   ?.label || risk.serverity}
               </td>
               <td>
-                {parameters?.["3"].find((item) => item.value === risk.riskscore)
+                {parameters["3"]?.find((item) => item.value === risk.riskscore)
                   ?.label || risk.riskscore}
               </td>
               <td>
-                {parameters?.["4"].find(
-                  (item) => item.value === risk.riskstatus
-                )?.label || risk.riskstatus}
+                {parameters["4"]?.find((item) => item.value === risk.riskstatus)
+                  ?.label || risk.riskstatus}
               </td>
               <td>
                 {parameters.colors.find((item) => item.value === risk.color)

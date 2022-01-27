@@ -249,3 +249,12 @@ main {
     }
   }
 }
+
+@media only screen and (max-width: 1366px) {
+  .tables {
+    grid-template-columns: 1fr !important;
+    .actionWrapper {
+      grid-column: 1/2 !important;
+    }
+  }
+}

@@ -49,7 +49,7 @@ export default function Location() {
       });
   }, []);
   return (
-    <div className={s.container}>
+    <div className={s.container} data-testid="locations">
       <header>
         <h3>LOCATION MASTER</h3>
       </header>

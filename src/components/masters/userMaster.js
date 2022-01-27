@@ -63,7 +63,7 @@ export default function UserMaster() {
       });
   }, []);
   return (
-    <div className={s.container}>
+    <div className={s.container} data-testid="users">
       <header>
         <h3>USER MASTER</h3>
       </header>
