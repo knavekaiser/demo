@@ -250,7 +250,7 @@ const MyDashboard = () => {
               <td>{inc.tat}</td>
               <TableActions
                 actions={[
-                  ...(+inc.status === 1
+                  ...(+inc.status === 2
                     ? [
                         {
                           icon: <FaRegEye />,

@@ -54,9 +54,16 @@ export const Input = forwardRef(
     );
   }
 );
-export const FileInput = ({ label, required, multiple, onChange }) => {
+export const FileInput = ({ label, required, multiple, onChange, prefill }) => {
   const id = useRef(Math.random().toString(36).substr(4));
+  const prefillLoaded = useRef(false);
   const [files, setFiles] = useState([]);
+  useEffect(() => {
+    if (prefill?.length && !prefillLoaded.current) {
+      setFiles(prefill.map((file) => ({ name: file.uploadFilePath })));
+      prefillLoaded.current = true;
+    }
+  }, [prefill]);
   useEffect(() => {
     onChange?.(files);
   }, [files]);

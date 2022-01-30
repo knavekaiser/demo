@@ -41,6 +41,7 @@ export default function IncidentReporting() {
   const [anonymous, setAnonymous] = useState(false);
   const involvedDept = methods.watch("deptsLookupMultiselect");
   const patientComplaint = methods.watch("patientYesOrNo");
+  const uploads = methods.watch("upload");
   const submitForm = useCallback(
     (data) => {
       const postData = async () => {
@@ -54,14 +55,12 @@ export default function IncidentReporting() {
                 witness: [],
                 actionTaken: [],
                 notification: [],
-                updated: [],
+                upload: [],
               }),
             }
           )
             .then((res) => res.json())
-            .then((data) => {
-              console.log(data);
-            })
+            .then((data) => {})
             .catch((err) => {
               console.log(err);
             });
@@ -123,7 +122,7 @@ export default function IncidentReporting() {
             });
           });
       };
-      if (data.status === "Submitted") {
+      if (+data.status === 2) {
         Prompt({
           type: "confirmation",
           message: anonymous
@@ -165,15 +164,14 @@ export default function IncidentReporting() {
       contribFactor: "",
       preventability: "",
       incidentNotification: "",
-      upload: "",
       incidentReportedDept: "",
       headofDepart:
         parameters?.hods?.length === 1 ? parameters.hods[0].value : "",
       userId: "",
+      upload: [],
       witness: [],
       actionTaken: [],
       notification: [],
-      updated: [],
     });
   }, [parameters]);
   const witnesses = methods.watch("witness");
@@ -630,7 +628,20 @@ export default function IncidentReporting() {
             </div>
           </div>
           <div className={s.fieldWrapper}>
-            <FileInput label="Upload" multiple={true} />
+            <FileInput
+              label="Upload"
+              multiple={true}
+              prefill={uploads}
+              onChange={(files) => {
+                methods.setValue(
+                  "upload",
+                  files.map((file) => ({
+                    upload: true,
+                    uploadFilePath: file.name,
+                  }))
+                );
+              }}
+            />
             {!anonymous && (
               <>
                 <Input
