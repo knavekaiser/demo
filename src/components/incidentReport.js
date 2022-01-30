@@ -125,9 +125,8 @@ export default function IncidentReporting() {
       if (+data.status === 2) {
         Prompt({
           type: "confirmation",
-          message: anonymous
-            ? "This incident will be submitted as Anonymous report. You will not be able to view or track the IR status. Do you wish to continue"
-            : "Once submitted, IR’s cannot be edited. Are you sure you want to continue",
+          message:
+            "Once submitted, IR’s cannot be edited. Are you sure you want to continue",
           callback: postData,
         });
       } else {
@@ -262,7 +261,18 @@ export default function IncidentReporting() {
               id="anonymous"
               name="anonymous"
               checked={anonymous}
-              onChange={(e) => setAnonymous(!anonymous)}
+              onChange={(e) => {
+                if (!anonymous) {
+                  Prompt({
+                    type: "confirmation",
+                    message:
+                      "This incident will be submitted as Anonymous report. You will not be able to view or track the IR status. Do you wish to continue",
+                    callback: () => setAnonymous(true),
+                  });
+                } else {
+                  setAnonymous(!anonymous);
+                }
+              }}
             />
             <label htmlFor="anonymous">Report Anonymously</label>
           </section>
@@ -280,10 +290,15 @@ export default function IncidentReporting() {
             >
               <Input
                 {...methods.register("incident_Date_Time", {
-                  required: "Please select Incident Date",
-                  validate: (v) =>
-                    new Date(v) < new Date() ||
-                    "Can not select date from future",
+                  validate: (v) => {
+                    if (v) {
+                      if (new Date(v) > new Date()) {
+                        return "Can not select date from future";
+                      }
+                    } else {
+                      return "Please select Incident Date";
+                    }
+                  },
                 })}
                 error={methods.formState.errors.incident_Date_Time}
                 max={new Date().toISOString().slice(0, 16)}
@@ -295,7 +310,12 @@ export default function IncidentReporting() {
                 name="location"
                 register={methods.register}
                 formOptions={{
-                  required: "Please select a location",
+                  validate: (v) => {
+                    return (
+                      +methods.getValues("status") === 1 ||
+                      "Please select a location"
+                    );
+                  },
                 }}
                 setValue={methods.setValue}
                 watch={methods.watch}
@@ -357,7 +377,12 @@ export default function IncidentReporting() {
               <Radio
                 register={methods.register}
                 formOptions={{
-                  required: "Please select a Type of Incident",
+                  validate: (v) => {
+                    return (
+                      +methods.getValues("status") === 1 ||
+                      "Please select a Type of Incident"
+                    );
+                  },
                 }}
                 name="typeofInci"
                 options={[
@@ -512,7 +537,12 @@ export default function IncidentReporting() {
             >
               <Textarea
                 {...methods.register("inciDescription", {
-                  required: "Please enter Incident Description",
+                  validate: (v) => {
+                    return (
+                      +methods.getValues("status") === 1 ||
+                      "Please enter Incident Description"
+                    );
+                  },
                 })}
                 error={methods.formState.errors.inciDescription}
                 label="Incident Description"
@@ -581,9 +611,7 @@ export default function IncidentReporting() {
                     <input
                       id={"preventability" + item.value}
                       type="radio"
-                      {...methods.register("preventability", {
-                        required: "Please select one",
-                      })}
+                      {...methods.register("preventability")}
                       value={item.value}
                     />{" "}
                     <label htmlFor={"preventability" + item.value}>
@@ -691,6 +719,7 @@ export default function IncidentReporting() {
             <button
               onClick={() => {
                 methods.setValue("status", 1);
+                methods.clearErrors();
               }}
               className="btn secondary w-100"
               disabled={readOnly || anonymous}
@@ -728,7 +757,14 @@ export const IncidentCategory = () => {
   }, []);
   return (
     <ConnectForm>
-      {({ register, setValue, watch, formState: { errors }, clearErrors }) => {
+      {({
+        register,
+        setValue,
+        watch,
+        getValues,
+        formState: { errors },
+        clearErrors,
+      }) => {
         const cat = watch("inciCateg");
         return (
           <div
@@ -741,7 +777,12 @@ export const IncidentCategory = () => {
                 name="inciCateg"
                 register={register}
                 formOptions={{
-                  required: "Please select a Category",
+                  validate: (v) => {
+                    return (
+                      +getValues("status") === 1 ||
+                      "Please select a Please select a Category"
+                    );
+                  },
                 }}
                 setValue={setValue}
                 watch={watch}
@@ -771,7 +812,12 @@ export const IncidentCategory = () => {
                     })) || null
                 }
                 formOptions={{
-                  required: "Please select a Subcategory",
+                  validate: (v) => {
+                    return (
+                      +getValues("status") === 1 ||
+                      "Please select a Please select a Subcategory"
+                    );
+                  },
                 }}
                 error={errors.inciSubCat}
                 clearErrors={clearErrors}
@@ -922,8 +968,9 @@ const ActionTakenForm = ({ edit, onSuccess, actions, users, clearForm }) => {
         type="datetime-local"
         {...register("accessDateTime", {
           required: "Select Date & Time",
+          validate: (v) =>
+            new Date(v) < new Date() || "Can not select date from future",
         })}
-        max={new Date().toISOString().slice(0, 16)}
         error={errors.accessDateTime}
       />
       <div className={s.btns} data-testid="actionTakenBtns">
@@ -1246,8 +1293,9 @@ const NotificationForm = ({
         type="datetime-local"
         {...register("notificationDateTime", {
           required: "Select Date & Time",
+          validate: (v) =>
+            new Date(v) < new Date() || "Can not select date from future",
         })}
-        max={new Date().toISOString().slice(0, 16)}
         error={errors.notificationDateTime}
       />
       <div className={s.btns} data-testid="notificationBtns">
