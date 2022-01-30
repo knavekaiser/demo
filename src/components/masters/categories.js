@@ -353,7 +353,7 @@ const SingleSubCategory = ({ id, subCategory, setCategories, setEdit }) => {
       <td>{subCategory.template}</td>
       <td>{subCategory.sentinel ? "Sentinel" : ""}</td>
       <td>
-        {subCategory.reportStatus && (
+        {(subCategory.reportStatus || subCategory.reportable?.length > 0) && (
           <span
             className={s.reportableBtn}
             onClick={() => setAddReportable(subCategory)}
@@ -450,7 +450,11 @@ const SubCategoryForm = ({
   const [loading, setLoading] = useState(false);
   const reportable = watch("reportable");
   useEffect(() => {
-    reset({ status: true, ...edit });
+    reset({
+      status: true,
+      ...edit,
+      ...(edit?.reportable?.length > 0 && { reportStatus: true }),
+    });
   }, [edit]);
   return (
     <>
@@ -686,6 +690,7 @@ const ReportableInlineForm = ({
   onSuccess,
   clearForm,
   subCategoryId,
+  reportables,
 }) => {
   const { handleSubmit, register, reset, watch, setValue } = useForm();
   const [loading, setLoading] = useState(false);
@@ -715,6 +720,16 @@ const ReportableInlineForm = ({
   return (
     <form
       onSubmit={handleSubmit((data) => {
+        if (
+          !edit &&
+          reportables?.some((item) => +item.report_to === +data.report_to)
+        ) {
+          Prompt({
+            type: "information",
+            message: `Person already exists.`,
+          });
+          return;
+        }
         setLoading(true);
         fetch(`${process.env.REACT_APP_HOST}/reportable`, {
           method: "POST",

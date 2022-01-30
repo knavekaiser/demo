@@ -49,6 +49,17 @@ const incidentType = [
     value: 0,
   },
 ];
+const irStatuses = [
+  { id: 1, name: "Saved" },
+  { id: 2, name: "Submitted" },
+  { id: 3, name: "Assigned" },
+  { id: 4, name: "Under investigation" },
+  { id: 5, name: "CAPA planning" },
+  { id: 6, name: "Closure confirmation sent" },
+  { id: 7, name: "Closure confirmed" },
+  { id: 8, name: "IR closed" },
+  { id: 9, name: "Cancelled" },
+];
 function IncidentReportingDashboard() {
   return (
     <div className={s.container}>
@@ -232,11 +243,14 @@ const MyDashboard = () => {
               </td>
               <td>{inc.reportedBy}</td>
               <td>{inc.irInvestigator}</td>
-              <td>{inc.status}</td>
+              <td>
+                {irStatuses.find((item) => item.id === +inc.status)?.name ||
+                  inc.status}
+              </td>
               <td>{inc.tat}</td>
               <TableActions
                 actions={[
-                  ...(inc.status === "Submitted"
+                  ...(+inc.status === 1
                     ? [
                         {
                           icon: <FaRegEye />,
@@ -429,10 +443,10 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
           setValue={setValue}
           watch={watch}
           register={register}
-          options={[
-            { label: "Saved", value: "Saved" },
-            { label: "Submitted", value: "Submitted" },
-          ]}
+          options={irStatuses.map((item) => ({
+            label: item.name,
+            value: item.id,
+          }))}
         />
       </section>
       {!qualityDashboard && (
@@ -594,11 +608,14 @@ const QualityDashboard = () => {
               </td>
               <td>{inc.reportedBy}</td>
               <td>{inc.irInvestigator}</td>
-              <td>{inc.status}</td>
+              <td>
+                {irStatuses.find((item) => item.id === +inc.status)?.name ||
+                  inc.status}
+              </td>
               <td>{inc.tat}</td>
               <TableActions
                 actions={[
-                  ...(inc.status === "Submitted"
+                  ...(+inc.status === 2
                     ? [
                         {
                           icon: <BsPencilFill />,

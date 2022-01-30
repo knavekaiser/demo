@@ -28,13 +28,13 @@ export default function IrCodeConfig() {
     setValues,
     reset,
   } = useForm();
-  const receed = watch("receed");
+  const reseed = watch("reseed");
   const period = watch("period");
   useEffect(() => {
-    if (receed === "M" && period === "/YYYY") {
+    if (reseed === "M" && period === "/YYYY") {
       setValue("period", "/MM");
     }
-    if (receed === "M") {
+    if (reseed === "M") {
       setPeriods([
         { label: "MM", value: "/MM" },
         { label: "MM/YYYY", value: "/MM/YYYY" },
@@ -46,7 +46,7 @@ export default function IrCodeConfig() {
         { label: "YYYY", value: "/YYYY" },
       ]);
     }
-  }, [receed]);
+  }, [reseed]);
   useEffect(() => {
     fetch(`${process.env.REACT_APP_HOST}/sequence`)
       .then((res) => res.json())
@@ -56,7 +56,7 @@ export default function IrCodeConfig() {
             .split(",")
             .map((item) => +item);
           const fields = {
-            receed: { label: "Reseed", order: 0 },
+            reseed: { label: "Reseed", order: 0 },
             prefix: { label: "Prefix", order: 1 },
             period: { label: "Period", order: 2 },
             irCode: { label: "IR Code", order: 3 },
@@ -78,7 +78,7 @@ export default function IrCodeConfig() {
             period: data._embedded.sequence[0].period,
             prefix: data._embedded.sequence[0].prefix,
             suffix: data._embedded.sequence[0].suffix,
-            receed: data._embedded.sequence[0].receed,
+            reseed: data._embedded.sequence[0].reseed,
             sequence: data._embedded.sequence[0].sequence,
           });
         }
@@ -158,7 +158,7 @@ export default function IrCodeConfig() {
             }}
           >
             {codeConfig.map((c) => {
-              if (c.field === "receed") {
+              if (c.field === "reseed") {
                 return (
                   <tr key={c.field} style={{ pointerEvents: "none" }}>
                     <td style={{ current: "grab" }} />
@@ -183,7 +183,7 @@ export default function IrCodeConfig() {
                         formOptions={{
                           required: "Select reseed",
                         }}
-                        name="receed"
+                        name="reseed"
                         register={register}
                         setValue={setValue}
                         watch={watch}

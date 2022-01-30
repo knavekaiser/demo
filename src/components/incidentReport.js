@@ -45,23 +45,26 @@ export default function IncidentReporting() {
     (data) => {
       const postData = async () => {
         if (edit) {
-          // await fetch(
-          //   `${process.env.REACT_APP_HOST}/IncidentReport/${edit.id}`,
-          //   {
-          //     method: "PATCH",
-          //     headers: { "Content-Type": "application/json" },
-          //     body: JSON.stringify({
-          //       witness: [],
-          //       actionTaken: [],
-          //       notification: [],
-          //       updated: [],
-          //     }),
-          //   }
-          // )
-          //   .then((res) => res.json())
-          //   .then((data) => {
-          //     console.log(data);
-          //   });
+          await fetch(
+            `${process.env.REACT_APP_HOST}/IncidentReport/${edit.id}`,
+            {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                witness: [],
+                actionTaken: [],
+                notification: [],
+                updated: [],
+              }),
+            }
+          )
+            .then((res) => res.json())
+            .then((data) => {
+              console.log(data);
+            })
+            .catch((err) => {
+              console.log(err);
+            });
         }
         fetch(
           `${process.env.REACT_APP_HOST}/IncidentReport${
@@ -676,7 +679,7 @@ export default function IncidentReporting() {
             </button>
             <button
               onClick={() => {
-                methods.setValue("status", "Saved");
+                methods.setValue("status", 1);
               }}
               className="btn secondary w-100"
               disabled={readOnly || anonymous}
@@ -685,7 +688,7 @@ export default function IncidentReporting() {
             </button>
             <button
               onClick={() => {
-                methods.setValue("status", "Submitted");
+                methods.setValue("status", 2);
               }}
               className="btn w-100"
               disabled={readOnly}
