@@ -188,10 +188,10 @@ const ContributingFactorForm = ({
           edit ? `/${edit.cf_id}` : ""
         }`;
         if (
-          !edit &&
           contributingFactors?.some(
             (item) =>
-              item.name.trim().toLowerCase() === data.name.trim().toLowerCase()
+              item.name.trim().toLowerCase() ===
+                data.name.trim().toLowerCase() && item.cf_id !== data.cf_id
           )
         ) {
           Prompt({
@@ -387,10 +387,10 @@ const ContributingFactorDetailForm = ({
     <form
       onSubmit={handleSubmit((data) => {
         if (
-          !edit &&
           contributingFactorDetails?.some(
             (item) =>
-              item.name.trim().toLowerCase() === data.name.trim().toLowerCase()
+              item.name.trim().toLowerCase() ===
+                data.name.trim().toLowerCase() && item.id !== data.id
           )
         ) {
           Prompt({

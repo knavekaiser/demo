@@ -73,10 +73,6 @@ export default function IncidentReporting() {
             method: edit ? "PUT" : "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              contribFactorYesOrNo: true,
-              contribFactor: 3,
-              template: "52121",
-              incidentReportedDept: 25,
               ...data,
               actionTakens: undefined,
               deptsLookupMultiselect:
@@ -198,7 +194,10 @@ export default function IncidentReporting() {
         preventability: edit.preventability?.toString() || "",
         typeofInci: edit.typeofInci?.toString() || "",
         deptsLookupMultiselect:
-          edit.deptsLookupMultiselect?.split(",").map((item) => +item) || "",
+          edit.deptsLookupMultiselect
+            ?.split(",")
+            .filter((item) => item)
+            .map((item) => +item) || [],
       };
       methods.reset(_edit);
     }
@@ -213,10 +212,12 @@ export default function IncidentReporting() {
     ]).then(([location, department, users]) => {
       const _parameters = { ...parameters };
       if (location?._embedded.location) {
-        _parameters.locations = location._embedded.location.map((item) => ({
-          label: item.name,
-          value: item.id,
-        }));
+        _parameters.locations = location._embedded.location
+          .filter((item) => item.status)
+          .map((item) => ({
+            label: item.name,
+            value: item.id,
+          }));
       }
       if (department?._embedded.department) {
         _parameters.departments = department._embedded.department.map(
@@ -313,6 +314,7 @@ export default function IncidentReporting() {
                   validate: (v) => {
                     return (
                       +methods.getValues("status") === 1 ||
+                      v ||
                       "Please select a location"
                     );
                   },
@@ -378,6 +380,7 @@ export default function IncidentReporting() {
                 register={methods.register}
                 formOptions={{
                   validate: (v) => {
+                    if (v) return true;
                     return (
                       +methods.getValues("status") === 1 ||
                       "Please select a Type of Incident"
@@ -538,6 +541,7 @@ export default function IncidentReporting() {
               <Textarea
                 {...methods.register("inciDescription", {
                   validate: (v) => {
+                    if (v) return true;
                     return (
                       +methods.getValues("status") === 1 ||
                       "Please enter Incident Description"
@@ -670,13 +674,13 @@ export default function IncidentReporting() {
                 );
               }}
             />
+            <Input
+              label="Incident Reported by"
+              value={!anonymous ? user.name : "Anonymous"}
+              readOnly={true}
+            />
             {!anonymous && (
               <>
-                <Input
-                  label="Incident Reported by"
-                  value={user.name}
-                  readOnly={true}
-                />
                 <Input
                   label="Department"
                   value={
@@ -780,6 +784,7 @@ export const IncidentCategory = () => {
                   validate: (v) => {
                     return (
                       +getValues("status") === 1 ||
+                      v ||
                       "Please select a Please select a Category"
                     );
                   },
@@ -806,6 +811,7 @@ export const IncidentCategory = () => {
                   categories
                     ?.find((c) => c.id === cat)
                     ?.subCategorys?.filter((c) => c.status)
+                    .filter((item) => item.status)
                     .map(({ id, name }) => ({
                       value: id,
                       label: name,
@@ -815,6 +821,7 @@ export const IncidentCategory = () => {
                   validate: (v) => {
                     return (
                       +getValues("status") === 1 ||
+                      v ||
                       "Please select a Please select a Subcategory"
                     );
                   },

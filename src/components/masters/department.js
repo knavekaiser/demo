@@ -128,10 +128,10 @@ const DepartmentForm = ({ edit, onSuccess, clearForm, departments }) => {
           edit ? `/${edit.id}` : ""
         }`;
         if (
-          !edit &&
           departments?.some(
             (item) =>
-              item.name.trim().toLowerCase() === data.name.trim().toLowerCase()
+              item.name.trim().toLowerCase() ===
+                data.name.trim().toLowerCase() && item.id !== data.id
           )
         ) {
           Prompt({

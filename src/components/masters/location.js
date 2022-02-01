@@ -158,10 +158,10 @@ const LocationForm = ({
           edit ? `/${edit.id}` : ""
         }`;
         if (
-          !edit &&
           locations?.some(
             (item) =>
-              item.name.trim().toLowerCase() === data.name.trim().toLowerCase()
+              item.name.trim().toLowerCase() ===
+                data.name.trim().toLowerCase() && item.id !== data.id
           )
         ) {
           Prompt({

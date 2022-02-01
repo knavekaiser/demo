@@ -168,10 +168,10 @@ const TwoFieldMasterForm = ({
           edit ? `/${edit.id}` : ""
         }`;
         if (
-          !edit &&
           twoFieldMasters?.some(
             (item) =>
-              item.name.trim().toLowerCase() === data.name.trim().toLowerCase()
+              item.name.trim().toLowerCase() ===
+                data.name.trim().toLowerCase() && item.id !== data.id
           )
         ) {
           Prompt({
@@ -387,10 +387,10 @@ const TwoFieldMasterDetailForm = ({
     <form
       onSubmit={handleSubmit((data) => {
         if (
-          !edit &&
           twoFieldMasterDetails?.some(
             (item) =>
-              item.name.trim().toLowerCase() === data.name.trim().toLowerCase()
+              item.name.trim().toLowerCase() ===
+                data.name.trim().toLowerCase() && item.id !== data.id
           )
         ) {
           Prompt({

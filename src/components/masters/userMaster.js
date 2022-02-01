@@ -8,6 +8,7 @@ import { TiTick } from "react-icons/ti";
 import { IoIosClose } from "react-icons/io";
 import {
   Input,
+  MobileNumberInput,
   Combobox,
   Table,
   TableActions,
@@ -174,6 +175,7 @@ const UserForm = ({ edit, onSuccess, clearForm, departments, users, role }) => {
     reset,
     watch,
     setValue,
+    getValues,
     formState: { errors },
     clearErrors,
   } = useForm({
@@ -197,16 +199,17 @@ const UserForm = ({ edit, onSuccess, clearForm, departments, users, role }) => {
           edit ? `/${edit.id}` : ""
         }`;
         if (
-          !edit &&
           users?.some(
             (item) =>
-              item.email.trim().toLowerCase() ===
+              (item.email.trim().toLowerCase() ===
                 data.email.trim().toLowerCase() ||
-              item.contact.trim().toLowerCase() ===
-                data.contact.trim().toLowerCase() ||
-              item.employeeId.trim().toLowerCase() ===
-                data.employeeId.trim().toLowerCase() ||
-              item.name.trim().toLowerCase() === data.name.trim().toLowerCase()
+                item.contact.trim().toLowerCase() ===
+                  data.contact.trim().toLowerCase() ||
+                item.employeeId.trim().toLowerCase() ===
+                  data.employeeId.trim().toLowerCase() ||
+                item.name.trim().toLowerCase() ===
+                  data.name.trim().toLowerCase()) &&
+              item.id !== data.id
           )
         ) {
           Prompt({
@@ -272,18 +275,17 @@ const UserForm = ({ edit, onSuccess, clearForm, departments, users, role }) => {
         })}
         error={errors.employeeId}
         placeholder="Enter"
-        readOnly={edit}
         type="number"
         tabIndex={edit ? "0" : "1"}
       />
-      <Input
-        {...register("contact", {
-          required: "Enter a Phone Number",
-        })}
+      <MobileNumberInput
+        name="contact"
+        required={true}
+        register={register}
         error={errors.contact}
-        placeholder="Enter"
-        readOnly={edit}
-        tabIndex={edit ? "0" : "1"}
+        clearErrors={clearErrors}
+        setValue={setValue}
+        watch={watch}
       />
       <Input
         {...register("email", {
@@ -296,7 +298,6 @@ const UserForm = ({ edit, onSuccess, clearForm, departments, users, role }) => {
         error={errors.email}
         autoComplete="newUser"
         placeholder="Enter"
-        readOnly={edit}
         tabIndex={edit ? "0" : "1"}
       />
       <Input

@@ -220,10 +220,10 @@ const PersonAffectedForm = ({
           edit ? `/${edit.pa_id}` : ""
         }`;
         if (
-          !edit &&
           personAffecteds?.some(
             (item) =>
-              item.name.trim().toLowerCase() === data.name.trim().toLowerCase()
+              item.name.trim().toLowerCase() ===
+                data.name.trim().toLowerCase() && item.pa_id !== data.pa_id
           )
         ) {
           Prompt({
@@ -497,10 +497,10 @@ const PersonAffectedDetailForm = ({
     <form
       onSubmit={handleSubmit((data) => {
         if (
-          !edit &&
           personAffectedDetails?.some(
             (item) =>
-              item.name.trim().toLowerCase() === data.name.trim().toLowerCase()
+              item.name.trim().toLowerCase() ===
+                data.name.trim().toLowerCase() && item.id !== data.id
           )
         ) {
           Prompt({

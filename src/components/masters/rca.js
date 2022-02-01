@@ -159,10 +159,10 @@ const RcaForm = ({ edit, onSuccess, clearForm, rcas }) => {
           edit ? `/${edit.id}` : ""
         }`;
         if (
-          !edit &&
           rcas?.some(
             (item) =>
-              item.name.trim().toLowerCase() === data.name.trim().toLowerCase()
+              item.name.trim().toLowerCase() ===
+                data.name.trim().toLowerCase() && item.id !== data.id
           )
         ) {
           Prompt({
@@ -351,10 +351,10 @@ const RcaCauseForm = ({ edit, rcaId, onSuccess, clearForm, rcaCauses }) => {
     <form
       onSubmit={handleSubmit((data) => {
         if (
-          !edit &&
           rcaCauses?.some(
             (item) =>
-              item.name.trim().toLowerCase() === data.name.trim().toLowerCase()
+              item.name.trim().toLowerCase() ===
+                data.name.trim().toLowerCase() && item.id !== data.id
           )
         ) {
           Prompt({

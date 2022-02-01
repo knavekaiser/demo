@@ -162,10 +162,10 @@ const CategoryForm = ({ edit, onSuccess, clearForm, categories }) => {
           edit ? `/${edit.id}` : ""
         }`;
         if (
-          !edit &&
           categories?.some(
             (item) =>
-              item.name.trim().toLowerCase() === data.name.trim().toLowerCase()
+              item.name.trim().toLowerCase() ===
+                data.name.trim().toLowerCase() && item.id !== data.id
           )
         ) {
           Prompt({
@@ -461,11 +461,10 @@ const SubCategoryForm = ({
       <form
         onSubmit={handleSubmit((data) => {
           if (
-            !edit &&
             subCategorys?.some(
               (item) =>
                 item.name.trim().toLowerCase() ===
-                data.name.trim().toLowerCase()
+                  data.name.trim().toLowerCase() && item.id !== data.id
             )
           ) {
             Prompt({
@@ -721,8 +720,9 @@ const ReportableInlineForm = ({
     <form
       onSubmit={handleSubmit((data) => {
         if (
-          !edit &&
-          reportables?.some((item) => +item.report_to === +data.report_to)
+          reportables?.some(
+            (item) => +item.report_to === +data.report_to && item.id !== data.id
+          )
         ) {
           Prompt({
             type: "information",

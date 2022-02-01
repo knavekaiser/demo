@@ -15,6 +15,8 @@ import { useForm } from "react-hook-form";
 import { Modal } from "./modal";
 import Sortable from "sortablejs";
 import s from "./elements.module.scss";
+import countries from "../countries";
+import { phone } from "phone";
 
 export const Input = forwardRef(
   ({ className, label, icon, error, type, ...rest }, ref) => {
@@ -308,6 +310,8 @@ export const Combobox = ({
   onChange,
   error,
   clearErrors,
+  item,
+  renderValue,
 }) => {
   const container = useRef();
   const selected = watch?.(name);
@@ -322,12 +326,13 @@ export const Combobox = ({
       top: Math.max(
         Math.min(
           y + height,
-          window.innerHeight - (35 * (options?.length || 0) + 8)
+          window.innerHeight - Math.min(35 * (options?.length || 0) + 8, 320)
+          // window.innerHeight - (35 * (options?.length || 0) + 8)
         ),
         8
       ),
       width: width,
-      maxHeight: window.innerHeight - 16,
+      maxHeight: Math.min(window.innerHeight - 16, 300),
     });
   }, [open, options]);
   return (
@@ -348,22 +353,29 @@ export const Combobox = ({
         ref={container}
       >
         <p className={`${s.displayValue} ${!selected ? s.placeholder : ""}`}>
-          {!(Array.isArray(options) && options.length) && "No options provided"}
-          {selected &&
-            ["string", "number"].includes(typeof selected) &&
-            options?.find(({ value }) => value === selected)?.label}
-          {Array.isArray(selected) &&
-            (selected.length > 3
-              ? `${selected.length} items selected`
-              : selected.reduce(
-                  (p, a, i, arr) =>
-                    `${p} ${options.find(({ value }) => value === a)?.label}${
-                      i < arr.length - 1 ? ", " : ""
-                    }`,
-                  ""
-                ))}
-          {options?.length > 0 && (
-            <>{!selected?.toString().length && (placeholder || "Select")}</>
+          {renderValue ? (
+            renderValue(selected)
+          ) : (
+            <>
+              {!(Array.isArray(options) && options.length) &&
+                "No options provided"}
+              {selected &&
+                ["string", "number"].includes(typeof selected) &&
+                options?.find(({ value }) => value === selected)?.label}
+              {Array.isArray(selected) &&
+                (selected.length > 3
+                  ? `${selected.length} items selected`
+                  : selected.reduce(
+                      (p, a, i, arr) =>
+                        `${p} ${
+                          options.find(({ value }) => value === a)?.label
+                        }${i < arr.length - 1 ? ", " : ""}`,
+                      ""
+                    ))}
+              {options?.length > 0 && (
+                <>{!selected?.toString().length && (placeholder || "Select")}</>
+              )}
+            </>
           )}
         </p>
         <input
@@ -399,6 +411,7 @@ export const Combobox = ({
           setOpen={setOpen}
           onChange={onChange}
           clearErrors={clearErrors}
+          item={item}
         />
       </Modal>
     </section>
@@ -413,6 +426,7 @@ const ComboboxList = ({
   setOpen,
   onChange = () => {},
   clearErrors,
+  item,
 }) => {
   const ul = useRef();
   const [hover, setHover] = useState(
@@ -515,10 +529,142 @@ const ComboboxList = ({
               readOnly={true}
             />
           )}
-          {label}
+          {item ? item({ label, value, ...rest }) : label}
         </li>
       ))}
     </ul>
+  );
+};
+export const MobileNumberInput = ({
+  label,
+  className,
+  name,
+  register,
+  required,
+  error,
+  clearErrors,
+  setValue,
+  watch,
+  ...rest
+}) => {
+  const { register: cRegister, watch: cWatch, setValue: cSetValue } = useForm();
+  const _id = useRef(Math.random().toString(32).substr(-8));
+  const [country, setCountry] = useState(null);
+  const phoneNumber = watch(name);
+  useEffect(() => {
+    const preferredCountry = countries.find((c) => c.iso2 === "IN");
+    cSetValue("country", preferredCountry.code);
+    setCountry({
+      value: preferredCountry.code,
+      label: preferredCountry.name,
+      iso2: preferredCountry.iso2,
+    });
+  }, []);
+  useEffect(() => {
+    const _number = phoneNumber?.trim().startsWith("+") && phone(phoneNumber);
+    if (_number?.isValid) {
+      const country = countries.find((c) => c.iso2 === _number.countryIso2);
+      cSetValue("country", country.code);
+      setCountry({
+        value: country.code,
+        label: country.name,
+        iso2: country.iso2,
+      });
+    }
+  }, [phoneNumber]);
+  return (
+    <section
+      className={`${s.input} ${s.mobileNumberInput} ${className || ""} ${
+        error ? s.err : ""
+      }`}
+    >
+      {label && <label>{label}</label>}
+      <div className={s.wrapper}>
+        <span className={s.field}>
+          <div className={s.country}>
+            <Combobox
+              className={s.countryFlags}
+              options={countries.map((c) => ({
+                value: c.code,
+                label: c.name,
+                iso2: c.iso2,
+              }))}
+              item={(option) => {
+                return (
+                  <>
+                    <img
+                      src={`https://flagcdn.com/w20/${option.iso2.toLowerCase()}.webp`}
+                    />
+                    <p style={{ marginLeft: "6px", display: "inline" }}>
+                      {option.label}
+                    </p>
+                  </>
+                );
+              }}
+              renderValue={(selected) => {
+                return selected ? (
+                  <img
+                    src={`https://flagcdn.com/w20/${countries
+                      .find((c) => c.code === selected)
+                      ?.iso2.toLowerCase()}.webp`}
+                  />
+                ) : (
+                  "No"
+                );
+              }}
+              register={cRegister}
+              name="country"
+              watch={cWatch}
+              setValue={cSetValue}
+              onChange={(option) => {
+                setCountry(option);
+                clearErrors?.(name);
+                const _number =
+                  phoneNumber && phone(phoneNumber, { country: option.iso2 });
+                if (_number.isValid) {
+                  setValue(name, _number.phoneNumber);
+                }
+              }}
+            />
+          </div>
+          <input
+            type={"text"}
+            {...register(name, {
+              validate: (value) => {
+                if (value) {
+                  return (
+                    phone(value, { country: country.iso2 }).isValid ||
+                    "Phone Number is not valid"
+                  );
+                }
+                if (required) {
+                  return "Please provide a valid Phone Number";
+                }
+                return true;
+              },
+            })}
+            onChange={(e) => {
+              clearErrors?.(name);
+              const value = e.target.value;
+              const _number = phone(value, { country: country.iso2 });
+              if (value && _number.isValid) {
+                setValue(name, _number.phoneNumber);
+              }
+            }}
+            id={rest.id || _id.current}
+            placeholder={"#"}
+            maxLength="15"
+            {...rest}
+          />
+        </span>
+        {error && (
+          <span className={s.errIcon}>
+            <BsFillExclamationTriangleFill />
+          </span>
+        )}
+        {error && <span className={s.errMsg}>{error.message}</span>}
+      </div>
+    </section>
   );
 };
 export const Checkbox = forwardRef(({ label, readOnly, ...rest }, ref) => {
