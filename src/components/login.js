@@ -7,7 +7,7 @@ import { Prompt } from "./modal";
 import s from "./login.module.scss";
 import paths from "./path";
 
-export default function Login({}) {
+export default function Login() {
   const { user, setUser } = useContext(SiteContext);
   const [users, setUsers] = useState([]);
   const {
@@ -25,7 +25,15 @@ export default function Login({}) {
       .then((res) => res.json())
       .then((users) => {
         if (users._embedded.user) {
-          setUsers(users._embedded.user);
+          setUsers(
+            users._embedded.user.map((user) => ({
+              ...user,
+              role: user.role
+                .split(",")
+                .filter((r) => r)
+                .map((r) => +r),
+            }))
+          );
         }
       })
       .catch((err) => {

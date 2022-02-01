@@ -56,7 +56,15 @@ export default function UserMaster() {
       .then((res) => res.json())
       .then((data) => {
         if (data._embedded?.user) {
-          setUsers(data._embedded.user);
+          setUsers(
+            data._embedded.user.map((user) => ({
+              ...user,
+              role: user.role
+                .split(",")
+                .filter((role) => role)
+                .map((role) => +role),
+            }))
+          );
         }
       })
       .catch((err) => {
@@ -126,8 +134,23 @@ export default function UserMaster() {
                 )?.label || user.department}
               </td>
               <td>
-                {parameters.role?.find((u) => u.value === user.role)?.label ||
-                  user.role}
+                {parameters.role?.find((r) => r.value === user.role[0])
+                  ?.label || user.role}
+                {Array.isArray(user.role) && user.role.length > 1 && (
+                  <div className={s.moreRoles}>
+                    +{user.role.length - 1}
+                    <div className={s.allRoles}>
+                      {user.role.map((u, i) =>
+                        i === 0 ? null : (
+                          <p key={u}>
+                            {parameters.role?.find((r) => r.value === u)
+                              ?.label || u}
+                          </p>
+                        )
+                      )}
+                    </div>
+                  </div>
+                )}
               </td>
               <TableActions
                 actions={[
@@ -222,13 +245,19 @@ const UserForm = ({ edit, onSuccess, clearForm, departments, users, role }) => {
         fetch(url, {
           method: edit ? "PUT" : "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
+          body: JSON.stringify({ ...data, role: data.role.join(",") }),
         })
           .then((res) => res.json())
           .then((data) => {
             setLoading(false);
             if (data.name) {
-              onSuccess(data);
+              onSuccess({
+                ...data,
+                role: data.role
+                  .split(",")
+                  .filter((r) => r)
+                  .map((r) => +r),
+              });
               reset();
             }
           })
@@ -332,6 +361,7 @@ const UserForm = ({ edit, onSuccess, clearForm, departments, users, role }) => {
         setValue={setValue}
         watch={watch}
         options={role}
+        multiple={true}
         error={errors.role}
         clearErrors={clearErrors}
       />

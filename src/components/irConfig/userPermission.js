@@ -11,7 +11,7 @@ import s from "./config.module.scss";
 
 export default function UserPermission() {
   const permissionRef = useRef(null);
-  const { checkPermission, user, role, setRole } = useContext(SiteContext);
+  const { checkPermission, user, setRoles } = useContext(SiteContext);
   const [userPermission, setUserPermission] = useState(null);
   const [permissions, setPermissions] = useState([
     {
@@ -165,11 +165,18 @@ export default function UserPermission() {
                 )
               )
                 .then((data) => {
-                  const currentUserUpdate = data.find(
-                    (item) => item.id === user.role
+                  const currentUserUpdate = data.filter((item) =>
+                    user.role.includes(item.id)
                   );
-                  if (currentUserUpdate) {
-                    setRole(currentUserUpdate);
+                  if (currentUserUpdate.length) {
+                    setRoles((prev) => [
+                      ...prev.filter((prevRole) =>
+                        currentUserUpdate.some(
+                          (newRole) => newRole.id !== prevRole.id
+                        )
+                      ),
+                      ...currentUserUpdate,
+                    ]);
                   }
                   fetchUserPermissions();
                   Prompt({

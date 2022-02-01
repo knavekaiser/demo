@@ -100,13 +100,26 @@ const MyDashboard = () => {
     Promise.all([
       fetch(`${process.env.REACT_APP_HOST}/location`).then((res) => res.json()),
       fetch(`${process.env.REACT_APP_HOST}/category`).then((res) => res.json()),
-    ]).then(([location, category]) => {
+      fetch(`${process.env.REACT_APP_HOST}/user`).then((res) => res.json()),
+    ]).then(([location, category, user]) => {
       const _parameters = { ...parameters };
       if (location?._embedded.location) {
         _parameters.locations = location._embedded.location;
       }
       if (category?._embedded.category) {
         _parameters.categories = category._embedded.category;
+      }
+      if (user?._embedded.user) {
+        _parameters.users = user._embedded.user.map((user) => ({
+          label: user.name,
+          value: user.id,
+        }));
+        _parameters.investigators = user._embedded.user
+          .filter((user) => user.role === 12)
+          .map((user) => ({
+            label: user.name,
+            value: user.id,
+          }));
       }
       setParameters(_parameters);
     });
@@ -241,7 +254,10 @@ const MyDashboard = () => {
                 {incidentType.find(({ value }) => value === inc.typeofInci)
                   ?.label || [inc.typeofInci]}
               </td>
-              <td>{inc.reportedBy}</td>
+              <td>
+                {parameters?.users.find(({ value }) => value === inc.userId)
+                  ?.label || "Anonymous"}
+              </td>
               <td>{inc.irInvestigator}</td>
               <td>
                 {irStatuses.find((item) => item.id === +inc.status)?.name ||
@@ -374,7 +390,14 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
       if (users._embedded?.user) {
         setIrInvestigator(
           users._embedded.user
-            .filter((user) => user.role === 10)
+            .map((user) => ({
+              ...user,
+              role: user.role
+                .split(",")
+                .filter((r) => r)
+                .map((r) => +r),
+            }))
+            .filter((user) => user.role.includes(10))
             .map((user) => ({ label: user.name, value: user.id }))
         );
       }
@@ -499,7 +522,11 @@ const QualityDashboard = () => {
           _parameters.categories = category._embedded.category;
         }
         if (user?._embedded.user) {
-          _parameters.users = user._embedded.user
+          _parameters.users = user._embedded.user.map((user) => ({
+            label: user.name,
+            value: user.id,
+          }));
+          _parameters.investigators = user._embedded.user
             .filter((user) => user.role === 12)
             .map((user) => ({
               label: user.name,
@@ -606,7 +633,10 @@ const QualityDashboard = () => {
                 {incidentType.find(({ value }) => value === inc.typeofInci)
                   ?.label || inc.typeofInci}
               </td>
-              <td>{inc.reportedBy}</td>
+              <td>
+                {parameters?.users.find(({ value }) => value === inc.userId)
+                  ?.label || "Anonymous"}
+              </td>
               <td>{inc.irInvestigator}</td>
               <td>
                 {irStatuses.find((item) => item.id === +inc.status)?.name ||
@@ -764,7 +794,7 @@ const QualityDashboard = () => {
           </ul>
           <AssignForm
             assign={assign}
-            users={parameters?.users}
+            users={parameters?.investigator}
             setAssign={setAssign}
             onSuccess={(incident) => {
               setIncidents((prev) =>

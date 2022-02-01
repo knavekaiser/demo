@@ -3,27 +3,31 @@ import React, { createContext, useState, useEffect, useCallback } from "react";
 export const SiteContext = createContext();
 export const Provider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [role, setRole] = useState(null);
+  const [roles, setRoles] = useState(null);
   const checkPermission = useCallback(
     ({ roleId, permission }) => {
-      return true;
-      return (
-        ((user.role === roleId || roleId.includes?.(user.role)) &&
-          role?.permission?.includes(permission)) ||
-        false
-      );
+      let roleMatch = false;
+      if (Array.isArray(roleId)) {
+        roleMatch = user.role.some((ur) => roleId.includes(ur));
+      } else {
+        roleMatch = user.role.includes(roleId);
+      }
+      const role = roles?.find((role) => user.role.includes(role.id));
+      return (roleMatch && role?.permission?.includes(permission)) || false;
     },
-    [role, user]
+    [roles, user]
   );
   useEffect(() => {
-    if (!role && user) {
-      fetch(`${process.env.REACT_APP_HOST}/userPermission/${user.role}`)
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.id) {
-            setRole(data);
-          }
-        });
+    if (!roles && user) {
+      Promise.all(
+        user.role.map((role) =>
+          fetch(
+            `${process.env.REACT_APP_HOST}/userPermission/${role}`
+          ).then((res) => res.json())
+        )
+      ).then((data) => {
+        setRoles(data);
+      });
     }
   }, [user]);
   return (
@@ -32,8 +36,8 @@ export const Provider = ({ children }) => {
         user,
         setUser,
         checkPermission,
-        role,
-        setRole,
+        roles,
+        setRoles,
       }}
     >
       {children}

@@ -1,10 +1,8 @@
 import React, { useState, useEffect, useContext, useCallback } from "react";
 import { SiteContext } from "../SiteContext";
-import { Link } from "react-router-dom";
 import { FaInfoCircle, FaRegTrashAlt, FaPlus, FaCheck } from "react-icons/fa";
 import { IoClose } from "react-icons/io5";
-import { BiChevronsDown, BiSearch } from "react-icons/bi";
-import { AiOutlinePlus } from "react-icons/ai";
+import { BiChevronsDown } from "react-icons/bi";
 import { BsPencilFill } from "react-icons/bs";
 import {
   Input,
@@ -16,7 +14,6 @@ import {
   Chip,
   Table,
   TableActions,
-  Checkbox,
   moment,
   Moment,
 } from "./elements";
@@ -229,7 +226,16 @@ export default function IncidentReporting() {
       }
       if (users?._embedded.user) {
         _parameters.hods = users._embedded.user
-          .filter((u) => u.role === 12 && u.department === user.department)
+          .map((user) => ({
+            ...user,
+            role: user.role
+              .split(",")
+              .filter((r) => r)
+              .map((r) => +r),
+          }))
+          .filter(
+            (u) => u.role.includes(12) && u.department === user.department
+          )
           .map((item) => ({
             label: item.name,
             value: item.id,
@@ -349,7 +355,6 @@ export default function IncidentReporting() {
                     })}
                     error={methods.formState.errors.patientname}
                     label="Patient name / UHID"
-                    // icon={<BiSearch />}
                   />
                   <Input
                     {...methods.register("complaIntegerDatetime", {
@@ -696,7 +701,13 @@ export default function IncidentReporting() {
                   name="headofDepart"
                   register={methods.register}
                   formOptions={{
-                    required: "Please select a Head of the Department",
+                    validate: (v) => {
+                      if (v) return true;
+                      return (
+                        +methods.getValues("status") === 1 ||
+                        "Please select a Head of the Department"
+                      );
+                    },
                   }}
                   options={parameters?.hods}
                   watch={methods.watch}
