@@ -228,6 +228,7 @@
         position: relative;
         margin-left: 6px;
         .allRoles {
+          z-index: 20;
           text-align: left;
           display: none;
           position: absolute;

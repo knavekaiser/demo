@@ -201,13 +201,11 @@ const UserForm = ({ edit, onSuccess, clearForm, departments, users, role }) => {
     getValues,
     formState: { errors },
     clearErrors,
-  } = useForm({
-    ...edit,
-    ...(edit?.dob && { dob: moment({ time: edit.dob, format: "YYYY-MM-DD" }) }),
-  });
+  } = useForm();
   const [loading, setLoading] = useState(false);
   useEffect(() => {
     reset({
+      role: [9],
       ...edit,
       ...(edit?.dob && {
         dob: moment({ time: edit.dob, format: "YYYY-MM-DD" }),

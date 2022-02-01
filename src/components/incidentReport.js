@@ -325,6 +325,9 @@ export default function IncidentReporting() {
                     );
                   },
                 }}
+                onChange={() => {
+                  methods.clearErrors("locationDetailsEntry");
+                }}
                 setValue={methods.setValue}
                 watch={methods.watch}
                 error={methods.formState.errors.location}
@@ -332,7 +335,17 @@ export default function IncidentReporting() {
                 clearErrors={methods.clearErrors}
               />
               <Input
-                {...methods.register("locationDetailsEntry")}
+                {...methods.register("locationDetailsEntry", {
+                  validate: (v) => {
+                    if (v) return true;
+                    if (
+                      methods.getValues("status") === 2 &&
+                      methods.getValues("location") === 107
+                    ) {
+                      return "Please enter Location Detail";
+                    }
+                  },
+                })}
                 error={methods.formState.errors.locationDetailsEntry}
                 label={
                   <>
