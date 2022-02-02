@@ -570,6 +570,16 @@ export const MobileNumberInput = ({
         label: country.name,
         iso2: country.iso2,
       });
+    } else if (country) {
+      const _number = phone(phoneNumber, { country: country.iso2 });
+      if (_number.isValid) {
+        setValue(name, _number.phoneNumber);
+      }
+    } else {
+      const _number = phone(phoneNumber);
+      if (_number.isValid) {
+        setValue(name, _number.phoneNumber);
+      }
     }
   }, [phoneNumber]);
   return (
@@ -643,14 +653,6 @@ export const MobileNumberInput = ({
                 return true;
               },
             })}
-            onChange={(e) => {
-              clearErrors?.(name);
-              const value = e.target.value;
-              const _number = phone(value, { country: country.iso2 });
-              if (value && _number.isValid) {
-                setValue(name, _number.phoneNumber);
-              }
-            }}
             id={rest.id || _id.current}
             placeholder={"#"}
             maxLength="15"

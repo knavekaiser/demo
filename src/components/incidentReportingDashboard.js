@@ -12,6 +12,7 @@ import {
 } from "react-icons/bs";
 import { GoPerson } from "react-icons/go";
 import {
+  Radio,
   Tabs,
   Input,
   Combobox,
@@ -46,7 +47,7 @@ const incidentType = [
   },
   {
     label: "Sentinel Event",
-    value: 0,
+    value: 8,
   },
 ];
 const irStatuses = [
@@ -61,6 +62,7 @@ const irStatuses = [
   { id: 9, name: "Cancelled" },
 ];
 function IncidentReportingDashboard() {
+  const { checkPermission } = useContext(SiteContext);
   return (
     <div className={s.container}>
       <header>
@@ -69,10 +71,14 @@ function IncidentReportingDashboard() {
       <Tabs
         tabs={[
           { label: "My Dashboard", path: paths.incidentDashboard.myDashboard },
-          {
-            label: "Quality Dashboard",
-            path: paths.incidentDashboard.qualityDashboard,
-          },
+          ...(checkPermission({ roleId: [10, 11] })
+            ? [
+                {
+                  label: "Quality Dashboard",
+                  path: paths.incidentDashboard.qualityDashboard,
+                },
+              ]
+            : []),
         ]}
       />
       <Routes>
@@ -80,10 +86,12 @@ function IncidentReportingDashboard() {
           path={paths.incidentDashboard.myDashboard + "/*"}
           element={<MyDashboard />}
         />
-        <Route
-          path={paths.incidentDashboard.qualityDashboard + "/*"}
-          element={<QualityDashboard />}
-        />
+        {checkPermission({ roleId: [10, 11] }) && (
+          <Route
+            path={paths.incidentDashboard.qualityDashboard + "/*"}
+            element={<QualityDashboard />}
+          />
+        )}
       </Routes>
     </div>
   );
@@ -115,7 +123,14 @@ const MyDashboard = () => {
           value: user.id,
         }));
         _parameters.investigators = user._embedded.user
-          .filter((user) => user.role === 12)
+          .map((user) => ({
+            ...user,
+            role: user.role
+              .split(",")
+              .filter((r) => r)
+              .map((r) => +r),
+          }))
+          .filter((user) => user.role.includes(12))
           .map((user) => ({
             label: user.name,
             value: user.id,
@@ -258,7 +273,11 @@ const MyDashboard = () => {
                 {parameters?.users.find(({ value }) => value === inc.userId)
                   ?.label || "Anonymous"}
               </td>
-              <td>{inc.irInvestigator}</td>
+              <td>
+                {parameters?.investigators.find(
+                  ({ value }) => value === inc.irInvestigator
+                )?.label || inc.irInvestigator}
+              </td>
               <td>
                 {irStatuses.find((item) => item.id === +inc.status)?.name ||
                   inc.status}
@@ -411,6 +430,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
         name="InciCateg"
         setValue={setValue}
         watch={watch}
+        multiple={true}
         register={register}
         options={categories}
       />
@@ -448,6 +468,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
         name="incidentType"
         setValue={setValue}
         watch={watch}
+        multiple={true}
         register={register}
         options={incidentType}
       />
@@ -459,6 +480,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
           watch={watch}
           register={register}
           options={irInvestigator}
+          multiple={true}
         />
         <Combobox
           label="Status"
@@ -466,6 +488,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
           setValue={setValue}
           watch={watch}
           register={register}
+          multiple={true}
           options={irStatuses.map((item) => ({
             label: item.name,
             value: item.id,
@@ -474,12 +497,20 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
       </section>
       {!qualityDashboard && (
         <section className={`${s.pair} ${s.checkboxes}`}>
-          <section>
-            <Checkbox label="My IRs" {...register("userId")} />
-          </section>
-          <section>
-            <Checkbox label="My Department IRs" {...register("department")} />
-          </section>
+          <Radio
+            register={register}
+            name="userId"
+            options={[
+              {
+                label: "My IRs",
+                value: 1,
+              },
+              {
+                label: "My Department IRs",
+                value: 2,
+              },
+            ]}
+          />
         </section>
       )}
       <section className={s.btns}>
@@ -527,7 +558,14 @@ const QualityDashboard = () => {
             value: user.id,
           }));
           _parameters.investigators = user._embedded.user
-            .filter((user) => user.role === 12)
+            .map((user) => ({
+              ...user,
+              role: user.role
+                .split(",")
+                .filter((r) => r)
+                .map((r) => +r),
+            }))
+            .filter((user) => user.role.includes(12))
             .map((user) => ({
               label: user.name,
               value: user.id,
@@ -637,7 +675,11 @@ const QualityDashboard = () => {
                 {parameters?.users.find(({ value }) => value === inc.userId)
                   ?.label || "Anonymous"}
               </td>
-              <td>{inc.irInvestigator}</td>
+              <td>
+                {parameters?.investigators.find(
+                  ({ value }) => value === inc.irInvestigator
+                )?.label || inc.irInvestigator}
+              </td>
               <td>
                 {irStatuses.find((item) => item.id === +inc.status)?.name ||
                   inc.status}
@@ -645,6 +687,19 @@ const QualityDashboard = () => {
               <td>{inc.tat}</td>
               <TableActions
                 actions={[
+                  ...(checkPermission({
+                    roleId: 11,
+                    permission: "Assign IRs",
+                  }) && [2, 3].includes(+inc.status)
+                    ? [
+                        {
+                          icon: <FaRegTrashAlt />,
+                          label:
+                            +inc.status === 2 ? "Assign IR" : "Re-assign IR",
+                          callBack: () => setAssign(inc),
+                        },
+                      ]
+                    : []),
                   ...(+inc.status === 2
                     ? [
                         {
@@ -652,18 +707,6 @@ const QualityDashboard = () => {
                           label: "Review IR",
                           callBack: () => {},
                         },
-                        ...(checkPermission({
-                          roleId: 11,
-                          permission: "Assign IRs",
-                        })
-                          ? [
-                              {
-                                icon: <FaRegTrashAlt />,
-                                label: "Assign IR",
-                                callBack: () => setAssign(inc),
-                              },
-                            ]
-                          : []),
                         ...(checkPermission({
                           roleId: [11, 10],
                           permission: "Cancel IRs",
@@ -753,7 +796,7 @@ const QualityDashboard = () => {
       </div>
       <Modal
         head={true}
-        label="ASSIGN IR"
+        label={+assign?.status === 2 ? "ASSIGN IR" : "RE-ASSIGN IR"}
         open={assign}
         setOpen={setAssign}
         className={s.assignModal}
@@ -763,17 +806,17 @@ const QualityDashboard = () => {
             <li>IR Code: {assign?.sequence}</li>
             <li>
               Incident Date & Time:{" "}
-              <Moment format="DD/MM/YYYY HH:mm">
+              <Moment format="DD/MM/YYYY hh:mma">
                 {assign?.incident_Date_Time}
               </Moment>
             </li>
             <li>
-              Incidnet Type:
+              Incidnet Type:{" "}
               {incidentType.find(({ value }) => value === assign?.typeofInci)
                 ?.label || assign?.typeofInci}
             </li>
             <li>
-              Category:
+              Category:{" "}
               {parameters?.categories.find(
                 (item) => item.id === assign?.inciCateg
               )?.name || assign?.inciCateg}
@@ -785,7 +828,7 @@ const QualityDashboard = () => {
               )?.name || assign?.location}
             </li>
             <li>
-              Sub Category:
+              Sub Category:{" "}
               {parameters?.categories
                 .find((item) => item.id === assign?.inciCateg)
                 ?.subCategorys?.find((item) => item.id === assign?.inciSubCat)
@@ -794,7 +837,7 @@ const QualityDashboard = () => {
           </ul>
           <AssignForm
             assign={assign}
-            users={parameters?.investigator}
+            users={parameters?.investigators}
             setAssign={setAssign}
             onSuccess={(incident) => {
               setIncidents((prev) =>
@@ -809,6 +852,17 @@ const QualityDashboard = () => {
 };
 const AssignForm = ({ assign, users, setAssign, onSuccess }) => {
   const [loading, setLoading] = useState(false);
+  const [timeline, setTimeline] = useState([
+    {
+      id: 454,
+      status: "Assigned",
+      user: {
+        name: "Ganesh",
+        id: 23,
+      },
+      dateTime: "2022-02-01T00:00:00",
+    },
+  ]);
   const {
     handleSubmit,
     register,
@@ -818,58 +872,80 @@ const AssignForm = ({ assign, users, setAssign, onSuccess }) => {
     formState: { errors },
   } = useForm();
   return (
-    <form
-      onSubmit={handleSubmit((data) => {
-        setLoading(true);
-        fetch(`${process.env.REACT_APP_HOST}/IncidentReport/${assign.id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...assign,
-            irInvestigator: data.user,
-            status: "Assigned",
-          }),
-        })
-          .then((res) => res.json())
-          .then((data) => {
-            setLoading(false);
-            if (data.id) {
-              setAssign(null);
-              onSuccess(data);
-            }
+    <>
+      {timeline && +assign.status === 3 && (
+        <ul className={s.timeline}>
+          {timeline.map((evt) => (
+            <li key={evt.id}>
+              <span className={s.ball} />
+              <p>
+                <span className={s.status}>{evt.status}</span> to{" "}
+                {evt.user.name} on{" "}
+                <Moment format="DD/MM/YYYY">{evt.dateTime}</Moment> at{" "}
+                <Moment format="hh:mma">{evt.dateTime}</Moment>
+              </p>
+            </li>
+          ))}
+          <li>
+            <span className={`${s.ball} ${s.new}`} />
+            <p>Re-assign</p>
+            <span className={s.ir}>IR</span>
+          </li>
+        </ul>
+      )}
+      <form
+        onSubmit={handleSubmit((data) => {
+          setLoading(true);
+          fetch(`${process.env.REACT_APP_HOST}/IncidentReport/${assign.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              ...assign,
+              irInvestigator: data.user,
+              status: 3,
+            }),
           })
-          .catch((err) => {
-            setLoading(false);
-            console.log(err);
-          });
-      })}
-    >
-      <Combobox
-        className={s.userCombo}
-        label="Select User to assign:"
-        name="user"
-        register={register}
-        formOptions={{
-          required: "Select an Investigator",
-        }}
-        error={errors.user}
-        setValue={setValue}
-        watch={watch}
-        options={users}
-      />
-      <section className={s.btns}>
-        <button
-          className="btn secondary ghost w-100"
-          type="button"
-          onClick={() => setAssign(null)}
-        >
-          Close
-        </button>
-        <button className="btn w-100" disabled={loading}>
-          Assign
-        </button>
-      </section>
-    </form>
+            .then((res) => res.json())
+            .then((data) => {
+              setLoading(false);
+              if (data.id) {
+                setAssign(null);
+                onSuccess(data);
+              }
+            })
+            .catch((err) => {
+              setLoading(false);
+              console.log(err);
+            });
+        })}
+      >
+        <Combobox
+          className={s.userCombo}
+          label="Select User to assign:"
+          name="user"
+          register={register}
+          formOptions={{
+            required: "Select an Investigator",
+          }}
+          error={errors.user}
+          setValue={setValue}
+          watch={watch}
+          options={users}
+        />
+        <section className={s.btns}>
+          <button
+            className="btn secondary ghost w-100"
+            type="button"
+            onClick={() => setAssign(null)}
+          >
+            Close
+          </button>
+          <button className="btn w-100" disabled={loading}>
+            Assign
+          </button>
+        </section>
+      </form>
+    </>
   );
 };
 

@@ -433,7 +433,7 @@ export default function IncidentReporting() {
                   },
                   {
                     label: "Sentinel Event",
-                    value: 0,
+                    value: 8,
                     // hint:
                     //   "Any potential safety event that did not reach the patient.",
                   },

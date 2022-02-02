@@ -503,6 +503,7 @@
   grid-auto-rows: max-content;
   overflow-x: auto !important;
   width: 100%;
+  border: 1px solid #b7b7b7;
   tr {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
@@ -532,8 +533,7 @@
     }
   }
   tbody {
-    border: 1px solid #b7b7b7;
-    border-top: none;
+    // border-top: none;
     // border-top: none;
     // overflow-y: auto !important;
     // overflow-x: hidden !important;

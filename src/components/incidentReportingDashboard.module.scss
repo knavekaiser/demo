@@ -1,3 +1,5 @@
+@import "variables";
+
 main {
   max-height: calc(100vh - 50px);
 }
@@ -52,14 +54,8 @@ main {
       .checkboxes {
         height: min-content;
         margin-top: auto;
-        margin-bottom: 4px;
+        margin-bottom: 8px;
         display: flex;
-        grid-gap: 1.5rem;
-        section {
-          display: flex;
-          align-items: center;
-          grid-gap: 6px;
-        }
       }
     }
     table {
@@ -160,6 +156,51 @@ main {
       font-weight: 600;
       background: rgb(246, 246, 246);
       padding: 10px 15px;
+    }
+    .timeline {
+      font-weight: 600;
+      padding-top: 10px;
+      display: grid;
+      grid-gap: 10px;
+      li {
+        display: flex;
+        grid-gap: 6px;
+        align-items: center;
+        .ball {
+          display: block;
+          border-radius: 50%;
+          height: 1.2rem;
+          width: 1.2rem;
+          border: 1px solid #a7a8a1;
+          background: #e0e0e0;
+          position: relative;
+          &::after {
+            content: "";
+            display: block;
+            position: absolute;
+            height: 100%;
+            width: 1px;
+            background: #a7a8a1;
+            left: 50%;
+            top: 100%;
+            z-index: -5;
+          }
+          &.new {
+            background: white;
+            border-color: #363b5d;
+            &::after {
+              background: #363b5d;
+              height: 70%;
+            }
+          }
+        }
+        .status {
+          color: $green;
+        }
+        .ir {
+          color: $red;
+        }
+      }
     }
     form {
       .userCombo {
