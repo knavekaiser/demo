@@ -12,9 +12,9 @@ import { useForm } from "react-hook-form";
 import s from "./masters.module.scss";
 
 const _periods = [
-  { label: "MM", value: "/MM" },
-  { label: "MM/YYYY", value: "/MM/YYYY" },
-  { label: "YYYY", value: "/YYYY" },
+  { label: "MM", value: "MM" },
+  { label: "MM/YYYY", value: "MM/YYYY" },
+  { label: "YYYY", value: "YYYY" },
 ];
 export default function IrCodeConfig() {
   const [periods, setPeriods] = useState();
