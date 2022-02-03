@@ -31,19 +31,21 @@ export default function IrCodeConfig() {
   const reseed = watch("reseed");
   const period = watch("period");
   useEffect(() => {
-    if (reseed === "M" && period === "/YYYY") {
-      setValue("period", "/MM");
+    if (reseed === "M" && period === "YYYY") {
+      setValue("period", "MM");
     }
     if (reseed === "M") {
       setPeriods([
-        { label: "MM", value: "/MM" },
-        { label: "MM/YYYY", value: "/MM/YYYY" },
+        { label: "None", value: "" },
+        { label: "MM", value: "MM" },
+        { label: "MM/YYYY", value: "MM/YYYY" },
       ]);
     } else {
       setPeriods([
-        { label: "MM", value: "/MM" },
-        { label: "MM/YYYY", value: "/MM/YYYY" },
-        { label: "YYYY", value: "/YYYY" },
+        { label: "None", value: "" },
+        { label: "MM", value: "MM" },
+        { label: "MM/YYYY", value: "MM/YYYY" },
+        { label: "YYYY", value: "YYYY" },
       ]);
     }
   }, [reseed]);

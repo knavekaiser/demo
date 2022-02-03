@@ -49,10 +49,10 @@ export default function IncidentReporting() {
               method: "PATCH",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
+                upload: [],
                 witness: [],
                 actionTaken: [],
                 notification: [],
-                upload: [],
               }),
             }
           )
@@ -132,7 +132,6 @@ export default function IncidentReporting() {
     methods.reset({
       id: "",
       action: "",
-      witness: "",
       status: "",
       department: "",
       userDept: "",
@@ -433,7 +432,7 @@ export default function IncidentReporting() {
                   },
                   {
                     label: "Sentinel Event",
-                    value: 0,
+                    value: 8,
                     // hint:
                     //   "Any potential safety event that did not reach the patient.",
                   },
@@ -713,15 +712,6 @@ export default function IncidentReporting() {
                   placeholder="Enter"
                   name="headofDepart"
                   register={methods.register}
-                  formOptions={{
-                    validate: (v) => {
-                      if (v) return true;
-                      return (
-                        +methods.getValues("status") === 1 ||
-                        "Please select a Head of the Department"
-                      );
-                    },
-                  }}
                   options={parameters?.hods}
                   watch={methods.watch}
                   setValue={methods.setValue}

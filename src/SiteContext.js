@@ -12,7 +12,12 @@ export const Provider = ({ children }) => {
       } else {
         roleMatch = user.role.includes(roleId);
       }
-      const role = roles?.find((role) => user.role.includes(role.id));
+      if (roleMatch && !permission) {
+        return true;
+      }
+      const role = roles?.filter((role) => {
+        return roleId === role.id || roleId.includes?.(role.id);
+      })[0];
       return (roleMatch && role?.permission?.includes(permission)) || false;
     },
     [roles, user]

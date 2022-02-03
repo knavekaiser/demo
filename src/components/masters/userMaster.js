@@ -227,9 +227,7 @@ const UserForm = ({ edit, onSuccess, clearForm, departments, users, role }) => {
                 item.contact.trim().toLowerCase() ===
                   data.contact.trim().toLowerCase() ||
                 item.employeeId.trim().toLowerCase() ===
-                  data.employeeId.trim().toLowerCase() ||
-                item.name.trim().toLowerCase() ===
-                  data.name.trim().toLowerCase()) &&
+                  data.employeeId.trim().toLowerCase()) &&
               item.id !== data.id
           )
         ) {
@@ -302,7 +300,6 @@ const UserForm = ({ edit, onSuccess, clearForm, departments, users, role }) => {
         })}
         error={errors.employeeId}
         placeholder="Enter"
-        type="number"
         tabIndex={edit ? "0" : "1"}
       />
       <MobileNumberInput

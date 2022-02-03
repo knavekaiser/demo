@@ -503,6 +503,7 @@
   grid-auto-rows: max-content;
   overflow-x: auto !important;
   width: 100%;
+  border: 1px solid #b7b7b7;
   tr {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
@@ -532,8 +533,7 @@
     }
   }
   tbody {
-    border: 1px solid #b7b7b7;
-    border-top: none;
+    // border-top: none;
     // border-top: none;
     // overflow-y: auto !important;
     // overflow-x: hidden !important;
@@ -610,7 +610,12 @@
     color: black !important;
     padding: 8px 12px;
     display: flex;
-    grid-gap: 6px;
+    grid-gap: 8px;
+    align-items: center;
+    svg {
+      height: 18px;
+      width: 18px;
+    }
     &:hover {
       background: rgba(144, 144, 144, 0.1) !important;
     }
