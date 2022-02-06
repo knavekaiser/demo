@@ -253,24 +253,8 @@ const MyDashboard = () => {
               key={inc.id}
               ir={inc}
               actions={[
-                ...(+inc.status === 2
+                ...(+inc.status === 1
                   ? [
-                      {
-                        icon: <FaRegFileAlt />,
-                        label: "Review IR",
-                        callBack: () => {
-                          navigate(paths.incidentReport, {
-                            state: {
-                              edit: inc,
-                              readOnly: true,
-                              focus: inc.id,
-                              from: location.pathname,
-                            },
-                          });
-                        },
-                      },
-                    ]
-                  : [
                       {
                         icon: <BsPencilFill />,
                         label: "Edit",
@@ -303,6 +287,22 @@ const MyDashboard = () => {
                                   );
                                 }
                               });
+                            },
+                          });
+                        },
+                      },
+                    ]
+                  : [
+                      {
+                        icon: <FaRegFileAlt />,
+                        label: "Review IR",
+                        callBack: () => {
+                          navigate(paths.incidentReport, {
+                            state: {
+                              edit: inc,
+                              readOnly: true,
+                              focus: inc.id,
+                              from: location.pathname,
                             },
                           });
                         },
