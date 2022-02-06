@@ -10,6 +10,7 @@
 
 # production
 /build
+/Login
 
 # misc
 .DS_Store

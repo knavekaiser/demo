@@ -450,8 +450,11 @@
       position: relative;
       input {
         cursor: pointer;
+        flex-shrink: 0;
         margin-right: 6px;
       }
+      display: flex;
+      align-items: center;
       padding: 8px;
       &:not(:last-child) {
         &::after {

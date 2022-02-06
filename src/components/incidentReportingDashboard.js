@@ -12,6 +12,7 @@ import {
   FaAdjust,
   FaCrosshairs,
   FaRegUser,
+  FaUser,
 } from "react-icons/fa";
 import { BiSearch } from "react-icons/bi";
 import { AiOutlinePlus } from "react-icons/ai";
@@ -212,15 +213,17 @@ const MyDashboard = () => {
         onSubmit={(values) => {
           const _filters = {};
           for (var field in values) {
-            if (values[field]) _filters[field] = values[field];
+            if (values[field]) {
+              if (values[field] === "self") {
+                _filters.userId = user.id;
+              }
+              if (values[field] === "department") {
+                _filters.department = user.department;
+              }
+              _filters[field] = values[field]?.join?.(",") || values[field];
+            }
           }
-          console.log(values);
-          if (values.userId) {
-            _filters.userId = user.id;
-          }
-          if (values.department) {
-            _filters.department = user.department;
-          }
+          delete _filters.irBy;
           console.log(_filters);
           setFilters(_filters);
         }}
@@ -247,113 +250,70 @@ const MyDashboard = () => {
             new Date(a.reportingDate) > new Date(b.reportingDate) ? -1 : 1
           )
           .map((inc) => (
-            <tr
+            <SingleIr
+              focus={focus}
+              setFocus={setFocus}
               key={inc.id}
-              className={focus === inc.id ? s.focus : ""}
-              onClick={() => setFocus(inc.id)}
-            >
-              <td>{inc.sequence}</td>
-              <td>
-                <Moment format="DD/MM/YYYY hh:mm">{inc.reportingDate}</Moment>
-              </td>
-              <td>
-                <Moment format="DD/MM/YYYY hh:mm">
-                  {inc.incident_Date_Time}
-                </Moment>
-              </td>
-              <td>
-                {parameters?.locations.find((item) => item.id === inc.location)
-                  ?.name || inc.location}
-              </td>
-              <td>
-                {parameters?.categories.find(
-                  (item) => item.id === inc.inciCateg
-                )?.name || inc.inciCateg}
-              </td>
-              <td>
-                {parameters?.categories
-                  .find((item) => item.id === inc.inciCateg)
-                  ?.subCategorys?.find((item) => item.id === inc.inciSubCat)
-                  ?.name || inc.inciSubCat}
-              </td>
-              <td>
-                {incidentType.find(({ value }) => value === inc.typeofInci)
-                  ?.label || [inc.typeofInci]}
-              </td>
-              <td>
-                {parameters?.users.find(({ value }) => value === inc.userId)
-                  ?.label || "Anonymous"}
-              </td>
-              <td>
-                {parameters?.investigators.find(
-                  ({ value }) => value === inc.irInvestigator
-                )?.label || inc.irInvestigator}
-              </td>
-              <td>
-                {irStatuses.find((item) => item.id === +inc.status)?.name ||
-                  inc.status}
-              </td>
-              <td>{inc.tat}</td>
-              <TableActions
-                actions={[
-                  ...(+inc.status === 2
-                    ? [
-                        {
-                          icon: <FaRegFileAlt />,
-                          label: "Review IR",
-                          callBack: () => {
-                            navigate(paths.incidentReport, {
-                              state: {
-                                edit: inc,
-                                readOnly: true,
-                                focus: inc.id,
-                                from: location.pathname,
-                              },
-                            });
-                          },
+              ir={inc}
+              actions={[
+                ...(+inc.status === 2
+                  ? [
+                      {
+                        icon: <FaRegFileAlt />,
+                        label: "Review IR",
+                        callBack: () => {
+                          navigate(paths.incidentReport, {
+                            state: {
+                              edit: inc,
+                              readOnly: true,
+                              focus: inc.id,
+                              from: location.pathname,
+                            },
+                          });
                         },
-                      ]
-                    : [
-                        {
-                          icon: <BsPencilFill />,
-                          label: "Edit",
-                          callBack: () => {
-                            navigate(paths.incidentReport, {
-                              state: {
-                                edit: inc,
-                                focus: inc.id,
-                                from: location.pathname,
-                              },
-                            });
-                          },
+                      },
+                    ]
+                  : [
+                      {
+                        icon: <BsPencilFill />,
+                        label: "Edit",
+                        callBack: () => {
+                          navigate(paths.incidentReport, {
+                            state: {
+                              edit: inc,
+                              focus: inc.id,
+                              from: location.pathname,
+                            },
+                          });
                         },
-                        {
-                          icon: <FaRegTrashAlt />,
-                          label: "Delete",
-                          callBack: () => {
-                            Prompt({
-                              type: "confirmation",
-                              message:
-                                "Are you sure you want to delete this report?",
-                              callback: () => {
-                                fetch(
-                                  `${process.env.REACT_APP_HOST}/IncidentReport/${inc.id}`,
-                                  { method: "DELETE" }
-                                ).then((res) => {
-                                  if (res.status === 204) {
-                                    setIncidents((prev) =>
-                                      prev.filter((ir) => ir.id !== inc.id)
-                                    );
-                                  }
-                                });
-                              },
-                            });
-                          },
+                      },
+                      {
+                        icon: <FaRegTrashAlt />,
+                        label: "Delete",
+                        callBack: () => {
+                          Prompt({
+                            type: "confirmation",
+                            message:
+                              "Are you sure you want to delete this report?",
+                            callback: () => {
+                              fetch(
+                                `${process.env.REACT_APP_HOST}/IncidentReport/${inc.id}`,
+                                { method: "DELETE" }
+                              ).then((res) => {
+                                if (res.status === 204) {
+                                  setIncidents((prev) =>
+                                    prev.filter((ir) => ir.id !== inc.id)
+                                  );
+                                }
+                              });
+                            },
+                          });
                         },
-                      ]),
-                ]}
-              />
-            </tr>
+                      },
+                    ]),
+              ]}
+              parameters={parameters}
+            />
           ))}
       </Table>
       <div className={s.legend}>
@@ -400,10 +360,98 @@ const ReportCount = ({ label, className, irs }) => {
     </div>
   );
 };
+const SingleIr = ({ ir, focus, setFocus, className, actions, parameters }) => {
+  return (
+    <tr
+      className={`${ir.typeofInci === 8 ? s.sentinel : ""} ${
+        focus === ir.id ? s.focus : ""
+      } ${className || ""}`}
+      onClick={() => {
+        setFocus && setFocus(ir.id);
+      }}
+    >
+      <td>
+        <span className={s.icons}>
+          {ir.patientYesOrNo && (
+            <>
+              <FaUser className={s.user} />
+              <span className={s.patientDetail}>
+                <p>
+                  Patient Name: <b>{ir.patientname}</b>
+                </p>
+                <p>
+                  Complaint Date & Time:{" "}
+                  <b>
+                    <Moment format="DD/MM/YYYY hh:mma">
+                      {ir.complaIntegerDatetime}
+                    </Moment>
+                  </b>
+                </p>
+                <p>
+                  Complaint ID: <b>{ir.complaIntegerIdEntry}</b>
+                </p>
+              </span>
+            </>
+          )}
+        </span>
+        {ir.sequence}
+      </td>
+      <td>
+        <Moment format="DD/MM/YYYY hh:mm">{ir.reportingDate}</Moment>
+      </td>
+      <td>
+        <Moment format="DD/MM/YYYY hh:mm">{ir.incident_Date_Time}</Moment>
+      </td>
+      <td>
+        {parameters?.locations.find((item) => item.id === ir.location)?.name ||
+          ir.location}
+      </td>
+      <td>
+        {parameters?.categories.find((item) => item.id === ir.inciCateg)
+          ?.name || ir.inciCateg}
+      </td>
+      <td>
+        {parameters?.categories
+          .find((item) => item.id === ir.inciCateg)
+          ?.subCategorys?.find((item) => item.id === ir.inciSubCat)?.name ||
+          ir.inciSubCat}
+      </td>
+      <td>
+        {incidentType.find(({ value }) => value === ir.typeofInci)?.label || [
+          ir.typeofInci,
+        ]}
+      </td>
+      <td>
+        {parameters?.users.find(({ value }) => value === ir.userId)?.label ||
+          "Anonymous"}
+      </td>
+      <td>
+        {parameters?.investigators.find(
+          ({ value }) => value === ir.irInvestigator
+        )?.label || ir.irInvestigator}
+      </td>
+      <td>
+        {irStatuses.find((item) => item.id === +ir.status)?.name || ir.status}
+      </td>
+      <td>{ir.tat}</td>
+      <TableActions actions={actions} />
+    </tr>
+  );
+};
 const Filters = ({ onSubmit, qualityDashboard }) => {
-  const { handleSubmit, register, watch, reset, setValue } = useForm();
+  const { checkPermission } = useContext(SiteContext);
+  const {
+    handleSubmit,
+    register,
+    watch,
+    reset,
+    setValue,
+    getValues,
+  } = useForm({ defaultValues: { view: "assignedToSelf" } });
   const [categories, setCategories] = useState([]);
   const [irInvestigator, setIrInvestigator] = useState([]);
+  const fromIncidentDateTime = watch("fromIncidentDateTime");
+  const fromreportingDate = watch("fromreportingDate");
   useEffect(() => {
     Promise.all([
       fetch(`${process.env.REACT_APP_HOST}/category`).then((res) => res.json()),
@@ -450,19 +498,18 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
         <Input
           type="date"
           placeholder="From"
-          {...register("fromIncidentDateTime", {
-            // validate: (v) =>
-            //   new Date(v) < new Date() || "Can not select date from future",
-          })}
-          max={moment({ format: "YYYY-MM-DDThh:mm", time: new Date() })}
+          {...register("fromIncidentDateTime")}
+          max={moment({ format: "YYYY-MM-DD", time: new Date() })}
         />
         <Input
           type="date"
           placeholder="To"
-          {...register("toIncidentDateTime", {
-            // validate: (v) =>
-            //   new Date(v) < new Date() || "Can not select date from future",
+          {...register("toIncidentDateTime")}
+          min={moment({
+            format: "YYYY-MM-DD",
+            time: new Date(fromIncidentDateTime),
           })}
+          max={moment({ format: "YYYY-MM-DD", time: new Date() })}
         />
       </section>
       <section className={s.pair}>
@@ -471,12 +518,22 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
           type="date"
           placeholder="From"
           {...register("fromreportingDate")}
+          max={moment({ format: "YYYY-MM-DD", time: new Date() })}
         />
-        <Input type="date" placeholder="To" {...register("toreportingDate")} />
+        <Input
+          type="date"
+          placeholder="To"
+          {...register("toreportingDate")}
+          min={moment({
+            format: "YYYY-MM-DD",
+            time: new Date(fromreportingDate),
+          })}
+          max={moment({ format: "YYYY-MM-DD", time: new Date() })}
+        />
       </section>
       <Combobox
         label="Incident Type"
-        name="incidentType"
+        name="typeofInci"
         setValue={setValue}
         watch={watch}
         multiple={true}
@@ -506,19 +563,43 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
           }))}
         />
       </section>
-      {!qualityDashboard && (
+      {qualityDashboard ? (
         <section className={`${s.pair} ${s.checkboxes}`}>
           <Radio
             register={register}
-            name="userId"
+            name="view"
+            options={[
+              {
+                label: "Assigned IRs",
+                value: "assignedToSelf",
+              },
+              ...(checkPermission({
+                roleId: [9, 10, 11],
+                permission: "Access to view IR's",
+              }) || true
+                ? [
+                    {
+                      label: "All IRs",
+                      value: "all",
+                    },
+                  ]
+                : []),
+            ]}
+          />
+        </section>
+      ) : (
+        <section className={`${s.pair} ${s.checkboxes}`}>
+          <Radio
+            register={register}
+            name="irBy"
             options={[
               {
                 label: "My IRs",
-                value: 1,
+                value: "self",
               },
               {
                 label: "My Department IRs",
-                value: 2,
+                value: "department",
               },
             ]}
           />
@@ -532,7 +613,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
           type="button"
           className={`btn clear ${s.clear}`}
           onClick={() => {
-            reset();
+            reset({ view: "all" });
             onSubmit({});
           }}
         >
@@ -547,51 +628,42 @@ const QualityDashboard = () => {
   const { user, checkPermission } = useContext(SiteContext);
   const [parameters, setParameters] = useState(null);
   const [incidents, setIncidents] = useState([]);
-  const [filters, setFilters] = useState({});
+  const [filters, setFilters] = useState({ irInvestigator: user.id });
   const [assign, setAssign] = useState(null);
   useEffect(() => {
     Promise.all([
       fetch(`${process.env.REACT_APP_HOST}/location`).then((res) => res.json()),
       fetch(`${process.env.REACT_APP_HOST}/category`).then((res) => res.json()),
       fetch(`${process.env.REACT_APP_HOST}/user`).then((res) => res.json()),
-    ])
-      .then(([location, category, user]) => {
-        const _parameters = { ...parameters };
-        if (location?._embedded.location) {
-          _parameters.locations = location._embedded.location;
-        }
-        if (category?._embedded.category) {
-          _parameters.categories = category._embedded.category;
-        }
-        if (user?._embedded.user) {
-          _parameters.users = user._embedded.user.map((user) => ({
+    ]).then(([location, category, user]) => {
+      const _parameters = { ...parameters };
+      if (location?._embedded.location) {
+        _parameters.locations = location._embedded.location;
+      }
+      if (category?._embedded.category) {
+        _parameters.categories = category._embedded.category;
+      }
+      if (user?._embedded.user) {
+        _parameters.users = user._embedded.user.map((user) => ({
+          label: user.name,
+          value: user.id,
+        }));
+        _parameters.investigators = user._embedded.user
+          .map((user) => ({
+            ...user,
+            role: user.role
+              .split(",")
+              .filter((r) => r)
+              .map((r) => +r),
+          }))
+          .filter((user) => user.role.includes(12))
+          .map((user) => ({
             label: user.name,
             value: user.id,
           }));
-          _parameters.investigators = user._embedded.user
-            .map((user) => ({
-              ...user,
-              role: user.role
-                .split(",")
-                .filter((r) => r)
-                .map((r) => +r),
-            }))
-            .filter((user) => user.role.includes(12))
-            .map((user) => ({
-              label: user.name,
-              value: user.id,
-            }));
-        }
-        setParameters(_parameters);
-        return fetch(
-          `${process.env.REACT_APP_HOST}/IncidentReport`
-        ).then((res) => res.json());
-      })
-      .then((data) => {
-        if (data._embedded?.IncidentReport) {
-          setIncidents(data._embedded.IncidentReport);
-        }
-      });
+      }
+      setParameters(_parameters);
+    });
   }, []);
   useEffect(() => {
     if (Object.entries(filters).length) {
@@ -624,9 +696,11 @@ const QualityDashboard = () => {
         onSubmit={(values) => {
           const _filters = {};
           for (var field in values) {
-            if (values[field]) _filters[field] = values[field];
+            if (values[field])
+              _filters[field] = values[field]?.join?.(",") || values[field];
+            if (values[field] === "assignedToSelf")
+              _filters.irInvestigator = user.id;
           }
-          console.log(values);
           setFilters(_filters);
         }}
         qualityDashboard={true}
@@ -653,130 +727,88 @@ const QualityDashboard = () => {
             new Date(a.reportingDate) > new Date(b.reportingDate) ? -1 : 1
           )
           .map((inc) => (
-            <tr key={inc.id}>
-              <td>{inc.sequence}</td>
-              <td>
-                <Moment format="DD/MM/YYYY hh:mm">{inc.reportingDate}</Moment>
-              </td>
-              <td>
-                <Moment format="DD/MM/YYYY hh:mm">
-                  {inc.incident_Date_Time}
-                </Moment>
-              </td>
-              <td>
-                {parameters?.locations.find((item) => item.id === inc.location)
-                  ?.name || inc.location}
-              </td>
-              <td>
-                {parameters?.categories.find(
-                  (item) => item.id === inc.inciCateg
-                )?.name || inc.inciCateg}
-              </td>
-              <td>
-                {parameters?.categories
-                  .find((item) => item.id === inc.inciCateg)
-                  ?.subCategorys?.find((item) => item.id === inc.inciSubCat)
-                  ?.name || inc.inciSubCat}
-              </td>
-              <td>
-                {incidentType.find(({ value }) => value === inc.typeofInci)
-                  ?.label || inc.typeofInci}
-              </td>
-              <td>
-                {parameters?.users.find(({ value }) => value === inc.userId)
-                  ?.label || "Anonymous"}
-              </td>
-              <td>
-                {parameters?.investigators.find(
-                  ({ value }) => value === inc.irInvestigator
-                )?.label || inc.irInvestigator}
-              </td>
-              <td>
-                {irStatuses.find((item) => item.id === +inc.status)?.name ||
-                  inc.status}
-              </td>
-              <td>{inc.tat}</td>
-              <TableActions
-                actions={[
-                  ...(checkPermission({
-                    roleId: 11,
-                    permission: "Assign IRs",
-                  }) && [2, 3].includes(+inc.status)
-                    ? [
-                        {
-                          icon: <FaRegUser />,
-                          label:
-                            +inc.status === 2 ? "Assign IR" : "Re-assign IR",
-                          callBack: () => setAssign(inc),
-                        },
-                      ]
-                    : []),
-                  ...(+inc.status === 2
-                    ? [
-                        {
-                          icon: <FaRegFileAlt />,
-                          label: "Review IR",
-                          callBack: () => {},
-                        },
-                        ...(checkPermission({
-                          roleId: [11, 10],
-                          permission: "Cancel IRs",
-                        })
-                          ? [
-                              {
-                                icon: <FaRegTrashAlt />,
-                                label: "Cancel IR",
-                                callBack: () => {},
-                              },
-                            ]
-                          : []),
-                        {
-                          icon: <FaExternalLinkAlt />,
-                          label: "Reportable Incident",
-                          callBack: () => {},
-                        },
-                        {
-                          icon: <FaRegTrashAlt />,
-                          label: "Merge/Un-Merge IR",
-                          callBack: () => {},
-                        },
-                      ]
-                    : []),
-                  ...(checkPermission({
-                    roleId: [11, 12],
-                    permission: "Approve IRs",
-                  })
-                    ? [
-                        {
-                          icon: <FaRegCheckSquare />,
-                          label: "IR Approval",
-                          callBack: () => {},
-                        },
-                      ]
-                    : []),
-                  {
-                    icon: <FaAdjust />,
-                    label: "IR Combine",
-                    callBack: () => {},
-                  },
-                  {
-                    icon: <FaCrosshairs />,
-                    label: "IR Investigation",
-                    callBack: () => {},
-                  },
-                  {
-                    icon: <FaRegTrashAlt />,
-                    label: "CAPA",
-                    callBack: () => {},
-                  },
-                  {
-                    icon: <FaRegTrashAlt />,
-                    label: "IR Closure",
-                    callBack: () => {},
-                  },
-                ]}
-              />
-            </tr>
+            <SingleIr
+              key={inc.id}
+              ir={inc}
+              actions={[
+                ...(checkPermission({
+                  roleId: 11,
+                  permission: "Assign IRs",
+                }) && [2, 3].includes(+inc.status)
+                  ? [
+                      {
+                        icon: <FaRegUser />,
+                        label: +inc.status === 2 ? "Assign IR" : "Re-assign IR",
+                        callBack: () => setAssign(inc),
+                      },
+                    ]
+                  : []),
+                ...(+inc.status === 2
+                  ? [
+                      {
+                        icon: <FaRegFileAlt />,
+                        label: "Review IR",
+                        callBack: () => {},
+                      },
+                      ...(checkPermission({
+                        roleId: [11, 10],
+                        permission: "Cancel IRs",
+                      })
+                        ? [
+                            {
+                              icon: <FaRegTrashAlt />,
+                              label: "Cancel IR",
+                              callBack: () => {},
+                            },
+                          ]
+                        : []),
+                      {
+                        icon: <FaExternalLinkAlt />,
+                        label: "Reportable Incident",
+                        callBack: () => {},
+                      },
+                      {
+                        icon: <FaRegTrashAlt />,
+                        label: "Merge/Un-Merge IR",
+                        callBack: () => {},
+                      },
+                    ]
+                  : []),
+                ...(checkPermission({
+                  roleId: [11, 12],
+                  permission: "Approve IRs",
+                })
+                  ? [
+                      {
+                        icon: <FaRegCheckSquare />,
+                        label: "IR Approval",
+                        callBack: () => {},
+                      },
+                    ]
+                  : []),
+                {
+                  icon: <FaAdjust />,
+                  label: "IR Combine",
+                  callBack: () => {},
+                },
+                {
+                  icon: <FaCrosshairs />,
+                  label: "IR Investigation",
+                  callBack: () => {},
+                },
+                {
+                  icon: <FaRegTrashAlt />,
+                  label: "CAPA",
+                  callBack: () => {},
+                },
+                {
+                  icon: <FaRegTrashAlt />,
+                  label: "IR Closure",
+                  callBack: () => {},
+                },
+              ]}
+              parameters={parameters}
+            />
           ))}
       </Table>
       <div className={s.legend}>

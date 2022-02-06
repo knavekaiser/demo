@@ -10,7 +10,6 @@ main {
   grid-gap: 0.5rem;
   overflow: hidden;
   grid-template-rows: min-content min-content 1fr;
-  // overflow: hidden;
   header {
     h3 {
       padding: 0 8px;
@@ -60,9 +59,59 @@ main {
     }
     table {
       tr {
+        position: relative;
         grid-template-columns: 12rem 12rem 10rem 7rem 7rem 8rem 8rem 6rem 6rem 5rem 5rem 4rem;
+        &.sentinel {
+          background: #ffe8e9;
+          &::before {
+            content: "";
+            display: block;
+            position: absolute;
+            height: 100%;
+            width: 3px;
+            background: $red;
+          }
+        }
         &.focus {
           background: rgb(191, 216, 226) !important;
+        }
+        .icons {
+          position: relative;
+          width: 1.3rem;
+          display: inline-block;
+          .user {
+            color: $orange;
+          }
+          &:hover {
+            .patientDetail {
+              display: inline-block;
+            }
+          }
+          .patientDetail {
+            display: none;
+            position: absolute;
+            background: white;
+            z-index: 10;
+            left: -6px;
+            top: 150%;
+            filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.52));
+            border-radius: 4px;
+            padding: 8px;
+            width: max-content;
+            font-size: 13px;
+            &::before {
+              content: "";
+              display: block;
+              width: 0;
+              height: 0;
+              border: 0.5rem solid transparent;
+              border-top: 0;
+              border-bottom: 0.7rem solid white;
+              position: absolute;
+              left: 0.5rem;
+              top: -0.7rem;
+            }
+          }
         }
       }
     }
@@ -74,6 +123,10 @@ main {
       flex-wrap: wrap;
       font-size: 14px;
       span {
+        svg {
+          height: 16px;
+          width: 16px;
+        }
         grid-gap: 0.3rem;
         display: flex;
         align-items: center;
