@@ -613,7 +613,18 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
           type="button"
           className={`btn clear ${s.clear}`}
           onClick={() => {
-            reset({ view: "all" });
+            reset({
+              sequence: "",
+              fromreportingDate: "",
+              toreportingDate: "",
+              fromIncidentDateTime: "",
+              toIncidentDateTime: "",
+              InciCateg: "",
+              typeofInci: "",
+              view: "all",
+              irInvestigator: "",
+              status: "",
+            });
             onSubmit({});
           }}
         >

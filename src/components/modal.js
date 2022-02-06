@@ -1,4 +1,4 @@
-import React, { useEffect, forwardRef, useCallback } from "react";
+import React, { useEffect, forwardRef, useCallback, useRef } from "react";
 import { FaCheck } from "react-icons/fa";
 import { IoClose } from "react-icons/io5";
 import ReactDOM, { createPortal } from "react-dom";
@@ -11,6 +11,7 @@ export const Modal = forwardRef(
       children,
       className,
       onBackdropClick,
+      clickThroughBackdrop,
       backdropClass,
       style,
       head,
@@ -18,6 +19,26 @@ export const Modal = forwardRef(
     },
     ref
   ) => {
+    const backdropRef = useRef();
+    const clickHandler = useCallback(
+      (e) => {
+        // const backdrop = backdropRef?.current;
+        // const modal = backdropRef?.current?.nextElementSibling;
+        // console.log(!!backdrop, open, e);
+        // if (backdrop && onBackdropClick && !open) {
+        //   onBackdropClick();
+        // }
+      },
+      [backdropRef, clickThroughBackdrop, open]
+    );
+    useEffect(() => {
+      // if (clickThroughBackdrop) {
+      //   document.addEventListener("click", clickHandler);
+      //   return () => {
+      //     document.removeEventListener("click", clickHandler);
+      //   };
+      // }
+    }, []);
     if (open) {
       return createPortal(
         <>
@@ -28,6 +49,8 @@ export const Modal = forwardRef(
               e.stopPropagation();
               onBackdropClick?.();
             }}
+            style={clickThroughBackdrop ? { pointerEvents: "none" } : {}}
+            ref={backdropRef}
           />
           <div
             style={{ ...style }}

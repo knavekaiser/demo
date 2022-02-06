@@ -100,7 +100,9 @@ button {
   display: grid;
   place-items: center;
   margin: auto;
+  pointer-events: none;
   & > * {
+    pointer-events: all;
     grid-column: 1/2;
     grid-row: 1/2;
   }

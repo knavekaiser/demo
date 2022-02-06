@@ -317,6 +317,7 @@ export const Combobox = ({
   const selected = watch?.(name);
   const [open, setOpen] = useState(false);
   const [style, setStyle] = useState({});
+  const clickHandlerAdded = useState(false);
   useLayoutEffect(() => {
     const { width, height, x, y } = container.current.getBoundingClientRect();
     const top = window.innerHeight - y;
@@ -335,6 +336,20 @@ export const Combobox = ({
       maxHeight: Math.min(window.innerHeight - 16, 300),
     });
   }, [open, options]);
+  useEffect(() => {
+    const clickHandler = (e) => {
+      if (!e.path.includes(container.current)) {
+        setOpen(false);
+      }
+    };
+    if (!clickHandler.current) {
+      document.addEventListener("click", clickHandler);
+      return () => {
+        document.removeEventListener("click", clickHandler);
+      };
+      clickHandler.current = true;
+    }
+  }, [open]);
   return (
     <section
       data-testid="combobox-container"
@@ -400,6 +415,7 @@ export const Combobox = ({
         open={open}
         setOpen={setOpen}
         onBackdropClick={() => setOpen(false)}
+        clickThroughBackdrop={true}
         style={style}
       >
         <ComboboxList
