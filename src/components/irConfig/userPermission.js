@@ -7,78 +7,13 @@ import { Box } from "../incidentReport";
 import { TiTick } from "react-icons/ti";
 import { Input, Checkbox, Table, TableActions, Toggle } from "../elements";
 import { Modal, Prompt } from "../modal";
+import { permissions } from "../../config";
 import s from "./config.module.scss";
 
 export default function UserPermission() {
   const permissionRef = useRef(null);
-  const { checkPermission, user, setRoles } = useContext(SiteContext);
+  const { user, setRoles } = useContext(SiteContext);
   const [userPermission, setUserPermission] = useState(null);
-  const [permissions, setPermissions] = useState([
-    {
-      id: 8,
-      role: "IR ADMIN",
-      permissions: {
-        "IR Master": false,
-        "IR Configuration": false,
-      },
-    },
-    {
-      id: 9,
-      role: "INCIDNET REPORTER",
-      permissions: {
-        "Incident Reporting": false,
-        "View access to reported incident by self": false,
-        "View Access to Root cause analysis tab": false,
-        "View Access to CAPA tab": false,
-        "View Access to IR closure tab": false,
-        "Incident closure dashboard": false,
-        "CAPA dashboard - access and update CAPA's marked reponsible for": false,
-        "Print Reported IR's": false,
-      },
-    },
-    {
-      id: 10,
-      role: "IR INVESTIGATOR",
-      permissions: {
-        "Access to view IR's": false,
-        "Merge IRs": false,
-        "Cancel IRs": false,
-        "Update IR investigation for assigned IRs": false,
-        "CAPA Dashboard - Update CAPA for assigned IRs": false,
-        "CAPA Dashboard - access and update CAPA's marked responsible for": false,
-        "Update IR Closure": false,
-        "Recity IR information for assigned IR": false,
-        "Update Reportable incident information": false,
-        "Add addendum": false,
-        "IR Analytics": false,
-        "Custom Reports": false,
-        Print: false,
-      },
-    },
-    {
-      id: 11,
-      role: "INCIDENT MANAGER",
-      permissions: {
-        "Approve IRs": false,
-        "Cancel IRs": false,
-        "Assign IRs": false,
-        "Merge IRs": false,
-        "CAPA dashboard - Access for CAPA's of all IRs": false,
-        "IR Analytics": false,
-        "Custom Reports": false,
-        Print: false,
-      },
-    },
-    {
-      id: 12,
-      role: "HEAD OF THE DEPARTMENT",
-      permissions: {
-        "Approve IRs": false,
-        "Acknowledge IRs": false,
-        "View Departments IRs": false,
-      },
-    },
-  ]);
   const fetchUserPermissions = useCallback(() => {
     fetch(`${process.env.REACT_APP_HOST}/userPermission`)
       .then((res) => res.json())
@@ -102,24 +37,24 @@ export default function UserPermission() {
         <h3>USER MANAGEMENT</h3>
       </header>
       <div className={s.userPermission}>
-        {permissions.map(({ id, role, permissions }) => (
-          <Box label={role} key={role}>
+        {permissions.map(({ role, label, permissions }) => (
+          <Box label={label} key={role}>
             <Table columns={[{ label: "Permission" }]}>
               {Object.entries(permissions).map(([key, value]) => {
                 const _permission = userPermission?.find(
-                  (item) => item.id === id
+                  (item) => item.role === role
                 )?.permission;
                 return (
                   <tr key={key}>
                     <td>
                       <input
-                        id={id + key}
+                        id={role + key}
                         type="checkbox"
                         checked={_permission?.includes(key) || false}
                         onChange={() => {
                           setUserPermission((prev) =>
                             prev.map((item) => {
-                              if (item.id !== id) return item;
+                              if (item.role !== role) return item;
                               return {
                                 ...item,
                                 permission: _permission?.includes(key)
@@ -130,7 +65,7 @@ export default function UserPermission() {
                           );
                         }}
                       />{" "}
-                      <label htmlFor={id + key}>{key}</label>
+                      <label htmlFor={role + key}>{key}</label>
                     </td>
                   </tr>
                 );
@@ -166,13 +101,13 @@ export default function UserPermission() {
               )
                 .then((data) => {
                   const currentUserUpdate = data.filter((item) =>
-                    user.role.includes(item.id)
+                    user.role.includes(item.role)
                   );
                   if (currentUserUpdate.length) {
                     setRoles((prev) => [
                       ...prev.filter((prevRole) =>
                         currentUserUpdate.some(
-                          (newRole) => newRole.id !== prevRole.id
+                          (newRole) => newRole.role !== prevRole.role
                         )
                       ),
                       ...currentUserUpdate,

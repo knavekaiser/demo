@@ -28,10 +28,7 @@ export default function Login() {
           setUsers(
             users._embedded.user.map((user) => ({
               ...user,
-              role: user.role
-                .split(",")
-                .filter((r) => r)
-                .map((r) => +r),
+              role: user.role.split(",").filter((r) => r),
             }))
           );
         }

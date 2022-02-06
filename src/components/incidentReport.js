@@ -227,13 +227,10 @@ export default function IncidentReporting() {
         _parameters.hods = users._embedded.user
           .map((user) => ({
             ...user,
-            role: user.role
-              .split(",")
-              .filter((r) => r)
-              .map((r) => +r),
+            role: user.role.split(",").filter((r) => r),
           }))
           .filter(
-            (u) => u.role.includes(12) && u.department === user.department
+            (u) => u.role.includes("hod") && u.department === user.department
           )
           .map((item) => ({
             label: item.name,

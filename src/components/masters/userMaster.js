@@ -18,6 +18,7 @@ import {
 } from "../elements";
 import { useForm } from "react-hook-form";
 import { Modal, Prompt } from "../modal";
+import { permissions } from "../../config";
 import s from "./masters.module.scss";
 
 export default function UserMaster() {
@@ -27,13 +28,7 @@ export default function UserMaster() {
       { label: "Female", value: "female" },
       { label: "Other", value: "other" },
     ],
-    role: [
-      { value: 8, label: "IR Admin" },
-      { value: 9, label: "Incident Reporter" },
-      { value: 10, label: "IR Investigator" },
-      { value: 11, label: "Incident Manager" },
-      { value: 12, label: "Head of the Department" },
-    ],
+    role: permissions.map((p) => ({ value: p.role, label: p.label })),
   });
   const [users, setUsers] = useState([]);
   const [edit, setEdit] = useState(null);
@@ -59,10 +54,7 @@ export default function UserMaster() {
           setUsers(
             data._embedded.user.map((user) => ({
               ...user,
-              role: user.role
-                .split(",")
-                .filter((role) => role)
-                .map((role) => +role),
+              role: user.role.split(",").filter((role) => role),
             }))
           );
         }
@@ -205,7 +197,7 @@ const UserForm = ({ edit, onSuccess, clearForm, departments, users, role }) => {
   const [loading, setLoading] = useState(false);
   useEffect(() => {
     reset({
-      role: [9],
+      role: ["irInvestigator"],
       ...edit,
       ...(edit?.dob && {
         dob: moment({ time: edit.dob, format: "YYYY-MM-DD" }),

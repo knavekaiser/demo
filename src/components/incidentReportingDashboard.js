@@ -83,7 +83,7 @@ function IncidentReportingDashboard() {
       <Tabs
         tabs={[
           { label: "My Dashboard", path: paths.incidentDashboard.myDashboard },
-          ...(checkPermission({ roleId: [10, 11] })
+          ...(checkPermission({ roleId: ["irInvestigator", "irManager"] })
             ? [
                 {
                   label: "Quality Dashboard",
@@ -98,7 +98,7 @@ function IncidentReportingDashboard() {
           path={paths.incidentDashboard.myDashboard + "/*"}
           element={<MyDashboard />}
         />
-        {checkPermission({ roleId: [10, 11] }) && (
+        {checkPermission({ roleId: ["irInvestigator", "irManager"] }) && (
           <Route
             path={paths.incidentDashboard.qualityDashboard + "/*"}
             element={<QualityDashboard />}
@@ -137,12 +137,9 @@ const MyDashboard = () => {
         _parameters.investigators = user._embedded.user
           .map((user) => ({
             ...user,
-            role: user.role
-              .split(",")
-              .filter((r) => r)
-              .map((r) => +r),
+            role: user.role.split(",").filter((r) => r),
           }))
-          .filter((user) => user.role.includes(12))
+          .filter((user) => user.role.includes("hod"))
           .map((user) => ({
             label: user.name,
             value: user.id,
@@ -470,12 +467,9 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
           users._embedded.user
             .map((user) => ({
               ...user,
-              role: user.role
-                .split(",")
-                .filter((r) => r)
-                .map((r) => +r),
+              role: user.role.split(",").filter((r) => r),
             }))
-            .filter((user) => user.role.includes(10))
+            .filter((user) => user.role.includes("irInvestigator"))
             .map((user) => ({ label: user.name, value: user.id }))
         );
       }
@@ -574,7 +568,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
                 value: "assignedToSelf",
               },
               ...(checkPermission({
-                roleId: [9, 10, 11],
+                roleId: ["incidentReporter", "irInvestigator", "irManager"],
                 permission: "Access to view IR's",
               }) || true
                 ? [
@@ -662,12 +656,9 @@ const QualityDashboard = () => {
         _parameters.investigators = user._embedded.user
           .map((user) => ({
             ...user,
-            role: user.role
-              .split(",")
-              .filter((r) => r)
-              .map((r) => +r),
+            role: user.role.split(",").filter((r) => r),
           }))
-          .filter((user) => user.role.includes(12))
+          .filter((user) => user.role.includes("hod"))
           .map((user) => ({
             label: user.name,
             value: user.id,
@@ -743,7 +734,7 @@ const QualityDashboard = () => {
               ir={inc}
               actions={[
                 ...(checkPermission({
-                  roleId: 11,
+                  roleId: "incidentManager",
                   permission: "Assign IRs",
                 }) && [2, 3].includes(+inc.status)
                   ? [
@@ -762,7 +753,7 @@ const QualityDashboard = () => {
                         callBack: () => {},
                       },
                       ...(checkPermission({
-                        roleId: [11, 10],
+                        roleId: ["irInvestigator", "irManager"],
                         permission: "Cancel IRs",
                       })
                         ? [
@@ -786,7 +777,7 @@ const QualityDashboard = () => {
                     ]
                   : []),
                 ...(checkPermission({
-                  roleId: [11, 12],
+                  roleId: ["incidentManager", "hod"],
                   permission: "Approve IRs",
                 })
                   ? [

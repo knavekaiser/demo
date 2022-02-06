@@ -191,7 +191,7 @@ function Dashboard() {
               },
             ]}
           />
-          {checkPermission({ roleId: 8, permission: "IR Master" }) && (
+          {checkPermission({ roleId: "irAdmin", permission: "IR Master" }) && (
             <Accordion
               label=<span className={s.label}>
                 <MastersIcon className={s.icon} />{" "}

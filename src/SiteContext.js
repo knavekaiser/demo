@@ -16,7 +16,7 @@ export const Provider = ({ children }) => {
         return true;
       }
       const role = roles?.filter((role) => {
-        return roleId === role.id || roleId.includes?.(role.id);
+        return roleId === role.role || roleId.includes?.(role.role);
       })[0];
       return (roleMatch && role?.permission?.includes(permission)) || false;
     },
@@ -24,15 +24,22 @@ export const Provider = ({ children }) => {
   );
   useEffect(() => {
     if (!roles && user) {
-      Promise.all(
-        user.role.map((role) =>
-          fetch(
-            `${process.env.REACT_APP_HOST}/userPermission/${role}`
-          ).then((res) => res.json())
-        )
-      ).then((data) => {
-        setRoles(data);
-      });
+      fetch(`${process.env.REACT_APP_HOST}/userPermission`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data._embedded.userPermission) {
+            setRoles(
+              data._embedded.userPermission.filter((p) =>
+                user.role.includes(p.role)
+              )
+            );
+          } else {
+            alert("Could not fetch permissions");
+          }
+        })
+        .catch((err) => {
+          console.log(err);
+        });
     }
   }, [user]);
   return (
