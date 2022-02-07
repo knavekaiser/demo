@@ -197,7 +197,7 @@ const UserForm = ({ edit, onSuccess, clearForm, departments, users, role }) => {
   const [loading, setLoading] = useState(false);
   useEffect(() => {
     reset({
-      role: ["irInvestigator"],
+      role: ["incidentReporter"],
       ...edit,
       ...(edit?.dob && {
         dob: moment({ time: edit.dob, format: "YYYY-MM-DD" }),
@@ -241,10 +241,7 @@ const UserForm = ({ edit, onSuccess, clearForm, departments, users, role }) => {
             if (data.name) {
               onSuccess({
                 ...data,
-                role: data.role
-                  .split(",")
-                  .filter((r) => r)
-                  .map((r) => +r),
+                role: data.role.split(",").filter((r) => r),
               });
               reset();
             }

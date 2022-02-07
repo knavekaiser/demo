@@ -20,6 +20,7 @@ import {
 import { Prompt } from "./modal";
 import { useForm, FormProvider, useFormContext } from "react-hook-form";
 import { useLocation, useNavigate } from "react-router-dom";
+import { incidentTypes } from "../config";
 import s from "./incidentReporting.module.scss";
 
 export const ConnectForm = ({ children }) => {
@@ -402,38 +403,7 @@ export default function IncidentReporting() {
                   },
                 }}
                 name="typeofInci"
-                options={[
-                  {
-                    label: "Unsafe condition",
-                    value: 1,
-                    // hint:
-                    //   "Any potential safety event that did not reach the patient.",
-                  },
-                  {
-                    label: "No Harm",
-                    value: 2,
-                    // hint:
-                    //   "Any potential safety event that did not reach the patient.",
-                  },
-                  {
-                    label: "Near Miss",
-                    value: 4,
-                    // hint:
-                    //   "Any potential safety event that did not reach the patient.",
-                  },
-                  {
-                    label: "Adverse Event",
-                    value: 7,
-                    // hint:
-                    //   "Any potential safety event that did not reach the patient.",
-                  },
-                  {
-                    label: "Sentinel Event",
-                    value: 8,
-                    // hint:
-                    //   "Any potential safety event that did not reach the patient.",
-                  },
-                ]}
+                options={incidentTypes}
                 error={methods.formState.errors.typeofInci}
               />
               {

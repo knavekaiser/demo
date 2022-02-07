@@ -9,7 +9,7 @@ const permissions = [
   },
   {
     role: "incidentReporter",
-    label: "INCIDNET REPORTER",
+    label: "INCIDENT REPORTER",
     permissions: {
       "Incident Reporting": false,
       "View access to reported incident by self": false,

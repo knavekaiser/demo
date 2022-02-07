@@ -41,11 +41,13 @@ export const Accordion = ({ label, basePath, items, className }) => {
       </Link>
       {location.pathname.startsWith(basePath) && (
         <ul className={s.submenu}>
-          {items.map((item) => (
+          {items.map((item, i) => (
             <li
-              key={item.path}
+              key={i}
               className={`${
-                location.pathname.startsWith(basePath + "/" + item.path)
+                (location.pathname + location.search).startsWith(
+                  basePath + "/" + item.path
+                )
                   ? s.active
                   : ""
               }`}
@@ -125,22 +127,91 @@ function Dashboard() {
               </span>
             </Link>
           </li>
-          <li
+          <Accordion
+            label=<span className={s.label}>
+              <IncidentDashboardIcon className={s.icon} />{" "}
+              <span className={s.text}>Incident Dashboard</span>
+            </span>
+            basePath={paths.incidentDashboard.basePath}
             className={`${s.sidebarItem} ${
               location.pathname.startsWith(paths.incidentDashboard.basePath)
                 ? s.active
                 : ""
             }`}
-          >
-            <Link
-              to={`${paths.incidentDashboard.basePath}/${paths.incidentDashboard.myDashboard}`}
-            >
-              <span className={s.label}>
-                <IncidentDashboardIcon className={s.icon} />{" "}
-                <span className={s.text}>Incident Dashboard</span>
-              </span>
-            </Link>
-          </li>
+            items={[
+              {
+                label: <>Submitted IRs</>,
+                path: paths.incidentDashboard.myDashboard_submitted,
+              },
+              {
+                label: <>Assigned IRs</>,
+                path: paths.incidentDashboard.myDashboard_assinged,
+              },
+              {
+                label: <>Under Investigation</>,
+                path: paths.incidentDashboard.myDashboard_underInvestigation,
+              },
+              {
+                label: <>CAPA planning</>,
+                path: paths.incidentDashboard.myDashboard_capaPlanning,
+              },
+              {
+                label: <>Closure confirmation</>,
+                path:
+                  paths.incidentDashboard.myDashboard_closureConfirmationSent,
+              },
+              {
+                label: <>Closure confirmed</>,
+                path: paths.incidentDashboard.myDashboard_closureConfirmed,
+              },
+              {
+                label: <>IR closure</>,
+                path: paths.incidentDashboard.myDashboard_irClosure,
+              },
+              {
+                label: <>Current Months IRs</>,
+                path: paths.incidentDashboard.myDashboard_currentMonth,
+              },
+              {
+                label: <>Open sentinel events</>,
+                path: paths.incidentDashboard.myDashboard_openSentinelEvent,
+              },
+              {
+                label: <>Reportable event</>,
+                path: paths.incidentDashboard.myDashboard_reportableEvent,
+              },
+              {
+                label: <>Active CAPA Closure</>,
+                path: paths.incidentDashboard.myDashboard_activeCapaClosure,
+              },
+              {
+                label: <>Paitent complaints</>,
+                path: paths.incidentDashboard.myDashboard_patientComplaint,
+              },
+              {
+                label: <>IR beyond Acceptable TAT</>,
+                path: paths.incidentDashboard.myDashboard_beyondAcceptableTat,
+              },
+            ]}
+          />
+          {
+            //   <li
+            //   className={`${s.sidebarItem} ${
+            //     location.pathname.startsWith(paths.incidentDashboard.basePath)
+            //       ? s.active
+            //       : ""
+            //   }`}
+            // >
+            //   <Link
+            //     to={`${paths.incidentDashboard.basePath}/${paths.incidentDashboard.myDashboard}`}
+            //   >
+            //     <span className={s.label}>
+            //       <IncidentDashboardIcon className={s.icon} />{" "}
+            //       <span className={s.text}>Incident Dashboard</span>
+            //     </span>
+            //   </Link>
+            // </li>
+          }
           <li
             className={`${s.sidebarItem} ${
               location.pathname.startsWith(paths.capaReport) ? s.active : ""

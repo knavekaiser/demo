@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useContext } from "react";
-import { SiteContext } from "../SiteContext";
+import {
+  SiteContext,
+  IrDashboardContext,
+  IrDashboardContextProvider,
+} from "../SiteContext";
 import { Routes, Route } from "react-router-dom";
 import {
   FaInfoCircle,
@@ -34,45 +38,21 @@ import {
   Checkbox,
   moment,
 } from "./elements";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, createSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { Modal, Prompt } from "./modal";
 import paths from "./path";
+import { incidentTypes, irStatus } from "../config";
 import s from "./incidentReportingDashboard.module.scss";
 
-const incidentType = [
-  {
-    label: "Unsafe condition",
-    value: 1,
-  },
-  {
-    label: "No Harm",
-    value: 2,
-  },
-  {
-    label: "Near Miss",
-    value: 4,
-  },
-  {
-    label: "Adverse Event",
-    value: 7,
-  },
-  {
-    label: "Sentinel Event",
-    value: 8,
-  },
-];
-const irStatuses = [
-  { id: 1, name: "Saved" },
-  { id: 2, name: "Submitted" },
-  { id: 3, name: "Assigned" },
-  { id: 4, name: "Under investigation" },
-  { id: 5, name: "CAPA planning" },
-  { id: 6, name: "Closure confirmation sent" },
-  { id: 7, name: "Closure confirmed" },
-  { id: 8, name: "IR closed" },
-  { id: 9, name: "Cancelled" },
-];
+function paramsToObject(entries) {
+  const result = {};
+  for (const [key, value] of entries) {
+    result[key] = value;
+  }
+  return result;
+}
+
 function IncidentReportingDashboard() {
   const { checkPermission } = useContext(SiteContext);
   return (
@@ -110,54 +90,25 @@ function IncidentReportingDashboard() {
 }
 const MyDashboard = () => {
   const { user } = useContext(SiteContext);
+  const { parameters } = useContext(IrDashboardContext);
   const location = useLocation();
-  const [parameters, setParameters] = useState(null);
+  const navigate = useNavigate();
   const [incidents, setIncidents] = useState([]);
   const [filters, setFilters] = useState({});
   const [focus, setFocus] = useState(null);
-  const navigate = useNavigate();
   useEffect(() => {
-    Promise.all([
-      fetch(`${process.env.REACT_APP_HOST}/location`).then((res) => res.json()),
-      fetch(`${process.env.REACT_APP_HOST}/category`).then((res) => res.json()),
-      fetch(`${process.env.REACT_APP_HOST}/user`).then((res) => res.json()),
-    ]).then(([location, category, user]) => {
-      const _parameters = { ...parameters };
-      if (location?._embedded.location) {
-        _parameters.locations = location._embedded.location;
-      }
-      if (category?._embedded.category) {
-        _parameters.categories = category._embedded.category;
-      }
-      if (user?._embedded.user) {
-        _parameters.users = user._embedded.user.map((user) => ({
-          label: user.name,
-          value: user.id,
-        }));
-        _parameters.investigators = user._embedded.user
-          .map((user) => ({
-            ...user,
-            role: user.role.split(",").filter((r) => r),
-          }))
-          .filter((user) => user.role.includes("hod"))
-          .map((user) => ({
-            label: user.name,
-            value: user.id,
-          }));
-      }
-      setParameters(_parameters);
-    });
     if (location.state?.focus) {
       setFocus(location.state.focus);
     }
   }, []);
   useEffect(() => {
-    if (Object.entries(filters).length) {
+    const _filters = paramsToObject(new URLSearchParams(location.search));
+    if (Object.entries(_filters).length) {
       fetch(
         `${
           process.env.REACT_APP_HOST
         }/IncidentReport/search/byDetails?${new URLSearchParams({
-          ...filters,
+          ..._filters,
         }).toString()}`
       )
         .then((res) => res.json())
@@ -175,7 +126,7 @@ const MyDashboard = () => {
           }
         });
     }
-  }, [filters]);
+  }, [location.search]);
   return (
     <div className={s.myDashboard}>
       <div className={s.reportCounts}>
@@ -221,8 +172,11 @@ const MyDashboard = () => {
             }
           }
           delete _filters.irBy;
-          console.log(_filters);
-          setFilters(_filters);
+          navigate({
+            pathname: location.pathname,
+            search: `?${createSearchParams(_filters)}`,
+          });
+          // setFilters(_filters);
         }}
       />
       <Table
@@ -414,7 +368,7 @@ const SingleIr = ({ ir, focus, setFocus, className, actions, parameters }) => {
           ir.inciSubCat}
       </td>
       <td>
-        {incidentType.find(({ value }) => value === ir.typeofInci)?.label || [
+        {incidentTypes.find(({ value }) => value === ir.typeofInci)?.label || [
           ir.typeofInci,
         ]}
       </td>
@@ -428,7 +382,7 @@ const SingleIr = ({ ir, focus, setFocus, className, actions, parameters }) => {
         )?.label || ir.irInvestigator}
       </td>
       <td>
-        {irStatuses.find((item) => item.id === +ir.status)?.name || ir.status}
+        {irStatus.find((item) => item.id === +ir.status)?.name || ir.status}
       </td>
       <td>{ir.tat}</td>
       <TableActions actions={actions} />
@@ -436,6 +390,8 @@ const SingleIr = ({ ir, focus, setFocus, className, actions, parameters }) => {
   );
 };
 const Filters = ({ onSubmit, qualityDashboard }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const { checkPermission } = useContext(SiteContext);
   const {
     handleSubmit,
@@ -475,6 +431,22 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
       }
     });
   }, []);
+  useEffect(() => {
+    const _filters = paramsToObject(new URLSearchParams(location.search));
+    reset({
+      sequence: "",
+      fromreportingDate: "",
+      toreportingDate: "",
+      fromIncidentDateTime: "",
+      toIncidentDateTime: "",
+      view: "all",
+      ..._filters,
+      typeofInci: _filters.typeofInci?.split(",").map((c) => +c) || "",
+      irInvestigator: _filters.irInvestigator?.split(",").map((c) => +c) || "",
+      status: _filters.status?.split(",").map((c) => +c) || "",
+      InciCateg: _filters.InciCateg?.split(",").map((c) => +c) || "",
+    });
+  }, [location.search]);
   return (
     <form className={s.filters} onSubmit={handleSubmit(onSubmit)}>
       <Input label="IR Code" {...register("sequence")} />
@@ -532,7 +504,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
         watch={watch}
         multiple={true}
         register={register}
-        options={incidentType}
+        options={incidentTypes}
       />
       <section className={s.pair}>
         <Combobox
@@ -551,7 +523,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
           watch={watch}
           register={register}
           multiple={true}
-          options={irStatuses.map((item) => ({
+          options={irStatus.map((item) => ({
             label: item.name,
             value: item.id,
           }))}
@@ -619,6 +591,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
               irInvestigator: "",
               status: "",
             });
+            navigate(location.pathname);
             onSubmit({});
           }}
         >
@@ -631,44 +604,15 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
 
 const QualityDashboard = () => {
   const { user, checkPermission } = useContext(SiteContext);
-  const [parameters, setParameters] = useState(null);
+  const { parameters } = useContext(IrDashboardContext);
+  const location = useLocation();
+  const navigate = useNavigate();
   const [incidents, setIncidents] = useState([]);
   const [filters, setFilters] = useState({ irInvestigator: user.id });
   const [assign, setAssign] = useState(null);
   useEffect(() => {
-    Promise.all([
-      fetch(`${process.env.REACT_APP_HOST}/location`).then((res) => res.json()),
-      fetch(`${process.env.REACT_APP_HOST}/category`).then((res) => res.json()),
-      fetch(`${process.env.REACT_APP_HOST}/user`).then((res) => res.json()),
-    ]).then(([location, category, user]) => {
-      const _parameters = { ...parameters };
-      if (location?._embedded.location) {
-        _parameters.locations = location._embedded.location;
-      }
-      if (category?._embedded.category) {
-        _parameters.categories = category._embedded.category;
-      }
-      if (user?._embedded.user) {
-        _parameters.users = user._embedded.user.map((user) => ({
-          label: user.name,
-          value: user.id,
-        }));
-        _parameters.investigators = user._embedded.user
-          .map((user) => ({
-            ...user,
-            role: user.role.split(",").filter((r) => r),
-          }))
-          .filter((user) => user.role.includes("hod"))
-          .map((user) => ({
-            label: user.name,
-            value: user.id,
-          }));
-      }
-      setParameters(_parameters);
-    });
-  }, []);
-  useEffect(() => {
-    if (Object.entries(filters).length) {
+    const _filters = paramsToObject(new URLSearchParams(location.search));
+    if (Object.entries(_filters).length) {
       fetch(
         `${
           process.env.REACT_APP_HOST
@@ -691,7 +635,7 @@ const QualityDashboard = () => {
           }
         });
     }
-  }, [filters]);
+  }, [location.search]);
   return (
     <div className={s.qualityDashboard}>
       <Filters
@@ -703,7 +647,12 @@ const QualityDashboard = () => {
             if (values[field] === "assignedToSelf")
               _filters.irInvestigator = user.id;
           }
-          setFilters(_filters);
+          delete _filters.view;
+          navigate({
+            pathname: location.pathname,
+            search: `?${createSearchParams(_filters)}`,
+          });
+          // setFilters(_filters);
         }}
         qualityDashboard={true}
       />
@@ -856,8 +805,8 @@ const QualityDashboard = () => {
               </Moment>
             </li>
             <li>
-              Incidnet Type:{" "}
-              {incidentType.find(({ value }) => value === assign?.typeofInci)
+              Incident Type:{" "}
+              {incidentTypes.find(({ value }) => value === assign?.typeofInci)
                 ?.label || assign?.typeofInci}
             </li>
             <li>
@@ -1004,4 +953,8 @@ const AssignForm = ({ assign, users, setAssign, onSuccess }) => {
   );
 };
 
-export default IncidentReportingDashboard;
+export default () => (
+  <IrDashboardContextProvider>
+    <IncidentReportingDashboard />
+  </IrDashboardContextProvider>
+);
