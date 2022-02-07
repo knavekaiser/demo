@@ -377,6 +377,7 @@ const TwoFieldMasterDetailForm = ({
     register,
     reset,
     watch,
+    setValue,
     formState: { errors },
   } = useForm({ ...edit });
   const [loading, setLoading] = useState(false);
@@ -434,6 +435,7 @@ const TwoFieldMasterDetailForm = ({
         register={register}
         required={true}
         watch={watch}
+        setValue={setValue}
       />
       <div className={s.btns}>
         <button className="btn secondary" type="submit" disabled={loading}>

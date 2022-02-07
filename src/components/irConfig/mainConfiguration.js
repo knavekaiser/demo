@@ -199,7 +199,7 @@ export default function MainConfig() {
               <td className={s.definition}>{inc.definition}</td>
               <td>{inc.reportingScreen}</td>
               <td>
-                <Toggle defaultValue={inc.rcaStatus} />
+                <Toggle readOnly={true} defaultValue={inc.rcaStatus} />
               </td>
               <td>{inc.rcaTempalte}</td>
               <TableActions
@@ -477,7 +477,7 @@ export default function MainConfig() {
             </Table>
             <section className={s.enableIR}>
               <label>Enable cancel IR function</label>
-              <Toggle />
+              <Toggle readOnly={true} defaultValue={true} />
             </section>
           </div>
         </div>
@@ -530,7 +530,7 @@ export default function MainConfig() {
           <div className={s.capaClosure}>
             <section>
               <label>Send CAPA closure report</label>
-              <Toggle defaultValue={true} />
+              <Toggle readOnly={true} defaultValue={true} />
             </section>
             <section>
               <input type="checkbox" id="sendThank-2" />
@@ -614,7 +614,7 @@ export default function MainConfig() {
           <section className={s.section_1}>
             <section>
               <label>View related incidents</label>
-              <Toggle />
+              <Toggle readOnly={true} defaultValue={true} />
             </section>
           </section>
           <section className={s.section_2}>
@@ -657,15 +657,15 @@ export default function MainConfig() {
           <section className={s.section_3}>
             <section>
               <label>View related incidents</label>
-              <Toggle />
+              <Toggle readOnly={true} defaultValue={true} />
             </section>
             <section>
               <label>Mark self reporting IRs</label>
-              <Toggle />
+              <Toggle readOnly={true} defaultValue={true} />
             </section>
             <section>
               <label>Mark IPSG Type</label>
-              <Toggle />
+              <Toggle readOnly={true} defaultValue={true} />
             </section>
             <section>
               <input type="checkbox" id="irInvestigationDetail-sendThank" />

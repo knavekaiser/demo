@@ -220,7 +220,7 @@ export const SwitchInput = ({
   onLabel,
   offLabel,
 }) => {
-  const watching = watch(name);
+  const value = watch(name);
   return (
     <div data-testid="switchInput" className={s.switchInput}>
       <label>{label}</label>
@@ -230,15 +230,32 @@ export const SwitchInput = ({
         style={{ display: "none" }}
         name={name}
       />
-      <div className={s.btns}>
+      <div
+        className={s.btns}
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if ([32, 13, 39, 37].includes(e.keyCode)) {
+            e.preventDefault();
+            if ([32, 13].includes(e.keyCode)) {
+              setValue(name, !value);
+            }
+            if (e.keyCode === 39) {
+              setValue(name, false);
+            }
+            if (e.keyCode === 37) {
+              setValue(name, true);
+            }
+          }
+        }}
+      >
         <span
-          className={`${watching ? s.active : ""} ${s.on}`}
+          className={`${value ? s.active : ""} ${s.on}`}
           onClick={() => setValue(name, true)}
         >
           {onLabel || "Yes"}
         </span>
         <span
-          className={`${!watching ? s.active : ""} ${s.off}`}
+          className={`${!value ? s.active : ""} ${s.off}`}
           onClick={() => setValue(name, false)}
         >
           {offLabel || "No"}
@@ -254,9 +271,10 @@ export const Toggle = ({
   readOnly,
   name,
   onChange,
+  setValue = () => {},
 }) => {
   const id = useRef(Math.random().toString(36).substr(-8));
-  const watching = watch?.([name]);
+  const value = watch?.(name);
   if (readOnly) {
     return (
       <section
@@ -280,9 +298,24 @@ export const Toggle = ({
   return (
     <section
       data-testid="toggleInput"
-      className={`${s.toggle} ${watching && watching[0] ? s.on : ""}`}
+      className={`${s.toggle} ${value ? s.on : ""}`}
       onClick={(e) => {
         e.target.querySelector("label")?.click();
+      }}
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if ([32, 13, 39, 37].includes(e.keyCode)) {
+          e.preventDefault();
+          if ([32, 13].includes(e.keyCode)) {
+            setValue(name, !value);
+          }
+          if (e.keyCode === 39) {
+            setValue(name, false);
+          }
+          if (e.keyCode === 37) {
+            setValue(name, true);
+          }
+        }
       }}
     >
       <input
@@ -424,6 +457,7 @@ export const Combobox = ({
           selected={selected}
           multiple={multiple}
           name={name}
+          open={open}
           setOpen={setOpen}
           onChange={onChange}
           clearErrors={clearErrors}
@@ -439,6 +473,7 @@ const ComboboxList = ({
   setValue,
   multiple,
   name,
+  open,
   setOpen,
   onChange = () => {},
   clearErrors,
@@ -446,7 +481,7 @@ const ComboboxList = ({
 }) => {
   const ul = useRef();
   const [hover, setHover] = useState(
-    options.findIndex(({ label, value }) => {
+    options?.findIndex(({ label, value }) => {
       return (
         value === selected ||
         (selected?.some && selected.some((s) => s === value))
@@ -482,7 +517,10 @@ const ComboboxList = ({
   );
   const keyDownHandler = useCallback(
     (e) => {
+      // console.log("child", e.keyCode, open, name);
       e.preventDefault();
+      e.stopPropagation();
+      if (!open) return;
       if (e.keyCode === 9) {
       }
       if (e.keyCode === 27) {
@@ -494,7 +532,7 @@ const ComboboxList = ({
         return;
       }
       if (e.keyCode === 38 || e.keyCode === 40) {
-        const index = options.findIndex(({ label, value }) => {
+        const index = options?.findIndex(({ label, value }) => {
           return (
             value === selected ||
             (selected?.some && selected.some((s) => s === value))
@@ -523,7 +561,7 @@ const ComboboxList = ({
       data-testid="combobox-options"
       onMouseMove={() => setHover(null)}
     >
-      {options.map(({ label, value, ...rest }, i) => (
+      {options?.map(({ label, value, ...rest }, i) => (
         <li
           key={i}
           onClick={(e) => {

@@ -206,7 +206,12 @@ const LocationForm = ({
         watch={watch}
         options={locationTypes}
       />
-      <Toggle name="status" register={register} watch={watch} />
+      <Toggle
+        name="status"
+        register={register}
+        watch={watch}
+        setValue={setValue}
+      />
       <div className={s.btns}>
         <button className="btn secondary" type="submit" disabled={loading}>
           {edit ? (

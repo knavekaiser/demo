@@ -28,7 +28,7 @@ import IrConfig from "./irConfig/index";
 import paths from "./path";
 import s from "./dashboard.module.scss";
 
-export const Accordion = ({ label, basePath, items, className }) => {
+export const Accordion = ({ label, basePath, items, className, startPath }) => {
   const location = useLocation();
   return (
     <li
@@ -36,25 +36,40 @@ export const Accordion = ({ label, basePath, items, className }) => {
         location.pathname.startsWith(basePath) ? s.open : ""
       } ${className || ""}`}
     >
-      <Link className={s.accordionLabel} to={`${basePath}/${items[0]?.path}`}>
+      <Link
+        className={s.accordionLabel}
+        to={startPath || `${basePath}/${items[0]?.path}`}
+      >
         {label} <BsChevronRight className={s.arrow} />
       </Link>
       {location.pathname.startsWith(basePath) && (
         <ul className={s.submenu}>
-          {items.map((item, i) => (
-            <li
-              key={i}
-              className={`${
-                (location.pathname + location.search).startsWith(
-                  basePath + "/" + item.path
-                )
-                  ? s.active
-                  : ""
-              }`}
-            >
-              <Link to={`${basePath}/${item.path}`}>{item.label}</Link>
-            </li>
-          ))}
+          {items.map((item, i) => {
+            if (item.accordion) {
+              return (
+                <Accordion
+                  label={item.label}
+                  basePath={item.basePath}
+                  className={item.className}
+                  items={item.items}
+                />
+              );
+            }
+            return (
+              <li
+                key={i}
+                className={`${
+                  (location.pathname + location.search).startsWith(
+                    basePath + "/" + item.path
+                  )
+                    ? s.active
+                    : ""
+                }`}
+              >
+                <Link to={`${basePath}/${item.path}`}>{item.label}</Link>
+              </li>
+            );
+          })}
         </ul>
       )}
     </li>
@@ -138,59 +153,91 @@ function Dashboard() {
                 ? s.active
                 : ""
             }`}
+            startPath={
+              paths.incidentDashboard.basePath +
+              "/" +
+              paths.incidentDashboard.myDashboard_submitted
+            }
             items={[
               {
-                label: <>Submitted IRs</>,
-                path: paths.incidentDashboard.myDashboard_submitted,
+                accordion: true,
+                label: <span className={s.label}>IR Status</span>,
+                basePath: paths.incidentDashboard.basePath,
+                className: `${s.sidebarItem} ${
+                  location.pathname.startsWith(paths.irConfig.basePath)
+                    ? s.active
+                    : ""
+                }`,
+                items: [
+                  {
+                    label: <>Submitted IRs</>,
+                    path: paths.incidentDashboard.myDashboard_submitted,
+                  },
+                  {
+                    label: <>Assigned IRs</>,
+                    path: paths.incidentDashboard.myDashboard_assinged,
+                  },
+                  {
+                    label: <>Under Investigation</>,
+                    path:
+                      paths.incidentDashboard.myDashboard_underInvestigation,
+                  },
+                  {
+                    label: <>CAPA planning</>,
+                    path: paths.incidentDashboard.myDashboard_capaPlanning,
+                  },
+                  {
+                    label: <>Closure confirmation</>,
+                    path:
+                      paths.incidentDashboard
+                        .myDashboard_closureConfirmationSent,
+                  },
+                  {
+                    label: <>Closure confirmed</>,
+                    path: paths.incidentDashboard.myDashboard_closureConfirmed,
+                  },
+                  {
+                    label: <>IR closure</>,
+                    path: paths.incidentDashboard.myDashboard_irClosure,
+                  },
+                ],
               },
               {
-                label: <>Assigned IRs</>,
-                path: paths.incidentDashboard.myDashboard_assinged,
-              },
-              {
-                label: <>Under Investigation</>,
-                path: paths.incidentDashboard.myDashboard_underInvestigation,
-              },
-              {
-                label: <>CAPA planning</>,
-                path: paths.incidentDashboard.myDashboard_capaPlanning,
-              },
-              {
-                label: <>Closure confirmation</>,
-                path:
-                  paths.incidentDashboard.myDashboard_closureConfirmationSent,
-              },
-              {
-                label: <>Closure confirmed</>,
-                path: paths.incidentDashboard.myDashboard_closureConfirmed,
-              },
-              {
-                label: <>IR closure</>,
-                path: paths.incidentDashboard.myDashboard_irClosure,
-              },
-              {
-                label: <>Current Months IRs</>,
-                path: paths.incidentDashboard.myDashboard_currentMonth,
-              },
-              {
-                label: <>Open sentinel events</>,
-                path: paths.incidentDashboard.myDashboard_openSentinelEvent,
-              },
-              {
-                label: <>Reportable event</>,
-                path: paths.incidentDashboard.myDashboard_reportableEvent,
-              },
-              {
-                label: <>Active CAPA Closure</>,
-                path: paths.incidentDashboard.myDashboard_activeCapaClosure,
-              },
-              {
-                label: <>Paitent complaints</>,
-                path: paths.incidentDashboard.myDashboard_patientComplaint,
-              },
-              {
-                label: <>IR beyond Acceptable TAT</>,
-                path: paths.incidentDashboard.myDashboard_beyondAcceptableTat,
+                accordion: true,
+                label: <span className={s.label}>Other Parameters</span>,
+                basePath: paths.incidentDashboard.basePath,
+                className: `${s.sidebarItem} ${
+                  location.pathname.startsWith(paths.irConfig.basePath)
+                    ? s.active
+                    : ""
+                }`,
+                items: [
+                  {
+                    label: <>Current Months IRs</>,
+                    path: paths.incidentDashboard.myDashboard_currentMonth,
+                  },
+                  {
+                    label: <>Open sentinel events</>,
+                    path: paths.incidentDashboard.myDashboard_openSentinelEvent,
+                  },
+                  {
+                    label: <>Reportable event</>,
+                    path: paths.incidentDashboard.myDashboard_reportableEvent,
+                  },
+                  {
+                    label: <>Active CAPA Closure</>,
+                    path: paths.incidentDashboard.myDashboard_activeCapaClosure,
+                  },
+                  {
+                    label: <>Paitent complaints</>,
+                    path: paths.incidentDashboard.myDashboard_patientComplaint,
+                  },
+                  {
+                    label: <>IR beyond Acceptable TAT</>,
+                    path:
+                      paths.incidentDashboard.myDashboard_beyondAcceptableTat,
+                  },
+                ],
               },
             ]}
           />

@@ -146,6 +146,7 @@ const RcaForm = ({ edit, onSuccess, clearForm, rcas }) => {
     register,
     reset,
     watch,
+    setValue,
     formState: { errors },
   } = useForm({ ...edit });
   const [loading, setLoading] = useState(false);
@@ -198,7 +199,13 @@ const RcaForm = ({ edit, onSuccess, clearForm, rcas }) => {
         })}
         error={errors.name}
       />
-      <Toggle name="show" register={register} required={true} watch={watch} />
+      <Toggle
+        name="show"
+        register={register}
+        required={true}
+        watch={watch}
+        setValue={setValue}
+      />
       <div className={s.btns}>
         <button className="btn secondary" type="submit" disabled={loading}>
           {edit ? (

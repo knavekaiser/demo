@@ -521,6 +521,7 @@ const SubCategoryForm = ({
           name="status"
           required={true}
           watch={watch}
+          setValue={setValue}
         />
         <div className={s.btns}>
           <button className="btn secondary" type="submit" disabled={loading}>

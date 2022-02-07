@@ -475,7 +475,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
             format: "YYYY-MM-DD",
             time: new Date(fromIncidentDateTime),
           })}
-          max={moment({ format: "YYYY-MM-DD", time: new Date() })}
+          // max={moment({ format: "YYYY-MM-DD", time: new Date() })}
         />
       </section>
       <section className={s.pair}>
@@ -494,7 +494,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
             format: "YYYY-MM-DD",
             time: new Date(fromreportingDate),
           })}
-          max={moment({ format: "YYYY-MM-DD", time: new Date() })}
+          // max={moment({ format: "YYYY-MM-DD", time: new Date() })}
         />
       </section>
       <Combobox
@@ -647,7 +647,7 @@ const QualityDashboard = () => {
             if (values[field] === "assignedToSelf")
               _filters.irInvestigator = user.id;
           }
-          delete _filters.view;
+          // delete _filters.view;
           navigate({
             pathname: location.pathname,
             search: `?${createSearchParams(_filters)}`,

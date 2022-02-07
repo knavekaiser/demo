@@ -289,7 +289,6 @@ const UserForm = ({ edit, onSuccess, clearForm, departments, users, role }) => {
         })}
         error={errors.employeeId}
         placeholder="Enter"
-        tabIndex={edit ? "0" : "1"}
       />
       <MobileNumberInput
         name="contact"
@@ -311,7 +310,6 @@ const UserForm = ({ edit, onSuccess, clearForm, departments, users, role }) => {
         error={errors.email}
         autoComplete="newUser"
         placeholder="Enter"
-        tabIndex={edit ? "0" : "1"}
       />
       <Input
         {...register("password", {

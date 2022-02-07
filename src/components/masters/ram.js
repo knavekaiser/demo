@@ -293,7 +293,13 @@ const RiskAssessmentForm = ({ edit, onSuccess, parameters, clearForm }) => {
         placeholder="Select"
         options={parameters.colors}
       />
-      <Toggle name="status" watch={watch} register={register} required={true} />
+      <Toggle
+        name="status"
+        watch={watch}
+        register={register}
+        required={true}
+        setValue={setValue}
+      />
       <div className={s.btns}>
         <button className="btn secondary" type="submit" disabled={loading}>
           {edit ? (
