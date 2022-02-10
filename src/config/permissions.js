@@ -1,7 +1,7 @@
 const permissions = [
   {
     role: "irAdmin",
-    label: "IR ADMIN",
+    label: "IR Admin",
     permissions: {
       "IR Master": false,
       "IR Configuration": false,
@@ -9,7 +9,7 @@ const permissions = [
   },
   {
     role: "incidentReporter",
-    label: "INCIDENT REPORTER",
+    label: "Incident Reporter",
     permissions: {
       "Incident Reporting": false,
       "View access to reported incident by self": false,
@@ -23,7 +23,7 @@ const permissions = [
   },
   {
     role: "irInvestigator",
-    label: "IR INVESTIGATOR",
+    label: "IR Investigator",
     permissions: {
       "Access to view IR's": false,
       "Merge IRs": false,
@@ -42,7 +42,7 @@ const permissions = [
   },
   {
     role: "incidentManager",
-    label: "INCIDENT MANAGER",
+    label: "Incident Manager",
     permissions: {
       "Approve IRs": false,
       "Cancel IRs": false,
@@ -56,7 +56,7 @@ const permissions = [
   },
   {
     role: "hod",
-    label: "HEAD OF THE DEPARTMENT",
+    label: "Head of Department - HOD",
     permissions: {
       "Approve IRs": false,
       "Acknowledge IRs": false,

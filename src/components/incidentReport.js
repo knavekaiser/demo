@@ -107,7 +107,13 @@ export default function IncidentReporting() {
               }
               Prompt({
                 type: "success",
-                message: "Incident was successfully reported.",
+                message: (
+                  <>
+                    Incident was successfully reported.
+                    <br />
+                    IR Code: {data.sequence}
+                  </>
+                ),
               });
               resetForm();
             }
@@ -136,7 +142,7 @@ export default function IncidentReporting() {
         postData();
       }
     },
-    [edit, user]
+    [edit, user, anonymous]
   );
   const resetForm = useCallback(() => {
     methods.reset({
@@ -174,6 +180,7 @@ export default function IncidentReporting() {
       actionTaken: [],
       notification: [],
     });
+    setAnonymous(false);
   }, [parameters]);
   const witnesses = methods.watch("witness");
   const actions = methods.watch("actionTaken");
