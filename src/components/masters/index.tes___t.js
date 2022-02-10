@@ -131,21 +131,21 @@ const testParent = ({
 
     test("Edit & clear", async () => {
       const editBtn = document.querySelector(editBtnSelector);
-      act(() => {
-        fireEvent.click(editBtn);
+      await act(async () => {
+        await fireEvent.click(editBtn);
       });
 
       let input = document.querySelector(inputSelector);
 
       const clearBtn = document.querySelector(clearFormBtnSelector);
-      act(() => {
-        fireEvent.click(clearBtn);
+      await act(async () => {
+        await fireEvent.click(clearBtn);
       });
     });
     test("Edit success", async () => {
       const editBtn = document.querySelector(editBtnSelector);
-      act(() => {
-        fireEvent.click(editBtn);
+      await act(async () => {
+        await fireEvent.click(editBtn);
       });
 
       const input = document.querySelector(inputSelector);
@@ -214,22 +214,22 @@ const testChild = ({ testId, name, ui, data }) => {
       const editBtn = document.querySelector(
         `div[data-testid="${testId}"] button[title="Edit"]`
       );
-      act(() => {
-        fireEvent.click(editBtn);
+      await act(async () => {
+        await fireEvent.click(editBtn);
       });
       const clearBtn = document.querySelector(
         `div[data-testid="${testId}"] form button[type="button"]`
       );
-      act(() => {
-        fireEvent.click(clearBtn);
+      await act(async () => {
+        await fireEvent.click(clearBtn);
       });
     });
     test("edit success", async () => {
       const editBtn = document.querySelector(
         `div[data-testid="${testId}"] button[title="Edit"]`
       );
-      act(() => {
-        fireEvent.click(editBtn);
+      await act(async () => {
+        await fireEvent.click(editBtn);
       });
 
       const input = document.querySelector(
@@ -664,29 +664,29 @@ const personAffectedData = {
         show: true,
         personAffectedDetails: [
           {
-            id: 1,
+            id: 2,
             name: "Season",
             show: true,
           },
           {
-            id: 2,
+            id: 3,
             name: "Age",
             show: true,
           },
           {
-            id: 3,
+            id: 4,
             name: "Gender",
             show: true,
           },
         ],
       },
       {
-        pa_id: 2,
+        pa_id: 5,
         name: "Person 2",
         show: true,
         personAffectedDetails: [
           {
-            id: 17,
+            id: 6,
             name: "Medical",
             show: false,
           },
@@ -908,7 +908,7 @@ testParent({
           contact: "9955414157",
           email: "abc@abc.com",
           department: 5,
-          role: 9,
+          role: "incidentReporter,irInvestigator",
           password: "1234",
         },
         {
@@ -920,7 +920,7 @@ testParent({
           contact: "9988761616",
           email: "abc1@abc.com",
           department: 1,
-          role: 12,
+          role: "irInvestigator,incidentReporter",
           password: "1234",
         },
         {
@@ -932,7 +932,7 @@ testParent({
           contact: "997766518",
           email: "abc@@abc.com",
           department: 2,
-          role: 10,
+          role: "incidentReporter",
           password: "71717",
         },
       ],

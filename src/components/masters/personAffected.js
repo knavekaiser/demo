@@ -304,7 +304,7 @@ const PersonAffectedDetail = ({
         </span>
       </div>
       <Table columns={[{ label: "Details" }, { label: "Action" }]}>
-        <tr key="inlineForm">
+        <tr>
           <td className={s.inlineForm}>
             <PersonAffectedDetailForm
               {...(edit && { edit })}

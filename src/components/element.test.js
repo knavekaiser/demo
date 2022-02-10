@@ -1,3 +1,4 @@
+import ReactDOM from "react-dom";
 import {
   Input,
   FileInput,
@@ -9,9 +10,16 @@ import {
   Combobox,
   Checkbox,
   TableActions,
+  Table,
   Moment,
+  Chip,
+  Tabs,
+  MobileNumberInput,
 } from "./elements";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { BrowserRouter } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { render, screen, fireEvent, act } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 
 test("input", () => {
   render(<Input type="text" placeholder="input-placeholder" />);
@@ -20,8 +28,11 @@ test("input", () => {
 });
 test("FileInput", () => {
   render(<FileInput label="Files" />);
-  const input = screen.getByTestId("fileInput");
-  expect(input.textContent).toBe("Files0 files selectedItem select");
+  const fileInput = screen.getByTestId("fileInput");
+  expect(fileInput.textContent).toBe("Files0 files selectedItem select");
+
+  const input = document.querySelector("input");
+  fireEvent.click(input);
 });
 test("Textarea", () => {
   render(<Textarea type="text" placeholder="textarea" />);
@@ -80,52 +91,99 @@ test("Toggle", () => {
   const input = screen.getByTestId("toggleInput");
   expect(input.textContent).toBe("");
 });
-test("combobox", () => {
-  render(
-    <Combobox
-      placeholder="Placeholder"
-      options={[
-        { value: "option1", label: "option 1" },
-        { value: "option1", label: "option 2" },
-        { value: "option1", label: "option 3" },
-      ]}
-    />
-  );
-
-  const container = screen.getByTestId("combobox-container");
-  expect(container.textContent).toBe("Placeholder");
-
-  const btn = screen.getByTestId("combobox-btn");
-  fireEvent.click(btn);
-
-  // const options2 = screen.getByTestId("combobox-option 2");
-  // expect(options2.textContent).toBe("option 2");
-
-  // fireEvent.click(options2);
-  // expect(container.textContent).toBe("Placeholder");
-});
 test("Checkbox", () => {
   render(<Checkbox label="Switch" />);
   const time = screen.getByTestId("checkbox-input");
   expect(time.textContent).toBe("Switch");
 });
-test("TableActions", () => {
-  render(
-    <table>
-      <tbody>
-        <tr>
-          <TableActions
-            actions={[
-              { icon: "Icon 1", label: "Action 1", callback: () => {} },
-              { icon: "Icon 2", label: "Action 2", callback: () => {} },
-            ]}
-          />
-        </tr>
-      </tbody>
-    </table>
-  );
-  const container = screen.getByTestId("tableActions");
-  expect(container.textContent).toBe("Icon 1Icon 2");
+describe("Table Actions", () => {
+  beforeAll(async () => {
+    ReactDOM.createPortal = jest.fn((element, node) => {
+      return element;
+    });
+    let portal = document.querySelector("#portal");
+    if (!portal) {
+      portal = document.createElement("div");
+      portal.id = "portal";
+      document.body.appendChild(portal);
+    }
+
+    let prompt = document.querySelector("#prompt");
+    if (!prompt) {
+      const prompt = document.createElement("div");
+      prompt.id = "prompt";
+      document.body.appendChild(prompt);
+    }
+  });
+  test("2 actions", async () => {
+    await act(async () =>
+      render(
+        <table>
+          <tbody>
+            <tr>
+              <TableActions
+                actions={[
+                  { icon: "Icon 1", label: "Action 1", callBack: () => {} },
+                  { icon: "Icon 2", label: "Action 2", callBack: () => {} },
+                ]}
+              />
+            </tr>
+          </tbody>
+        </table>
+      )
+    );
+    const container = screen.getByTestId("tableActions");
+    expect(container.textContent).toBe("Icon 1Icon 2");
+  });
+  test("4 actions", async () => {
+    await act(async () =>
+      render(
+        <table>
+          <tbody>
+            <tr>
+              <TableActions
+                actions={[
+                  { icon: "Icon 1", label: "Action 1", callBack: () => {} },
+                  { icon: "Icon 2", label: "Action 2", callBack: () => {} },
+                  { icon: "Icon 3", label: "Action 3", callBack: () => {} },
+                  { icon: "Icon 4", label: "Action 4", callBack: () => {} },
+                  { icon: "Icon 5", label: "Action 5", callBack: () => {} },
+                ]}
+              />
+            </tr>
+          </tbody>
+        </table>
+      )
+    );
+    const gearBtn = screen.getByTestId("gear-btn");
+    fireEvent.click(gearBtn);
+
+    const opt1 = document.querySelector(".modal button");
+    fireEvent.click(opt1);
+
+    fireEvent.click(gearBtn);
+    const backdrop = document.querySelector(".modalBackdrop");
+    fireEvent.click(backdrop);
+  });
+  test("Table", async () => {
+    await act(async () =>
+      render(
+        <Table
+          columns={[{ label: "Label 1" }, { label: "Label 2" }]}
+          sortable={true}
+        >
+          <tr>
+            <td>Name</td>
+            <td>Email</td>
+          </tr>
+          <tr>
+            <td>Name 2</td>
+            <td>Email 2</td>
+          </tr>
+        </Table>
+      )
+    );
+  });
 });
 test("Moment", () => {
   const component = render(
@@ -135,4 +193,99 @@ test("Moment", () => {
   );
   const time = screen.getByTestId("moment");
   expect(time.textContent).toBe("12/05/2021 Wed 01:45");
+});
+test("Invalid Date", () => {
+  const component = render(
+    <Moment format="DD/MM/YYYY ddd hh:mm">1agdasdgsd33*&**9</Moment>
+  );
+  const time = screen.getByTestId("moment");
+  expect(time.textContent).toBe("1agdasdgsd33*&**9");
+});
+test("Chip", () => {
+  const component = render(<Chip label="test chip" remove={jest.fn()} />);
+  const button = document.querySelector("button.clear");
+  fireEvent.click(button);
+});
+test("Tabs", () => {
+  const component = render(
+    <BrowserRouter>
+      <Tabs
+        tabs={[
+          { path: "/admin/path-1", label: "Path 1" },
+          { path: "/admin/path-2", label: "Path 2" },
+        ]}
+      />
+    </BrowserRouter>
+  );
+  const a = document.querySelector("a");
+  fireEvent.click(a);
+});
+
+const Form = () => {
+  const { handleSubmit, register, setValue, watch, clearErrors } = useForm();
+  return (
+    <form onSubmit={handleSubmit((data) => {})}>
+      <MobileNumberInput
+        name="number"
+        required={true}
+        register={register}
+        error={null}
+        clearErrors={clearErrors}
+        setValue={setValue}
+        watch={watch}
+      />
+    </form>
+  );
+};
+
+describe("Form", () => {
+  beforeAll(async () => {
+    ReactDOM.createPortal = jest.fn((element, node) => {
+      return element;
+    });
+    let portal = document.querySelector("#portal");
+    if (!portal) {
+      portal = document.createElement("div");
+      portal.id = "portal";
+      document.body.appendChild(portal);
+    }
+
+    let prompt = document.querySelector("#prompt");
+    if (!prompt) {
+      const prompt = document.createElement("div");
+      prompt.id = "prompt";
+      document.body.appendChild(prompt);
+    }
+
+    await act(async () => render(<Form />));
+  });
+  test("Plain render", async () => {
+    const container = document.querySelector("section");
+
+    const arrow = screen.getByTestId("combobox-btn");
+    await act(async () => {
+      await fireEvent.click(arrow);
+    });
+
+    const country = document.querySelector(".modal ul li");
+    await act(async () => {
+      await fireEvent.click(country);
+    });
+
+    await act(async () => {
+      await fireEvent.click(arrow);
+    });
+
+    let input = document.querySelector(
+      `section[data-testid="mobileNumberInput"] > div > span > input`
+    );
+    await act(async () => {
+      await fireEvent.click(input);
+    });
+
+    await act(async () => {
+      await userEvent.type(input, "+8801989479749");
+    });
+    expect(input.value).toBe("+8801989479749");
+  });
 });

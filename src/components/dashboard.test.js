@@ -1,7 +1,7 @@
 import Dashboard, { Accordion } from "./dashboard";
 import { SiteContext } from "../SiteContext";
 import { BrowserRouter } from "react-router-dom";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 
 const customRender = (ui, { providerProps, ...renderOptions }) => {
   return render(
@@ -12,22 +12,28 @@ const customRender = (ui, { providerProps, ...renderOptions }) => {
   );
 };
 
-test("Dashboard", () => {
+test("Dashboard", async () => {
   const providerProps = {
     user: { id: 10, name: "Test User" },
     checkPermission: () => true,
+    setUser: jest.fn(),
+    setRole: jest.fn(),
   };
   customRender(<Dashboard />, { providerProps });
   const comp = screen.getByTestId("dashboard");
   expect(comp.textContent).toMatch(
-    "Incident Reporting Incident Dashboard CAPA Reporting Reports IR Configuration  Masters"
+    "Incident Dashboard  CAPA Reporting Reports IR Configuration  Masters REPORT AN INCIDENT"
   );
 
   const btn = document.querySelector("button.clear");
-  fireEvent.click(btn);
+  await act(async () => {
+    await fireEvent.click(btn);
+  });
 
-  // const logoutBtn = document.querySelector(
-  //   `div[data-testid="dashboard"] div div div button:last-child`
-  // );
-  // fireEvent.click(logoutBtn);
+  const logoutBtn = document.querySelector(
+    `div[data-testid="dashboard"] div div div button:last-child`
+  );
+  await act(async () => {
+    await fireEvent.click(logoutBtn);
+  });
 });

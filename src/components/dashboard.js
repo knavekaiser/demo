@@ -7,10 +7,13 @@ import {
   useNavigate,
 } from "react-router-dom";
 import { BiChevronLeft, BiPowerOff } from "react-icons/bi";
-import { SiteContext } from "../SiteContext";
-import { BsChevronRight } from "react-icons/bs";
+import {
+  SiteContext,
+  IrDashboardContextProvider,
+  IrDashboardContext,
+} from "../SiteContext";
 import { IoKeyOutline } from "react-icons/io5";
-import { FaRegBell } from "react-icons/fa";
+import { FaRegBell, FaChevronRight } from "react-icons/fa";
 import { Combobox } from "./elements";
 import {
   IncidentReportIcon,
@@ -40,7 +43,7 @@ export const Accordion = ({ label, basePath, items, className, startPath }) => {
         className={s.accordionLabel}
         to={startPath || `${basePath}/${items[0]?.path}`}
       >
-        {label} <BsChevronRight className={s.arrow} />
+        {label} <FaChevronRight className={s.arrow} />
       </Link>
       {location.pathname.startsWith(basePath) && (
         <ul className={s.submenu}>
@@ -48,6 +51,7 @@ export const Accordion = ({ label, basePath, items, className, startPath }) => {
             if (item.accordion) {
               return (
                 <Accordion
+                  key={i}
                   label={item.label}
                   basePath={item.basePath}
                   className={item.className}
@@ -142,123 +146,9 @@ function Dashboard() {
               </span>
             </Link>
           </li>
-          <Accordion
-            label=<span className={s.label}>
-              <IncidentDashboardIcon className={s.icon} />{" "}
-              <span className={s.text}>Incident Dashboard</span>
-            </span>
-            basePath={paths.incidentDashboard.basePath}
-            className={`${s.sidebarItem} ${
-              location.pathname.startsWith(paths.incidentDashboard.basePath)
-                ? s.active
-                : ""
-            }`}
-            startPath={
-              paths.incidentDashboard.basePath +
-              "/" +
-              paths.incidentDashboard.myDashboard_submitted
-            }
-            items={[
-              {
-                accordion: true,
-                label: <span className={s.label}>IR Status</span>,
-                basePath: paths.incidentDashboard.basePath,
-                className: `${s.sidebarItem} ${
-                  location.pathname.startsWith(paths.irConfig.basePath)
-                    ? s.active
-                    : ""
-                }`,
-                items: [
-                  {
-                    label: <>Submitted IRs</>,
-                    path: paths.incidentDashboard.myDashboard_submitted,
-                  },
-                  {
-                    label: <>Assigned IRs</>,
-                    path: paths.incidentDashboard.myDashboard_assinged,
-                  },
-                  {
-                    label: <>Under Investigation</>,
-                    path:
-                      paths.incidentDashboard.myDashboard_underInvestigation,
-                  },
-                  {
-                    label: <>CAPA planning</>,
-                    path: paths.incidentDashboard.myDashboard_capaPlanning,
-                  },
-                  {
-                    label: <>Closure confirmation</>,
-                    path:
-                      paths.incidentDashboard
-                        .myDashboard_closureConfirmationSent,
-                  },
-                  {
-                    label: <>Closure confirmed</>,
-                    path: paths.incidentDashboard.myDashboard_closureConfirmed,
-                  },
-                  {
-                    label: <>IR closure</>,
-                    path: paths.incidentDashboard.myDashboard_irClosure,
-                  },
-                ],
-              },
-              {
-                accordion: true,
-                label: <span className={s.label}>Other Parameters</span>,
-                basePath: paths.incidentDashboard.basePath,
-                className: `${s.sidebarItem} ${
-                  location.pathname.startsWith(paths.irConfig.basePath)
-                    ? s.active
-                    : ""
-                }`,
-                items: [
-                  {
-                    label: <>Current Months IRs</>,
-                    path: paths.incidentDashboard.myDashboard_currentMonth,
-                  },
-                  {
-                    label: <>Open sentinel events</>,
-                    path: paths.incidentDashboard.myDashboard_openSentinelEvent,
-                  },
-                  {
-                    label: <>Reportable event</>,
-                    path: paths.incidentDashboard.myDashboard_reportableEvent,
-                  },
-                  {
-                    label: <>Active CAPA Closure</>,
-                    path: paths.incidentDashboard.myDashboard_activeCapaClosure,
-                  },
-                  {
-                    label: <>Paitent complaints</>,
-                    path: paths.incidentDashboard.myDashboard_patientComplaint,
-                  },
-                  {
-                    label: <>IR beyond Acceptable TAT</>,
-                    path:
-                      paths.incidentDashboard.myDashboard_beyondAcceptableTat,
-                  },
-                ],
-              },
-            ]}
-          />
-          {
-            //   <li
-            //   className={`${s.sidebarItem} ${
-            //     location.pathname.startsWith(paths.incidentDashboard.basePath)
-            //       ? s.active
-            //       : ""
-            //   }`}
-            // >
-            //   <Link
-            //     to={`${paths.incidentDashboard.basePath}/${paths.incidentDashboard.myDashboard}`}
-            //   >
-            //     <span className={s.label}>
-            //       <IncidentDashboardIcon className={s.icon} />{" "}
-            //       <span className={s.text}>Incident Dashboard</span>
-            //     </span>
-            //   </Link>
-            // </li>
-          }
+          <IrDashboardContextProvider>
+            <SidebarItem_IrDashboard location={location} />
+          </IrDashboardContextProvider>
           <li
             className={`${s.sidebarItem} ${
               location.pathname.startsWith(paths.capaReport) ? s.active : ""
@@ -375,5 +265,175 @@ function Dashboard() {
     </div>
   );
 }
+const SidebarItem_IrDashboard = ({ location }) => {
+  const { count } = useContext(IrDashboardContext);
+  return (
+    <Accordion
+      label=<span className={s.label}>
+        <IncidentDashboardIcon className={s.icon} />{" "}
+        <span className={s.text}>Incident Dashboard</span>
+      </span>
+      basePath={paths.incidentDashboard.basePath}
+      className={`${s.sidebarItem} ${
+        location.pathname.startsWith(paths.incidentDashboard.basePath)
+          ? s.active
+          : ""
+      }`}
+      startPath={
+        paths.incidentDashboard.basePath +
+        "/" +
+        paths.incidentDashboard.myDashboard_submitted
+      }
+      items={[
+        {
+          accordion: true,
+          label: <span className={s.label}>IR Status</span>,
+          basePath: paths.incidentDashboard.basePath,
+          className: `${s.sidebarItem} ${
+            location.pathname.startsWith(paths.irConfig.basePath)
+              ? s.active
+              : ""
+          }`,
+          items: [
+            {
+              label: (
+                <>
+                  Submitted IRs{" "}
+                  {count["2"] ? (
+                    <span className={s.count}>{count["2"]}</span>
+                  ) : null}
+                </>
+              ),
+              path: paths.incidentDashboard.myDashboard_submitted,
+            },
+            {
+              label: (
+                <>
+                  Assigned IRs{" "}
+                  {count["3"] ? (
+                    <span className={s.count}>{count["3"]}</span>
+                  ) : null}
+                </>
+              ),
+              path: paths.incidentDashboard.myDashboard_assinged,
+            },
+            {
+              label: (
+                <>
+                  Under Investigation{" "}
+                  {count["4"] ? (
+                    <span className={s.count}>{count["4"]}</span>
+                  ) : null}
+                </>
+              ),
+              path: paths.incidentDashboard.myDashboard_underInvestigation,
+            },
+            {
+              label: (
+                <>
+                  CAPA planning{" "}
+                  {count["5"] ? (
+                    <span className={s.count}>{count["5"]}</span>
+                  ) : null}
+                </>
+              ),
+              path: paths.incidentDashboard.myDashboard_capaPlanning,
+            },
+            {
+              label: (
+                <>
+                  Closure confirmation{" "}
+                  {count["6"] ? (
+                    <span className={s.count}>{count["6"]}</span>
+                  ) : null}
+                </>
+              ),
+              path: paths.incidentDashboard.myDashboard_closureConfirmationSent,
+            },
+            {
+              label: (
+                <>
+                  Closure confirmed{" "}
+                  {count["7"] ? (
+                    <span className={s.count}>{count["7"]}</span>
+                  ) : null}
+                </>
+              ),
+              path: paths.incidentDashboard.myDashboard_closureConfirmed,
+            },
+            {
+              label: (
+                <>
+                  IR closure{" "}
+                  {count["8"] ? (
+                    <span className={s.count}>{count["8"]}</span>
+                  ) : null}
+                </>
+              ),
+              path: paths.incidentDashboard.myDashboard_irClosure,
+            },
+          ],
+        },
+        {
+          accordion: true,
+          label: <span className={s.label}>Other Parameters</span>,
+          basePath: paths.incidentDashboard.basePath,
+          className: `${s.sidebarItem} ${
+            location.pathname.startsWith(paths.irConfig.basePath)
+              ? s.active
+              : ""
+          }`,
+          items: [
+            {
+              label: (
+                <>
+                  Current Months IRs{" "}
+                  {count.currentMonth ? (
+                    <span className={s.count}>{count.currentMonth}</span>
+                  ) : null}
+                </>
+              ),
+              path: paths.incidentDashboard.myDashboard_currentMonth,
+            },
+            {
+              label: (
+                <>
+                  Open sentinel events{" "}
+                  {count.sentinel ? (
+                    <span className={s.count}>{count.sentinel}</span>
+                  ) : null}
+                </>
+              ),
+              path: paths.incidentDashboard.myDashboard_openSentinelEvent,
+            },
+            {
+              label: <>Reportable event</>,
+              path: paths.incidentDashboard.myDashboard_reportableEvent,
+            },
+            {
+              label: <>Active CAPA Closure</>,
+              path: paths.incidentDashboard.myDashboard_activeCapaClosure,
+            },
+            {
+              label: (
+                <>
+                  Paitent complaints{" "}
+                  {count.patientComplaint ? (
+                    <span className={s.count}>{count.patientComplaint}</span>
+                  ) : null}
+                </>
+              ),
+              path: paths.incidentDashboard.myDashboard_patientComplaint,
+            },
+            {
+              label: <>IR beyond Acceptable TAT</>,
+              path: paths.incidentDashboard.myDashboard_beyondAcceptableTat,
+            },
+          ],
+        },
+      ]}
+    />
+  );
+};
 
 export default Dashboard;

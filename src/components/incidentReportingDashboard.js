@@ -90,7 +90,7 @@ function IncidentReportingDashboard() {
 }
 const MyDashboard = () => {
   const { user } = useContext(SiteContext);
-  const { parameters } = useContext(IrDashboardContext);
+  const { parameters, count } = useContext(IrDashboardContext);
   const location = useLocation();
   const navigate = useNavigate();
   const [incidents, setIncidents] = useState([]);
@@ -134,8 +134,8 @@ const MyDashboard = () => {
           className="open"
           label="OPEN IRS"
           irs={[
-            { label: "My IRs", count: 0 },
-            { label: "Department IRs", count: 10 },
+            { label: "My IRs", count: count.myIr },
+            { label: "Department IRs", count: count.departmentIr },
           ]}
         />
         <ReportCount
@@ -312,81 +312,186 @@ const ReportCount = ({ label, className, irs }) => {
   );
 };
 const SingleIr = ({ ir, focus, setFocus, className, actions, parameters }) => {
+  const [showTatDetails, setShowTatDetails] = useState(false);
   return (
-    <tr
-      className={`${ir.typeofInci === 8 ? s.sentinel : ""} ${
-        focus === ir.id ? s.focus : ""
-      } ${className || ""}`}
-      onClick={() => {
-        setFocus && setFocus(ir.id);
-      }}
-    >
-      <td>
-        <span className={s.icons}>
-          {ir.patientYesOrNo && (
-            <>
-              <FaUser className={s.user} />
-              <span className={s.patientDetail}>
-                <p>
-                  Patient Name: <b>{ir.patientname}</b>
-                </p>
-                <p>
-                  Complaint Date & Time:{" "}
-                  <b>
-                    <Moment format="DD/MM/YYYY hh:mma">
-                      {ir.complaIntegerDatetime}
-                    </Moment>
-                  </b>
-                </p>
-                <p>
-                  Complaint ID: <b>{ir.complaIntegerIdEntry}</b>
-                </p>
-              </span>
-            </>
+    <>
+      <tr
+        className={`${ir.typeofInci === 8 ? s.sentinel : ""} ${
+          focus === ir.id ? s.focus : ""
+        } ${className || ""}`}
+        onClick={() => {
+          setFocus && setFocus(ir.id);
+        }}
+      >
+        <td>
+          <span className={s.icons}>
+            {ir.patientYesOrNo && (
+              <>
+                <FaUser className={s.user} />
+                <span className={s.patientDetail}>
+                  <p>
+                    Patient Name: <b>{ir.patientname}</b>
+                  </p>
+                  <p>
+                    Complaint Date & Time:{" "}
+                    <b>
+                      <Moment format="DD/MM/YYYY hh:mma">
+                        {ir.complaIntegerDatetime}
+                      </Moment>
+                    </b>
+                  </p>
+                  <p>
+                    Complaint ID: <b>{ir.complaIntegerIdEntry}</b>
+                  </p>
+                </span>
+              </>
+            )}
+          </span>
+          {ir.sequence}
+        </td>
+        <td>
+          <Moment format="DD/MM/YYYY hh:mm">{ir.reportingDate}</Moment>
+        </td>
+        <td>
+          <Moment format="DD/MM/YYYY hh:mm">{ir.incident_Date_Time}</Moment>
+        </td>
+        <td>
+          {parameters?.locations.find((item) => item.id === ir.location)
+            ?.name || ir.location}
+        </td>
+        <td>
+          {parameters?.categories.find((item) => item.id === ir.inciCateg)
+            ?.name || ir.inciCateg}
+        </td>
+        <td>
+          {parameters?.categories
+            .find((item) => item.id === ir.inciCateg)
+            ?.subCategorys?.find((item) => item.id === ir.inciSubCat)?.name ||
+            ir.inciSubCat}
+        </td>
+        <td>
+          {incidentTypes.find(({ value }) => value === ir.typeofInci)
+            ?.label || [ir.typeofInci]}
+        </td>
+        <td>
+          {parameters?.users.find(({ value }) => value === ir.userId)?.label ||
+            "Anonymous"}
+        </td>
+        <td>
+          {parameters?.investigators.find(
+            ({ value }) => value === ir.irInvestigator
+          )?.label || ir.irInvestigator}
+        </td>
+        <td>
+          {irStatus.find((item) => item.id === +ir.status)?.name || ir.status}
+        </td>
+        <td className={s.tat} onClick={() => setShowTatDetails(true)}>
+          {Math.floor(
+            ((ir.closureDate || new Date()) - new Date(ir.reportingDate)) /
+              (1000 * 3600 * 24)
           )}
-        </span>
-        {ir.sequence}
-      </td>
-      <td>
-        <Moment format="DD/MM/YYYY hh:mm">{ir.reportingDate}</Moment>
-      </td>
-      <td>
-        <Moment format="DD/MM/YYYY hh:mm">{ir.incident_Date_Time}</Moment>
-      </td>
-      <td>
-        {parameters?.locations.find((item) => item.id === ir.location)?.name ||
-          ir.location}
-      </td>
-      <td>
-        {parameters?.categories.find((item) => item.id === ir.inciCateg)
-          ?.name || ir.inciCateg}
-      </td>
-      <td>
-        {parameters?.categories
-          .find((item) => item.id === ir.inciCateg)
-          ?.subCategorys?.find((item) => item.id === ir.inciSubCat)?.name ||
-          ir.inciSubCat}
-      </td>
-      <td>
-        {incidentTypes.find(({ value }) => value === ir.typeofInci)?.label || [
-          ir.typeofInci,
+        </td>
+        <TableActions actions={actions} />
+      </tr>
+      <Modal
+        open={showTatDetails}
+        setOpen={setShowTatDetails}
+        head={true}
+        label="TAT DETAILS"
+        className={s.tatDetails}
+      >
+        <TatDetails
+          ir={ir}
+          parameters={parameters}
+          setShowTatDetails={setShowTatDetails}
+        />
+      </Modal>
+    </>
+  );
+};
+const TatDetails = ({ ir, parameters, setShowTatDetails }) => {
+  return (
+    <div className={s.content}>
+      <ul className={s.irDetail}>
+        <li>IR Code: {ir?.sequence}</li>
+        <li>
+          Incident Date & Time:{" "}
+          <Moment format="DD/MM/YYYY hh:mma">{ir?.incident_Date_Time}</Moment>
+        </li>
+        <li>
+          Incident Type:{" "}
+          {incidentTypes.find(({ value }) => value === ir?.typeofInci)?.label ||
+            ir?.typeofInci}
+        </li>
+        <li>
+          Category:{" "}
+          {parameters?.categories.find((item) => item.id === ir?.inciCateg)
+            ?.name || ir?.inciCateg}
+        </li>
+        <li>
+          Location:{" "}
+          {parameters?.locations.find((item) => item.id === ir?.location)
+            ?.name || ir?.location}
+        </li>
+        <li>
+          Sub Category:{" "}
+          {parameters?.categories
+            .find((item) => item.id === ir?.inciCateg)
+            ?.subCategorys?.find((item) => item.id === ir?.inciSubCat)?.name ||
+            ir?.inciSubCat}
+        </li>
+      </ul>
+      <p className={s.totalDays}>
+        TAT:{" "}
+        {Math.floor(
+          ((ir.closureDate || new Date()) - new Date(ir.reportingDate)) /
+            (1000 * 3600 * 24)
+        )}{" "}
+        Days
+      </p>
+      <Table
+        columns={[
+          { label: "Status" },
+          { label: "User" },
+          { label: "Date & Time" },
+          { label: "Days" },
         ]}
-      </td>
-      <td>
-        {parameters?.users.find(({ value }) => value === ir.userId)?.label ||
-          "Anonymous"}
-      </td>
-      <td>
-        {parameters?.investigators.find(
-          ({ value }) => value === ir.irInvestigator
-        )?.label || ir.irInvestigator}
-      </td>
-      <td>
-        {irStatus.find((item) => item.id === +ir.status)?.name || ir.status}
-      </td>
-      <td>{ir.tat}</td>
-      <TableActions actions={actions} />
-    </tr>
+      >
+        {ir.irStatusDetails
+          .sort((a, b) =>
+            new Date(a.dateTime) < new Date(b.dateTime) ? 1 : -1
+          )
+          .map((evt) => (
+            <tr key={evt.dateTime}>
+              <td>
+                {irStatus.find((status) => status.id === evt.status)?.name ||
+                  evt.status}
+              </td>
+              <td>
+                {parameters?.users.find((user) => user.value === evt.userid)
+                  ?.label || evt.userid}
+              </td>
+              <td>
+                <Moment format="MM/DD/YYYY hh:mma">{evt.dateTime}</Moment>
+              </td>
+              <td>
+                {Math.floor(
+                  (new Date(evt.dateTime) - new Date(ir.reportingDate)) /
+                    (1000 * 3600 * 24)
+                )}
+              </td>
+            </tr>
+          ))}
+      </Table>
+      <section className={s.btns}>
+        <button
+          className={`btn secondary w-100`}
+          onClick={() => setShowTatDetails(false)}
+        >
+          Close
+        </button>
+      </section>
+    </div>
   );
 };
 const Filters = ({ onSubmit, qualityDashboard }) => {
@@ -899,13 +1004,18 @@ const AssignForm = ({ assign, users, setAssign, onSuccess }) => {
               irInvestigator: data.user,
               status: 3,
               irStatusDetails: [
-                ...(assign.irStatusDetails || []),
+                ...(assign.irStatusDetails || []).map((evt) => ({
+                  ...evt,
+                  id: undefined,
+                })),
                 {
                   userid: data.user,
+                  status: 3,
                   dateTime: new Date().toISOString(),
                 },
               ],
               actionTakens: undefined,
+              _links: undefined,
             }),
           })
             .then((res) => res.json())

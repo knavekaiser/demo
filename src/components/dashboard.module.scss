@@ -89,8 +89,10 @@
       display: grid;
       font-size: 11pt;
       width: 240px;
-      .sidebarItem {
+      & > .sidebarItem {
         padding-right: 10px;
+      }
+      .sidebarItem {
         .icon {
           height: 18px;
           width: 18px;
@@ -114,11 +116,27 @@
           }
         }
         a {
-          display: block;
+          display: flex;
+          grid-gap: 6px;
+          align-items: center;
           border-left: 3px solid #2f3545;
           padding: 8px 10px;
+          .count {
+            padding: 4px 12px;
+            background-color: #0897c3;
+            color: white;
+            margin: auto;
+            margin-right: 0;
+            border-radius: 4px;
+          }
         }
         border-bottom: 1px solid #292f43;
+        .sidebarItem {
+          a {
+            padding: 1px 10px;
+            min-height: 30px;
+          }
+        }
       }
     }
     .collapseBtn {

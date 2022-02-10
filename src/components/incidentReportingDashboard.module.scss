@@ -113,6 +113,11 @@ main {
             }
           }
         }
+        .tat {
+          text-decoration: underline;
+          color: $primary-color;
+          cursor: pointer;
+        }
       }
     }
     .legend {
@@ -197,19 +202,11 @@ main {
     }
   }
 }
-.assignModal {
+.assignModal,
+.tatDetails {
   .content {
     padding: 10px 20px;
     padding-bottom: 20px;
-    .irDetail {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      grid-gap: 0.5rem;
-      font-size: 14px;
-      font-weight: 600;
-      background: rgb(246, 246, 246);
-      padding: 10px 15px;
-    }
     .timeline {
       font-weight: 600;
       padding-top: 10px;
@@ -255,6 +252,15 @@ main {
         }
       }
     }
+    .irDetail {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-gap: 0.5rem;
+      font-size: 14px;
+      font-weight: 600;
+      background: rgb(246, 246, 246);
+      padding: 10px 15px;
+    }
     form {
       .userCombo {
         margin: 1rem 0;
@@ -269,6 +275,26 @@ main {
         justify-content: center;
         grid-gap: 10px;
       }
+    }
+  }
+}
+
+.tatDetails {
+  .content {
+    display: grid;
+    grid-gap: 0.5rem;
+    .totalDays {
+      text-align: right;
+    }
+    table {
+      tr {
+        grid-template-columns: 8rem 10rem 15rem 4rem;
+      }
+    }
+    .btns {
+      margin-top: 1rem;
+      display: flex;
+      justify-content: center;
     }
   }
 }

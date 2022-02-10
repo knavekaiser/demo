@@ -84,6 +84,15 @@ export default function IncidentReporting() {
                     userId: user.id,
                     department: user.department,
                   }),
+              ...(data.status === 2 && {
+                irStatusDetails: [
+                  {
+                    status: 2,
+                    dateTime: new Date().toISOString(),
+                    ...(!anonymous && { userid: user.id }),
+                  },
+                ],
+              }),
             }),
           }
         )

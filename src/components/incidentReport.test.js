@@ -53,6 +53,19 @@ describe("Incident Report Form", () => {
       await fireEvent.click(actionTaken_add);
     });
   });
+
+  test("Reset form", async () => {
+    // const resetBtn = document.querySelector(".btns .btn.secondary");
+    const resetBtn = screen.getByText("Clear");
+    await act(async () => {
+      await fireEvent.click(resetBtn);
+    });
+  });
+
+  test("Set notification", async () => {
+    const notified = document.querySelector(".notified");
+    expect(notified.textContent).toBe("Clear");
+  });
 });
 
 test("Box", () => {

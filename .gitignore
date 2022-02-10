@@ -11,6 +11,7 @@
 # production
 /build
 /Login
+/public/js
 
 # misc
 .DS_Store
