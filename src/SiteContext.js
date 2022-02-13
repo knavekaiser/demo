@@ -6,11 +6,13 @@ import React, {
   useCallback,
 } from "react";
 import { irStatus } from "./config";
+import defaultEndpoints from "./config/endpoints";
 
 export const SiteContext = createContext();
 export const Provider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [roles, setRoles] = useState(null);
+  const [endpoints, setEndpoints] = useState(defaultEndpoints);
   const checkPermission = useCallback(
     ({ roleId, permission }) => {
       let roleMatch = false;
@@ -65,6 +67,8 @@ export const Provider = ({ children }) => {
         checkPermission,
         roles,
         setRoles,
+        endpoints,
+        setEndpoints,
       }}
     >
       {children}
@@ -101,7 +105,7 @@ export const IrDashboardContextProvider = ({ children }) => {
               ...user,
               role: user.role.split(",").filter((r) => r),
             }))
-            .filter((user) => user.role.includes("hod"))
+            .filter((user) => user.role.includes("irInvestigator"))
             .map((user) => ({
               label: user.name,
               value: user.id,

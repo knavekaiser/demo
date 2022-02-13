@@ -28,7 +28,7 @@ export const ConnectForm = ({ children }) => {
   return children({ ...methods });
 };
 export default function IncidentReporting() {
-  const { user } = useContext(SiteContext);
+  const { user, endpoints } = useContext(SiteContext);
   const location = useLocation();
   const navigate = useNavigate();
   const methods = useForm();
@@ -217,14 +217,25 @@ export default function IncidentReporting() {
   }, [edit]);
   useEffect(() => {
     Promise.all([
-      fetch(`${process.env.REACT_APP_HOST}/location`).then((res) => res.json()),
+      fetch(endpoints.locations, {
+        headers: {
+          SECURITY_TOKEN: sessionStorage.getItem("token"),
+        },
+      }).then((res) => res.json()),
       fetch(`${process.env.REACT_APP_HOST}/department`).then((res) =>
         res.json()
       ),
       fetch(`${process.env.REACT_APP_HOST}/user`).then((res) => res.json()),
     ]).then(([location, department, users]) => {
       const _parameters = { ...parameters };
-      if (location?._embedded.location) {
+      if (Array.isArray(location)) {
+        _parameters.locations = location
+          .filter((item) => +item.status)
+          .map((item) => ({
+            label: item.locationName,
+            value: item.locationID,
+          }));
+      } else if (location?._embedded?.location) {
         _parameters.locations = location._embedded.location
           .filter((item) => item.status)
           .map((item) => ({
@@ -232,7 +243,7 @@ export default function IncidentReporting() {
             value: item.id,
           }));
       }
-      if (department?._embedded.department) {
+      if (department?._embedded?.department) {
         _parameters.departments = department._embedded.department.map(
           (item) => ({
             label: item.name,
@@ -240,7 +251,7 @@ export default function IncidentReporting() {
           })
         );
       }
-      if (users?._embedded.user) {
+      if (users?._embedded?.user) {
         _parameters.hods = users._embedded.user
           .map((user) => ({
             ...user,
@@ -312,8 +323,15 @@ export default function IncidentReporting() {
                 {...methods.register("incident_Date_Time", {
                   validate: (v) => {
                     if (v) {
-                      if (new Date(v) > new Date()) {
-                        return "Can not select date from future";
+                      if (
+                        new Date(v) >
+                        (edit?.reportingDate
+                          ? new Date(edit.reportingDate)
+                          : new Date())
+                      ) {
+                        return edit?.reportingDate
+                          ? "Incident date can't not be leter than reporting date"
+                          : "Can not select date from future";
                       }
                     } else {
                       return "Please select Incident Date";
@@ -353,7 +371,7 @@ export default function IncidentReporting() {
                     if (v) return true;
                     if (
                       methods.getValues("status") === 2 &&
-                      methods.getValues("location") === 107
+                      methods.getValues("location") === 24
                     ) {
                       return "Please enter Location Detail";
                     }
@@ -377,10 +395,18 @@ export default function IncidentReporting() {
                 <>
                   <Input
                     {...methods.register("patientname", {
-                      // required: "Please enter Patient Name",
+                      validate: (v) => {
+                        if (
+                          methods.getValues("patientYesOrNo") &&
+                          +methods.getValues("status") === 2
+                        ) {
+                          return "Please enter Patient Name";
+                        }
+                        return true;
+                      },
                     })}
                     error={methods.formState.errors.patientname}
-                    label="Patient name / UHID"
+                    label="Patient Name / UHID"
                   />
                   <Input
                     {...methods.register("complaIntegerDatetime", {

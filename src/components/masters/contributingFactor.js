@@ -5,14 +5,7 @@ import { BiSearch } from "react-icons/bi";
 import { RiCloseLine } from "react-icons/ri";
 import { IoClose } from "react-icons/io5";
 import { Box } from "../incidentReport";
-import {
-  Form,
-  Input,
-  Checkbox,
-  Table,
-  TableActions,
-  Toggle,
-} from "../elements";
+import { Form, Input, Table, TableActions, Toggle } from "../elements";
 import { useForm } from "react-hook-form";
 import { Modal, Prompt } from "../modal";
 import s from "./masters.module.scss";

@@ -25,7 +25,12 @@ export const Input = forwardRef(
       <section
         className={`${s.input} ${className || ""} ${error ? s.err : ""}`}
       >
-        {label && <label>{label}</label>}
+        {label && (
+          <label>
+            {label}
+            {rest.required && "*"}
+          </label>
+        )}
         <div className={s.wrapper}>
           <span className={s.field}>
             <input
@@ -43,12 +48,12 @@ export const Input = forwardRef(
                 <GoCalendar />
               </label>
             )}
+            {error && (
+              <span className={s.errIcon}>
+                <BsFillExclamationTriangleFill />
+              </span>
+            )}
           </span>
-          {error && (
-            <span className={s.errIcon}>
-              <BsFillExclamationTriangleFill />
-            </span>
-          )}
           {error && <span className={s.errMsg}>{error.message}</span>}
           {icon && icon}
         </div>
@@ -56,6 +61,109 @@ export const Input = forwardRef(
     );
   }
 );
+export const SearchField = ({
+  url,
+  processData,
+  renderListItem,
+  label,
+  onChange,
+  watch,
+  name,
+  setValue,
+  register,
+  formOptions,
+  error,
+  ...rest
+}) => {
+  const [data, setData] = useState([]);
+  const value = watch(name);
+  const [showResult, setShowResult] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [style, setStyle] = useState({});
+  const clickHandlerAdded = useState(false);
+  const container = useRef();
+  useLayoutEffect(() => {
+    const { width, height, x, y } = container.current.getBoundingClientRect();
+    const top = window.innerHeight - y;
+    setStyle({
+      position: "absolute",
+      left: x,
+      top: Math.max(
+        Math.min(
+          y + height,
+          window.innerHeight - Math.min(35 * (data.length || 0) + 8, 320)
+          // window.innerHeight - (35 * (options?.length || 0) + 8)
+        ),
+        8
+      ),
+      width: width,
+      maxHeight: Math.min(window.innerHeight - 16, 300),
+    });
+  }, [showResult, data]);
+  useEffect(() => {
+    const clickHandler = (e) => {
+      if (e.path && !e.path.includes(container.current)) {
+        setShowResult(false);
+      }
+    };
+    if (!clickHandlerAdded.current) {
+      document.addEventListener("click", clickHandler);
+      return () => {
+        document.removeEventListener("click", clickHandler);
+      };
+      clickHandlerAdded.current = true;
+    }
+  }, [showResult]);
+  useEffect(() => {
+    if (value) {
+      setLoading(true);
+      fetch(url)
+        .then((res) => res.json())
+        .then((rawData) => {
+          setLoading(false);
+          const data = processData(rawData, value);
+          setData(data);
+        })
+        .catch((err) => {
+          setLoading(false);
+          console.log(err);
+        });
+    }
+  }, [value]);
+  return (
+    <section ref={container}>
+      <Input
+        label={label}
+        onFocus={(e) => setShowResult(true)}
+        {...register(name, formOptions)}
+        autoComplete="off"
+        error={error}
+      />
+      <Modal
+        open={showResult && data.length > 0}
+        className={s.searchFieldModal}
+        backdropClass={s.searchFieldModalBackdrop}
+        style={style}
+        onBackdropClick={() => setShowResult(false)}
+        clickThroughBackdrop={true}
+      >
+        <ul className={s.options}>
+          {data.map((item, i) => (
+            <li
+              key={i}
+              onClick={() => {
+                setValue(name, item.label);
+                onChange(item.data);
+              }}
+            >
+              {renderListItem(item)}
+            </li>
+          ))}
+        </ul>
+      </Modal>
+    </section>
+  );
+};
 export const FileInput = ({ label, required, multiple, onChange, prefill }) => {
   const id = useRef(Math.random().toString(36).substr(4));
   const prefillLoaded = useRef(false);
@@ -72,7 +180,9 @@ export const FileInput = ({ label, required, multiple, onChange, prefill }) => {
   return (
     <section data-testid="fileInput" className={s.fileInput}>
       <div className={s.label}>
-        <label>{label}</label>
+        <label>
+          {label} {required && "*"}
+        </label>
         <span className={s.fileCount}>{files.length} files selected</span>
       </div>
       <input
@@ -111,21 +221,27 @@ export const Textarea = forwardRef(
   ({ className, label, error, ...rest }, ref) => {
     return (
       <section
-        className={`${s.input} ${s.textinput} ${className || ""} ${
+        className={`${s.input} ${s.textarea} ${className || ""} ${
           error ? s.err : ""
         }`}
       >
-        {label && <label>{label}</label>}
-        <textarea ref={ref} {...rest} />
-        {error && (
-          <span
-            className={s.errIcon}
-            style={!label ? { transform: "translateY(-6px)" } : {}}
-          >
-            <BsFillExclamationTriangleFill />
-          </span>
+        {label && (
+          <label>
+            {label} {rest.required && "*"}
+          </label>
         )}
-        {error && <span className={s.errMsg}>{error.message}</span>}
+        <span className={s.field}>
+          <textarea ref={ref} {...rest} />
+          {error && (
+            <span
+              className={s.errIcon}
+              style={!label ? { transform: "translateY(-6px)" } : {}}
+            >
+              <BsFillExclamationTriangleFill />
+            </span>
+          )}
+          {error && <span className={s.errMsg}>{error.message}</span>}
+        </span>
       </section>
     );
   }
@@ -178,7 +294,11 @@ export const CustomRadio = ({
   }, [selected]);
   return (
     <section className={s.customRadio} data-testid="customRadioInput">
-      {label && <label>{label}</label>}
+      {label && (
+        <label>
+          {label} {required && "*"}
+        </label>
+      )}
       <input {...register(name)} required={required} />
       <div className={s.options}>
         {options.map(({ label, value: v, disabled }) => (
@@ -219,11 +339,14 @@ export const SwitchInput = ({
   onChange,
   onLabel,
   offLabel,
+  required,
 }) => {
   const value = watch(name);
   return (
     <div data-testid="switchInput" className={s.switchInput}>
-      <label>{label}</label>
+      <label>
+        {label} {required && "*"}
+      </label>
       <input
         type="checkbox"
         {...register(name)}
@@ -345,6 +468,7 @@ export const Combobox = ({
   clearErrors,
   item,
   renderValue,
+  required,
 }) => {
   const id = useRef(Math.random().toString(36).substr(-8));
   const container = useRef();
@@ -464,7 +588,11 @@ export const Combobox = ({
         !(Array.isArray(options) && options.length) ? s.noOptions : ""
       } ${error ? s.err : ""}`}
     >
-      {label && <label data-testid="combobox-label">{label}</label>}
+      {label && (
+        <label data-testid="combobox-label">
+          {label} {required && "*"}
+        </label>
+      )}
       <div
         className={s.field}
         onClick={() => {
@@ -677,7 +805,11 @@ export const MobileNumberInput = ({
         error ? s.err : ""
       }`}
     >
-      {label && <label>{label}</label>}
+      {label && (
+        <label>
+          {label} {required && "*"}
+        </label>
+      )}
       <div className={s.wrapper}>
         <span className={s.field}>
           <div className={s.country}>

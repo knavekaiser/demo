@@ -81,7 +81,7 @@ export const Accordion = ({ label, basePath, items, className, startPath }) => {
 };
 
 function Dashboard() {
-  const { user, setUser, setRole, checkPermission } = useContext(SiteContext);
+  const { user, setUser, setRoles, checkPermission } = useContext(SiteContext);
   const location = useLocation();
   const navigate = useNavigate();
   const [collaped, setCollapsed] = useState(false);
@@ -117,7 +117,7 @@ function Dashboard() {
             <button
               onClick={() => {
                 setUser(null);
-                setRole(null);
+                setRoles(null);
                 navigate("/login");
               }}
             >
@@ -282,7 +282,7 @@ const SidebarItem_IrDashboard = ({ location }) => {
       startPath={
         paths.incidentDashboard.basePath +
         "/" +
-        paths.incidentDashboard.myDashboard_submitted
+        paths.incidentDashboard.myDashboard
       }
       items={[
         {

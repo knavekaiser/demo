@@ -9,6 +9,7 @@ import { IoClose } from "react-icons/io5";
 import {
   Form,
   Input,
+  SearchField,
   Combobox,
   Table,
   TableActions,
@@ -67,6 +68,7 @@ export default function Location() {
             <td className={s.inlineForm}>
               <LocationForm
                 {...(edit && { edit })}
+                setEdit={setEdit}
                 key={edit ? "edit" : "add"}
                 onSuccess={(newLoc) => {
                   setLocations((prev) => {
@@ -133,6 +135,7 @@ export default function Location() {
 }
 const LocationForm = ({
   edit,
+  setEdit,
   onChange,
   locations,
   clearForm,
@@ -146,6 +149,7 @@ const LocationForm = ({
     setValue,
     watch,
     formState: { errors },
+    clearErrors,
   } = useForm();
   const [loading, setLoading] = useState(false);
   useEffect(() => {
@@ -160,8 +164,8 @@ const LocationForm = ({
         if (
           locations?.some(
             (item) =>
-              item.name.trim().toLowerCase() ===
-                data.name.trim().toLowerCase() && item.id !== data.id
+              item.name?.trim().toLowerCase() ===
+                data.name?.trim().toLowerCase() && item.id !== data.id
           )
         ) {
           Prompt({
@@ -191,20 +195,53 @@ const LocationForm = ({
           });
       })}
     >
-      <Input
-        {...register("name", {
-          required: "Please enter a Name",
-        })}
+      {
+        //   <Input
+        //   {...register("name", {
+        //     required: "Please enter a Name",
+        //   })}
+        //   error={errors.name}
+        // />
+      }
+      <SearchField
+        url={`http://139.59.44.254:8080/location`}
+        processData={(data, value) => {
+          if (data?._embedded.location) {
+            return data._embedded.location
+              .filter((loc) => new RegExp(value, "i").test(loc.name))
+              .map((loc) => ({ value: loc.id, label: loc.name, data: loc }));
+          }
+          return [];
+        }}
+        register={register}
+        name="name"
+        formOptions={{
+          required: "Please enter Location Name",
+        }}
+        renderListItem={(loc) => <>{loc.label}</>}
+        watch={watch}
+        setValue={setValue}
+        onChange={(item) => {
+          if (typeof item === "string") {
+            setValue("name", item);
+          } else {
+            setEdit(item);
+          }
+        }}
         error={errors.name}
       />
       <Combobox
         name="locationType"
-        required={true}
         placeholder="Enter"
         register={register}
+        formOptions={{
+          required: "Please select a Type",
+        }}
         setValue={setValue}
         watch={watch}
         options={locationTypes}
+        error={errors.locationType}
+        clearErrors={clearErrors}
       />
       <Toggle
         name="status"

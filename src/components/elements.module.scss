@@ -52,11 +52,17 @@
   }
   .errIcon {
     position: absolute;
-    right: 4px;
-    top: 58%;
+    right: 6px;
+    top: 50%;
     color: red;
     font-size: 0.8em;
     pointer-events: none;
+    display: grid;
+    place-items: center;
+    transform: translateY(-50%);
+    svg {
+      position: static;
+    }
   }
   .errMsg {
     font-size: 10pt;
@@ -139,6 +145,16 @@
       .wrapper > .field {
         border-color: red;
       }
+    }
+  }
+  &.textarea {
+    .field {
+      position: relative;
+    }
+    .errIcon {
+      top: 6px;
+      right: 8px;
+      transform: none;
     }
   }
 }
@@ -330,6 +346,9 @@
   }
 }
 
+.searchFieldModal {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.45);
+}
 .combobox {
   cursor: pointer;
   & > label {
@@ -436,6 +455,7 @@
     display: block;
   }
 }
+.searchFieldModal,
 .comboboxModal {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.45);
   .options {
@@ -477,12 +497,15 @@
     overflow-x: hidden;
   }
 }
+.searchFieldModalBackdrop,
 .comboboxBackdrop {
   background: rgba(0, 0, 0, 0) !important;
 }
 
 .checkbox {
   display: flex;
+  align-items: center;
+  grid-gap: 6px;
 }
 
 .chip {

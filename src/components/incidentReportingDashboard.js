@@ -9,7 +9,7 @@ import {
   FaInfoCircle,
   FaRegTrashAlt,
   FaPlus,
-  FaRegFileAlt,
+  FaEye,
   FaExternalLinkAlt,
   FaRegStickyNote,
   FaRegCheckSquare,
@@ -35,7 +35,6 @@ import {
   Table,
   TableActions,
   Moment,
-  Checkbox,
   moment,
 } from "./elements";
 import { useNavigate, useLocation, createSearchParams } from "react-router-dom";
@@ -109,6 +108,7 @@ const MyDashboard = () => {
           process.env.REACT_APP_HOST
         }/IncidentReport/search/byDetails?${new URLSearchParams({
           ..._filters,
+          userId: user.id,
         }).toString()}`
       )
         .then((res) => res.json())
@@ -118,7 +118,13 @@ const MyDashboard = () => {
           }
         });
     } else {
-      fetch(`${process.env.REACT_APP_HOST}/IncidentReport`)
+      fetch(
+        `${
+          process.env.REACT_APP_HOST
+        }/IncidentReport/search/byDetails?${new URLSearchParams({
+          userId: user.id,
+        }).toString()}`
+      )
         .then((res) => res.json())
         .then((data) => {
           if (data._embedded?.IncidentReport) {
@@ -248,7 +254,7 @@ const MyDashboard = () => {
                     ]
                   : [
                       {
-                        icon: <FaRegFileAlt />,
+                        icon: <FaEye />,
                         label: "Review IR",
                         callBack: () => {
                           navigate(paths.incidentReport, {
@@ -505,7 +511,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
     reset,
     setValue,
     getValues,
-  } = useForm({ defaultValues: { view: "assignedToSelf" } });
+  } = useForm({ defaultValues: { view: "assignedToSelf", irBy: "self" } });
   const [categories, setCategories] = useState([]);
   const [irInvestigator, setIrInvestigator] = useState([]);
   const fromIncidentDateTime = watch("fromIncidentDateTime");
@@ -668,10 +674,13 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
                 label: "My IRs",
                 value: "self",
               },
-              {
-                label: "My Department IRs",
-                value: "department",
-              },
+              ...((checkPermission({ roleId: "hod" }) && [
+                {
+                  label: "My Department IRs",
+                  value: "department",
+                },
+              ]) ||
+                []),
             ]}
           />
         </section>
@@ -802,7 +811,7 @@ const QualityDashboard = () => {
                 ...(+inc.status === 2
                   ? [
                       {
-                        icon: <FaRegFileAlt />,
+                        icon: <FaEye />,
                         label: "Review IR",
                         callBack: () => {},
                       },
@@ -1044,7 +1053,7 @@ const AssignForm = ({ assign, users, setAssign, onSuccess }) => {
           error={errors.user}
           setValue={setValue}
           watch={watch}
-          options={users}
+          options={users.filter((user) => user.value !== assign.irInvestigator)}
         />
         <section className={s.btns}>
           <button
