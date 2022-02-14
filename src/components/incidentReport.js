@@ -6,6 +6,7 @@ import { BiChevronsDown } from "react-icons/bi";
 import { BsPencilFill } from "react-icons/bs";
 import {
   Input,
+  SearchField,
   Combobox,
   FileInput,
   Textarea,
@@ -20,7 +21,9 @@ import {
 import { Prompt } from "./modal";
 import { useForm, FormProvider, useFormContext } from "react-hook-form";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useHisFetch } from "../hooks";
 import { incidentTypes } from "../config";
+import defaultEndpoints from "../config/endpoints";
 import s from "./incidentReporting.module.scss";
 
 export const ConnectForm = ({ children }) => {
@@ -185,6 +188,12 @@ export default function IncidentReporting() {
   const witnesses = methods.watch("witness");
   const actions = methods.watch("actionTaken");
   const notifications = methods.watch("notification");
+
+  const { get: getLocations } = useHisFetch(endpoints.locations);
+  const { get: getDepartments } = useHisFetch(endpoints.departments);
+  const { get: getUsersWithRoles } = useHisFetch(defaultEndpoints.users);
+  const { get: getUsers } = useHisFetch(endpoints.users);
+
   useEffect(() => {
     if (location.state?.edit) {
       const { edit, readOnly } = location.state;
@@ -217,17 +226,19 @@ export default function IncidentReporting() {
   }, [edit]);
   useEffect(() => {
     Promise.all([
-      fetch(endpoints.locations, {
-        headers: {
-          SECURITY_TOKEN: sessionStorage.getItem("token"),
-        },
-      }).then((res) => res.json()),
-      fetch(`${process.env.REACT_APP_HOST}/department`).then((res) =>
-        res.json()
-      ),
-      fetch(`${process.env.REACT_APP_HOST}/user`).then((res) => res.json()),
-    ]).then(([location, department, users]) => {
+      getLocations(),
+      getDepartments(),
+      getUsers(),
+      getUsersWithRoles(),
+    ]).then(([location, department, users, usersWithRoles]) => {
       const _parameters = { ...parameters };
+      const userDetails = (usersWithRoles?._embedded?.user || []).map(
+        (user) => {
+          user.role = user.role.split(",");
+          return user;
+        }
+      );
+
       if (Array.isArray(location)) {
         _parameters.locations = location
           .filter((item) => +item.status)
@@ -243,7 +254,12 @@ export default function IncidentReporting() {
             value: item.id,
           }));
       }
-      if (department?._embedded?.department) {
+      if (Array.isArray(department)) {
+        _parameters.departments = department.map((dept) => ({
+          label: dept.description,
+          value: dept.code,
+        }));
+      } else if (department?._embedded?.department) {
         _parameters.departments = department._embedded.department.map(
           (item) => ({
             label: item.name,
@@ -251,7 +267,34 @@ export default function IncidentReporting() {
           })
         );
       }
-      if (users?._embedded?.user) {
+      if (users?.userViewList) {
+        const _users = users.userViewList.map((user) => {
+          const userDetail = userDetails.find((u) =>
+            new RegExp(u.name, "i").test(user.userId)
+          );
+          if (userDetail) {
+            user.id = userDetail.id;
+            user.role = userDetail.role;
+            user.department = userDetail.department.toString();
+          }
+          return user;
+        });
+        _parameters.hods = _users
+          .filter(
+            (u) =>
+              u.role?.includes("hod") &&
+              u.department.toString() === user.department.toString()
+          )
+          .map((item) => ({
+            label: item.userId,
+            value: item.id,
+          }));
+        _parameters.users = _users.map((item) => ({
+          label: item.userId,
+          value: item.id,
+          department: item.department,
+        }));
+      } else if (users?._embedded?.user) {
         _parameters.hods = users._embedded.user
           .map((user) => ({
             ...user,
@@ -340,11 +383,11 @@ export default function IncidentReporting() {
                 })}
                 error={methods.formState.errors.incident_Date_Time}
                 max={new Date().toISOString().slice(0, 16)}
-                label="Incident Date & Time"
+                label="Incident Date & Time *"
                 type="datetime-local"
               />
               <Combobox
-                label="Location of incident"
+                label="Location of incident *"
                 name="location"
                 register={methods.register}
                 formOptions={{
@@ -380,7 +423,8 @@ export default function IncidentReporting() {
                 error={methods.formState.errors.locationDetailsEntry}
                 label={
                   <>
-                    Location Detail <i>(if any)</i>
+                    Location Detail <i>(if any)</i>{" "}
+                    {methods.getValues("location") === 24 && "*"}
                   </>
                 }
               />
@@ -393,20 +437,70 @@ export default function IncidentReporting() {
               />
               {patientComplaint && (
                 <>
-                  <Input
-                    {...methods.register("patientname", {
-                      validate: (v) => {
-                        if (
-                          methods.getValues("patientYesOrNo") &&
-                          +methods.getValues("status") === 2
-                        ) {
-                          return "Please enter Patient Name";
-                        }
-                        return true;
-                      },
-                    })}
-                    error={methods.formState.errors.patientname}
+                  {
+                    //   <Input
+                    //   {...methods.register("patientname", {
+                    //     validate: (v) => {
+                    //       if (
+                    //         methods.getValues("patientYesOrNo") &&
+                    //         +methods.getValues("status") === 2
+                    //       ) {
+                    //         return "Please enter Patient Name";
+                    //       }
+                    //       return true;
+                    //     },
+                    //   })}
+                    //   error={methods.formState.errors.patientname}
+                    //   label="Patient Name / UHID"
+                    // />
+                  }
+                  <SearchField
+                    url={endpoints.patients}
                     label="Patient Name / UHID"
+                    processData={(data, value) => {
+                      if (Array.isArray(data)) {
+                        return data
+                          .filter(
+                            (p) =>
+                              new RegExp(value, "i").test(p.name) ||
+                              new RegExp(value, "i").test(p.uhid)
+                          )
+                          .map((p) => ({
+                            value: p.id,
+                            label: p.name,
+                            data: p,
+                          }));
+                      } else if (data?._embedded?.patients) {
+                        return data._embedded.patients
+                          .filter(
+                            (p) =>
+                              new RegExp(value, "i").test(p.name) ||
+                              new RegExp(value, "i").test(p.uhid)
+                          )
+                          .map((p) => ({
+                            value: p.id,
+                            label: p.name,
+                            data: p,
+                          }));
+                      }
+                      return [];
+                    }}
+                    register={methods.register}
+                    name="patientname"
+                    formOptions={{
+                      required: "Please Paitent Name",
+                    }}
+                    renderListItem={(p) => <>{p.label}</>}
+                    watch={methods.watch}
+                    setValue={methods.setValue}
+                    onChange={(item) => {
+                      if (typeof item === "string") {
+                        methods.setValue("patientname", item);
+                      } else {
+                        methods.setValue("patientname", item.name);
+                      }
+                    }}
+                    error={methods.formState.errors.patientname}
                   />
                   <Input
                     {...methods.register("complaIntegerDatetime", {
@@ -431,7 +525,7 @@ export default function IncidentReporting() {
               <button style={{ display: "none" }}>submit</button>
             </form>
           </Box>
-          <Box label="TYPE OF INCIDENT" collapsable={true}>
+          <Box label="TYPE OF INCIDENT *" collapsable={true}>
             <div className={s.typeOfIncident}>
               <Radio
                 register={methods.register}
@@ -575,7 +669,7 @@ export default function IncidentReporting() {
                   },
                 })}
                 error={methods.formState.errors.inciDescription}
-                label="Incident Description"
+                label="Incident Description *"
                 className={s.description}
               />
               <section className={s.departments}>
@@ -595,7 +689,8 @@ export default function IncidentReporting() {
                       key={department}
                       label={
                         parameters?.departments.find(
-                          (dept) => dept.value === +department
+                          (dept) =>
+                            dept.value.toString() === department.toString()
                         )?.label || department
                       }
                       remove={() => {
@@ -711,7 +806,8 @@ export default function IncidentReporting() {
                   label="Department"
                   value={
                     parameters?.departments?.find(
-                      (item) => item.value === user.department
+                      (item) =>
+                        item.value.toString() === user.department.toString()
                     )?.label || ""
                   }
                   readOnly={true}
@@ -800,7 +896,7 @@ export const IncidentCategory = () => {
           >
             <div className={s.form}>
               <Combobox
-                label="Incident Category"
+                label="Incident Category *"
                 name="inciCateg"
                 register={register}
                 formOptions={{
@@ -825,7 +921,7 @@ export const IncidentCategory = () => {
                 clearErrors={clearErrors}
               />
               <Combobox
-                label="Incident Sub-category"
+                label="Incident Sub-category *"
                 name="inciSubCat"
                 register={register}
                 watch={watch}

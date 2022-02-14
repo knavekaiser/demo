@@ -13,6 +13,13 @@
     position: relative;
     .field {
       position: relative;
+      & > svg {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        margin: auto;
+        right: 6px;
+      }
     }
   }
   input,
@@ -37,12 +44,6 @@
   textarea {
     resize: vertical;
     min-height: 3rem;
-  }
-  svg {
-    position: absolute;
-    bottom: 7px;
-    margin: auto;
-    right: 0.3rem;
   }
   &.err {
     input,
@@ -85,11 +86,6 @@
     height: 90%;
     display: grid;
     place-items: center;
-    svg {
-      position: relative;
-      top: 0;
-      left: 0;
-    }
   }
   &.mobileNumberInput {
     .wrapper {

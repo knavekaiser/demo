@@ -60,7 +60,7 @@ main {
     table {
       tr {
         position: relative;
-        grid-template-columns: 12rem 12rem 10rem 7rem 7rem 8rem 8rem 6rem 6rem 5rem 5rem 4rem;
+        grid-template-columns: 12rem 8rem 8rem 7rem 7rem 8rem 8rem 6rem 6rem 5rem 5rem 4rem;
         &.sentinel {
           background: #ffe8e9;
           &::before {

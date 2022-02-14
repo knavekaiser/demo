@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
+import { SiteContext } from "../../SiteContext";
 import { FaInfoCircle, FaPlus, FaCheck, FaRegTrashAlt } from "react-icons/fa";
 import { BsPencilFill } from "react-icons/bs";
 import { IoClose } from "react-icons/io5";
@@ -8,8 +9,10 @@ import { TiTick } from "react-icons/ti";
 import { IoIosClose } from "react-icons/io";
 import {
   Input,
+  SearchField,
   MobileNumberInput,
   Combobox,
+  Checkbox,
   Table,
   TableActions,
   Toggle,
@@ -19,9 +22,13 @@ import {
 import { useForm } from "react-hook-form";
 import { Modal, Prompt } from "../modal";
 import { permissions } from "../../config";
+import { useHisFetch } from "../../hooks";
+import defaultEndpoints from "../../config/endpoints";
 import s from "./masters.module.scss";
 
 export default function UserMaster() {
+  const { endpoints } = useContext(SiteContext);
+  const { get: getAllDepartments } = useHisFetch(endpoints.departments);
   const [parameters, setParameters] = useState({
     genders: [
       { label: "Male", value: "male" },
@@ -32,19 +39,26 @@ export default function UserMaster() {
   });
   const [users, setUsers] = useState([]);
   const [edit, setEdit] = useState(null);
+  const [addFromHis, setAddFromHis] = useState(false);
   useEffect(() => {
-    Promise.all([
-      fetch(`${process.env.REACT_APP_HOST}/department`).then((res) =>
-        res.json()
-      ),
-    ])
+    Promise.all([getAllDepartments()])
       .then(([departments]) => {
-        const _parameters = {
-          departments: departments._embedded.department.map(({ id, name }) => ({
-            value: id,
-            label: name,
-          })),
-        };
+        const _parameters = {};
+        if (Array.isArray(departments)) {
+          _parameters.departments = departments.map(
+            ({ code, description }) => ({
+              value: code,
+              label: description,
+            })
+          );
+        } else if (departments?._embedded?.department) {
+          _parameters.departments = departments._embedded.department.map(
+            ({ id, name }) => ({
+              value: id,
+              label: name,
+            })
+          );
+        }
         setParameters((prev) => ({ ...prev, ..._parameters }));
         return fetch(`${process.env.REACT_APP_HOST}/user`);
       })
@@ -67,6 +81,11 @@ export default function UserMaster() {
     <div className={s.container} data-testid="users">
       <header>
         <h3>USER MASTER</h3>
+        <Checkbox
+          label="Import from HIS"
+          checked={addFromHis}
+          onChange={(e) => setAddFromHis(e.target.checked)}
+        />
       </header>
       <div className={s.users}>
         <Table
@@ -88,6 +107,7 @@ export default function UserMaster() {
             <td className={s.inlineForm}>
               <UserForm
                 {...(edit && { edit })}
+                setEdit={setEdit}
                 key={edit ? "edit" : "add"}
                 departments={parameters?.departments}
                 onSuccess={(newUser) => {
@@ -103,6 +123,7 @@ export default function UserMaster() {
                 }}
                 users={users}
                 role={parameters.role}
+                addFromHis={addFromHis}
               />
             </td>
           </tr>
@@ -122,7 +143,7 @@ export default function UserMaster() {
               <td>•••••••</td>
               <td>
                 {parameters.departments?.find(
-                  (u) => u.value === user.department
+                  (u) => u.value.toString() === user.department.toString()
                 )?.label || user.department}
               </td>
               <td>
@@ -149,7 +170,11 @@ export default function UserMaster() {
                   {
                     icon: <BsPencilFill />,
                     label: "Edit",
-                    callBack: () => setEdit(user),
+                    callBack: () =>
+                      setEdit({
+                        ...user,
+                        department: user.department?.toString(),
+                      }),
                   },
                   {
                     icon: <FaRegTrashAlt />,
@@ -183,7 +208,17 @@ export default function UserMaster() {
     </div>
   );
 }
-const UserForm = ({ edit, onSuccess, clearForm, departments, users, role }) => {
+const UserForm = ({
+  edit,
+  setEdit,
+  onSuccess,
+  clearForm,
+  departments,
+  users,
+  role,
+  addFromHis,
+}) => {
+  const { endpoints } = useContext(SiteContext);
   const {
     handleSubmit,
     register,
@@ -214,10 +249,12 @@ const UserForm = ({ edit, onSuccess, clearForm, departments, users, role }) => {
         if (
           users?.some(
             (item) =>
-              (item.email.trim().toLowerCase() ===
-                data.email.trim().toLowerCase() ||
-                item.contact.trim().toLowerCase() ===
-                  data.contact.trim().toLowerCase() ||
+              ((data.email &&
+                item.email.trim().toLowerCase() ===
+                  data.email.trim().toLowerCase()) ||
+                (data.contact &&
+                  item.contact.trim().toLowerCase() ===
+                    data.contact.trim().toLowerCase()) ||
                 item.employeeId.trim().toLowerCase() ===
                   data.employeeId.trim().toLowerCase()) &&
               item.id !== data.id
@@ -253,11 +290,63 @@ const UserForm = ({ edit, onSuccess, clearForm, departments, users, role }) => {
           });
       })}
     >
-      <Input
-        {...register("name", {
+      {
+        //   <Input
+        //   {...register("name", {
+        //     required: "Please enter a Name",
+        //   })}
+        //   placeholder="Enter"
+        //   error={errors.name}
+        // />
+      }
+      <SearchField
+        url={addFromHis ? endpoints.users : defaultEndpoints.users}
+        processData={(data, value) => {
+          if (data?._embedded?.user) {
+            return data._embedded.user
+              .filter((user) => new RegExp(value, "i").test(user.name))
+              .map((user) => ({
+                value: user.id,
+                label: user.name,
+                data: {
+                  ...user,
+                  role: user.role.split(","),
+                },
+              }));
+          } else if (data.userViewList) {
+            return data.userViewList
+              .filter((user) => new RegExp(value, "i").test(user.userId))
+              .map((user) => ({
+                value: user.userId,
+                label: user.userId,
+                data: user,
+              }));
+          }
+          return [];
+        }}
+        register={register}
+        name="name"
+        formOptions={{
           required: "Please enter a Name",
-        })}
-        placeholder="Enter"
+        }}
+        renderListItem={(item) => <>{item.label}</>}
+        watch={watch}
+        setValue={setValue}
+        onChange={(user) => {
+          if (typeof user === "string") {
+            setValue("name", user);
+          } else {
+            if (addFromHis) {
+              setValue("name", user.userId);
+              setValue("gender", user.gender?.toLowerCase() || "");
+              setValue("employeeId", user.employeeID);
+              setValue("department", user.departmentMaster?.code || "");
+              setValue("role", ["incidentReporter"]);
+            } else {
+              setEdit(user);
+            }
+          }
+        }}
         error={errors.name}
       />
       <Combobox
@@ -278,7 +367,7 @@ const UserForm = ({ edit, onSuccess, clearForm, departments, users, role }) => {
       />
       <Input
         {...register("dob", {
-          required: "Date of Birth",
+          // ...(!addFromHis && { required: "Date of Birth" }),
         })}
         type="date"
         error={errors.dob}
@@ -292,7 +381,7 @@ const UserForm = ({ edit, onSuccess, clearForm, departments, users, role }) => {
       />
       <MobileNumberInput
         name="contact"
-        required={true}
+        // required={!addFromHis}
         register={register}
         error={errors.contact}
         clearErrors={clearErrors}
@@ -301,11 +390,13 @@ const UserForm = ({ edit, onSuccess, clearForm, departments, users, role }) => {
       />
       <Input
         {...register("email", {
-          required: "Please enter an Email Address",
-          pattern: {
-            value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-            message: "invalid email address",
-          },
+          // ...(!addFromHis && {
+          //   required: "Please enter an Email Address",
+          //   pattern: {
+          //     value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+          //     message: "invalid email address",
+          //   },
+          // }),
         })}
         error={errors.email}
         autoComplete="newUser"
@@ -313,7 +404,7 @@ const UserForm = ({ edit, onSuccess, clearForm, departments, users, role }) => {
       />
       <Input
         {...register("password", {
-          required: "Please enter a Password",
+          // ...(!addFromHis && { required: "Please enter a Password" }),
         })}
         error={errors.password}
         autoComplete="new-password"
@@ -327,9 +418,11 @@ const UserForm = ({ edit, onSuccess, clearForm, departments, users, role }) => {
         setValue={setValue}
         watch={watch}
         options={departments}
-        formOptions={{
-          required: "Select Department",
-        }}
+        formOptions={
+          {
+            // ...(!addFromHis && { required: "Select Department" }),
+          }
+        }
         error={errors.department}
         clearErrors={clearErrors}
       />

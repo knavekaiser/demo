@@ -18,7 +18,7 @@ import paths from "./path";
 import { appConfig } from "../config";
 
 export default function Login() {
-  const { user, setUser, setEndpoints } = useContext(SiteContext);
+  const { user, setUser, setEndpoints, his, setHis } = useContext(SiteContext);
   const [users, setUsers] = useState([]);
   const location = useLocation();
   const navigate = useNavigate();
@@ -28,7 +28,6 @@ export default function Login() {
     watch,
     formState: { errors },
   } = useForm();
-  const loginWithHis = watch("loginWithHis");
   useEffect(() => {
     // setupLogin();
     if (user) {
@@ -58,7 +57,7 @@ export default function Login() {
         <img src="/asset/logo.jpg" />
         <form
           onSubmit={handleSubmit(async (data) => {
-            if (loginWithHis) {
+            if (his) {
               let token = sessionStorage.getItem("token");
               if (!token) {
                 const salt = await fetch(
@@ -114,7 +113,6 @@ export default function Login() {
                   data?.userViewList ? data.userViewList[0] : null
                 )
                 .catch((err) => {
-                  console.error(err);
                   return Prompt({
                     type: "error",
                     message: "Could not get user data. Please try again.",
@@ -122,11 +120,16 @@ export default function Login() {
                 });
 
               if (!user) {
+                sessionStorage.removeItem("token");
                 return Prompt({
                   type: "error",
                   message: "Could not log in. Please try again.",
                 });
               }
+
+              const userDetail = users.find((u) =>
+                new RegExp(u.name, "i").test(user.userId)
+              );
 
               // get urls from database
               const endpoints = {
@@ -141,26 +144,13 @@ export default function Login() {
               };
               setEndpoints(endpoints);
               setUser({
-                name: user.fullName,
-                id: 1,
-                gender: user.gender,
-                dob: "2022-02-05T00:00:00.000+05:30",
-                employeeId: user.employeeID,
-                email: "admin@mail.com",
-                contact: "+918774574582",
-                department: 2,
-                role: [
-                  "irAdmin",
-                  "incidentReporter",
-                  "irInvestigator",
-                  "incidentManager",
-                  "hod",
-                ],
+                ...userDetail,
+                ...user,
               });
               navigate(paths.incidentReport);
             } else {
               const _user = users.find(
-                (u) => u.email === data.username && u.password === data.password
+                (u) => u.name === data.username && u.password === data.password
               );
               if (_user) {
                 setUser(_user);
@@ -176,14 +166,16 @@ export default function Login() {
         >
           <h1>Sign In</h1>
           <section>
-            <Checkbox label="Login with HIS" {...register("loginWithHis")} />
+            <Checkbox
+              label="Login with HIS"
+              checked={his}
+              onChange={(e) => setHis(e.target.checked)}
+            />
           </section>
           <Input
-            label={loginWithHis ? "Username" : "Email"}
+            label={"Username"}
             {...register("username", {
-              required: `Plase provide an ${
-                loginWithHis ? "Username" : "email address"
-              }`,
+              required: `Plase enter a Username`,
             })}
             error={errors.username}
           />

@@ -7,7 +7,7 @@ import React, {
   forwardRef,
 } from "react";
 import { IoIosClose } from "react-icons/io";
-import { FaUpload, FaSortDown } from "react-icons/fa";
+import { FaUpload, FaSortDown, FaSearch } from "react-icons/fa";
 import { BsFillGearFill, BsFillExclamationTriangleFill } from "react-icons/bs";
 import { GoCalendar } from "react-icons/go";
 import { Link, useLocation } from "react-router-dom";
@@ -16,6 +16,7 @@ import { Modal } from "./modal";
 import Sortable from "sortablejs";
 import s from "./elements.module.scss";
 import countries from "../countries";
+import { useHisFetch } from "../hooks";
 import { phone } from "phone";
 
 export const Input = forwardRef(
@@ -48,14 +49,16 @@ export const Input = forwardRef(
                 <GoCalendar />
               </label>
             )}
-            {error && (
-              <span className={s.errIcon}>
-                <BsFillExclamationTriangleFill />
-              </span>
-            )}
+            {
+              //   error && (
+              //   <span className={s.errIcon}>
+              //     <BsFillExclamationTriangleFill />
+              //   </span>
+              // )
+            }
+            {icon && icon}
           </span>
           {error && <span className={s.errMsg}>{error.message}</span>}
-          {icon && icon}
         </div>
       </section>
     );
@@ -82,6 +85,9 @@ export const SearchField = ({
   const [style, setStyle] = useState({});
   const clickHandlerAdded = useState(false);
   const container = useRef();
+
+  const { get: hisFetch } = useHisFetch(url);
+
   useLayoutEffect(() => {
     const { width, height, x, y } = container.current.getBoundingClientRect();
     const top = window.innerHeight - y;
@@ -117,8 +123,7 @@ export const SearchField = ({
   useEffect(() => {
     if (value) {
       setLoading(true);
-      fetch(url)
-        .then((res) => res.json())
+      hisFetch(url)
         .then((rawData) => {
           setLoading(false);
           const data = processData(rawData, value);
@@ -138,6 +143,7 @@ export const SearchField = ({
         {...register(name, formOptions)}
         autoComplete="off"
         error={error}
+        icon={<FaSearch />}
       />
       <Modal
         open={showResult && data.length > 0}
@@ -879,12 +885,12 @@ export const MobileNumberInput = ({
             maxLength="15"
             {...rest}
           />
+          {error && (
+            <span className={s.errIcon}>
+              <BsFillExclamationTriangleFill />
+            </span>
+          )}
         </span>
-        {error && (
-          <span className={s.errIcon}>
-            <BsFillExclamationTriangleFill />
-          </span>
-        )}
         {error && <span className={s.errMsg}>{error.message}</span>}
       </div>
     </section>
@@ -1023,7 +1029,7 @@ export const TableActions = ({ actions }) => {
 };
 
 export const moment = ({ time, format }) => {
-  if (new Date(time).toString() === "Invalid Date") {
+  if (!time || new Date(time).toString() === "Invalid Date") {
     return time;
   }
   const options = {

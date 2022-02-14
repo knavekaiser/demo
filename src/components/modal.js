@@ -86,7 +86,10 @@ export const Prompt = ({ className, type, message, btns, callback }) => {
     callback();
     cleanup();
   };
-  const decline = () => cleanup();
+  const decline = () => {
+    cleanup();
+    callback && callback();
+  };
   ReactDOM.render(
     <>
       <div className={`promptBackdrop`} />

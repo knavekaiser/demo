@@ -5,6 +5,7 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
+import { useNavigate } from "react-router-dom";
 import { irStatus } from "./config";
 import defaultEndpoints from "./config/endpoints";
 
@@ -13,6 +14,9 @@ export const Provider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [roles, setRoles] = useState(null);
   const [endpoints, setEndpoints] = useState(defaultEndpoints);
+  const [his, setHis] = useState(false);
+  const navigate = useNavigate();
+
   const checkPermission = useCallback(
     ({ roleId, permission }) => {
       let roleMatch = false;
@@ -29,19 +33,33 @@ export const Provider = ({ children }) => {
           roles?.reduce((p, a) => [...p, ...(a.permission || [])], [])
         ),
       ];
-      // const role = roles?.filter((role) => {
-      //   return roleId === role.role || roleId.includes?.(role.role);
-      // })[0];
       return (roleMatch && allPermissions?.includes(permission)) || false;
     },
     [roles, user]
   );
+
+  const logout = useCallback(() => {
+    setUser(null);
+    setRoles(null);
+    setHis(false);
+    setEndpoints(defaultEndpoints);
+    navigate("/login");
+  }, []);
+
   useEffect(() => {
     if (!roles && user) {
-      fetch(`${process.env.REACT_APP_HOST}/userPermission`)
+      fetch(defaultEndpoints.userPermissions)
         .then((res) => res.json())
         .then((data) => {
           if (data._embedded.userPermission) {
+            console.log(
+              data._embedded.userPermission
+                .filter((p) => user.role.includes(p.role))
+                .map((role) => ({
+                  ...role,
+                  permission: role.permission.split(",").map((p) => p),
+                }))
+            );
             setRoles(
               data._embedded.userPermission
                 .filter((p) => user.role.includes(p.role))
@@ -69,6 +87,9 @@ export const Provider = ({ children }) => {
         setRoles,
         endpoints,
         setEndpoints,
+        his,
+        setHis,
+        logout,
       }}
     >
       {children}
