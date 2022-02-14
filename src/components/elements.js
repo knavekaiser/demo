@@ -782,6 +782,7 @@ export const MobileNumberInput = ({
   clearErrors,
   setValue,
   watch,
+  icon,
   ...rest
 }) => {
   const { register: cRegister, watch: cWatch, setValue: cSetValue } = useForm();
@@ -905,6 +906,7 @@ export const MobileNumberInput = ({
               <BsFillExclamationTriangleFill />
             </span>
           )}
+          {icon && icon}
         </span>
         {error && <span className={s.errMsg}>{error.message}</span>}
       </div>

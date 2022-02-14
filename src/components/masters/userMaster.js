@@ -1,6 +1,12 @@
 import { useState, useEffect, useContext } from "react";
 import { SiteContext } from "../../SiteContext";
-import { FaInfoCircle, FaPlus, FaCheck, FaRegTrashAlt } from "react-icons/fa";
+import {
+  FaInfoCircle,
+  FaPlus,
+  FaCheck,
+  FaRegTrashAlt,
+  FaSearch,
+} from "react-icons/fa";
 import { BsPencilFill } from "react-icons/bs";
 import { IoClose } from "react-icons/io5";
 import { BiSearch } from "react-icons/bi";
@@ -445,6 +451,7 @@ const UserForm = ({
               clearErrors={clearErrors}
               setValue={setValue}
               watch={watch}
+              icon={<FaSearch />}
             />
           );
         }}
