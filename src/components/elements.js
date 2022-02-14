@@ -76,6 +76,8 @@ export const SearchField = ({
   register,
   formOptions,
   error,
+  renderField,
+  clearErrors,
   ...rest
 }) => {
   const [data, setData] = useState([]);
@@ -137,14 +139,27 @@ export const SearchField = ({
   }, [value]);
   return (
     <section ref={container}>
-      <Input
-        label={label}
-        onFocus={(e) => setShowResult(true)}
-        {...register(name, formOptions)}
-        autoComplete="off"
-        error={error}
-        icon={<FaSearch />}
-      />
+      {renderField ? (
+        renderField({
+          register,
+          watch,
+          setValue,
+          name,
+          formOptions,
+          error,
+          clearErrors,
+          setShowResult,
+        })
+      ) : (
+        <Input
+          label={label}
+          onFocus={(e) => setShowResult(true)}
+          {...register(name, formOptions)}
+          autoComplete="off"
+          error={error}
+          icon={<FaSearch />}
+        />
+      )}
       <Modal
         open={showResult && data.length > 0}
         className={s.searchFieldModal}

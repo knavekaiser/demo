@@ -414,7 +414,11 @@ export default function IncidentReporting() {
                     if (v) return true;
                     if (
                       methods.getValues("status") === 2 &&
-                      methods.getValues("location") === 24
+                      parameters?.locations
+                        .find(
+                          (loc) => loc.value === methods.getValues("location")
+                        )
+                        ?.label.toLowerCase() === "others"
                     ) {
                       return "Please enter Location Detail";
                     }
@@ -424,7 +428,11 @@ export default function IncidentReporting() {
                 label={
                   <>
                     Location Detail <i>(if any)</i>{" "}
-                    {methods.getValues("location") === 24 && "*"}
+                    {parameters?.locations
+                      .find(
+                        (loc) => loc.value === methods.getValues("location")
+                      )
+                      ?.label.toLowerCase() === "others" && "*"}
                   </>
                 }
               />

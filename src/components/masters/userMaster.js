@@ -379,28 +379,125 @@ const UserForm = ({
         error={errors.employeeId}
         placeholder="Enter"
       />
-      <MobileNumberInput
-        name="contact"
-        // required={!addFromHis}
+      {
+        //   <MobileNumberInput
+        //   name="contact"
+        //   // required={!addFromHis}
+        //   register={register}
+        //   error={errors.contact}
+        //   clearErrors={clearErrors}
+        //   setValue={setValue}
+        //   watch={watch}
+        // />
+      }
+      <SearchField
+        url={defaultEndpoints.users}
+        processData={(data, value) => {
+          if (data?._embedded?.user) {
+            return data._embedded.user
+              .filter((user) =>
+                new RegExp(value.replace("+", ""), "i").test(user.contact)
+              )
+              .map((user) => ({
+                value: user.contact,
+                label: user.contact,
+                data: {
+                  ...user,
+                  role: user.role.split(","),
+                },
+              }));
+          }
+          return [];
+        }}
         register={register}
+        name="contact"
+        formOptions={{
+          required: "Phone Number",
+        }}
+        renderListItem={(item) => <>{item.label}</>}
+        watch={watch}
+        setValue={setValue}
+        onChange={(user) => {
+          if (typeof user === "string") {
+            setValue("contact", user);
+          } else {
+            setEdit(user);
+          }
+        }}
         error={errors.contact}
         clearErrors={clearErrors}
-        setValue={setValue}
-        watch={watch}
+        renderField={({
+          name,
+          register,
+          error,
+          setValue,
+          clearErrors,
+          watch,
+          setShowResult,
+        }) => {
+          return (
+            <MobileNumberInput
+              // required={!addFromHis}
+              onFocus={() => setShowResult(true)}
+              name={name}
+              register={register}
+              error={error}
+              clearErrors={clearErrors}
+              setValue={setValue}
+              watch={watch}
+            />
+          );
+        }}
       />
-      <Input
-        {...register("email", {
-          // ...(!addFromHis && {
-          //   required: "Please enter an Email Address",
-          //   pattern: {
-          //     value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-          //     message: "invalid email address",
-          //   },
-          // }),
-        })}
+      {
+        //   <Input
+        //   {...register("email", {
+        //     // ...(!addFromHis && {
+        //     //   required: "Please enter an Email Address",
+        //     //   pattern: {
+        //     //     value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+        //     //     message: "invalid email address",
+        //     //   },
+        //     // }),
+        //   })}
+        //   error={errors.email}
+        //   autoComplete="newUser"
+        //   placeholder="Enter"
+        // />
+      }
+      <SearchField
+        url={defaultEndpoints.users}
+        processData={(data, value) => {
+          if (data?._embedded?.user) {
+            return data._embedded.user
+              .filter((user) => new RegExp(value, "i").test(user.email))
+              .map((user) => ({
+                value: user.email,
+                label: user.email,
+                data: {
+                  ...user,
+                  role: user.role.split(","),
+                },
+              }));
+          }
+          return [];
+        }}
+        register={register}
+        name="email"
+        formOptions={{
+          required: "Please enter a Email",
+        }}
+        renderListItem={(item) => <>{item.label}</>}
+        watch={watch}
+        setValue={setValue}
+        onChange={(user) => {
+          if (typeof user === "string") {
+            setValue("email", user);
+          } else {
+            setEdit(user);
+          }
+        }}
         error={errors.email}
-        autoComplete="newUser"
-        placeholder="Enter"
       />
       <Input
         {...register("password", {

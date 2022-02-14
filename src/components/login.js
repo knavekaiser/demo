@@ -141,6 +141,8 @@ export default function Login() {
                   "https://hisir.napierhealthcare.com:7654/napier-his-web/Integration/userMasterService/getAllDepartments",
                 users:
                   "https://hisir.napierhealthcare.com:7654/napier-his-web/Integration/userMasterService/getUserDeatils",
+                logout:
+                  "https://hisir.napierhealthcare.com:7654/napier-his-web/Integration/loginService/logout",
               };
               setEndpoints(endpoints);
               setUser({

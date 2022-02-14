@@ -39,12 +39,28 @@ export const Provider = ({ children }) => {
   );
 
   const logout = useCallback(() => {
+    if (true) {
+      (async () => {
+        await fetch(endpoints.logout, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userName: user.name,
+            // clientRefId: "Napier123",
+            appContext: "",
+            securityToken: sessionStorage.getItem("token"),
+          }),
+        });
+      })();
+    }
+
     setUser(null);
     setRoles(null);
     setHis(false);
     setEndpoints(defaultEndpoints);
+    sessionStorage.removeItem("token");
     navigate("/login");
-  }, []);
+  }, [user, endpoints]);
 
   useEffect(() => {
     if (!roles && user) {
@@ -52,14 +68,6 @@ export const Provider = ({ children }) => {
         .then((res) => res.json())
         .then((data) => {
           if (data._embedded.userPermission) {
-            console.log(
-              data._embedded.userPermission
-                .filter((p) => user.role.includes(p.role))
-                .map((role) => ({
-                  ...role,
-                  permission: role.permission.split(",").map((p) => p),
-                }))
-            );
             setRoles(
               data._embedded.userPermission
                 .filter((p) => user.role.includes(p.role))

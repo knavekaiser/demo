@@ -88,7 +88,9 @@ export const Prompt = ({ className, type, message, btns, callback }) => {
   };
   const decline = () => {
     cleanup();
-    callback && callback();
+    ["information", "success", "error"].includes(type) &&
+      callback &&
+      callback();
   };
   ReactDOM.render(
     <>
