@@ -8,6 +8,7 @@ import { TiTick } from "react-icons/ti";
 import { Input, Checkbox, Table, TableActions, Toggle } from "../elements";
 import { Modal, Prompt } from "../modal";
 import { permissions } from "../../config";
+import defaultEndpoints from "../../config/endpoints";
 import s from "./config.module.scss";
 
 export default function UserPermission() {
@@ -88,14 +89,12 @@ export default function UserPermission() {
               Promise.all(
                 updatePending.map((item) =>
                   fetch(
-                    `${process.env.REACT_APP_HOST}/userPermission/${item.id}`,
-                    {
-                      method: "PUT",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                        permission: item.permission.join(","),
-                      }),
-                    }
+                    `${
+                      defaultEndpoints.userPermission_updateByRole
+                    }?${new URLSearchParams({
+                      role: item.role,
+                      permission: item.permission.join(","),
+                    }).toString()}`
                   ).then((res) => res.json())
                 )
               )

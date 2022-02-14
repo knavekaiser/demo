@@ -6,4 +6,5 @@ export default {
   users: `${baseApiUrl}/user`,
   departments: `${baseApiUrl}/department`,
   userPermissions: `${baseApiUrl}/userPermission`,
+  userPermission_updateByRole: `${baseApiUrl}/userPermission/search/updateByRole`,
 };
