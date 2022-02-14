@@ -39,7 +39,7 @@ export const Provider = ({ children }) => {
   );
 
   const logout = useCallback(() => {
-    if (true) {
+    if (his) {
       (async () => {
         await fetch(endpoints.logout, {
           method: "POST",

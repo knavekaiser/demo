@@ -29,7 +29,6 @@ export default function Login() {
     formState: { errors },
   } = useForm();
   useEffect(() => {
-    // setupLogin();
     if (user) {
       navigate("/");
       return;
