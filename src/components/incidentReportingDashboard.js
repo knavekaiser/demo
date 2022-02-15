@@ -534,7 +534,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
           users._embedded.user
             .map((user) => ({
               ...user,
-              role: user.role.split(",").filter((r) => r),
+              role: user.role?.split(",").filter((r) => r) || [],
             }))
             .filter((user) => user.role.includes("irInvestigator"))
             .map((user) => ({ label: user.name, value: user.id }))

@@ -33,14 +33,14 @@ export default function Login() {
       navigate("/");
       return;
     }
-    fetch(`${process.env.REACT_APP_HOST}/user`)
+    fetch(`${process.env.REACT_APP_HOST}/user?size=10000`)
       .then((res) => res.json())
       .then((users) => {
         if (users._embedded.user) {
           setUsers(
             users._embedded.user.map((user) => ({
               ...user,
-              role: user.role.split(",").filter((r) => r),
+              role: user.role?.split(",").filter((r) => r) || [],
             }))
           );
         }

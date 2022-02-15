@@ -36,7 +36,11 @@ export const useHisFetch = (url) => {
           });
 
         if (response?.errorMessage) {
-          if (response.errorMessage === "Invalid Token") {
+          if (
+            ["Invalid Token" || "Token validation failed"].includes(
+              response.errorMessage
+            )
+          ) {
             return Prompt({
               type: "error",
               message: "Session expired. Please log in again.",

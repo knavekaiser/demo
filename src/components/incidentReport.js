@@ -234,7 +234,7 @@ export default function IncidentReporting() {
       const _parameters = { ...parameters };
       const userDetails = (usersWithRoles?._embedded?.user || []).map(
         (user) => {
-          user.role = user.role.split(",");
+          user.role = user.role?.split(",") || [];
           return user;
         }
       );
@@ -298,7 +298,7 @@ export default function IncidentReporting() {
         _parameters.hods = users._embedded.user
           .map((user) => ({
             ...user,
-            role: user.role.split(",").filter((r) => r),
+            role: user.role?.split(",").filter((r) => r) || [],
           }))
           .filter(
             (u) => u.role.includes("hod") && u.department === user.department

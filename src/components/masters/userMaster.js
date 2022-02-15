@@ -35,6 +35,7 @@ import s from "./masters.module.scss";
 export default function UserMaster() {
   const { endpoints } = useContext(SiteContext);
   const { get: getAllDepartments } = useHisFetch(endpoints.departments);
+  const { get: getHisUsers } = useHisFetch(endpoints.users);
   const [parameters, setParameters] = useState({
     genders: [
       { label: "Male", value: "male" },
@@ -44,11 +45,12 @@ export default function UserMaster() {
     role: permissions.map((p) => ({ value: p.role, label: p.label })),
   });
   const [users, setUsers] = useState([]);
+  const [hisUsers, setHisUsers] = useState([]);
   const [edit, setEdit] = useState(null);
   const [addFromHis, setAddFromHis] = useState(false);
   useEffect(() => {
-    Promise.all([getAllDepartments()])
-      .then(([departments]) => {
+    Promise.all([getAllDepartments(), getHisUsers()])
+      .then(([departments, hisUsers]) => {
         const _parameters = {};
         if (Array.isArray(departments)) {
           _parameters.departments = departments.map(
@@ -65,8 +67,13 @@ export default function UserMaster() {
             })
           );
         }
+
+        if (hisUsers.userViewList) {
+          setHisUsers(hisUsers.userViewList);
+        }
+
         setParameters((prev) => ({ ...prev, ..._parameters }));
-        return fetch(`${process.env.REACT_APP_HOST}/user`);
+        return fetch(`${process.env.REACT_APP_HOST}/user?size=10000`);
       })
       .then((res) => res.json())
       .then((data) => {
@@ -74,7 +81,7 @@ export default function UserMaster() {
           setUsers(
             data._embedded.user.map((user) => ({
               ...user,
-              role: user.role.split(",").filter((role) => role),
+              role: user.role?.split(",").filter((role) => role) || [],
             }))
           );
         }
@@ -87,11 +94,55 @@ export default function UserMaster() {
     <div className={s.container} data-testid="users">
       <header>
         <h3>USER MASTER</h3>
-        <Checkbox
-          label="Import from HIS"
-          checked={addFromHis}
-          onChange={(e) => setAddFromHis(e.target.checked)}
-        />
+        {
+          //   <Checkbox
+          //   label="Import from HIS"
+          //   checked={addFromHis}
+          //   onChange={(e) => setAddFromHis(e.target.checked)}
+          // />
+        }
+        <button
+          onClick={() => {
+            const newUsers = hisUsers.filter(
+              (hisUser) => !users.some((user) => user.name === hisUser.userId)
+            );
+            if (newUsers.length > 0) {
+              Prompt({
+                type: "confirmation",
+                message: `${newUsers.length} new User found. Do you want to continue?`,
+                callback: () => {
+                  Promise.all(
+                    newUsers.map((user) =>
+                      fetch(`${defaultEndpoints.users}`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          name: user.userId,
+                          gender: user.gender?.toLowerCase() || "",
+                          employeeId: user.employeeID,
+                          role: "incidentReporter",
+                        }),
+                      }).then((res) => res.json())
+                    )
+                  ).then((result) => {
+                    console.log(result.length);
+                    setUsers((prev) => [...prev, ...result]);
+                    Prompt({
+                      type: "success",
+                      message: `${result.length} users added.`,
+                    });
+                  });
+                },
+              });
+            } else {
+              Prompt({ type: "information", message: "No new User found." });
+            }
+          }}
+          className="btn secondary"
+          style={{ marginTop: "1rem" }}
+        >
+          Add users from HIS
+        </button>
       </header>
       <div className={s.users}>
         <Table
@@ -316,7 +367,7 @@ const UserForm = ({
                 label: user.name,
                 data: {
                   ...user,
-                  role: user.role.split(","),
+                  role: user.role?.split(",") || [],
                 },
               }));
           } else if (data.userViewList) {
@@ -399,7 +450,7 @@ const UserForm = ({
                 label: user.employeeId,
                 data: {
                   ...user,
-                  role: user.role.split(","),
+                  role: user.role?.split(",") || [],
                 },
               }));
           }
@@ -446,7 +497,7 @@ const UserForm = ({
                 label: user.contact,
                 data: {
                   ...user,
-                  role: user.role.split(","),
+                  role: user.role?.split(",") || [],
                 },
               }));
           }
@@ -520,7 +571,7 @@ const UserForm = ({
                 label: user.email,
                 data: {
                   ...user,
-                  role: user.role.split(","),
+                  role: user.role?.split(",") || [],
                 },
               }));
           }
