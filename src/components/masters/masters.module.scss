@@ -206,6 +206,9 @@
   }
   .users {
     display: grid;
+    table {
+      max-height: calc(100vh - 160px);
+    }
     .inlineForm {
       border: none !important;
       padding: 0 !important;
