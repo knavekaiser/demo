@@ -376,14 +376,51 @@ const UserForm = ({
           // ...(!addFromHis && { required: "Date of Birth" }),
         })}
         type="date"
+        className={s.dobInput}
         error={errors.dob}
       />
-      <Input
-        {...register("employeeId", {
-          required: "Employee ID",
-        })}
+      {
+        //   <Input
+        //   {...register("employeeId", {
+        //     required: "Employee ID",
+        //   })}
+        //   error={errors.employeeId}
+        //   placeholder="Enter"
+        // />
+      }
+      <SearchField
+        url={defaultEndpoints.users}
+        processData={(data, value) => {
+          if (data?._embedded?.user) {
+            return data._embedded.user
+              .filter((user) => new RegExp(value, "i").test(user.employeeId))
+              .map((user) => ({
+                value: user.employeeId,
+                label: user.employeeId,
+                data: {
+                  ...user,
+                  role: user.role.split(","),
+                },
+              }));
+          }
+          return [];
+        }}
+        register={register}
+        name="employeeId"
+        formOptions={{
+          required: "Please enter a Employee ID",
+        }}
+        renderListItem={(item) => <>{item.label}</>}
+        watch={watch}
+        setValue={setValue}
+        onChange={(user) => {
+          if (typeof user === "string") {
+            setValue("employeeId", user);
+          } else {
+            setEdit(user);
+          }
+        }}
         error={errors.employeeId}
-        placeholder="Enter"
       />
       {
         //   <MobileNumberInput

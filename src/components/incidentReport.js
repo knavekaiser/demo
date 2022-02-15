@@ -415,7 +415,7 @@ export default function IncidentReporting() {
                     if (
                       methods.getValues("status") === 2 &&
                       parameters?.locations
-                        .find(
+                        ?.find(
                           (loc) => loc.value === methods.getValues("location")
                         )
                         ?.label.toLowerCase() === "others"
@@ -429,7 +429,7 @@ export default function IncidentReporting() {
                   <>
                     Location Detail <i>(if any)</i>{" "}
                     {parameters?.locations
-                      .find(
+                      ?.find(
                         (loc) => loc.value === methods.getValues("location")
                       )
                       ?.label.toLowerCase() === "others" && "*"}

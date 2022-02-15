@@ -49,7 +49,6 @@ export const useHisFetch = (url) => {
         }
       } catch (err) {
         setError(err);
-        throw err;
       } finally {
         setLoading(false);
       }

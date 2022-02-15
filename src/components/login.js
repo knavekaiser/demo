@@ -74,6 +74,9 @@ export default function Login() {
                   });
                 }
                 const hash = bcrypt.hashSync(data.password, salt);
+                await fetch(
+                  `${appConfig.orgUrl}/loginService/discardSessionAndCreateNew?userId=${data.username}`
+                );
                 token = await fetch(`${appConfig.orgUrl}/loginService/login`, {
                   method: "POST",
                   headers: { "Content-type": "application/json" },
@@ -142,7 +145,10 @@ export default function Login() {
                   "https://hisir.napierhealthcare.com:7654/napier-his-web/Integration/userMasterService/getUserDeatils",
                 logout:
                   "https://hisir.napierhealthcare.com:7654/napier-his-web/Integration/loginService/logout",
+                discardSession:
+                  "https://hisir.napierhealthcare.com:7654/napier-his-web/Integration/loginService/discardSessionAndCreateNew",
               };
+
               setEndpoints(endpoints);
               setUser({
                 ...userDetail,
