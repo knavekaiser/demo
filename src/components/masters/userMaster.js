@@ -121,6 +121,7 @@ export default function UserMaster() {
                           gender: user.gender?.toLowerCase() || "",
                           employeeId: user.employeeID,
                           role: "incidentReporter",
+                          department: +user.departmentMaster?.code || undefined,
                         }),
                       }).then((res) => res.json())
                     )
@@ -307,12 +308,12 @@ const UserForm = ({
           users?.some(
             (item) =>
               ((data.email &&
-                item.email.trim().toLowerCase() ===
+                item.email?.trim().toLowerCase() ===
                   data.email.trim().toLowerCase()) ||
                 (data.contact &&
-                  item.contact.trim().toLowerCase() ===
+                  item.contact?.trim().toLowerCase() ===
                     data.contact.trim().toLowerCase()) ||
-                item.employeeId.trim().toLowerCase() ===
+                item.employeeId?.trim().toLowerCase() ===
                   data.employeeId.trim().toLowerCase()) &&
               item.id !== data.id
           )
@@ -579,9 +580,9 @@ const UserForm = ({
         }}
         register={register}
         name="email"
-        formOptions={{
-          required: "Please enter a Email",
-        }}
+        // formOptions={{
+        //   required: "Please enter a Email",
+        // }}
         renderListItem={(item) => <>{item.label}</>}
         watch={watch}
         setValue={setValue}
