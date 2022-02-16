@@ -33,7 +33,7 @@ export default function UserPermission() {
     fetchUserPermissions();
   }, []);
   return (
-    <div className={s.container}>
+    <div className={s.container} data-testid="userPermission">
       <header>
         <h3>USER MANAGEMENT</h3>
       </header>
@@ -119,7 +119,10 @@ export default function UserPermission() {
                   });
                 })
                 .catch((err) => {
-                  alert(err.message);
+                  Prompt({
+                    type: "error",
+                    message: err.message,
+                  });
                 });
             }
           }}

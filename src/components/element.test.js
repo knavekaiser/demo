@@ -29,7 +29,7 @@ test("input", () => {
 test("FileInput", () => {
   render(<FileInput label="Files" />);
   const fileInput = screen.getByTestId("fileInput");
-  expect(fileInput.textContent).toBe("Files0 files selectedItem select");
+  expect(fileInput.textContent).toBe("Files 0 files selectedItem select");
 
   const input = document.querySelector("input");
   fireEvent.click(input);
@@ -79,12 +79,12 @@ test("CustomRadio", () => {
     />
   );
   const container = screen.getByTestId("customRadioInput");
-  expect(container.textContent).toBe("Custom RadioOption 1Option 2");
+  expect(container.textContent).toBe("Custom Radio Option 1Option 2");
 });
 test("Switch", () => {
   render(<SwitchInput label="Switch" />);
   const input = screen.getByTestId("switchInput");
-  expect(input.textContent).toBe("SwitchYesNo");
+  expect(input.textContent).toBe("Switch YesNo");
 });
 test("Toggle", () => {
   render(<Toggle label="Switch" />);

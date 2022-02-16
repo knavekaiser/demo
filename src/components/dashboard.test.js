@@ -18,6 +18,11 @@ test("Dashboard", async () => {
     checkPermission: () => true,
     setUser: jest.fn(),
     setRole: jest.fn(),
+    endpoints: {
+      locations: "http://endpoints.com/locations",
+      users: "http://endpoints.com/users",
+      departments: "http://endpoints.com/departments",
+    },
   };
   customRender(<Dashboard />, { providerProps });
   const comp = screen.getByTestId("dashboard");

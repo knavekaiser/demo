@@ -10,7 +10,6 @@ import {
 import { useForm } from "react-hook-form";
 import { Input, Checkbox } from "./elements";
 import { Prompt } from "./modal";
-import { loadScript } from "../helpers";
 import bcrypt from "bcryptjs";
 import s from "./login.module.scss";
 import paths from "./path";
@@ -50,7 +49,7 @@ export default function Login() {
       });
   }, []);
   return (
-    <div className={s.login}>
+    <div className={s.login} data-testid="login">
       <img src="/asset/new_login_img.jpg" />
       <div className={s.formWrapper}>
         <img src="/asset/logo.jpg" />

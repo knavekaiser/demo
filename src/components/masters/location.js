@@ -17,6 +17,7 @@ import {
 } from "../elements";
 import { Modal, Prompt } from "../modal";
 import { useForm } from "react-hook-form";
+import defaultEndpoints from "../../config/endpoints";
 import s from "./masters.module.scss";
 
 export default function Location() {
@@ -204,7 +205,7 @@ const LocationForm = ({
         // />
       }
       <SearchField
-        url={`http://139.59.44.254:8080/location`}
+        url={defaultEndpoints.locations}
         processData={(data, value) => {
           if (data?._embedded.location) {
             return data._embedded.location

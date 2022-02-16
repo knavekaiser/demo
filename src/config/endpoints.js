@@ -1,4 +1,4 @@
-const baseApiUrl = "http://139.59.44.254:8080";
+const baseApiUrl = process.env.REACT_APP_HOST;
 
 export default {
   baseApiUrl,

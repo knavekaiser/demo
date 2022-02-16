@@ -16,6 +16,7 @@ export default function IrConfig() {
         path={paths.irConfig.irDataAnalytics}
         element={<IrDataAnalytics />}
       />
+      <Route path="/*" element={<h4 data-testid="irConfigs">404</h4>} />
     </Routes>
   );
 }

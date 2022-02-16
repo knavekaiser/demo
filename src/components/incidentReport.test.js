@@ -13,6 +13,13 @@ const customRender = (ui, { providerProps, ...renderOptions }) => {
   );
 };
 
+const setMockFetch = (data, status) => {
+  jest.spyOn(global, "fetch").mockResolvedValue({
+    json: jest.fn().mockResolvedValue(data),
+    status: status || 200,
+  });
+};
+
 describe("Incident Report Form", () => {
   beforeAll(() => {
     ReactDOM.createPortal = jest.fn((element, node) => {
@@ -34,7 +41,14 @@ describe("Incident Report Form", () => {
       document.body.appendChild(prompt);
     }
 
-    const providerProps = { user: { id: 10, name: "Test User" } };
+    const providerProps = {
+      user: { id: 10, name: "Test User" },
+      endpoints: {
+        locations: "http://endpoints.com/locations",
+        users: "http://endpoints.com/users",
+        departments: "http://endpoints.com/departments",
+      },
+    };
     await act(async () => customRender(<IncidentReport />, { providerProps }));
   });
 
@@ -64,7 +78,22 @@ describe("Incident Report Form", () => {
 
   test("Set notification", async () => {
     const notified = document.querySelector(".notified");
-    expect(notified.textContent).toBe("Clear");
+    expect(notified.textContent).toMatch("NameDepartmentDate");
+  });
+
+  test("useHisFetch", async () => {
+    setMockFetch({
+      errorMessage: "Invalid Token",
+    });
+    const providerProps = {
+      user: { id: 10, name: "Test User" },
+      endpoints: {
+        locations: "http://endpoints.com/locations",
+        users: "http://endpoints.com/users",
+        departments: "http://endpoints.com/departments",
+      },
+    };
+    await act(async () => customRender(<IncidentReport />, { providerProps }));
   });
 });
 

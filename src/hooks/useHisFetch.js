@@ -52,9 +52,9 @@ export const useHisFetch = (url) => {
           return response;
         }
       } catch (err) {
-        setError(err);
+        // setError(err);
       } finally {
-        setLoading(false);
+        // setLoading(false);
       }
     },
     [url]

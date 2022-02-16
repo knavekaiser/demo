@@ -1,6 +1,6 @@
 import ReactDOM from "react-dom";
 import Masters from "./index";
-import { Provider } from "../../SiteContext";
+import { Provider, SiteContext } from "../../SiteContext";
 import { BrowserRouter } from "react-router-dom";
 import { render, screen, act, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -16,14 +16,31 @@ import Rca from "./rca";
 import TwoFieldMaster from "./twoFieldMaster";
 import User from "./userMaster";
 
-test("Dashboard", () => {
-  render(
-    <Provider>
+const customRender = async (ui, { providerProps, ...renderOptions }) => {
+  return await act(async () => {
+    await render(
       <BrowserRouter>
-        <Masters />
-      </BrowserRouter>
-    </Provider>
-  );
+        <SiteContext.Provider value={providerProps}>{ui}</SiteContext.Provider>
+      </BrowserRouter>,
+      renderOptions
+    );
+  });
+};
+
+const providerProps = {
+  user: { id: 10, name: "Test User" },
+  checkPermission: () => true,
+  setUser: jest.fn(),
+  setRole: jest.fn(),
+  endpoints: {
+    locations: "http://endpoints.com/locations",
+    users: "http://endpoints.com/users",
+    departments: "http://endpoints.com/departments",
+  },
+};
+
+test("Dashboard", async () => {
+  await customRender(<Masters />, { providerProps });
   const comp = screen.getByTestId("masters");
   expect(comp.textContent).toMatch("404");
 });
@@ -40,7 +57,9 @@ const setMockFailFetch = () => {
 
 const renderWithData = async (ui, data) => {
   setMockFetch(data);
-  await act(async () => render(ui));
+  await act(async () => {
+    await customRender(ui, { providerProps });
+  });
 };
 
 const testParent = ({
@@ -82,7 +101,9 @@ const testParent = ({
 
     test("Fails to load", async () => {
       setMockFailFetch();
-      await act(async () => render(ui));
+      await act(async () => {
+        await customRender(ui, { providerProps });
+      });
     });
     test("Renders All Parents", async () => {
       const categories = screen.getByTestId(testId);
@@ -455,8 +476,8 @@ describe("Reportable test", () => {
         },
       ],
     });
-    await act(async () =>
-      render(
+    await act(async () => {
+      await customRender(
         <ReportableForm
           categoryId={4}
           subCategoryId={18}
@@ -483,9 +504,10 @@ describe("Reportable test", () => {
             },
           ]}
           setCategories={jest.fn()}
-        />
-      )
-    );
+        />,
+        { providerProps }
+      );
+    });
   });
 
   test("edit & clear", async () => {
@@ -996,7 +1018,9 @@ describe("IR Code Configuration", () => {
         ],
       },
     });
-    await act(async () => render(<IrConfig />));
+    await act(async () => {
+      await customRender(<IrConfig />, { providerProps });
+    });
   });
 
   test("Render", async () => {
@@ -1030,6 +1054,8 @@ describe("IR Code Configuration", () => {
 
   test("Fail to load", async () => {
     setMockFailFetch();
-    await act(async () => render(<IrConfig />));
+    await act(async () => {
+      await customRender(<IrConfig />, { providerProps });
+    });
   });
 });

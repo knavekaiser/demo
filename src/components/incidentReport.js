@@ -225,6 +225,7 @@ export default function IncidentReporting() {
     }
   }, [edit]);
   useEffect(() => {
+    let active = true;
     Promise.all([
       getLocations(),
       getDepartments(),
@@ -316,8 +317,11 @@ export default function IncidentReporting() {
           methods.setValue("headofDepart", _parameters.hods[0].value);
         }
       }
-      setParameters(_parameters);
+      active && setParameters(_parameters);
     });
+    return () => {
+      active = false;
+    };
   }, []);
   return (
     <div className={s.container} data-testid="incidentReportingForm">
@@ -883,7 +887,7 @@ export const IncidentCategory = () => {
         }
       })
       .catch((err) => {
-        console.error(err);
+        console.log(err);
       });
   }, []);
   return (

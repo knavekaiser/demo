@@ -143,7 +143,7 @@ export const IrDashboardContextProvider = ({ children }) => {
         setParameters(_parameters);
       })
       .catch((err) => {
-        console.error(err);
+        console.log(err);
       });
     const countByStatus = await Promise.all([
       ...irStatus.map((status) =>
@@ -159,7 +159,7 @@ export const IrDashboardContextProvider = ({ children }) => {
         }, {});
       })
       .catch((err) => {
-        console.error(err);
+        console.log(err);
       });
     const otherCounts = await Promise.all([
       fetch(

@@ -155,7 +155,7 @@ export default function MainConfig() {
     },
   ]);
   return (
-    <div className={s.container}>
+    <div className={s.container} data-testid="mainConfig">
       <header>
         <h3>IR CONFIGURATION</h3>
       </header>
@@ -277,7 +277,7 @@ export default function MainConfig() {
                   {
                     icon: <FaRegTrashAlt />,
                     label: "Delete",
-                    callBack: () => console.log("delete"),
+                    callBack: () => {},
                   },
                 ]}
               />
@@ -684,11 +684,7 @@ export default function MainConfig() {
 }
 const NotifyForm = ({ edit, onChange }) => {
   return (
-    <form
-      onSubmit={(data) => {
-        console.log(data);
-      }}
-    >
+    <form>
       <Input required={true} name="name" placeholder="Enter" />
       <Input required={true} name="dob" placeholder="Enter" />
       <Input required={true} name="employeeId" placeholder="Enter" />
