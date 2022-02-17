@@ -69,7 +69,18 @@ button {
       }
     }
     &.ghost {
-      border: 1px solid #3450a3;
+      border: 1px solid #9d9d9d;
+      background: white;
+      color: #616161;
+      &:hover {
+        background: #e6e6e6;
+      }
+      &:active {
+        background: #dfdfdf;
+      }
+      &:disabled {
+        opacity: 0.5;
+      }
     }
   }
 }

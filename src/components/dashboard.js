@@ -5,6 +5,7 @@ import {
   Route,
   useLocation,
   useNavigate,
+  useSearchParams,
 } from "react-router-dom";
 import { BiChevronLeft, BiPowerOff } from "react-icons/bi";
 import {
@@ -14,7 +15,7 @@ import {
 } from "../SiteContext";
 import { IoKeyOutline } from "react-icons/io5";
 import { FaRegBell, FaChevronRight } from "react-icons/fa";
-import { Combobox } from "./elements";
+import { Combobox, moment } from "./elements";
 import {
   IncidentReportIcon,
   IncidentDashboardIcon,
@@ -41,7 +42,13 @@ export const Accordion = ({ label, basePath, items, className, startPath }) => {
     >
       <Link
         className={s.accordionLabel}
-        to={startPath || `${basePath}/${items[0]?.path}`}
+        to={
+          startPath
+            ? startPath
+            : typeof items[0]?.path === "string"
+            ? `${basePath}/${items[0]?.path}`
+            : items[0]
+        }
       >
         {label} <FaChevronRight className={s.arrow} />
       </Link>
@@ -63,14 +70,22 @@ export const Accordion = ({ label, basePath, items, className, startPath }) => {
               <li
                 key={i}
                 className={`${
-                  (location.pathname + location.search).startsWith(
-                    basePath + "/" + item.path
-                  )
+                  location.pathname.startsWith(basePath + "/" + item.path) ||
+                  (item.path?.search &&
+                    location.search.startsWith(`?${item.path.search}`))
                     ? s.active
                     : ""
                 }`}
               >
-                <Link to={`${basePath}/${item.path}`}>{item.label}</Link>
+                <Link
+                  to={
+                    typeof item.path === "string"
+                      ? `${basePath}/${item.path}`
+                      : item.path
+                  }
+                >
+                  {item.label}
+                </Link>
               </li>
             );
           })}
@@ -143,7 +158,7 @@ function Dashboard() {
             </Link>
           </li>
           <IrDashboardContextProvider>
-            <SidebarItem_IrDashboard location={location} />
+            <SidebarItem_IrDashboard />
           </IrDashboardContextProvider>
           <li
             className={`${s.sidebarItem} ${
@@ -261,7 +276,9 @@ function Dashboard() {
     </div>
   );
 }
-const SidebarItem_IrDashboard = ({ location }) => {
+const SidebarItem_IrDashboard = () => {
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
   const { count } = useContext(IrDashboardContext);
   return (
     <Accordion
@@ -300,7 +317,10 @@ const SidebarItem_IrDashboard = ({ location }) => {
                   ) : null}
                 </>
               ),
-              path: paths.incidentDashboard.myDashboard_submitted,
+              path: {
+                pathname: location.pathname,
+                search: `status=2`,
+              },
             },
             {
               label: (
@@ -311,7 +331,10 @@ const SidebarItem_IrDashboard = ({ location }) => {
                   ) : null}
                 </>
               ),
-              path: paths.incidentDashboard.myDashboard_assinged,
+              path: {
+                pathname: location.pathname,
+                search: `status=3`,
+              },
             },
             {
               label: (
@@ -322,7 +345,10 @@ const SidebarItem_IrDashboard = ({ location }) => {
                   ) : null}
                 </>
               ),
-              path: paths.incidentDashboard.myDashboard_underInvestigation,
+              path: {
+                pathname: location.pathname,
+                search: `status=4`,
+              },
             },
             {
               label: (
@@ -333,7 +359,10 @@ const SidebarItem_IrDashboard = ({ location }) => {
                   ) : null}
                 </>
               ),
-              path: paths.incidentDashboard.myDashboard_capaPlanning,
+              path: {
+                pathname: location.pathname,
+                search: `status=5`,
+              },
             },
             {
               label: (
@@ -344,7 +373,10 @@ const SidebarItem_IrDashboard = ({ location }) => {
                   ) : null}
                 </>
               ),
-              path: paths.incidentDashboard.myDashboard_closureConfirmationSent,
+              path: {
+                pathname: location.pathname,
+                search: `status=6`,
+              },
             },
             {
               label: (
@@ -355,7 +387,10 @@ const SidebarItem_IrDashboard = ({ location }) => {
                   ) : null}
                 </>
               ),
-              path: paths.incidentDashboard.myDashboard_closureConfirmed,
+              path: {
+                pathname: location.pathname,
+                search: `status=7`,
+              },
             },
             {
               label: (
@@ -366,7 +401,10 @@ const SidebarItem_IrDashboard = ({ location }) => {
                   ) : null}
                 </>
               ),
-              path: paths.incidentDashboard.myDashboard_irClosure,
+              path: {
+                pathname: location.pathname,
+                search: `status=8`,
+              },
             },
           ],
         },
@@ -389,7 +427,16 @@ const SidebarItem_IrDashboard = ({ location }) => {
                   ) : null}
                 </>
               ),
-              path: paths.incidentDashboard.myDashboard_currentMonth,
+              path: {
+                pathname: location.pathname,
+                search: `fromIncidentDateTime=${moment({
+                  time: new Date().setDate(1),
+                  format: "YYYY-MM-DD",
+                })}&toIncidentDateTime=${moment({
+                  time: new Date(),
+                  format: "YYYY-MM-DD",
+                })}`,
+              },
             },
             {
               label: (
@@ -400,15 +447,24 @@ const SidebarItem_IrDashboard = ({ location }) => {
                   ) : null}
                 </>
               ),
-              path: paths.incidentDashboard.myDashboard_openSentinelEvent,
+              path: {
+                pathname: location.pathname,
+                search: `typeofInci=8`,
+              },
             },
             {
               label: <>Reportable event</>,
-              path: paths.incidentDashboard.myDashboard_reportableEvent,
+              path: {
+                pathname: location.pathname,
+                search: `reportable=yes`,
+              },
             },
             {
               label: <>Active CAPA Closure</>,
-              path: paths.incidentDashboard.myDashboard_activeCapaClosure,
+              path: {
+                pathname: location.pathname,
+                search: `capaClosure=active`,
+              },
             },
             {
               label: (
@@ -419,11 +475,17 @@ const SidebarItem_IrDashboard = ({ location }) => {
                   ) : null}
                 </>
               ),
-              path: paths.incidentDashboard.myDashboard_patientComplaint,
+              path: {
+                pathname: location.pathname,
+                search: `patientYesOrNo=true`,
+              },
             },
             {
               label: <>IR beyond Acceptable TAT</>,
-              path: paths.incidentDashboard.myDashboard_beyondAcceptableTat,
+              path: {
+                pathname: location.pathname,
+                search: `tat=beyond`,
+              },
             },
           ],
         },

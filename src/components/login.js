@@ -32,7 +32,7 @@ export default function Login() {
       navigate("/");
       return;
     }
-    fetch(`${process.env.REACT_APP_HOST}/user?size=10000`)
+    fetch(`${process.env.REACT_APP_HOST}/user`)
       .then((res) => res.json())
       .then((users) => {
         if (users._embedded.user) {

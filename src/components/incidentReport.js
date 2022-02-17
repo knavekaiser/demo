@@ -18,7 +18,7 @@ import {
   moment,
   Moment,
 } from "./elements";
-import { Prompt } from "./modal";
+import { Prompt, Modal } from "./modal";
 import { useForm, FormProvider, useFormContext } from "react-hook-form";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useHisFetch } from "../hooks";
@@ -326,14 +326,31 @@ export default function IncidentReporting() {
   return (
     <div className={s.container} data-testid="incidentReportingForm">
       <header>
-        <h3>REPORT AN INCIDENT {readOnly && <span>(View)</span>}</h3>
+        <h3>
+          REPORT AN INCIDENT{" "}
+          {readOnly && (
+            <span>
+              (View){" "}
+              <button
+                className="clear"
+                onClick={() => {
+                  navigate(location.state.from, {
+                    state: { focus: location.state.focus },
+                  });
+                }}
+              >
+                Back to Dashboard
+              </button>
+            </span>
+          )}
+        </h3>
         <span className={s.subHead}>
           <span className={s.note}>
             <FaInfoCircle /> There is a blame free reporting culture. No
             punitive measure will be taken against any staff reporting any
             incident.
           </span>
-          <section>
+          <section style={readOnly ? { pointerEvents: "none" } : {}}>
             <input
               type="checkbox"
               id="anonymous"
@@ -386,31 +403,52 @@ export default function IncidentReporting() {
                   },
                 })}
                 error={methods.formState.errors.incident_Date_Time}
-                max={new Date().toISOString().slice(0, 16)}
+                // max={new Date().toISOString().slice(0, 16)}
                 label="Incident Date & Time *"
                 type="datetime-local"
               />
-              <Combobox
+              {
+                //   <Combobox
+                //   name="location"
+                //   register={methods.register}
+                //   formOptions={{
+                //     validate: (v) => {
+                //       return (
+                //         +methods.getValues("status") === 1 ||
+                //         v ||
+                //         "Please select a location"
+                //       );
+                //     },
+                //   }}
+                //   onChange={() => {
+                //     methods.clearErrors("locationDetailsEntry");
+                //   }}
+                //   setValue={methods.setValue}
+                //   watch={methods.watch}
+                //   error={methods.formState.errors.location}
+                //   options={parameters?.locations}
+                //   clearErrors={methods.clearErrors}
+                // />
+              }
+              <SearchField
+                data={parameters?.locations}
                 label="Location of incident *"
-                name="location"
                 register={methods.register}
+                name="location"
                 formOptions={{
-                  validate: (v) => {
-                    return (
-                      +methods.getValues("status") === 1 ||
-                      v ||
-                      "Please select a location"
-                    );
-                  },
+                  required: "Please Paitent Name",
                 }}
-                onChange={() => {
-                  methods.clearErrors("locationDetailsEntry");
-                }}
-                setValue={methods.setValue}
+                renderListItem={(option) => <>{option.label}</>}
                 watch={methods.watch}
+                setValue={methods.setValue}
+                onChange={(item) => {
+                  if (typeof item === "string") {
+                    methods.setValue("location", item);
+                  } else {
+                    methods.setValue("location", item.value);
+                  }
+                }}
                 error={methods.formState.errors.location}
-                options={parameters?.locations}
-                clearErrors={methods.clearErrors}
               />
               <Input
                 {...methods.register("locationDetailsEntry", {
@@ -468,7 +506,7 @@ export default function IncidentReporting() {
                   }
                   <SearchField
                     url={endpoints.patients}
-                    label="Patient Name / UHID"
+                    label="Patient Name / UHID *"
                     processData={(data, value) => {
                       if (Array.isArray(data)) {
                         return data
@@ -500,7 +538,15 @@ export default function IncidentReporting() {
                     register={methods.register}
                     name="patientname"
                     formOptions={{
-                      required: "Please Paitent Name",
+                      validate: (v) => {
+                        if (
+                          methods.getValues("patientYesOrNo") &&
+                          +methods.getValues("status") === 2
+                        ) {
+                          return "Please enter Patient Name";
+                        }
+                        return true;
+                      },
                     }}
                     renderListItem={(p) => <>{p.label}</>}
                     watch={methods.watch}
@@ -517,20 +563,40 @@ export default function IncidentReporting() {
                   <Input
                     {...methods.register("complaIntegerDatetime", {
                       // required: "Please select Complaint Date",
-                      // validate: (v) =>
-                      //   new Date(v) < new Date() ||
-                      //   "Can not select date from future",
+                      validate: (v) => {
+                        if (v) {
+                          return (
+                            new Date(v) < new Date() ||
+                            "Can not select date from future"
+                          );
+                        }
+                        if (
+                          methods.getValues("patientYesOrNo") &&
+                          +methods.getValues("status") === 2
+                        ) {
+                          return "Please select Complaint Date & Time";
+                        }
+                      },
                     })}
-                    error={methods.formState.errors.complaintDatetime}
-                    label="Complaint Date & Time"
+                    error={methods.formState.errors.complaIntegerDatetime}
+                    label="Complaint Date & Time *"
                     type="datetime-local"
+                    // max={new Date().toISOString().slice(0, 16)}
                   />
                   <Input
                     {...methods.register("complaIntegerIdEntry", {
-                      // required: "Please enter Comlient ID",
+                      validate: (v) => {
+                        if (
+                          methods.getValues("patientYesOrNo") &&
+                          +methods.getValues("status") === 2
+                        ) {
+                          return "Please enter Complaint ID";
+                        }
+                        return true;
+                      },
                     })}
-                    error={methods.formState.errors.complaintIdEntry}
-                    label="Complaint ID"
+                    error={methods.formState.errors.complaIntegerIdEntry}
+                    label="Complaint ID *"
                   />
                 </>
               )}
@@ -554,6 +620,9 @@ export default function IncidentReporting() {
                 options={incidentTypes}
                 error={methods.formState.errors.typeofInci}
               />
+              <button className={`clear ${s.info}`}>
+                <FaInfoCircle />
+              </button>
               {
                 //   <table className={s.adverseEvent} cellSpacing={0} cellPadding={0}>
                 //   <thead>
@@ -876,14 +945,30 @@ export default function IncidentReporting() {
     </div>
   );
 }
+
 export const IncidentCategory = () => {
   const [categories, setCategories] = useState([]);
+  const [showCategoryTable, setShowCategoryTable] = useState(false);
+  const [rows, setRows] = useState([]);
+  const [tableValues, setTableValues] = useState({});
   useEffect(() => {
     fetch(`${process.env.REACT_APP_HOST}/category`)
       .then((res) => res.json())
       .then((data) => {
         if (data._embedded.category) {
           setCategories(data._embedded.category);
+          const maxSubCategory = [...data._embedded.category].sort((a, b) =>
+            a.subCategorys.length > b.subCategorys.length ? -1 : 1
+          )[0].subCategorys.length;
+
+          const rows = data._embedded.category.map((cat) => {
+            const row = [];
+            for (var i = 0; i < maxSubCategory; i++) {
+              row.push(cat.subCategorys[i] || null);
+            }
+            return row;
+          });
+          setRows(rows);
         }
       })
       .catch((err) => {
@@ -928,6 +1013,7 @@ export const IncidentCategory = () => {
                 }))}
                 onChange={({ value }) => {
                   setValue("inciSubCat", "");
+                  setTableValues({ category: value });
                 }}
                 error={errors.inciCateg}
                 clearErrors={clearErrors}
@@ -958,12 +1044,105 @@ export const IncidentCategory = () => {
                   },
                 }}
                 error={errors.inciSubCat}
+                onChange={({ value }) =>
+                  setTableValues((prev) => ({ ...prev, subCat: value }))
+                }
                 clearErrors={clearErrors}
               />
-              <button className="btn secondary">
+              <button
+                className={`clear ${s.info}`}
+                onClick={() => {
+                  setShowCategoryTable(true);
+                }}
+              >
+                <FaInfoCircle />
+              </button>
+              <button className={`btn secondary ${s.addRow}`}>
                 <FaPlus /> Add Row
               </button>
             </div>
+            <Modal
+              head={true}
+              open={showCategoryTable}
+              setOpen={() => {
+                setShowCategoryTable();
+                setTableValues({
+                  category: getValues("inciCateg"),
+                  subCat: getValues("inciSubCat"),
+                });
+              }}
+              label="SELECT SUB-CATEGORY"
+              className={s.categoryTable}
+            >
+              <div className={s.container}>
+                <Table
+                  columns={categories.map((category) => ({
+                    label: category.name,
+                  }))}
+                >
+                  {rows[0]?.map((col, i, arr) => (
+                    <tr key={i}>
+                      {rows?.map((subCat, j) =>
+                        subCat[i] ? (
+                          <td key={j}>
+                            <label htmlFor={`subCat-${subCat[i]?.id}`}>
+                              <input
+                                name="subcategory"
+                                type="radio"
+                                id={`subCat-${subCat[i]?.id}`}
+                                className="label"
+                                checked={
+                                  categories[j]?.id === tableValues.category &&
+                                  subCat[i].id === tableValues.subCat
+                                }
+                                onChange={() => {
+                                  setTableValues({
+                                    category: categories[j]?.id,
+                                    subCat: subCat[i].id,
+                                  });
+                                }}
+                              />
+                              {subCat[i]?.name}
+                            </label>
+                          </td>
+                        ) : (
+                          <td key={j} />
+                        )
+                      )}
+                    </tr>
+                  ))}
+                </Table>
+                <section className={s.btns}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowCategoryTable(false);
+                      setTableValues({
+                        category: getValues("inciCateg"),
+                        subCat: getValues("inciSubCat"),
+                      });
+                    }}
+                    className="btn ghost w-100"
+                  >
+                    Close
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (tableValues.category && tableValues.subCat) {
+                        setValue("inciCateg", tableValues.category);
+                        setValue("inciSubCat", tableValues.subCat);
+                      }
+                      setShowCategoryTable(false);
+                    }}
+                    className="btn secondary w-100"
+                    disabled={!tableValues.category || !tableValues.subCat}
+                  >
+                    Select
+                  </button>
+                </section>
+              </div>
+            </Modal>
             <div className={s.placeholder}>Placeholder</div>
           </div>
         );

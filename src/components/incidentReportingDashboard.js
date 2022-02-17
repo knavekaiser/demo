@@ -102,6 +102,21 @@ const MyDashboard = () => {
   }, []);
   useEffect(() => {
     const _filters = paramsToObject(new URLSearchParams(location.search));
+    if (_filters.fromIncidentDateTime) {
+      _filters.fromIncidentDateTime =
+        _filters.fromIncidentDateTime + " 00:00:00";
+    }
+    if (_filters.toIncidentDateTime) {
+      _filters.toIncidentDateTime = _filters.toIncidentDateTime + " 23:59:59";
+    }
+    if (_filters.fromReportingDateTime) {
+      _filters.fromReportingDateTime =
+        _filters.fromReportingDateTime + " 00:00:00";
+    }
+    if (_filters.toRreportingDateTime) {
+      _filters.toRreportingDateTime =
+        _filters.toRreportingDateTime + " 23:59:59";
+    }
     if (Object.entries(_filters).length) {
       fetch(
         `${
@@ -515,7 +530,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
   const [categories, setCategories] = useState([]);
   const [irInvestigator, setIrInvestigator] = useState([]);
   const fromIncidentDateTime = watch("fromIncidentDateTime");
-  const fromreportingDate = watch("fromreportingDate");
+  const fromReportingDateTime = watch("fromReportingDateTime");
   useEffect(() => {
     Promise.all([
       fetch(`${process.env.REACT_APP_HOST}/category`).then((res) => res.json()),
@@ -546,7 +561,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
     const _filters = paramsToObject(new URLSearchParams(location.search));
     reset({
       sequence: "",
-      fromreportingDate: "",
+      fromReportingDateTime: "",
       toreportingDate: "",
       fromIncidentDateTime: "",
       toIncidentDateTime: "",
@@ -586,7 +601,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
             format: "YYYY-MM-DD",
             time: new Date(fromIncidentDateTime),
           })}
-          // max={moment({ format: "YYYY-MM-DD", time: new Date() })}
+          max={moment({ format: "YYYY-MM-DD", time: new Date() })}
         />
       </section>
       <section className={s.pair}>
@@ -594,7 +609,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
         <Input
           type="date"
           placeholder="From"
-          {...register("fromreportingDate")}
+          {...register("fromReportingDateTime")}
           max={moment({ format: "YYYY-MM-DD", time: new Date() })}
         />
         <Input
@@ -603,9 +618,9 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
           {...register("toreportingDate")}
           min={moment({
             format: "YYYY-MM-DD",
-            time: new Date(fromreportingDate),
+            time: new Date(fromReportingDateTime),
           })}
-          // max={moment({ format: "YYYY-MM-DD", time: new Date() })}
+          max={moment({ format: "YYYY-MM-DD", time: new Date() })}
         />
       </section>
       <Combobox
@@ -695,7 +710,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
           onClick={() => {
             reset({
               sequence: "",
-              fromreportingDate: "",
+              fromReportingDateTime: "",
               toreportingDate: "",
               fromIncidentDateTime: "",
               toIncidentDateTime: "",
@@ -722,16 +737,32 @@ const QualityDashboard = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [incidents, setIncidents] = useState([]);
-  const [filters, setFilters] = useState({ irInvestigator: user.id });
+  const [filters, setFilters] = useState({});
   const [assign, setAssign] = useState(null);
   useEffect(() => {
     const _filters = paramsToObject(new URLSearchParams(location.search));
+    if (_filters.fromIncidentDateTime) {
+      _filters.fromIncidentDateTime =
+        _filters.fromIncidentDateTime + " 00:00:00";
+    }
+    if (_filters.toIncidentDateTime) {
+      _filters.toIncidentDateTime = _filters.toIncidentDateTime + " 23:59:59";
+    }
+    if (_filters.fromReportingDateTime) {
+      _filters.fromReportingDateTime =
+        _filters.fromReportingDateTime + " 00:00:00";
+    }
+    if (_filters.toRreportingDateTime) {
+      _filters.toRreportingDateTime =
+        _filters.toRreportingDateTime + " 23:59:59";
+    }
     if (Object.entries(_filters).length) {
       fetch(
         `${
           process.env.REACT_APP_HOST
         }/IncidentReport/search/byDetails?${new URLSearchParams({
           ...filters,
+          ..._filters,
         }).toString()}`
       )
         .then((res) => res.json())
@@ -847,6 +878,11 @@ const QualityDashboard = () => {
                       {
                         icon: <FaRegCheckSquare />,
                         label: "IR Approval",
+                        callBack: () => {},
+                      },
+                      {
+                        icon: <FaRegCheckSquare />,
+                        label: "Acknowledge IR",
                         callBack: () => {},
                       },
                     ]
