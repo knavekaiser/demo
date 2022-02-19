@@ -656,7 +656,8 @@ export default function IncidentReporting() {
                       validate: (v) => {
                         if (
                           methods.getValues("patientYesOrNo") &&
-                          +methods.getValues("status") === 2
+                          +methods.getValues("status") === 2 &&
+                          !v
                         ) {
                           return "Please enter Complaint ID";
                         }

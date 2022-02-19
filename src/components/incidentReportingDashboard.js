@@ -29,6 +29,7 @@ import {
 import { GoPerson } from "react-icons/go";
 import {
   Radio,
+  Select,
   Tabs,
   Input,
   Combobox,
