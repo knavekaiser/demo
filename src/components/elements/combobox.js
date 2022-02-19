@@ -11,6 +11,9 @@ import s from "./elements.module.scss";
 import { FaSortDown, FaSearch } from "react-icons/fa";
 import { Modal } from "../modal";
 import { Input } from "./elements";
+import { Controller } from "react-hook-form";
+
+import ReactSelect, { components } from "react-select";
 
 export const Combobox = ({
   register = () => {},
@@ -263,34 +266,26 @@ export const Combobox = ({
 };
 
 export const AutoComplete = ({
+  options: defaultOptions,
+  multiple,
   register,
-  addNew,
   formOptions,
-  label,
   name,
   watch,
   setValue,
-  placeholder,
-  fetchData,
-  options: _defaultOptions,
-  multiple,
-  className,
-  onChange,
-  item,
-  renderValue,
-  required,
   error,
   clearErrors,
+  item,
+  onChange,
 }) => {
-  const id = useRef(Math.random().toString(36).substr(-8));
   const container = useRef();
-  const optionContainerRef = useRef();
-  const [inputValue, setInputValue] = useState("");
-  const [options, setOptions] = useState([...(_defaultOptions || [])]);
-
-  const selected = watch?.(name);
+  const clickHandlerAdded = useRef(false);
+  const [laoding, setLoading] = useState(false);
+  const [options, setOptions] = useState([...defaultOptions]);
+  const [displayValue, setDisplayValue] = useState("");
   const [open, setOpen] = useState(false);
   const [style, setStyle] = useState({});
+  const selected = watch(name);
   const [hover, setHover] = useState(
     options?.findIndex(({ label, value }) => {
       return (
@@ -299,9 +294,9 @@ export const AutoComplete = ({
       );
     })
   );
-  const clickHandlerAdded = useState(false);
   const select = useCallback(
     ({ label, value, ...rest }) => {
+      console.log("select");
       const _selectedItem = selected?.find?.((item) => item === value);
       if (_selectedItem) {
         setValue(
@@ -316,6 +311,7 @@ export const AutoComplete = ({
           ]);
         } else {
           setValue(name, value);
+          setDisplayValue(label);
         }
       }
 
@@ -323,17 +319,13 @@ export const AutoComplete = ({
         setOpen(false);
       }
       clearErrors?.(name);
-      onChange?.({ label, value, ...rest });
+      onChange && onChange({ label, value, ...rest });
     },
     [selected]
   );
   const keyDownHandler = useCallback(
     (e) => {
-      console.log("child", e.keyCode, open, name);
-      // e.preventDefault();
-      // e.stopPropagation();
       if (!options) return;
-      // if (!open) return;
 
       if (!open && e.keyCode === 32) {
         setOpen(true);
@@ -363,34 +355,26 @@ export const AutoComplete = ({
         }
       }
     },
-    [hover, selected]
+    [hover, selected, options]
   );
   useLayoutEffect(() => {
     const { width, height, x, y } = container.current.getBoundingClientRect();
     const top = window.innerHeight - y;
-    if (optionContainerRef.current) {
-      setStyle({
-        position: "absolute",
-        left: x,
-        top: Math.max(
-          Math.min(
-            y + height,
-            window.innerHeight -
-              Math.min(
-                (optionContainerRef.current?.querySelector("li").clientHeight ||
-                  35) *
-                  (options?.length || 0) +
-                  8,
-                320
-              )
-          ),
-          8
+    setStyle({
+      position: "absolute",
+      left: x,
+      top: Math.max(
+        Math.min(
+          y + height,
+          window.innerHeight - Math.min(35 * (options?.length || 0) + 8, 320)
+          // window.innerHeight - (35 * (options?.length || 0) + 8)
         ),
-        width: width,
-        maxHeight: Math.min(window.innerHeight - 16, 300),
-      });
-    }
-  }, [open]);
+        8
+      ),
+      width: width,
+      maxHeight: Math.min(window.innerHeight - 16, 300),
+    });
+  }, [open, options]);
   useEffect(() => {
     const clickHandler = (e) => {
       if (e.path && !e.path.includes(container.current)) {
@@ -405,85 +389,49 @@ export const AutoComplete = ({
       clickHandlerAdded.current = true;
     }
   }, [open]);
+  useEffect(() => {
+    if (selected) {
+      setOptions(
+        defaultOptions.filter((item) =>
+          new RegExp(selected, "i").test(item.label)
+        )
+      );
+    } else {
+      setOptions(defaultOptions);
+    }
+  }, [selected]);
+  useEffect(() => {
+    setOptions(defaultOptions);
+  }, [defaultOptions]);
   return (
-    <section
-      data-testid="combobox-container"
-      className={`${s.combobox} ${className || ""} ${open ? s.open : ""} ${
-        !(Array.isArray(options) && options.length) ? s.noOptions : ""
-      } ${error ? s.err : ""}`}
-    >
-      {label && (
-        <label data-testid="combobox-label">
-          {label} {required && "*"}
-        </label>
-      )}
-      <div
-        className={s.field}
-        // onClick={() => {
-        //   if (Array.isArray(options) && options.length) {
-        //     setOpen(true);
-        //   }
-        // }}
-        ref={container}
-        onKeyDown={(e) => {
-          if ([32, 38, 40].includes(e.keyCode)) {
-            e.preventDefault();
-            e.stopPropagation();
-            if (e.keyCode === 27) {
-              // escape key
-              setOpen(false);
-              return;
-            }
-            if (!open && e.keyCode === 32) {
-              setOpen(true);
-              return;
-            }
-            if (e.keyCode === 32 && options[hover]) {
-              select(options[hover]);
-            }
-            if (e.keyCode === 38 || e.keyCode === 40) {
-              const index = options?.findIndex(({ label, value }) => {
-                return (
-                  value === selected ||
-                  (selected?.some && selected.some((s) => s === value))
-                );
-              });
-              const _hover = hover !== undefined ? hover : index;
-              if (e.keyCode === 38) {
-                setHover(Math.max(_hover - 1, 0));
-              } else if (e.keyCode === 40) {
-                setHover(Math.min(_hover + 1, options.length - 1));
-              }
-            }
-          }
+    <section className={s.autoComplete} ref={container}>
+      <Input
+        {...register(name, formOptions)}
+        value={displayValue || selected}
+        onFocus={() => {
+          setValue(name, displayValue);
+          setDisplayValue("");
+          setOpen(true);
         }}
-      >
-        <Input
-          id={id.current}
-          data-testid="combobox-input"
-          {...register(name, { ...formOptions })}
-          value={inputValue}
-          autoComplete="off"
-          onFocus={() => {
-            if (Array.isArray(options) && options.length) {
-              setOpen(true);
-            }
-          }}
-          onBlur={() => {
-            setOpen(true);
-            setOptions(_defaultOptions);
-            if (!addNew) {
-              setValue("");
-            }
-          }}
-          // readOnly={true}
-          // tabIndex={1}
-        />
-        <span data-testid="combobox-btn" className={s.btn}>
-          <FaSearch />
-        </span>
-      </div>
-      {error && <span className={s.errMsg}>{error.message}</span>}
+        error={error}
+        onBlur={() => {
+          const option = defaultOptions.find((item) =>
+            new RegExp(selected, "i").test(item.label)
+          );
+          console.log(option);
+          if (selected && option) {
+            setValue(name, option.value);
+            setDisplayValue(option.label);
+          } else {
+            setDisplayValue("");
+            setValue(name, "");
+          }
+          setOpen(false);
+        }}
+        onKeyDown={keyDownHandler}
+        icon={<FaSearch />}
+        autoComplete="off"
+      />
       <Modal
         open={open}
         className={s.comboboxModal}
@@ -507,7 +455,6 @@ export const AutoComplete = ({
           setOpen={setOpen}
           clearErrors={clearErrors}
           item={item}
-          ref={optionContainerRef}
         />
       </Modal>
     </section>
@@ -571,3 +518,77 @@ const ComboboxList = forwardRef(
     );
   }
 );
+
+const DropdownIndicator = (props) => {
+  return (
+    components.DropdownIndicator && (
+      <components.DropdownIndicator {...props}>
+        <FaSearch />
+      </components.DropdownIndicator>
+    )
+  );
+};
+
+export const Select = ({
+  control,
+  formOptions,
+  name,
+  options,
+  multiple,
+  label,
+  className,
+  placeholder,
+  onChange: _onChange,
+}) => {
+  return (
+    <Controller
+      control={control}
+      name={name}
+      rules={formOptions}
+      render={({
+        field: { onChange, onBlur, value, name, ref },
+        fieldState: { invalid, isTouched, isDirty, error },
+      }) => (
+        <section className={s.select}>
+          {label && <label>{label}</label>}
+          <ReactSelect
+            placeholder={
+              !options || !options?.length
+                ? "No options provided"
+                : placeholder || "Enter"
+            }
+            components={{ DropdownIndicator }}
+            className={`reactSelect ${error && "err"} ${className || ""}`}
+            classNamePrefix="reactSelect"
+            isDisabled={!options || !options?.length}
+            inputRef={ref}
+            menuPortalTarget={document.querySelector("#portal")}
+            options={options || []}
+            value={options?.find((c) => c.value === value)}
+            onChange={(val) => {
+              onChange(val.value);
+              _onChange && _onChange(val);
+            }}
+            isMulti={multiple}
+            styles={{
+              option: (provided, state) => ({
+                ...provided,
+                background: state.isSelected
+                  ? "#e8e8e8;"
+                  : state.isFocused
+                  ? "#eeeeee"
+                  : "white",
+                padding: "6px 10px",
+                color: "black",
+                fontSize: "0.8rem",
+              }),
+              control: () => ({}),
+              singleValue: (provided, state) => {},
+            }}
+          />
+          {error && <span className={s.errMsg}>{error.message}</span>}
+        </section>
+      )}
+    />
+  );
+};

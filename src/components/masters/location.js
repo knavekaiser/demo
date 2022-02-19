@@ -15,8 +15,9 @@ import {
   Table,
   TableActions,
   Toggle,
+  Select,
 } from "../elements";
-import Select from "react-select";
+
 import { Modal, Prompt } from "../modal";
 import { useForm, Controller } from "react-hook-form";
 import defaultEndpoints from "../../config/endpoints";
@@ -234,39 +235,38 @@ const LocationForm = ({
         }}
         error={errors.name}
       />
-      <Combobox
-        register={register}
-        name="locationType"
-        options={locationTypes}
-        formOptions={{
-          required: "Please select Location Type",
-        }}
-        watch={watch}
-        setValue={setValue}
-        error={errors.locationType}
-      />
       {
-        //   <Controller
-        //   control={control}
+        //   <Combobox
+        //   register={register}
         //   name="locationType"
-        //   render={({ onChange, value, name, ref }) => (
-        //     <Select
-        //       inputRef={ref}
-        //       options={locationTypes}
-        //       value={locationTypes.find((c) => c.value === value)}
-        //       onChange={(val) => onChange(val.value)}
-        //     />
-        //   )}
+        //   options={locationTypes}
+        //   formOptions={{
+        //     required: "Please select Location Type",
+        //   }}
+        //   watch={watch}
+        //   setValue={setValue}
+        //   error={errors.locationType}
         // />
       }
+      <Select
+        options={locationTypes}
+        name="locationType"
+        control={control}
+        formOptions={{ required: "Please select Location Type" }}
+      />
       {
-        //   <Select
+        // <AutoComplete
+        //   register={register}
+        //   formOptions={{
+        //     required: "Please select Location Type",
+        //   }}
         //   name="locationType"
         //   placeholder="Enter"
-        //   {...register("locationType", { required: "Please select a Type" })}
         //   options={locationTypes}
         //   error={errors.locationType}
         //   clearErrors={clearErrors}
+        //   setValue={setValue}
+        //   watch={watch}
         // />
       }
       <Toggle

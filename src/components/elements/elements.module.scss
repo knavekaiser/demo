@@ -671,6 +671,22 @@
   }
 }
 
+.select {
+  display: grid;
+  label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-bottom: 0.2rem;
+    white-space: nowrap;
+  }
+  .errMsg {
+    font-size: 10pt;
+    color: red;
+    text-align: left;
+    display: block;
+  }
+}
+
 @media only screen and (min-width: 1366px) {
   .table {
     thead {

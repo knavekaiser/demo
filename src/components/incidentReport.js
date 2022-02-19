@@ -8,6 +8,7 @@ import {
   Input,
   SearchField,
   Combobox,
+  Select,
   FileInput,
   Textarea,
   SwitchInput,
@@ -46,26 +47,26 @@ export default function IncidentReporting() {
   const submitForm = useCallback(
     (data) => {
       const postData = async () => {
-        if (edit) {
-          await fetch(
-            `${process.env.REACT_APP_HOST}/IncidentReport/${edit.id}`,
-            {
-              method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                upload: [],
-                witness: [],
-                actionTaken: [],
-                notification: [],
-              }),
-            }
-          )
-            .then((res) => res.json())
-            .then((data) => {})
-            .catch((err) => {
-              console.log(err);
-            });
-        }
+        // if (edit) {
+        //   await fetch(
+        //     `${process.env.REACT_APP_HOST}/IncidentReport/${edit.id}`,
+        //     {
+        //       method: "PATCH",
+        //       headers: { "Content-Type": "application/json" },
+        //       body: JSON.stringify({
+        //         upload: [],
+        //         witness: [],
+        //         actionTaken: [],
+        //         notification: [],
+        //       }),
+        //     }
+        //   )
+        //     .then((res) => res.json())
+        //     .then((data) => {})
+        //     .catch((err) => {
+        //       console.log(err);
+        //     });
+        // }
         fetch(
           `${process.env.REACT_APP_HOST}/IncidentReport${
             edit ? `/${edit.id}` : ""
@@ -103,8 +104,23 @@ export default function IncidentReporting() {
           .then((data) => {
             if (data.id) {
               if (edit) {
-                navigate(location.state.from, {
-                  state: { focus: location.state.focus },
+                Prompt({
+                  type: "success",
+                  message: (
+                    <>
+                      Incident was successfully Submitted.
+                      {data.sequence && (
+                        <>
+                          <br />
+                          IR Code: {data.sequence}
+                        </>
+                      )}
+                    </>
+                  ),
+                  callback: () =>
+                    navigate(location.state.from, {
+                      state: { focus: location.state.focus },
+                    }),
                 });
                 return;
               }
@@ -112,9 +128,13 @@ export default function IncidentReporting() {
                 type: "success",
                 message: (
                   <>
-                    Incident was successfully reported.
-                    <br />
-                    IR Code: {data.sequence}
+                    Incident was successfully Saved.
+                    {data.sequence && (
+                      <>
+                        <br />
+                        IR Code: {data.sequence}
+                      </>
+                    )}
                   </>
                 ),
               });
@@ -192,6 +212,7 @@ export default function IncidentReporting() {
   const { get: getLocations } = useHisFetch(endpoints.locations);
   const { get: getDepartments } = useHisFetch(endpoints.departments);
   const { get: getUsersWithRoles } = useHisFetch(defaultEndpoints.users);
+  const { get: getAllPatients } = useHisFetch(endpoints.patients);
   const { get: getUsers } = useHisFetch(endpoints.users);
 
   useEffect(() => {
@@ -231,7 +252,8 @@ export default function IncidentReporting() {
       getDepartments(),
       getUsers(),
       getUsersWithRoles(),
-    ]).then(([location, department, users, usersWithRoles]) => {
+      getAllPatients(),
+    ]).then(([location, department, users, usersWithRoles, patients]) => {
       const _parameters = { ...parameters };
       const userDetails = (usersWithRoles?._embedded?.user || []).map(
         (user) => {
@@ -255,6 +277,7 @@ export default function IncidentReporting() {
             value: item.id,
           }));
       }
+
       if (Array.isArray(department)) {
         _parameters.departments = department.map((dept) => ({
           label: dept.description,
@@ -268,6 +291,7 @@ export default function IncidentReporting() {
           })
         );
       }
+
       if (users?.userViewList) {
         const _users = users.userViewList.map((user) => {
           const userDetail = userDetails.find((u) =>
@@ -291,9 +315,9 @@ export default function IncidentReporting() {
             value: item.id,
           }));
         _parameters.users = _users.map((item) => ({
-          label: item.userId,
-          value: item.id,
-          department: item.department,
+          label: item.fullName,
+          value: item.userId,
+          department: item.department?.code,
         }));
       } else if (users?._embedded?.user) {
         _parameters.hods = users._embedded.user
@@ -317,6 +341,14 @@ export default function IncidentReporting() {
           methods.setValue("headofDepart", _parameters.hods[0].value);
         }
       }
+
+      if (Array.isArray(patients)) {
+        _parameters.patients = patients.map((patient) => ({
+          value: patient.uhid,
+          label: patient.name,
+        }));
+      }
+
       active && setParameters(_parameters);
     });
     return () => {
@@ -403,7 +435,7 @@ export default function IncidentReporting() {
                   },
                 })}
                 error={methods.formState.errors.incident_Date_Time}
-                // max={new Date().toISOString().slice(0, 16)}
+                max={moment({ time: new Date(), format: "YYYY-MM-DDThh:mm" })}
                 label="Incident Date & Time *"
                 type="datetime-local"
               />
@@ -430,25 +462,48 @@ export default function IncidentReporting() {
                 //   clearErrors={methods.clearErrors}
                 // />
               }
-              <SearchField
-                data={parameters?.locations}
-                label="Location of incident *"
-                register={methods.register}
+              {
+                //   <SearchField
+                //   data={parameters?.locations}
+                //   label="Location of Incident *"
+                //   register={methods.register}
+                //   name="location"
+                //   formOptions={{
+                //     validate: (v) => {
+                //       if (v) return true;
+                //       return (
+                //         +methods.getValues("status") === 1 ||
+                //         "Please Paitent Name"
+                //       );
+                //     },
+                //   }}
+                //   renderListItem={(option) => <>{option.label}</>}
+                //   watch={methods.watch}
+                //   setValue={methods.setValue}
+                //   onChange={(item) => {
+                //     if (typeof item === "string") {
+                //       methods.setValue("location", item);
+                //     } else {
+                //       methods.setValue("location", item.value);
+                //     }
+                //   }}
+                //   error={methods.formState.errors.location}
+                // />
+              }
+              <Select
+                control={methods.control}
                 name="location"
+                options={parameters?.locations}
+                label="Location of Incident *"
                 formOptions={{
-                  required: "Please Paitent Name",
+                  validate: (v) => {
+                    if (v) return true;
+                    return (
+                      +methods.getValues("status") === 1 ||
+                      "Please Paitent Name"
+                    );
+                  },
                 }}
-                renderListItem={(option) => <>{option.label}</>}
-                watch={methods.watch}
-                setValue={methods.setValue}
-                onChange={(item) => {
-                  if (typeof item === "string") {
-                    methods.setValue("location", item);
-                  } else {
-                    methods.setValue("location", item.value);
-                  }
-                }}
-                error={methods.formState.errors.location}
               />
               <Input
                 {...methods.register("locationDetailsEntry", {
@@ -504,65 +559,75 @@ export default function IncidentReporting() {
                     //   label="Patient Name / UHID"
                     // />
                   }
-                  <SearchField
-                    url={endpoints.patients}
+                  <Select
                     label="Patient Name / UHID *"
-                    processData={(data, value) => {
-                      if (Array.isArray(data)) {
-                        return data
-                          .filter(
-                            (p) =>
-                              new RegExp(value, "i").test(p.name) ||
-                              new RegExp(value, "i").test(p.uhid)
-                          )
-                          .map((p) => ({
-                            value: p.id,
-                            label: p.name,
-                            data: p,
-                          }));
-                      } else if (data?._embedded?.patients) {
-                        return data._embedded.patients
-                          .filter(
-                            (p) =>
-                              new RegExp(value, "i").test(p.name) ||
-                              new RegExp(value, "i").test(p.uhid)
-                          )
-                          .map((p) => ({
-                            value: p.id,
-                            label: p.name,
-                            data: p,
-                          }));
-                      }
-                      return [];
-                    }}
-                    register={methods.register}
+                    options={parameters?.patients}
                     name="patientname"
+                    control={methods.control}
                     formOptions={{
-                      validate: (v) => {
-                        if (
-                          methods.getValues("patientYesOrNo") &&
-                          +methods.getValues("status") === 2
-                        ) {
-                          return "Please enter Patient Name";
-                        }
-                        return true;
-                      },
+                      required: "Please enter Patient Name",
                     }}
-                    renderListItem={(p) => <>{p.label}</>}
-                    watch={methods.watch}
-                    setValue={methods.setValue}
-                    onChange={(item) => {
-                      if (typeof item === "string") {
-                        methods.setValue("patientname", item);
-                      } else {
-                        methods.setValue("patientname", item.name);
-                      }
-                    }}
-                    error={methods.formState.errors.patientname}
                   />
+                  {
+                    //   <SearchField
+                    //   url={endpoints.patients}
+                    //   label="Patient Name / UHID *"
+                    //   processData={(data, value) => {
+                    //     if (Array.isArray(data)) {
+                    //       return data
+                    //         .filter(
+                    //           (p) =>
+                    //             new RegExp(value, "i").test(p.name) ||
+                    //             new RegExp(value, "i").test(p.uhid)
+                    //         )
+                    //         .map((p) => ({
+                    //           value: p.id,
+                    //           label: p.name,
+                    //           data: p,
+                    //         }));
+                    //     } else if (data?._embedded?.patients) {
+                    //       return data._embedded.patients
+                    //         .filter(
+                    //           (p) =>
+                    //             new RegExp(value, "i").test(p.name) ||
+                    //             new RegExp(value, "i").test(p.uhid)
+                    //         )
+                    //         .map((p) => ({
+                    //           value: p.id,
+                    //           label: p.name,
+                    //           data: p,
+                    //         }));
+                    //     }
+                    //     return [];
+                    //   }}
+                    //   register={methods.register}
+                    //   name="patientname"
+                    //   formOptions={{
+                    //     validate: (v) => {
+                    //       if (
+                    //         methods.getValues("patientYesOrNo") &&
+                    //         +methods.getValues("status") === 2
+                    //       ) {
+                    //         return "Please enter Patient Name";
+                    //       }
+                    //       return true;
+                    //     },
+                    //   }}
+                    //   renderListItem={(p) => <>{p.label}</>}
+                    //   watch={methods.watch}
+                    //   setValue={methods.setValue}
+                    //   onChange={(item) => {
+                    //     if (typeof item === "string") {
+                    //       methods.setValue("patientname", item);
+                    //     } else {
+                    //       methods.setValue("patientname", item.name);
+                    //     }
+                    //   }}
+                    //   error={methods.formState.errors.patientname}
+                    // />
+                  }
                   <Input
                     {...methods.register("complaIntegerDatetime", {
-                      // required: "Please select Complaint Date",
                       validate: (v) => {
                         if (v) {
                           return (
@@ -581,7 +646,10 @@ export default function IncidentReporting() {
                     error={methods.formState.errors.complaIntegerDatetime}
                     label="Complaint Date & Time *"
                     type="datetime-local"
-                    // max={new Date().toISOString().slice(0, 16)}
+                    max={moment({
+                      time: new Date(),
+                      format: "YYYY-MM-DDThh:mm",
+                    })}
                   />
                   <Input
                     {...methods.register("complaIntegerIdEntry", {
@@ -605,24 +673,43 @@ export default function IncidentReporting() {
           </Box>
           <Box label="TYPE OF INCIDENT *" collapsable={true}>
             <div className={s.typeOfIncident}>
-              <Radio
-                register={methods.register}
-                formOptions={{
-                  validate: (v) => {
-                    if (v) return true;
-                    return (
-                      +methods.getValues("status") === 1 ||
-                      "Please select a Type of Incident"
-                    );
-                  },
-                }}
-                name="typeofInci"
-                options={incidentTypes}
-                error={methods.formState.errors.typeofInci}
-              />
-              <button className={`clear ${s.info}`}>
-                <FaInfoCircle />
-              </button>
+              <div className={s.radio}>
+                <Radio
+                  register={methods.register}
+                  formOptions={{
+                    validate: (v) => {
+                      if (v) return true;
+                      return (
+                        +methods.getValues("status") === 1 ||
+                        "Please select a Type of Incident"
+                      );
+                    },
+                  }}
+                  name="typeofInci"
+                  options={incidentTypes.map((type) => {
+                    if (type.value === 8) {
+                      return {
+                        ...type,
+                        label: (
+                          <>
+                            {type.label}{" "}
+                            <button
+                              className={`clear ${s.info}`}
+                              onClick={(e) =>
+                                console.log("Show table or something")
+                              }
+                            >
+                              <FaInfoCircle />
+                            </button>
+                          </>
+                        ),
+                      };
+                    }
+                    return type;
+                  })}
+                  error={methods.formState.errors.typeofInci}
+                />
+              </div>
               {
                 //   <table className={s.adverseEvent} cellSpacing={0} cellPadding={0}>
                 //   <thead>
@@ -754,15 +841,25 @@ export default function IncidentReporting() {
                 className={s.description}
               />
               <section className={s.departments}>
-                <Combobox
+                {
+                  //   <Combobox
+                  //   label="Department Involved"
+                  //   name="deptsLookupMultiselect"
+                  //   register={methods.register}
+                  //   watch={methods.watch}
+                  //   setValue={methods.setValue}
+                  //   multiple={true}
+                  //   options={parameters?.departments || []}
+                  //   className={s.search}
+                  // />
+                }
+                <Select
                   label="Department Involved"
                   name="deptsLookupMultiselect"
-                  register={methods.register}
-                  watch={methods.watch}
-                  setValue={methods.setValue}
+                  control={methods.control}
                   multiple={true}
-                  options={parameters?.departments || []}
-                  className={s.search}
+                  options={parameters?.departments}
+                  // className={s.search}
                 />
                 {involvedDept?.map &&
                   involvedDept.map((department) => (
@@ -893,16 +990,24 @@ export default function IncidentReporting() {
                   }
                   readOnly={true}
                 />
-                <Combobox
+                {
+                  //   <Combobox
+                  //   label="Head of the department"
+                  //   placeholder="Enter"
+                  //   name="headofDepart"
+                  //   register={methods.register}
+                  //   options={parameters?.hods}
+                  //   watch={methods.watch}
+                  //   setValue={methods.setValue}
+                  //   error={methods.formState.errors.headofDepart}
+                  //   clearErrors={methods.clearErrors}
+                  // />
+                }
+                <Select
                   label="Head of the department"
-                  placeholder="Enter"
                   name="headofDepart"
-                  register={methods.register}
+                  control={methods.control}
                   options={parameters?.hods}
-                  watch={methods.watch}
-                  setValue={methods.setValue}
-                  error={methods.formState.errors.headofDepart}
-                  clearErrors={methods.clearErrors}
                 />
               </>
             )}
@@ -984,6 +1089,7 @@ export const IncidentCategory = () => {
         getValues,
         formState: { errors },
         clearErrors,
+        control,
       }) => {
         const cat = watch("inciCateg");
         return (
@@ -992,10 +1098,69 @@ export const IncidentCategory = () => {
             data-testid="incident-category-form"
           >
             <div className={s.form}>
-              <Combobox
-                label="Incident Category *"
+              {
+                //   <Combobox
+                //   label="Incident Category *"
+                //   name="inciCateg"
+                //   register={register}
+                //   formOptions={{
+                //     validate: (v) => {
+                //       return (
+                //         +getValues("status") === 1 ||
+                //         v ||
+                //         "Please select a Please select a Category"
+                //       );
+                //     },
+                //   }}
+                //   setValue={setValue}
+                //   watch={watch}
+                //   options={categories.map(({ id, name }) => ({
+                //     value: id,
+                //     label: name,
+                //   }))}
+                //   onChange={({ value }) => {
+                //     setValue("inciSubCat", "");
+                //     setTableValues({ category: value });
+                //   }}
+                //   error={errors.inciCateg}
+                //   clearErrors={clearErrors}
+                // />
+                // <Combobox
+                //   label="Incident Sub-category *"
+                //   name="inciSubCat"
+                //   register={register}
+                //   watch={watch}
+                //   setValue={setValue}
+                //   options={
+                //     categories
+                //       ?.find((c) => c.id === cat)
+                //       ?.subCategorys?.filter((c) => c.status)
+                //       .filter((item) => item.status)
+                //       .map(({ id, name }) => ({
+                //         value: id,
+                //         label: name,
+                //       })) || null
+                //   }
+                //   formOptions={{
+                //     validate: (v) => {
+                //       return (
+                //         +getValues("status") === 1 ||
+                //         v ||
+                //         "Please select a Please select a Subcategory"
+                //       );
+                //     },
+                //   }}
+                //   error={errors.inciSubCat}
+                //   onChange={({ value }) =>
+                //     setTableValues((prev) => ({ ...prev, subCat: value }))
+                //   }
+                //   clearErrors={clearErrors}
+                // />
+              }
+              <Select
+                control={control}
                 name="inciCateg"
-                register={register}
+                label="Incident Category *"
                 formOptions={{
                   validate: (v) => {
                     return (
@@ -1005,8 +1170,6 @@ export const IncidentCategory = () => {
                     );
                   },
                 }}
-                setValue={setValue}
-                watch={watch}
                 options={categories.map(({ id, name }) => ({
                   value: id,
                   label: name,
@@ -1015,15 +1178,11 @@ export const IncidentCategory = () => {
                   setValue("inciSubCat", "");
                   setTableValues({ category: value });
                 }}
-                error={errors.inciCateg}
-                clearErrors={clearErrors}
               />
-              <Combobox
-                label="Incident Sub-category *"
+              <Select
+                control={control}
                 name="inciSubCat"
-                register={register}
-                watch={watch}
-                setValue={setValue}
+                label="Incident Sub-category *"
                 options={
                   categories
                     ?.find((c) => c.id === cat)
@@ -1043,11 +1202,9 @@ export const IncidentCategory = () => {
                     );
                   },
                 }}
-                error={errors.inciSubCat}
                 onChange={({ value }) =>
                   setTableValues((prev) => ({ ...prev, subCat: value }))
                 }
-                clearErrors={clearErrors}
               />
               <button
                 className={`clear ${s.info}`}
@@ -1241,6 +1398,7 @@ const ActionTakenForm = ({ edit, onSuccess, actions, users, clearForm }) => {
     setValue,
     formState: { errors },
     clearErrors,
+    control,
   } = useForm();
   useEffect(() => reset({ ...edit }), [edit]);
   return (
@@ -1269,25 +1427,41 @@ const ActionTakenForm = ({ edit, onSuccess, actions, users, clearForm }) => {
         {...register("immedActionTaken", { required: "Describe the Action" })}
         error={errors.immedActionTaken}
       />
-      <Combobox
+      {
+        //   <Combobox
+        //   options={users}
+        //   name="accessTakenBy"
+        //   register={register}
+        //   formOptions={{
+        //     required: "Action Taken By",
+        //   }}
+        //   setValue={setValue}
+        //   watch={watch}
+        //   error={errors.accessTakenBy}
+        //   clearErrors={clearErrors}
+        // />
+      }
+      <Select
         options={users}
         name="accessTakenBy"
-        register={register}
+        control={control}
         formOptions={{
           required: "Action Taken By",
         }}
-        setValue={setValue}
-        watch={watch}
-        error={errors.accessTakenBy}
-        clearErrors={clearErrors}
       />
       <Input
         type="datetime-local"
         {...register("accessDateTime", {
-          required: "Select Date & Time",
-          validate: (v) =>
-            new Date(v) < new Date() || "Can not select date from future",
+          validate: (v) => {
+            if (v) {
+              return (
+                new Date(v) < new Date() || "Can not select date from future"
+              );
+            }
+            return "Select Date & Time";
+          },
         })}
+        max={moment({ time: new Date(), format: "YYYY-MM-DDThh:mm" })}
         error={errors.accessDateTime}
       />
       <div className={s.btns} data-testid="actionTakenBtns">
@@ -1395,6 +1569,7 @@ const WitnessesForm = ({
 }) => {
   const {
     handleSubmit,
+    control,
     register,
     reset,
     watch,
@@ -1421,21 +1596,36 @@ const WitnessesForm = ({
         reset();
       })}
     >
-      <Combobox
+      {
+        //   <Combobox
+        //   options={
+        //     users?.filter(
+        //       (user) => !witnesses.some((u) => u.witnessName === user.value)
+        //     ) || []
+        //   }
+        //   name="witnessName"
+        //   register={register}
+        //   formOptions={{
+        //     required: "Select a Witness",
+        //   }}
+        //   setValue={setValue}
+        //   watch={watch}
+        //   error={errors.witnessName}
+        //   clearErrors={clearErrors}
+        //   onChange={({ department }) => setValue("witnessDept", department)}
+        // />
+      }
+      <Select
         options={
           users?.filter(
             (user) => !witnesses.some((u) => u.witnessName === user.value)
           ) || []
         }
+        control={control}
         name="witnessName"
-        register={register}
         formOptions={{
           required: "Select a Witness",
         }}
-        setValue={setValue}
-        watch={watch}
-        error={errors.witnessName}
-        clearErrors={clearErrors}
         onChange={({ department }) => setValue("witnessDept", department)}
       />
       <Input
@@ -1564,6 +1754,7 @@ const NotificationForm = ({
 }) => {
   const {
     handleSubmit,
+    control,
     register,
     reset,
     watch,
@@ -1587,17 +1778,28 @@ const NotificationForm = ({
         reset();
       })}
     >
-      <Combobox
+      {
+        //   <Combobox
+        //   options={users}
+        //   name="name"
+        //   register={register}
+        //   formOptions={{
+        //     required: "Select a Person",
+        //   }}
+        //   setValue={setValue}
+        //   watch={watch}
+        //   error={errors.name}
+        //   clearErrors={clearErrors}
+        //   onChange={({ department }) => setValue("dept", department)}
+        // />
+      }
+      <Select
         options={users}
         name="name"
-        register={register}
+        control={control}
         formOptions={{
           required: "Select a Person",
         }}
-        setValue={setValue}
-        watch={watch}
-        error={errors.name}
-        clearErrors={clearErrors}
         onChange={({ department }) => setValue("dept", department)}
       />
       <Input
@@ -1613,6 +1815,7 @@ const NotificationForm = ({
           validate: (v) =>
             new Date(v) < new Date() || "Can not select date from future",
         })}
+        max={moment({ time: new Date(), format: "YYYY-MM-DDThh:mm" })}
         error={errors.notificationDateTime}
       />
       <div className={s.btns} data-testid="notificationBtns">

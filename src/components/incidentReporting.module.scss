@@ -183,6 +183,12 @@ main {
     border: 1px dashed rgb(189, 189, 189);
   }
   .typeOfIncident {
+    .radio {
+      display: flex;
+      section {
+        // width: ma-content;
+      }
+    }
     display: flex;
     grid-gap: 1rem;
     flex-wrap: wrap;
@@ -195,6 +201,9 @@ main {
   }
   .incidentCategory {
     .form {
+      & > section {
+        min-width: 15rem;
+      }
       display: flex;
       flex-wrap: wrap;
       align-items: flex-start;
@@ -203,7 +212,6 @@ main {
       align-items: center;
       .info {
         font-size: 1.2rem;
-        align-self: flex-end;
       }
       .addRow {
         margin: 0 auto;

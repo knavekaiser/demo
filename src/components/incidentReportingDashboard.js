@@ -356,7 +356,7 @@ const SingleIr = ({ ir, focus, setFocus, className, actions, parameters }) => {
                   <p>
                     Complaint Date & Time:{" "}
                     <b>
-                      <Moment format="DD/MM/YYYY hh:mma">
+                      <Moment format="DD/MM/YYYY hh:mm">
                         {ir.complaIntegerDatetime}
                       </Moment>
                     </b>
@@ -437,7 +437,7 @@ const TatDetails = ({ ir, parameters, setShowTatDetails }) => {
         <li>IR Code: {ir?.sequence}</li>
         <li>
           Incident Date & Time:{" "}
-          <Moment format="DD/MM/YYYY hh:mma">{ir?.incident_Date_Time}</Moment>
+          <Moment format="DD/MM/YYYY hh:mm">{ir?.incident_Date_Time}</Moment>
         </li>
         <li>
           Incident Type:{" "}
@@ -493,7 +493,7 @@ const TatDetails = ({ ir, parameters, setShowTatDetails }) => {
                   ?.label || evt.userid}
               </td>
               <td>
-                <Moment format="MM/DD/YYYY hh:mma">{evt.dateTime}</Moment>
+                <Moment format="MM/DD/YYYY hh:mm">{evt.dateTime}</Moment>
               </td>
               <td>
                 {Math.floor(
@@ -950,7 +950,7 @@ const QualityDashboard = () => {
             <li>IR Code: {assign?.sequence}</li>
             <li>
               Incident Date & Time:{" "}
-              <Moment format="DD/MM/YYYY hh:mma">
+              <Moment format="DD/MM/YYYY hh:mm">
                 {assign?.incident_Date_Time}
               </Moment>
             </li>
@@ -1027,7 +1027,7 @@ const AssignForm = ({ assign, users, setAssign, onSuccess }) => {
                 <span className={s.status}>{evt.status}</span> to{" "}
                 {evt.user.label} on{" "}
                 <Moment format="DD/MM/YYYY">{evt.dateTime}</Moment> at{" "}
-                <Moment format="hh:mma">{evt.dateTime}</Moment>
+                <Moment format="hh:mm">{evt.dateTime}</Moment>
               </p>
             </li>
           ))}
