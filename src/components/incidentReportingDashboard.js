@@ -119,9 +119,8 @@ const MyDashboard = () => {
     if (_filters.toIncidentDateTime) {
       _filters.toIncidentDateTime = _filters.toIncidentDateTime + " 23:59:59";
     }
-    if (_filters.fromReportingDateTime) {
-      _filters.fromReportingDateTime =
-        _filters.fromReportingDateTime + " 00:00:00";
+    if (_filters.fromreportingDate) {
+      _filters.fromreportingDate = _filters.fromreportingDate + " 00:00:00";
     }
     if (_filters.toreportingDate) {
       _filters.toreportingDate = _filters.toreportingDate + " 23:59:59";
@@ -551,7 +550,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
   } = useForm({ defaultValues: { view: "assigned", irBy: "self" } });
   const [categories, setCategories] = useState([]);
   const fromIncidentDateTime = watch("fromIncidentDateTime");
-  const fromReportingDateTime = watch("fromReportingDateTime");
+  const fromreportingDate = watch("fromreportingDate");
   useEffect(() => {
     Promise.all([
       fetch(`${process.env.REACT_APP_HOST}/category`).then((res) => res.json()),
@@ -570,7 +569,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
     const _filters = paramsToObject(new URLSearchParams(location.search));
     reset({
       sequence: "",
-      fromReportingDateTime: "",
+      fromreportingDate: "",
       toreportingDate: "",
       fromIncidentDateTime: "",
       toIncidentDateTime: "",
@@ -619,7 +618,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
         <Input
           type="date"
           placeholder="From"
-          {...register("fromReportingDateTime")}
+          {...register("fromreportingDate")}
           max={moment({ format: "YYYY-MM-DD", time: new Date() })}
         />
         <Input
@@ -628,7 +627,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
           {...register("toreportingDate")}
           min={moment({
             format: "YYYY-MM-DD",
-            time: new Date(fromReportingDateTime),
+            time: new Date(fromreportingDate),
           })}
           max={moment({ format: "YYYY-MM-DD", time: new Date() })}
         />
@@ -727,7 +726,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
           onClick={() => {
             reset({
               sequence: "",
-              fromReportingDateTime: "",
+              fromreportingDate: "",
               toreportingDate: "",
               fromIncidentDateTime: "",
               toIncidentDateTime: "",
@@ -766,9 +765,8 @@ const QualityDashboard = () => {
     if (_filters.toIncidentDateTime) {
       _filters.toIncidentDateTime = _filters.toIncidentDateTime + " 23:59:59";
     }
-    if (_filters.fromReportingDateTime) {
-      _filters.fromReportingDateTime =
-        _filters.fromReportingDateTime + " 00:00:00";
+    if (_filters.fromreportingDate) {
+      _filters.fromreportingDate = _filters.fromreportingDate + " 00:00:00";
     }
     if (_filters.toreportingDate) {
       _filters.toreportingDate = _filters.toreportingDate + " 23:59:59";
