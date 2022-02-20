@@ -18,20 +18,24 @@ import { Modal, Prompt } from "../modal";
 import s from "./masters.module.scss";
 
 export default function TwoFieldMasters() {
+  const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
   const [twoFieldMasters, setTwoFieldMasters] = useState([]);
   const [edit, setEdit] = useState(null);
   const [filter, setFilter] = useState(null);
   useEffect(() => {
+    setLoading(true);
     fetch(`${process.env.REACT_APP_HOST}/twoFieldMaster`)
       .then((res) => res.json())
       .then((data) => {
+        setLoading(false);
         if (data._embedded?.twoFieldMaster) {
           setTwoFieldMasters(data._embedded.twoFieldMaster);
           setSelected(data._embedded.twoFieldMaster[0]?.id);
         }
       })
       .catch((err) => {
+        setLoading(false);
         console.log(err);
       });
   }, []);
@@ -53,7 +57,10 @@ export default function TwoFieldMasters() {
               onChange={(e) => setFilter(e.target.value)}
             />
           </div>
-          <Table columns={[{ label: "Master Name" }, { label: "Action" }]}>
+          <Table
+            loading={loading}
+            columns={[{ label: "Master Name" }, { label: "Action" }]}
+          >
             <tr className={s.filterForm}>
               <td className={s.inlineForm}>
                 <TwoFieldMasterForm

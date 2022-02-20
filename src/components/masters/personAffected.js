@@ -19,6 +19,7 @@ import { Modal, Prompt } from "../modal";
 import s from "./masters.module.scss";
 
 export default function PersonAffected() {
+  const [loading, setLoading] = useState(true);
   const immutable = useRef([
     "patient",
     "staff",
@@ -31,15 +32,18 @@ export default function PersonAffected() {
   const [filter, setFilter] = useState(null);
   const [edit, setEdit] = useState(null);
   useEffect(() => {
+    setLoading(true);
     fetch(`${process.env.REACT_APP_HOST}/personAffected`)
       .then((res) => res.json())
       .then((data) => {
+        setLoading(false);
         if (data._embedded?.personAffected) {
           setPersonAffecteds(data._embedded.personAffected);
           setSelected(data._embedded.personAffected[0]?.pa_id);
         }
       })
       .catch((err) => {
+        setLoading(false);
         console.log(err);
       });
   }, []);
@@ -58,6 +62,7 @@ export default function PersonAffected() {
             />
           </div>
           <Table
+            loading={loading}
             columns={[
               { label: "Person Affected" },
               // { label: "Show" },

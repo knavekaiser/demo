@@ -12,9 +12,10 @@ const permissions = [
     label: "Incident Reporter",
     permissions: {
       "Incident Reporting": false,
-      "View access to reported incident by self": false,
-      "View Access to Root cause analysis tab": false,
-      "View Access to CAPA tab": false,
+      "My Dashboard": false,
+      // "View access to reported incident by self": false,
+      // "View Access to Root cause analysis tab": false,
+      // "View Access to CAPA tab": false,
       "View Access to IR closure tab": false,
       "Incident closure dashboard": false,
       "CAPA dashboard - access and update CAPA's marked reponsible for": false,
@@ -25,7 +26,7 @@ const permissions = [
     role: "irInvestigator",
     label: "IR Investigator",
     permissions: {
-      "Access to view IR's": false,
+      "Access to view IRs": false,
       "Merge IRs": false,
       "Cancel IRs": false,
       "Update IR investigation for assigned IRs": false,

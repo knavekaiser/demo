@@ -27,6 +27,41 @@ import { incidentTypes } from "../config";
 import defaultEndpoints from "../config/endpoints";
 import s from "./incidentReporting.module.scss";
 
+const defaultFormValues = {
+  id: "",
+  action: "",
+  status: "",
+  department: "",
+  userDept: "",
+  reportingDate: "",
+  location: "",
+  sequence: "",
+  template: "",
+  incident_Date_Time: "",
+  locationDetailsEntry: "",
+  patientYesOrNo: "",
+  patientname: "",
+  complaintDatetime: "",
+  complaintIdEntry: "",
+  typeofInci: "",
+  inciCateg: "",
+  inciSubCat: "",
+  personAffected: "",
+  inciDescription: "",
+  deptsLookupMultiselect: "",
+  contribFactorYesOrNo: "",
+  contribFactor: "",
+  preventability: "",
+  incidentNotification: "",
+  incidentReportedDept: "",
+  headofDepart: "",
+  userId: "",
+  upload: [],
+  witness: [],
+  actionTaken: [],
+  notification: [],
+};
+
 export const ConnectForm = ({ children }) => {
   const methods = useFormContext();
   return children({ ...methods });
@@ -35,11 +70,10 @@ export default function IncidentReporting() {
   const { user, endpoints } = useContext(SiteContext);
   const location = useLocation();
   const navigate = useNavigate();
-  const methods = useForm();
+  const methods = useForm({ defaultValues: defaultFormValues });
   const [edit, setEdit] = useState(null);
   const [readOnly, setReadOnly] = useState(false);
   const [parameters, setParameters] = useState(null);
-  const [users, setUsers] = useState(null);
   const [anonymous, setAnonymous] = useState(false);
   const involvedDept = methods.watch("deptsLookupMultiselect");
   const patientComplaint = methods.watch("patientYesOrNo");
@@ -47,6 +81,10 @@ export default function IncidentReporting() {
   const submitForm = useCallback(
     (data) => {
       const postData = async () => {
+        if (data.upload?.length) {
+          console.log(data.upload);
+          return;
+        }
         // if (edit) {
         //   await fetch(
         //     `${process.env.REACT_APP_HOST}/IncidentReport/${edit.id}`,
@@ -169,39 +207,10 @@ export default function IncidentReporting() {
   );
   const resetForm = useCallback(() => {
     methods.reset({
-      id: "",
-      action: "",
-      status: "",
-      department: "",
-      userDept: "",
-      reportingDate: "",
-      location: "",
-      sequence: "",
-      template: "",
+      ...defaultFormValues,
       incident_Date_Time: "",
-      locationDetailsEntry: "",
-      patientYesOrNo: "",
-      patientname: "",
-      complaintDatetime: "",
-      complaintIdEntry: "",
-      typeofInci: "",
-      inciCateg: "",
-      inciSubCat: "",
-      personAffected: "",
-      inciDescription: "",
-      deptsLookupMultiselect: "",
-      contribFactorYesOrNo: "",
-      contribFactor: "",
-      preventability: "",
-      incidentNotification: "",
-      incidentReportedDept: "",
       headofDepart:
         parameters?.hods?.length === 1 ? parameters.hods[0].value : "",
-      userId: "",
-      upload: [],
-      witness: [],
-      actionTaken: [],
-      notification: [],
     });
     setAnonymous(false);
   }, [parameters]);
@@ -317,7 +326,7 @@ export default function IncidentReporting() {
         _parameters.users = _users.map((item) => ({
           label: item.fullName,
           value: item.userId,
-          department: item.department?.code,
+          department: item.departmentMaster?.code,
         }));
       } else if (users?._embedded?.user) {
         _parameters.hods = users._embedded.user

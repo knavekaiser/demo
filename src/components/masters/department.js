@@ -19,17 +19,21 @@ import { useForm } from "react-hook-form";
 import s from "./masters.module.scss";
 
 export default function Department() {
+  const [loading, setLoading] = useState(true);
   const [departments, setDepartments] = useState([]);
   const [edit, setEdit] = useState(null);
   useEffect(() => {
+    setLoading(true);
     fetch(`${process.env.REACT_APP_HOST}/department`)
       .then((res) => res.json())
       .then((data) => {
+        setLoading(false);
         if (data._embedded?.department) {
           setDepartments(data._embedded.department);
         }
       })
       .catch((err) => {
+        setLoading(false);
         console.log(err);
       });
   }, []);
@@ -40,6 +44,7 @@ export default function Department() {
       </header>
       <div className={s.departments}>
         <Table
+          loading={loading}
           columns={[
             // { label: "Code" },
             { label: "Department Name" },

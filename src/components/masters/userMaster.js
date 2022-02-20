@@ -36,6 +36,7 @@ export default function UserMaster() {
   const { endpoints } = useContext(SiteContext);
   const { get: getAllDepartments } = useHisFetch(endpoints.departments);
   const { get: getHisUsers } = useHisFetch(endpoints.users);
+  const [loading, setLoading] = useState(true);
   const [parameters, setParameters] = useState({
     genders: [
       { label: "Male", value: "male" },
@@ -49,6 +50,7 @@ export default function UserMaster() {
   const [edit, setEdit] = useState(null);
   const [addFromHis, setAddFromHis] = useState(false);
   useEffect(() => {
+    setLoading(true);
     Promise.all([getAllDepartments(), getHisUsers()])
       .then(([departments, hisUsers]) => {
         const _parameters = {};
@@ -77,6 +79,7 @@ export default function UserMaster() {
       })
       .then((res) => res.json())
       .then((data) => {
+        setLoading(false);
         if (data._embedded?.user) {
           setUsers(
             data._embedded.user.map((user) => ({
@@ -87,6 +90,7 @@ export default function UserMaster() {
         }
       })
       .catch((err) => {
+        setLoading(false);
         console.log(err);
       });
   }, []);
@@ -160,6 +164,7 @@ export default function UserMaster() {
             { label: "Action" },
           ]}
           actions={true}
+          loading={loading}
         >
           <tr>
             <td className={s.inlineForm}>

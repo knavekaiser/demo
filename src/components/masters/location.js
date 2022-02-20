@@ -24,10 +24,12 @@ import defaultEndpoints from "../../config/endpoints";
 import s from "./masters.module.scss";
 
 export default function Location() {
+  const [loading, setLoading] = useState(true);
   const [locations, setLocations] = useState([]);
   const [locationTypes, setLocationTypes] = useState([]);
   const [edit, setEdit] = useState(null);
   useEffect(() => {
+    setLoading(true);
     fetch(`${process.env.REACT_APP_HOST}/twoFieldMaster/6`)
       .then((res) => res.json())
       .then((data) => {
@@ -45,11 +47,13 @@ export default function Location() {
       })
       .then((res) => res.json())
       .then((data) => {
+        setLoading(false);
         if (data._embedded?.location) {
           setLocations(data._embedded.location);
         }
       })
       .catch((err) => {
+        setLoading(false);
         console.log(err);
       });
   }, []);
@@ -60,6 +64,7 @@ export default function Location() {
       </header>
       <div className={s.locations}>
         <Table
+          loading={loading}
           columns={[
             { label: "Location Name" },
             { label: "Location Type" },

@@ -563,6 +563,7 @@ export const Select = ({
             isDisabled={!options || !options?.length}
             inputRef={ref}
             menuPortalTarget={document.querySelector("#portal")}
+            menuPlacement="auto"
             options={options || []}
             value={options?.find((c) => c.value === value)}
             onChange={(val) => {

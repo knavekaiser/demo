@@ -17,6 +17,10 @@ import {
   FaCrosshairs,
   FaRegUser,
   FaUser,
+  FaRegStar,
+  FaRegTimesCircle,
+  FaRegFileAlt,
+  FaFlag,
 } from "react-icons/fa";
 import { BiSearch } from "react-icons/bi";
 import { AiOutlinePlus } from "react-icons/ai";
@@ -26,7 +30,7 @@ import {
   BsFillCircleFill,
   BsFillExclamationTriangleFill,
 } from "react-icons/bs";
-import { GoPerson } from "react-icons/go";
+import { FiCheckSquare } from "react-icons/fi";
 import {
   Radio,
   Select,
@@ -68,6 +72,9 @@ function IncidentReportingDashboard() {
                 {
                   label: "Quality Dashboard",
                   path: paths.incidentDashboard.qualityDashboard,
+                  search: {
+                    status: 3,
+                  },
                 },
               ]
             : []),
@@ -90,13 +97,15 @@ function IncidentReportingDashboard() {
 }
 const MyDashboard = () => {
   const { user } = useContext(SiteContext);
-  const { parameters, count } = useContext(IrDashboardContext);
+  const { parameters, count, setDashboard } = useContext(IrDashboardContext);
   const location = useLocation();
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
   const [incidents, setIncidents] = useState([]);
   const [filters, setFilters] = useState({});
   const [focus, setFocus] = useState(null);
   useEffect(() => {
+    setDashboard("myDashboard");
     if (location.state?.focus) {
       setFocus(location.state.focus);
     }
@@ -114,10 +123,10 @@ const MyDashboard = () => {
       _filters.fromReportingDateTime =
         _filters.fromReportingDateTime + " 00:00:00";
     }
-    if (_filters.toRreportingDateTime) {
-      _filters.toRreportingDateTime =
-        _filters.toRreportingDateTime + " 23:59:59";
+    if (_filters.toreportingDate) {
+      _filters.toreportingDate = _filters.toreportingDate + " 23:59:59";
     }
+    setLoading(true);
     if (Object.entries(_filters).length) {
       fetch(
         `${
@@ -129,9 +138,14 @@ const MyDashboard = () => {
       )
         .then((res) => res.json())
         .then((data) => {
+          setLoading(false);
           if (data._embedded?.IncidentReport) {
             setIncidents(data._embedded.IncidentReport);
           }
+        })
+        .catch((err) => {
+          setLoading(false);
+          console.log(err);
         });
     } else {
       fetch(
@@ -143,14 +157,19 @@ const MyDashboard = () => {
       )
         .then((res) => res.json())
         .then((data) => {
+          setLoading(false);
           if (data._embedded?.IncidentReport) {
             setIncidents(data._embedded.IncidentReport);
           }
+        })
+        .catch((err) => {
+          setLoading(false);
+          console.log(err);
         });
     }
   }, [location.search]);
   return (
-    <div className={s.myDashboard}>
+    <div key="myDashboard" className={s.myDashboard}>
       <div className={s.reportCounts}>
         <ReportCount
           className="open"
@@ -217,6 +236,7 @@ const MyDashboard = () => {
           { label: "Actions" },
         ]}
         actions={true}
+        loading={loading}
       >
         {incidents
           .sort((a, b) =>
@@ -310,9 +330,9 @@ const MyDashboard = () => {
         </span>
         <span>
           <span className={s.icon} style={{ color: "rgb(230, 112, 16)" }}>
-            <GoPerson />
+            <FaUser />
           </span>{" "}
-          Patient Complient
+          Patient Complaint
         </span>
       </div>
     </div>
@@ -520,6 +540,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { checkPermission } = useContext(SiteContext);
+  const { parameters } = useContext(IrDashboardContext);
   const {
     handleSubmit,
     register,
@@ -527,15 +548,13 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
     reset,
     setValue,
     getValues,
-  } = useForm({ defaultValues: { view: "assignedToSelf", irBy: "self" } });
+  } = useForm({ defaultValues: { view: "assigned", irBy: "self" } });
   const [categories, setCategories] = useState([]);
-  const [irInvestigator, setIrInvestigator] = useState([]);
   const fromIncidentDateTime = watch("fromIncidentDateTime");
   const fromReportingDateTime = watch("fromReportingDateTime");
   useEffect(() => {
     Promise.all([
       fetch(`${process.env.REACT_APP_HOST}/category`).then((res) => res.json()),
-      fetch(`${process.env.REACT_APP_HOST}/user`).then((res) => res.json()),
     ]).then(([category, users]) => {
       if (category._embedded?.category) {
         setCategories(
@@ -543,17 +562,6 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
             value: id,
             label: name,
           }))
-        );
-      }
-      if (users._embedded?.user) {
-        setIrInvestigator(
-          users._embedded.user
-            .map((user) => ({
-              ...user,
-              role: user.role?.split(",").filter((r) => r) || [],
-            }))
-            .filter((user) => user.role.includes("irInvestigator"))
-            .map((user) => ({ label: user.name, value: user.id }))
         );
       }
     });
@@ -566,7 +574,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
       toreportingDate: "",
       fromIncidentDateTime: "",
       toIncidentDateTime: "",
-      view: "all",
+      view: _filters.status === "3" ? "assigned" : "all",
       ..._filters,
       typeofInci: _filters.typeofInci?.split(",").map((c) => +c) || "",
       irInvestigator: _filters.irInvestigator?.split(",").map((c) => +c) || "",
@@ -578,6 +586,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
     <form className={s.filters} onSubmit={handleSubmit(onSubmit)}>
       <Input label="IR Code" {...register("sequence")} />
       <Combobox
+        placeholder="All"
         label="Category"
         name="InciCateg"
         setValue={setValue}
@@ -625,6 +634,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
         />
       </section>
       <Combobox
+        placeholder="All"
         label="Incident Type"
         name="typeofInci"
         setValue={setValue}
@@ -635,25 +645,31 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
       />
       <section className={s.pair}>
         <Combobox
+          placeholder="All"
           label="IR Investigator"
           name="irInvestigator"
           setValue={setValue}
           watch={watch}
           register={register}
-          options={irInvestigator}
+          options={parameters?.investigators}
           multiple={true}
         />
         <Combobox
+          placeholder="All"
           label="Status"
           name="status"
           setValue={setValue}
           watch={watch}
           register={register}
           multiple={true}
-          options={irStatus.map((item) => ({
-            label: item.name,
-            value: item.id,
-          }))}
+          options={irStatus
+            .filter((status) =>
+              qualityDashboard && status.id === 1 ? false : true
+            )
+            .map((item) => ({
+              label: item.name,
+              value: item.id,
+            }))}
         />
       </section>
       {qualityDashboard ? (
@@ -664,12 +680,12 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
             options={[
               {
                 label: "Assigned IRs",
-                value: "assignedToSelf",
+                value: "assigned",
               },
               ...(checkPermission({
                 roleId: ["incidentReporter", "irInvestigator", "irManager"],
-                permission: "Access to view IR's",
-              }) || true
+                permission: "Access to view IRs",
+              })
                 ? [
                     {
                       label: "All IRs",
@@ -717,7 +733,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
               toIncidentDateTime: "",
               InciCateg: "",
               typeofInci: "",
-              view: "all",
+              view: "assigned",
               irInvestigator: "",
               status: "",
             });
@@ -734,9 +750,10 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
 
 const QualityDashboard = () => {
   const { user, checkPermission } = useContext(SiteContext);
-  const { parameters } = useContext(IrDashboardContext);
+  const { parameters, setDashboard } = useContext(IrDashboardContext);
   const location = useLocation();
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
   const [incidents, setIncidents] = useState([]);
   const [filters, setFilters] = useState({});
   const [assign, setAssign] = useState(null);
@@ -753,10 +770,10 @@ const QualityDashboard = () => {
       _filters.fromReportingDateTime =
         _filters.fromReportingDateTime + " 00:00:00";
     }
-    if (_filters.toRreportingDateTime) {
-      _filters.toRreportingDateTime =
-        _filters.toRreportingDateTime + " 23:59:59";
+    if (_filters.toreportingDate) {
+      _filters.toreportingDate = _filters.toreportingDate + " 23:59:59";
     }
+    setLoading(true);
     if (Object.entries(_filters).length) {
       fetch(
         `${
@@ -764,36 +781,55 @@ const QualityDashboard = () => {
         }/IncidentReport/search/byDetails?${new URLSearchParams({
           ...filters,
           ..._filters,
+          status: _filters.status ? _filters.status : "2,3,4,5,6,7,8,9",
         }).toString()}`
       )
         .then((res) => res.json())
         .then((data) => {
+          setLoading(false);
           if (data._embedded?.IncidentReport) {
             setIncidents(data._embedded.IncidentReport);
           }
+        })
+        .catch((err) => {
+          setLoading(false);
+          console.log(err);
         });
     } else {
-      fetch(`${process.env.REACT_APP_HOST}/IncidentReport`)
+      fetch(
+        `${
+          process.env.REACT_APP_HOST
+        }/IncidentReport/search/byDetails?${new URLSearchParams({
+          status: "2,3,4,5,6,7,8,9",
+        }).toString()}`
+      )
         .then((res) => res.json())
         .then((data) => {
+          setLoading(false);
           if (data._embedded?.IncidentReport) {
             setIncidents(data._embedded.IncidentReport);
           }
+        })
+        .catch((err) => {
+          setLoading(false);
+          console.log(err);
         });
     }
   }, [location.search]);
+  useEffect(() => {
+    setDashboard("qualityDashboard");
+  }, []);
   return (
-    <div className={s.qualityDashboard}>
+    <div key="qualityDashboard" className={s.qualityDashboard}>
       <Filters
         onSubmit={(values) => {
           const _filters = {};
           for (var field in values) {
             if (values[field])
               _filters[field] = values[field]?.join?.(",") || values[field];
-            if (values[field] === "assignedToSelf")
-              _filters.irInvestigator = user.id;
+            if (values[field] === "assigned") _filters.status = 3;
           }
-          // delete _filters.view;
+          delete _filters.view;
           navigate({
             pathname: location.pathname,
             search: `?${createSearchParams(_filters)}`,
@@ -818,6 +854,7 @@ const QualityDashboard = () => {
           { label: "Actions" },
         ]}
         actions={true}
+        loading={loading}
       >
         {incidents
           .sort((a, b) =>
@@ -843,8 +880,14 @@ const QualityDashboard = () => {
                 ...(+inc.status === 2
                   ? [
                       {
-                        icon: <FaEye />,
-                        label: "Review IR",
+                        icon: <FaRegFileAlt />,
+                        label: (
+                          <>
+                            Review IR{" "}
+                            <FaFlag style={{ color: "rgb(21, 164, 40)" }} />
+                            <FiCheckSquare />
+                          </>
+                        ),
                         callBack: () => {},
                       },
                       ...(checkPermission({
@@ -853,7 +896,7 @@ const QualityDashboard = () => {
                       })
                         ? [
                             {
-                              icon: <FaRegTrashAlt />,
+                              icon: <FaRegTimesCircle />,
                               label: "Cancel IR",
                               callBack: () => {},
                             },
@@ -865,7 +908,7 @@ const QualityDashboard = () => {
                         callBack: () => {},
                       },
                       {
-                        icon: <FaRegTrashAlt />,
+                        icon: <FaAdjust />,
                         label: "Merge/Un-Merge IR",
                         callBack: () => {},
                       },
@@ -877,12 +920,12 @@ const QualityDashboard = () => {
                 })
                   ? [
                       {
-                        icon: <FaRegCheckSquare />,
+                        icon: <FiCheckSquare />,
                         label: "IR Approval",
                         callBack: () => {},
                       },
                       {
-                        icon: <FaRegCheckSquare />,
+                        icon: <FiCheckSquare />,
                         label: "Acknowledge IR",
                         callBack: () => {},
                       },
@@ -899,12 +942,12 @@ const QualityDashboard = () => {
                   callBack: () => {},
                 },
                 {
-                  icon: <FaRegTrashAlt />,
+                  icon: <FaRegStar />,
                   label: "CAPA",
                   callBack: () => {},
                 },
                 {
-                  icon: <FaRegTrashAlt />,
+                  icon: <svg />,
                   label: "IR Closure",
                   callBack: () => {},
                 },
@@ -934,9 +977,9 @@ const QualityDashboard = () => {
         </span>
         <span>
           <span className={s.icon} style={{ color: "rgb(230, 112, 16)" }}>
-            <GoPerson />
+            <FaUser />
           </span>{" "}
-          Patient Complient
+          Patient Complaint
         </span>
       </div>
       <Modal
@@ -1091,6 +1134,11 @@ const AssignForm = ({ assign, users, setAssign, onSuccess }) => {
           setValue={setValue}
           watch={watch}
           options={users.filter((user) => user.value !== assign.irInvestigator)}
+          item={(option) => (
+            <>
+              {option.label} ({option.assignedIr || 0})
+            </>
+          )}
         />
         <section className={s.btns}>
           <button
@@ -1101,7 +1149,7 @@ const AssignForm = ({ assign, users, setAssign, onSuccess }) => {
             Close
           </button>
           <button className="btn w-100" disabled={loading}>
-            Assign
+            {assign ? "Re-Assign" : "Assign"}
           </button>
         </section>
       </form>
@@ -1109,8 +1157,4 @@ const AssignForm = ({ assign, users, setAssign, onSuccess }) => {
   );
 };
 
-export default () => (
-  <IrDashboardContextProvider>
-    <IncidentReportingDashboard />
-  </IrDashboardContextProvider>
-);
+export default IncidentReportingDashboard;

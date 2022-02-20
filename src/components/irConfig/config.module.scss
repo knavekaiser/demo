@@ -247,6 +247,11 @@
       th {
         text-align: left !important;
       }
+      td {
+        display: flex;
+        align-items: center;
+        grid-gap: 6px;
+      }
     }
   }
 }

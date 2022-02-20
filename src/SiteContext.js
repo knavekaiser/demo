@@ -109,6 +109,7 @@ export const IrDashboardContext = createContext();
 export const IrDashboardContextProvider = ({ children }) => {
   const { user } = useContext(SiteContext);
   const [parameters, setParameters] = useState();
+  const [dashboard, setDashboard] = useState("myDashboard");
   const [count, setCount] = useState({});
   useEffect(async () => {
     Promise.all([
@@ -116,7 +117,7 @@ export const IrDashboardContextProvider = ({ children }) => {
       fetch(`${process.env.REACT_APP_HOST}/category`).then((res) => res.json()),
       fetch(`${process.env.REACT_APP_HOST}/user`).then((res) => res.json()),
     ])
-      .then(([location, category, user]) => {
+      .then(async ([location, category, user]) => {
         const _parameters = { ...parameters };
         if (location?._embedded.location) {
           _parameters.locations = location._embedded.location;
@@ -129,75 +130,112 @@ export const IrDashboardContextProvider = ({ children }) => {
             label: user.name,
             value: user.id,
           }));
-          _parameters.investigators = user._embedded.user
-            .map((user) => ({
-              ...user,
-              role: user.role?.split(",").filter((r) => r) || [],
-            }))
-            .filter((user) => user.role.includes("irInvestigator"))
-            .map((user) => ({
-              label: user.name,
-              value: user.id,
-            }));
+          _parameters.investigators = await Promise.all(
+            user._embedded.user
+              .map((user) => ({
+                ...user,
+                role: user.role?.split(",").filter((r) => r) || [],
+              }))
+              .filter((user) => user.role.includes("irInvestigator"))
+              .map(async (user) => {
+                const assignedIr = await fetch(
+                  `${
+                    process.env.REACT_APP_HOST
+                  }/IncidentReport/search/countByStatusAndUserId?${new URLSearchParams(
+                    {
+                      status: 3,
+                      userId: user.id,
+                    }
+                  ).toString()}`
+                ).then((res) => res.json());
+                return {
+                  label: user.name,
+                  value: user.id,
+                  assignedIr,
+                };
+              })
+          );
         }
         setParameters(_parameters);
       })
       .catch((err) => {
         console.log(err);
       });
-    const countByStatus = await Promise.all([
-      ...irStatus.map((status) =>
-        fetch(
-          `${process.env.REACT_APP_HOST}/IncidentReport/search/countByStatus?status=${status.id}`
-        ).then((res) => res.json())
-      ),
-    ])
-      .then((data) => {
-        return irStatus.reduce((p, a, i) => {
-          p[a.id] = data[i];
-          return p;
-        }, {});
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-    const otherCounts = await Promise.all([
-      fetch(
-        `${process.env.REACT_APP_HOST}/IncidentReport/search/countCurrentMonth`
-      ).then((res) => res.json()),
-      fetch(
-        `${process.env.REACT_APP_HOST}/IncidentReport/search/countByTypeofInci?typeofInci=8`
-      ).then((res) => res.json()),
-      fetch(
-        `${process.env.REACT_APP_HOST}/IncidentReport/search/countByPatientYesOrNo?patientYesOrNo=yes`
-      ).then((res) => res.json()),
-      fetch(
-        `${process.env.REACT_APP_HOST}/IncidentReport/search/countByUserId?userId=${user.id}`
-      ).then((res) => res.json()),
-      fetch(
-        `${process.env.REACT_APP_HOST}/IncidentReport/search/countByDepartment?department=${user.department}`
-      ).then((res) => res.json()),
-    ])
-      .then(
-        ([currentMonth, sentinel, patientComplaint, myIr, departmentIr]) => ({
-          currentMonth,
-          sentinel,
-          patientComplaint,
-          myIr,
-          departmentIr,
-        })
-      )
-      .catch((err) => {
-        console.log(err);
-      });
-    setCount({ ...countByStatus, ...otherCounts });
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const countByStatus = await Promise.all([
+        ...irStatus.map((status) =>
+          fetch(
+            dashboard === "myDashboard" // IncidentReport/search/countByStatusAndUserId?status=2&userId=15
+              ? `${
+                  process.env.REACT_APP_HOST
+                }/IncidentReport/search/countByStatusAndUserId?${new URLSearchParams(
+                  {
+                    status: status.id,
+                    ...(dashboard === "myDashboard" && {
+                      userId: user.id,
+                    }),
+                  }
+                ).toString()}`
+              : `${process.env.REACT_APP_HOST}/IncidentReport/search/countByStatus?status=${status.id}`
+          ).then((res) => res.json())
+        ),
+      ])
+        .then((data) => {
+          return irStatus.reduce((p, a, i) => {
+            p[a.id] = data[i];
+            return p;
+          }, {});
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+      const otherCounts = await Promise.all([
+        fetch(
+          `${process.env.REACT_APP_HOST}/IncidentReport/search/countCurrentMonth`
+        ).then((res) => res.json()),
+        fetch(
+          `${process.env.REACT_APP_HOST}/IncidentReport/search/countByTypeofInci?typeofInci=8`
+        ).then((res) => res.json()),
+        fetch(
+          `${process.env.REACT_APP_HOST}/IncidentReport/search/countByPatientYesOrNo?patientYesOrNo=yes`
+        ).then((res) => res.json()),
+        fetch(
+          `${process.env.REACT_APP_HOST}/IncidentReport/search/countByUserId?userId=${user.id}`
+        ).then((res) => res.json()),
+        fetch(
+          `${process.env.REACT_APP_HOST}/IncidentReport/search/countByDepartment?department=${user.department}`
+        ).then((res) => res.json()),
+      ])
+        .then(
+          ([currentMonth, sentinel, patientComplaint, myIr, departmentIr]) => ({
+            currentMonth,
+            sentinel,
+            patientComplaint,
+            myIr,
+            departmentIr,
+          })
+        )
+        .catch((err) => {
+          console.log(err);
+        });
+
+      setCount((prev) => ({ ...countByStatus, ...otherCounts }));
+    })();
+  }, [dashboard, setCount, user]);
+
   return (
     <IrDashboardContext.Provider
       value={{
         count,
+        setCount,
         parameters,
         setParameters,
+        dashboard,
+        setDashboard,
       }}
     >
       {children}

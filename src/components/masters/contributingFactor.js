@@ -11,20 +11,24 @@ import { Modal, Prompt } from "../modal";
 import s from "./masters.module.scss";
 
 export default function ContributingFactor() {
+  const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
   const [contributingFactors, setContributingFactors] = useState([]);
   const [filter, setFilter] = useState(null);
   const [edit, setEdit] = useState(null);
   useEffect(() => {
+    setLoading(true);
     fetch(`${process.env.REACT_APP_HOST}/contributingFactors`)
       .then((res) => res.json())
       .then((data) => {
+        setLoading(false);
         if (data._embedded?.contributingFactors) {
           setContributingFactors(data._embedded.contributingFactors);
           setSelected(data._embedded.contributingFactors[0]?.cf_id);
         }
       })
       .catch((err) => {
+        setLoading(false);
         console.log(err);
       });
   }, []);
@@ -47,6 +51,7 @@ export default function ContributingFactor() {
             />
           </div>
           <Table
+            loading={loading}
             columns={[
               { label: "Contributing Factor" },
               // { label: "Show" },

@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import {
   Link,
   Routes,
@@ -157,9 +157,7 @@ function Dashboard() {
               </span>
             </Link>
           </li>
-          <IrDashboardContextProvider>
-            <SidebarItem_IrDashboard />
-          </IrDashboardContextProvider>
+          <SidebarItem_IrDashboard />
           <li
             className={`${s.sidebarItem} ${
               location.pathname.startsWith(paths.capaReport) ? s.active : ""
@@ -453,7 +451,7 @@ const SidebarItem_IrDashboard = () => {
               },
             },
             {
-              label: <>Reportable event</>,
+              label: <>Open Reportable event</>,
               path: {
                 pathname: location.pathname,
                 search: `reportable=yes`,
@@ -469,7 +467,7 @@ const SidebarItem_IrDashboard = () => {
             {
               label: (
                 <>
-                  Paitent complaints{" "}
+                  Open Patient complaints{" "}
                   {count.patientComplaint ? (
                     <span className={s.count}>{count.patientComplaint}</span>
                   ) : null}
@@ -481,7 +479,7 @@ const SidebarItem_IrDashboard = () => {
               },
             },
             {
-              label: <>IR beyond Acceptable TAT</>,
+              label: <>Open IR beyond Acceptable TAT</>,
               path: {
                 pathname: location.pathname,
                 search: `tat=beyond`,

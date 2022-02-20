@@ -18,19 +18,23 @@ import { Modal, Prompt } from "../modal";
 import s from "./masters.module.scss";
 
 export default function Rcas() {
+  const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
   const [rcas, setRcas] = useState([]);
   const [edit, setEdit] = useState(null);
   useEffect(() => {
+    setLoading(true);
     fetch(`${process.env.REACT_APP_HOST}/rca`)
       .then((res) => res.json())
       .then((data) => {
+        setLoading(false);
         if (data._embedded?.rca) {
           setRcas(data._embedded.rca);
           setSelected(data._embedded.rca[0]?.id);
         }
       })
       .catch((err) => {
+        setLoading(false);
         console.log(err);
       });
   }, []);
@@ -51,6 +55,7 @@ export default function Rcas() {
             // </div>
           }
           <Table
+            loading={loading}
             columns={[
               { label: "Root Cause" },
               { label: "Show" },

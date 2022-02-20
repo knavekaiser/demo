@@ -580,6 +580,23 @@
         border-bottom: 1px solid #b7b7b7;
       }
     }
+    .loading {
+      padding: 2rem;
+      border: none;
+      grid-template-columns: 1fr !important;
+      td {
+        border: none !important;
+        display: flex;
+        align-items: center;
+        grid-gap: 6px;
+        .icon {
+          font-size: 1.5rem;
+        }
+        svg {
+          animation: spin 1s infinite linear;
+        }
+      }
+    }
   }
   &.actions {
     tr {
@@ -684,6 +701,15 @@
     color: red;
     text-align: left;
     display: block;
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
   }
 }
 

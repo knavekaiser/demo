@@ -7,10 +7,10 @@ import React, {
   forwardRef,
 } from "react";
 import { IoIosClose } from "react-icons/io";
-import { FaUpload, FaSortDown, FaSearch } from "react-icons/fa";
+import { FaUpload, FaSortDown, FaSearch, FaCircleNotch } from "react-icons/fa";
 import { BsFillGearFill, BsFillExclamationTriangleFill } from "react-icons/bs";
 import { GoCalendar } from "react-icons/go";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, createSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { Modal } from "../modal";
 import Sortable from "sortablejs";
@@ -647,10 +647,15 @@ export const Tabs = ({ tabs, className }) => {
   const location = useLocation();
   return (
     <div className={`${s.tabs} ${s[className]}`} data-testid="tabs">
-      {tabs.map(({ path, label }) => (
+      {tabs.map(({ path, label, search }) => (
         <Link
           key={path}
-          to={path}
+          to={{
+            pathname: path,
+            ...(search && {
+              search: `?${createSearchParams(search)}`,
+            }),
+          }}
           className={location?.pathname.endsWith(path) ? s.active : ""}
         >
           {label}
@@ -660,7 +665,14 @@ export const Tabs = ({ tabs, className }) => {
     </div>
   );
 };
-export const Table = ({ columns, className, children, sortable, actions }) => {
+export const Table = ({
+  columns,
+  className,
+  children,
+  sortable,
+  actions,
+  loading,
+}) => {
   const tbody = useRef();
   const table = useRef();
   const [style, setStyle] = useState({});
@@ -688,7 +700,20 @@ export const Table = ({ columns, className, children, sortable, actions }) => {
           ))}
         </tr>
       </thead>
-      <tbody ref={tbody}>{children}</tbody>
+      <tbody ref={tbody}>
+        {loading ? (
+          <tr className={s.loading}>
+            <td>
+              <span className={s.icon}>
+                <FaCircleNotch />
+              </span>
+              Loading...
+            </td>
+          </tr>
+        ) : (
+          children
+        )}
+      </tbody>
     </table>
   );
 };

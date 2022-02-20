@@ -19,20 +19,24 @@ import { Modal, Prompt } from "../modal";
 import s from "./masters.module.scss";
 
 export default function Categories() {
+  const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
   const [categories, setCategories] = useState([]);
   const [filter, setFilter] = useState(null);
   const [edit, setEdit] = useState(null);
   useEffect(() => {
+    setLoading(true);
     fetch(`${process.env.REACT_APP_HOST}/category`)
       .then((res) => res.json())
       .then((data) => {
+        setLoading(false);
         if (data._embedded?.category) {
           setCategories(data._embedded.category);
           setSelected(data._embedded.category[0]?.id);
         }
       })
       .catch((err) => {
+        setLoading(false);
         console.log(err);
       });
   }, []);
@@ -54,7 +58,10 @@ export default function Categories() {
               onChange={(e) => setFilter(e.target.value)}
             />
           </div>
-          <Table columns={[{ label: "Category Name" }, { label: "Action" }]}>
+          <Table
+            loading={loading}
+            columns={[{ label: "Category Name" }, { label: "Action" }]}
+          >
             <tr>
               <td className={s.inlineForm}>
                 <CategoryForm

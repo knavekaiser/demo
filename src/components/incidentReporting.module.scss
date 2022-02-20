@@ -270,13 +270,19 @@ main {
   }
 }
 .categoryTable {
-  max-width: 25rem;
+  width: 55rem;
   .container {
     padding: 10px;
     table {
+      // width: max-content;
       tr {
+        grid-auto-columns: minmax(12rem, 20rem);
+        grid-auto-flow: column;
         td {
           label {
+            input {
+              flex-shrink: 0;
+            }
             display: flex;
             grid-gap: 6px;
             align-items: center;

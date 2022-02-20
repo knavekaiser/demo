@@ -19,6 +19,7 @@ import { useForm } from "react-hook-form";
 import s from "./masters.module.scss";
 
 export default function RiskAssessments() {
+  const [loading, setLoading] = useState(true);
   const [parameters, setParameters] = useState({
     colors: [
       { label: "Green", value: "1", hex: "#68ad03" },
@@ -31,6 +32,7 @@ export default function RiskAssessments() {
   const [risks, setRisks] = useState([]);
   const [edit, setEdit] = useState(null);
   useEffect(() => {
+    setLoading(true);
     Promise.all([
       fetch(`${process.env.REACT_APP_HOST}/twoFieldMaster/9`).then((res) =>
         res.json()
@@ -63,11 +65,13 @@ export default function RiskAssessments() {
       })
       .then((res) => res.json())
       .then((data) => {
+        setLoading(false);
         if (data._embedded?.riskAssement) {
           setRisks(data._embedded.riskAssement);
         }
       })
       .catch((err) => {
+        setLoading(false);
         console.log(err);
       });
   }, []);
@@ -78,6 +82,7 @@ export default function RiskAssessments() {
       </header>
       <div className={s.ram}>
         <Table
+          loading={loading}
           columns={[
             { label: "Likelihood" },
             { label: "Severity" },
