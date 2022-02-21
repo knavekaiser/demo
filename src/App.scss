@@ -23,11 +23,12 @@ button {
   &.clear {
     border: none;
     background: none !important;
-    color: #3450a3;
+    color: $primary-color;
     outline: none;
     cursor: pointer;
   }
   &.btn {
+    grid-gap: 6px;
     cursor: pointer;
     display: flex;
     align-items: center;

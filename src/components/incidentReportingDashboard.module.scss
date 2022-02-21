@@ -20,6 +20,20 @@ main {
   .myDashboard,
   .qualityDashboard {
     display: grid;
+    .report {
+      padding: 6px 0;
+      button {
+        color: black;
+        font-size: 1rem !important;
+        svg {
+          color: $primary-color;
+        }
+      }
+      width: 100%;
+      display: flex;
+      justify-content: flex-end;
+      grid-gap: 6px;
+    }
     .filters {
       background: #d7dff4;
       display: grid;
@@ -28,7 +42,7 @@ main {
       grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
       grid-gap: 1rem;
       align-items: center;
-      margin-bottom: 0.75rem;
+      // margin-bottom: 0.75rem;
       .pair,
       .btns {
         display: grid;
@@ -279,6 +293,52 @@ main {
   }
 }
 
+.paper {
+  display: none;
+  // padding: 1rem;
+  // margin: 25mm 25mm 25mm 25mm;
+  table {
+    border: 1px solid #b7b7b7;
+    // width: calc(100% - 2rem);
+    tr {
+      color: #363843;
+      grid-gap: 20px;
+      padding: 10px;
+      td,
+      th {
+        text-align: left;
+        padding: 6px;
+      }
+    }
+    thead {
+      background: #647299;
+      tr {
+        background: inherit;
+        font-size: 12px;
+        font-weight: bold;
+      }
+      th {
+        color: white;
+      }
+    }
+    tbody {
+      tr {
+        font-size: 13px;
+        min-height: 30px;
+        &:nth-child(even) {
+          background: #f3f3f3;
+        }
+        &:nth-child(odd) {
+          background: #ffffff;
+        }
+        &:not(:last-child) {
+          border-bottom: 1px solid #b7b7b7;
+        }
+      }
+    }
+  }
+}
+
 .tatDetails {
   .content {
     display: grid;
@@ -296,5 +356,11 @@ main {
       display: flex;
       justify-content: center;
     }
+  }
+}
+
+@media print {
+  .paper {
+    display: block;
   }
 }

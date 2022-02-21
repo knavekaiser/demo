@@ -9,10 +9,11 @@ const permissions = [
   },
   {
     role: "incidentReporter",
-    label: "Incident Reporter",
+    label: "IR Reporter",
     permissions: {
       "Incident Reporting": false,
       "My Dashboard": false,
+      "IR Query Dashboard": false,
       // "View access to reported incident by self": false,
       // "View Access to Root cause analysis tab": false,
       // "View Access to CAPA tab": false,
@@ -28,7 +29,7 @@ const permissions = [
     permissions: {
       "Access to view IRs": false,
       "Merge IRs": false,
-      "Cancel IRs": false,
+      "Cancel IR": false,
       "Update IR investigation for assigned IRs": false,
       "CAPA Dashboard - Update CAPA for assigned IRs": false,
       "CAPA Dashboard - access and update CAPA's marked responsible for": false,
@@ -36,32 +37,52 @@ const permissions = [
       "Recity IR information for assigned IR": false,
       "Update Reportable incident information": false,
       "Add addendum": false,
-      "IR Analytics": false,
-      "Custom Reports": false,
-      Print: false,
+      "IR Analytics": {
+        "Quick Insights": false,
+        "Data Analytics": false,
+      },
+      "Custom Reports": {
+        "Monthly IR Reports": false,
+        "Injury Reports": false,
+        "CAPA Reports": false,
+      },
+      Print: {
+        "Reported IR": false,
+        "IR Closure Screen": false,
+      },
     },
   },
   {
     role: "incidentManager",
-    label: "Incident Manager",
+    label: "IR Manager",
     permissions: {
-      "Approve IRs": false,
-      "Cancel IRs": false,
+      "Access and update all IRs": false,
+      "Quality Dashboard": false,
+      "Cancel IR": false,
       "Assign IRs": false,
       "Merge IRs": false,
       "CAPA dashboard - Access for CAPA's of all IRs": false,
-      "IR Analytics": false,
-      "Custom Reports": false,
-      Print: false,
+      "IR Analytics": {
+        "Quick Insights": false,
+        "Data Analytics": false,
+      },
+      "Custom Reports": {
+        "Monthly IR Reports": false,
+        "Injury Reports": false,
+        "CAPA Reports": false,
+      },
+      Print: {
+        "Reported IR": false,
+        "IR Closure Screen": false,
+      },
     },
   },
   {
     role: "hod",
-    label: "Head of Department - HOD",
+    label: "Head of Department",
     permissions: {
-      "Approve IRs": false,
-      "Acknowledge IRs": false,
-      "View Departments IRs": false,
+      "Acknowledge IR": false,
+      "View Departments IR": false,
     },
   },
 ];

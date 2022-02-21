@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, {
+  useState,
+  useEffect,
+  useContext,
+  Component,
+  useRef,
+} from "react";
 import {
   SiteContext,
   IrDashboardContext,
@@ -21,6 +27,8 @@ import {
   FaRegTimesCircle,
   FaRegFileAlt,
   FaFlag,
+  FaUpload,
+  FaPrint,
 } from "react-icons/fa";
 import { BiSearch } from "react-icons/bi";
 import { AiOutlinePlus } from "react-icons/ai";
@@ -47,7 +55,9 @@ import { useForm } from "react-hook-form";
 import { Modal, Prompt } from "./modal";
 import paths from "./path";
 import { incidentTypes, irStatus } from "../config";
+import { CSVLink } from "react-csv";
 import s from "./incidentReportingDashboard.module.scss";
+import { useReactToPrint } from "react-to-print";
 
 function paramsToObject(entries) {
   const result = {};
@@ -55,6 +65,99 @@ function paramsToObject(entries) {
     result[key] = value;
   }
   return result;
+}
+
+class Print extends Component {
+  render() {
+    const incidents = this.props.incidents;
+    const parameters = this.props.parameters;
+    return (
+      <div className={s.paper}>
+        <table cellPadding={0} cellSpacing={0}>
+          <thead>
+            <tr>
+              {[
+                { label: "IR Code" },
+                { label: "Reporting Date & Time" },
+                { label: "Incident Date & Time" },
+                { label: "Incident Location" },
+                { label: "Category" },
+                { label: "Subcategory" },
+                { label: "Incident Type" },
+                { label: "Reported / Captured by" },
+                { label: "IR Investigator" },
+                { label: "Status" },
+                { label: "TAT" },
+              ].map((col) => (
+                <th key={col.label}>{col.label}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {incidents
+              .sort((a, b) =>
+                new Date(a.reportingDate) > new Date(b.reportingDate) ? -1 : 1
+              )
+              .map((ir, i) => (
+                <tr key={i}>
+                  <td>{ir.sequence}</td>
+                  <td>
+                    <Moment format="DD/MM/YYYY hh:mm">
+                      {ir.reportingDate}
+                    </Moment>
+                  </td>
+                  <td>
+                    <Moment format="DD/MM/YYYY hh:mm">
+                      {ir.incident_Date_Time}
+                    </Moment>
+                  </td>
+                  <td>
+                    {parameters?.locations.find(
+                      (item) => item.id === ir.location
+                    )?.name || ir.location}
+                  </td>
+                  <td>
+                    {parameters?.categories.find(
+                      (item) => item.id === ir.inciCateg
+                    )?.name || ir.inciCateg}
+                  </td>
+                  <td>
+                    {parameters?.categories
+                      .find((item) => item.id === ir.inciCateg)
+                      ?.subCategorys?.find((item) => item.id === ir.inciSubCat)
+                      ?.name || ir.inciSubCat}
+                  </td>
+                  <td>
+                    {incidentTypes.find(({ value }) => value === ir.typeofInci)
+                      ?.label || [ir.typeofInci]}
+                  </td>
+                  <td>
+                    {parameters?.users.find(({ value }) => value === ir.userId)
+                      ?.label || "Anonymous"}
+                  </td>
+                  <td>
+                    {parameters?.investigators.find(
+                      ({ value }) => value === ir.irInvestigator
+                    )?.label || ir.irInvestigator}
+                  </td>
+                  <td>
+                    {irStatus.find((item) => item.id === +ir.status)?.name ||
+                      ir.status}
+                  </td>
+                  <td className={s.tat}>
+                    {Math.floor(
+                      ((ir.closureDate || new Date()) -
+                        new Date(ir.reportingDate)) /
+                        (1000 * 3600 * 24)
+                    )}
+                  </td>
+                </tr>
+              ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  }
 }
 
 function IncidentReportingDashboard() {
@@ -219,6 +322,7 @@ const MyDashboard = () => {
           // setFilters(_filters);
         }}
       />
+      <div className={s.report} />
       <Table
         columns={[
           { label: "IR Code" },
@@ -750,12 +854,15 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
 const QualityDashboard = () => {
   const { user, checkPermission } = useContext(SiteContext);
   const { parameters, setDashboard } = useContext(IrDashboardContext);
+  const printRef = useRef();
   const location = useLocation();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [incidents, setIncidents] = useState([]);
+  const [csvDraft, setCsvDraft] = useState(null);
   const [filters, setFilters] = useState({});
   const [assign, setAssign] = useState(null);
+  const handlePrint = useReactToPrint({ content: () => printRef.current });
   useEffect(() => {
     const _filters = paramsToObject(new URLSearchParams(location.search));
     if (_filters.fromIncidentDateTime) {
@@ -787,6 +894,68 @@ const QualityDashboard = () => {
           setLoading(false);
           if (data._embedded?.IncidentReport) {
             setIncidents(data._embedded.IncidentReport);
+            setCsvDraft({
+              headers: Object.entries({
+                "IR Code": "sequence",
+                "Reporting Date & Time": "reportingDate",
+                "Incident Date & Time": "incident_Date_Time",
+                "Incident Location": "location",
+                Category: "inciCateg",
+                Subcategory: "inciSubCat",
+                "Incident Type": "typeofInci",
+                "Reported / Captured by": "userId",
+                "IR Investigator": "irInvestigator",
+                Status: "status",
+                TAT: "tat",
+              }).map(([key, value]) => ({
+                label: key,
+                key: value,
+              })),
+              data: data._embedded.IncidentReport.sort((a, b) =>
+                new Date(a.reportingDate) > new Date(b.reportingDate) ? -1 : 1
+              ).map((ir) => ({
+                ...ir,
+                reportingDate: moment({
+                  time: ir.reportingDate,
+                  format: "DD/MM/YYYY hh:mm",
+                }),
+                incident_Date_Time: moment({
+                  time: ir.incident_Date_Time,
+                  format: "DD/MM/YYYY hh:mm",
+                }),
+                location:
+                  parameters?.locations.find((item) => item.id === ir.location)
+                    ?.name || ir.location,
+                inciCateg:
+                  parameters?.categories.find(
+                    (item) => item.id === ir.inciCateg
+                  )?.name || ir.inciCateg,
+                inciSubCat:
+                  parameters?.categories
+                    .find((item) => item.id === ir.inciCateg)
+                    ?.subCategorys?.find((item) => item.id === ir.inciSubCat)
+                    ?.name || ir.inciSubCat,
+                typeofInci: incidentTypes.find(
+                  ({ value }) => value === ir.typeofInci
+                )?.label || [ir.typeofInci],
+                userId:
+                  parameters?.users.find(({ value }) => value === ir.userId)
+                    ?.label || "Anonymous",
+                irInvestigator:
+                  parameters?.investigators.find(
+                    ({ value }) => value === ir.irInvestigator
+                  )?.label || ir.irInvestigator,
+                status:
+                  irStatus.find((item) => item.id === +ir.status)?.name ||
+                  ir.status,
+                tat: Math.floor(
+                  ((ir.closureDate || new Date()) -
+                    new Date(ir.reportingDate)) /
+                    (1000 * 3600 * 24)
+                ),
+              })),
+              filename: `Incident Report.csv`,
+            });
           }
         })
         .catch((err) => {
@@ -836,6 +1005,25 @@ const QualityDashboard = () => {
         }}
         qualityDashboard={true}
       />
+      <div className={s.report}>
+        {checkPermission({
+          roleId: ["irInvestigator", "irManager"],
+          permission: "PrintReported IR",
+        }) && (
+          <>
+            {csvDraft && (
+              <button className={"btn clear"}>
+                <CSVLink {...csvDraft} type="submit">
+                  Export <FaUpload />
+                </CSVLink>
+              </button>
+            )}
+            <button className={"btn clear"} onClick={handlePrint}>
+              Print <FaPrint />
+            </button>
+          </>
+        )}
+      </div>
       <Table
         columns={[
           { label: "IR Code" },
@@ -980,6 +1168,7 @@ const QualityDashboard = () => {
           Patient Complaint
         </span>
       </div>
+      <Print incidents={incidents} parameters={parameters} ref={printRef} />
       <Modal
         head={true}
         label={+assign?.status === 2 ? "ASSIGN IR" : "RE-ASSIGN IR"}
