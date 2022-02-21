@@ -7,7 +7,13 @@ import React, {
   forwardRef,
 } from "react";
 import { IoIosClose } from "react-icons/io";
-import { FaUpload, FaSortDown, FaSearch, FaCircleNotch } from "react-icons/fa";
+import {
+  FaUpload,
+  FaSortDown,
+  FaSearch,
+  FaCircleNotch,
+  FaRegTrashAlt,
+} from "react-icons/fa";
 import { BsFillGearFill, BsFillExclamationTriangleFill } from "react-icons/bs";
 import { GoCalendar } from "react-icons/go";
 import { Link, useLocation, createSearchParams } from "react-router-dom";
@@ -203,14 +209,20 @@ export const FileInput = ({ label, required, multiple, onChange, prefill }) => {
   const id = useRef(Math.random().toString(36).substr(4));
   const prefillLoaded = useRef(false);
   const [files, setFiles] = useState([]);
+  const [showFiles, setShowFiles] = useState(false);
   useEffect(() => {
-    if (prefill?.length && !prefillLoaded.current) {
-      setFiles(prefill.map((file) => ({ name: file.uploadFilePath })));
-      prefillLoaded.current = true;
+    if (prefill?.length !== files.length) {
+      setFiles(
+        prefill.map((file) =>
+          typeof file === "string" ? { name: file, uri: file } : file
+        )
+      );
     }
   }, [prefill]);
   useEffect(() => {
-    onChange?.(files);
+    if (prefill?.length !== files.length) {
+      onChange?.(files);
+    }
   }, [files]);
   return (
     <section data-testid="fileInput" className={s.fileInput}>
@@ -218,7 +230,9 @@ export const FileInput = ({ label, required, multiple, onChange, prefill }) => {
         <label>
           {label} {required && "*"}
         </label>
-        <span className={s.fileCount}>{files.length} files selected</span>
+        <span className={s.fileCount} onClick={() => setShowFiles(true)}>
+          {files.length} files selected
+        </span>
       </div>
       <input
         id={id.current}
@@ -234,6 +248,7 @@ export const FileInput = ({ label, required, multiple, onChange, prefill }) => {
                 (item) => !files.some((file) => file.name === item.name)
               ),
             ]);
+            // e.target.files = {};
           }
         }}
       />
@@ -249,6 +264,40 @@ export const FileInput = ({ label, required, multiple, onChange, prefill }) => {
           </span>
         </label>
       </div>
+      <Modal
+        open={showFiles}
+        className={s.fileInputModal}
+        setOpen={setShowFiles}
+        head={true}
+        label="Files"
+      >
+        <div className={s.container}>
+          <Table columns={[{ label: "File" }, { label: "Action" }]}>
+            {files.map((file, i) => (
+              <tr key={i}>
+                <td>{file.name}</td>
+                <TableActions
+                  actions={[
+                    {
+                      icon: <FaRegTrashAlt />,
+                      label: "Remove",
+                      callBack: () => {
+                        setFiles((prev) =>
+                          prev.filter((f) =>
+                            typeof f === "string"
+                              ? f !== file
+                              : f.name !== file.name
+                          )
+                        );
+                      },
+                    },
+                  ]}
+                />
+              </tr>
+            ))}
+          </Table>
+        </div>
+      </Modal>
     </section>
   );
 };

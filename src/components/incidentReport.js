@@ -75,15 +75,46 @@ export default function IncidentReporting() {
   const [readOnly, setReadOnly] = useState(false);
   const [parameters, setParameters] = useState(null);
   const [anonymous, setAnonymous] = useState(false);
-  const involvedDept = methods.watch("deptsLookupMultiselect");
+  // const involvedDept = methods.watch("deptsLookupMultiselect");
   const patientComplaint = methods.watch("patientYesOrNo");
   const uploads = methods.watch("upload");
   const submitForm = useCallback(
     (data) => {
       const postData = async () => {
         if (data.upload?.length) {
-          console.log(data.upload);
-          return;
+          const formData = new FormData();
+          const uploaded = [];
+          const newFiles = [];
+
+          for (var _file of data.upload) {
+            if (typeof _file === "string" || _file.uri) {
+              uploaded.push(_file.uri || _file);
+            } else {
+              newFiles.push(_file);
+              formData.append("files", _file);
+            }
+          }
+
+          let links = [];
+
+          if (newFiles.length) {
+            await fetch(endpoints.uploadFiles, {
+              method: "POST",
+              body: formData,
+            })
+              .then((res) => res.json())
+              .then((data) => {
+                links = data?.map((item) => item.uri) || [];
+              })
+              .catch((err) => {
+                console.log(err);
+              });
+          }
+
+          data.upload = [...uploaded, ...links].map((item) => ({
+            upload: true,
+            uploadFilePath: item,
+          }));
         }
         // if (edit) {
         //   await fetch(
@@ -245,6 +276,7 @@ export default function IncidentReporting() {
         }),
         preventability: edit.preventability?.toString() || "",
         typeofInci: edit.typeofInci?.toString() || "",
+        upload: edit.upload.map((item) => item.uploadFilePath),
         deptsLookupMultiselect:
           edit.deptsLookupMultiselect
             ?.split(",")
@@ -871,26 +903,28 @@ export default function IncidentReporting() {
                   options={parameters?.departments}
                   // className={s.search}
                 />
-                {involvedDept?.map &&
-                  involvedDept.map((department) => (
-                    <Chip
-                      key={department}
-                      label={
-                        parameters?.departments.find(
-                          (dept) =>
-                            dept.value.toString() === department.toString()
-                        )?.label || department
-                      }
-                      remove={() => {
-                        methods.setValue(
-                          "deptsLookupMultiselect",
-                          involvedDept.filter(
-                            (item) => item.toString() !== department.toString()
-                          )
-                        );
-                      }}
-                    />
-                  ))}
+                {
+                  // involvedDept?.map &&
+                  // involvedDept.map((department) => (
+                  //   <Chip
+                  //     key={department}
+                  //     label={
+                  //       parameters?.departments.find(
+                  //         (dept) =>
+                  //           dept.value.toString() === department.toString()
+                  //       )?.label || department
+                  //     }
+                  //     remove={() => {
+                  //       methods.setValue(
+                  //         "deptsLookupMultiselect",
+                  //         involvedDept.filter(
+                  //           (item) => item.toString() !== department.toString()
+                  //         )
+                  //       );
+                  //     }}
+                  //   />
+                  // ))
+                }
               </section>
               <button style={{ display: "none" }}>submit</button>
             </form>
@@ -974,13 +1008,7 @@ export default function IncidentReporting() {
               multiple={true}
               prefill={uploads}
               onChange={(files) => {
-                methods.setValue(
-                  "upload",
-                  files.map((file) => ({
-                    upload: true,
-                    uploadFilePath: file.name,
-                  }))
-                );
+                methods.setValue("upload", files);
               }}
             />
             <Input

@@ -164,6 +164,7 @@
     font-size: 14px;
     font-weight: 600;
     span {
+      cursor: pointer;
       text-decoration: underline;
       color: #3450a3;
     }
@@ -498,6 +499,17 @@
 .searchFieldModalBackdrop,
 .comboboxBackdrop {
   background: rgba(0, 0, 0, 0) !important;
+}
+
+.fileInputModal {
+  .container {
+    padding: 10px;
+    table {
+      tr {
+        grid-template-columns: 1fr 4rem;
+      }
+    }
+  }
 }
 
 .checkbox {

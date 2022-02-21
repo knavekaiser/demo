@@ -7,4 +7,5 @@ export default {
   departments: `${baseApiUrl}/department`,
   userPermissions: `${baseApiUrl}/userPermission`,
   userPermission_updateByRole: `${baseApiUrl}/userPermission/search/updateByRole`,
+  uploadFiles: `${baseApiUrl}/upload-multiple-files`,
 };

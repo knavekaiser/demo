@@ -565,9 +565,19 @@ export const Select = ({
             menuPortalTarget={document.querySelector("#portal")}
             menuPlacement="auto"
             options={options || []}
-            value={options?.find((c) => c.value === value)}
+            value={
+              options?.find((op) => op.value === value) ||
+              options?.filter((op) =>
+                value?.some?.((item) => item === op.value)
+              ) ||
+              ""
+            }
             onChange={(val) => {
-              onChange(val.value);
+              if (multiple) {
+                onChange(val.map((item) => item.value));
+              } else {
+                onChange(val.value);
+              }
               _onChange && _onChange(val);
             }}
             isMulti={multiple}
