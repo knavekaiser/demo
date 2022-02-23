@@ -232,6 +232,11 @@ const MyDashboard = () => {
     if (_filters.toreportingDate) {
       _filters.toreportingDate = _filters.toreportingDate + " 23:59:59";
     }
+    if (_filters.irBy === "self") {
+      _filters.userId = user.id;
+    } else {
+      delete _filters.userId;
+    }
     setLoading(true);
     if (Object.entries(_filters).length) {
       fetch(
@@ -239,7 +244,6 @@ const MyDashboard = () => {
           process.env.REACT_APP_HOST
         }/IncidentReport/search/byDetails?${new URLSearchParams({
           ..._filters,
-          userId: user.id,
         }).toString()}`
       )
         .then((res) => res.json())
