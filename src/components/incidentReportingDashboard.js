@@ -166,7 +166,13 @@ function IncidentReportingDashboard() {
       </header>
       <Tabs
         tabs={[
-          { label: "My Dashboard", path: paths.incidentDashboard.myDashboard },
+          {
+            label: "My Dashboard",
+            path: paths.incidentDashboard.myDashboard,
+            search: {
+              userId: user.id,
+            },
+          },
           ...(checkPermission({ roleId: ["irInvestigator", "incidentManager"] })
             ? [
                 {
@@ -315,7 +321,7 @@ const MyDashboard = () => {
               _filters[field] = values[field]?.join?.(",") || values[field];
             }
           }
-          delete _filters.irBy;
+          // delete _filters.irBy;
           navigate({
             pathname: location.pathname,
             search: `?${createSearchParams(_filters)}`,
@@ -673,7 +679,7 @@ const TatDetails = ({ ir, parameters, setShowTatDetails }) => {
 const Filters = ({ onSubmit, qualityDashboard }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { checkPermission } = useContext(SiteContext);
+  const { user, checkPermission } = useContext(SiteContext);
   const { parameters } = useContext(IrDashboardContext);
   const { handleSubmit, register, watch, reset, setValue, getValues } = useForm(
     {
@@ -714,6 +720,18 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
       InciCateg: _filters.InciCateg?.split(",").map((c) => +c) || "",
     });
   }, [location.search]);
+  const view = watch("view");
+  useEffect(() => {
+    if (qualityDashboard) {
+      if (view === "all") {
+        setValue("irInvestigator", "");
+        setValue("status", "");
+      } else if (view === "assigned") {
+        setValue("irInvestigator", user.id);
+        setValue("status", 3);
+      }
+    }
+  }, [view]);
   return (
     <form className={s.filters} onSubmit={handleSubmit(onSubmit)}>
       <Input label="IR Code" {...register("sequence")} />
@@ -865,19 +883,24 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
           className={`btn clear ${s.clear}`}
           onClick={() => {
             reset({
-              sequence: "",
-              fromreportingDate: "",
-              toreportingDate: "",
-              fromIncidentDateTime: "",
-              toIncidentDateTime: "",
-              InciCateg: "",
-              typeofInci: "",
-              irInvestigator: "",
-              status: "",
-              view: "all",
+              irBy: "self",
+              view: "assigned",
             });
-            navigate(location.pathname);
-            onSubmit({});
+            // navigate({
+            //   pathname: location.pathname,
+            //   search: `?${createSearchParams(_filters)}`,
+            // });
+            navigate({
+              pathname: location.pathname,
+              search: `?${createSearchParams({
+                irBy: "self",
+                view: "assigned",
+              })}`,
+            });
+            onSubmit({
+              irBy: "self",
+              view: "assigned",
+            });
           }}
         >
           Clear
@@ -915,7 +938,6 @@ const QualityDashboard = () => {
       _filters.toreportingDate = _filters.toreportingDate + " 23:59:59";
     }
     setLoading(true);
-    console.log({ _filters, filters });
     if (Object.entries(_filters).length) {
       fetch(
         `${
