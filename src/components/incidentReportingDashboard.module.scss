@@ -74,7 +74,7 @@ main {
     table {
       tr {
         position: relative;
-        grid-template-columns: 12rem 8rem 8rem 7rem 7rem 8rem 8rem 6rem 6rem 5rem 5rem 4rem;
+        grid-template-columns: 12rem 8rem 8rem 7rem 7rem 8rem 8rem 6rem 6rem 5rem 5rem 4.5rem;
         &.sentinel {
           background: #ffe8e9;
           &::before {
@@ -95,6 +95,12 @@ main {
           display: inline-block;
           .user {
             color: $orange;
+          }
+          .sentinel {
+            color: rgb(230, 16, 54);
+          }
+          .reportable {
+            color: rgb(115, 49, 162);
           }
           &:hover {
             .patientDetail {

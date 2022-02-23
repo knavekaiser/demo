@@ -29,15 +29,12 @@ import {
   FaFlag,
   FaUpload,
   FaPrint,
+  FaCircle,
 } from "react-icons/fa";
 import { BiSearch } from "react-icons/bi";
 import { AiOutlinePlus } from "react-icons/ai";
 import { WiTime9 } from "react-icons/wi";
-import {
-  BsPencilFill,
-  BsFillCircleFill,
-  BsFillExclamationTriangleFill,
-} from "react-icons/bs";
+import { BsPencilFill, BsFillExclamationTriangleFill } from "react-icons/bs";
 import { FiCheckSquare } from "react-icons/fi";
 import {
   Radio,
@@ -161,7 +158,7 @@ class Print extends Component {
 }
 
 function IncidentReportingDashboard() {
-  const { checkPermission } = useContext(SiteContext);
+  const { user, checkPermission } = useContext(SiteContext);
   return (
     <div className={s.container}>
       <header>
@@ -170,13 +167,14 @@ function IncidentReportingDashboard() {
       <Tabs
         tabs={[
           { label: "My Dashboard", path: paths.incidentDashboard.myDashboard },
-          ...(checkPermission({ roleId: ["irInvestigator", "irManager"] })
+          ...(checkPermission({ roleId: ["irInvestigator", "incidentManager"] })
             ? [
                 {
                   label: "Quality Dashboard",
                   path: paths.incidentDashboard.qualityDashboard,
                   search: {
                     status: 3,
+                    irInvestigator: user.id,
                   },
                 },
               ]
@@ -188,7 +186,7 @@ function IncidentReportingDashboard() {
           path={paths.incidentDashboard.myDashboard + "/*"}
           element={<MyDashboard />}
         />
-        {checkPermission({ roleId: ["irInvestigator", "irManager"] }) && (
+        {checkPermission({ roleId: ["irInvestigator", "incidentManager"] }) && (
           <Route
             path={paths.incidentDashboard.qualityDashboard + "/*"}
             element={<QualityDashboard />}
@@ -370,29 +368,35 @@ const MyDashboard = () => {
                           });
                         },
                       },
-                      {
-                        icon: <FaRegTrashAlt />,
-                        label: "Delete",
-                        callBack: () => {
-                          Prompt({
-                            type: "confirmation",
-                            message:
-                              "Are you sure you want to delete this report?",
-                            callback: () => {
-                              fetch(
-                                `${process.env.REACT_APP_HOST}/IncidentReport/${inc.id}`,
-                                { method: "DELETE" }
-                              ).then((res) => {
-                                if (res.status === 204) {
-                                  setIncidents((prev) =>
-                                    prev.filter((ir) => ir.id !== inc.id)
-                                  );
-                                }
-                              });
-                            },
-                          });
+                      ...((checkPermission({
+                        roleId: ["irInvestigator", "incidentManager"],
+                        permission: "Cancel IR",
+                      }) && [
+                        {
+                          icon: <FaRegTrashAlt />,
+                          label: "Delete",
+                          callBack: () => {
+                            Prompt({
+                              type: "confirmation",
+                              message:
+                                "Are you sure you want to delete this report?",
+                              callback: () => {
+                                fetch(
+                                  `${process.env.REACT_APP_HOST}/IncidentReport/${inc.id}`,
+                                  { method: "DELETE" }
+                                ).then((res) => {
+                                  if (res.status === 204) {
+                                    setIncidents((prev) =>
+                                      prev.filter((ir) => ir.id !== inc.id)
+                                    );
+                                  }
+                                });
+                              },
+                            });
+                          },
                         },
-                      },
+                      ]) ||
+                        []),
                     ]
                   : [
                       {
@@ -410,6 +414,17 @@ const MyDashboard = () => {
                         },
                       },
                     ]),
+                ...((checkPermission({
+                  roleId: "hod",
+                  permission: "Acknowledge IR",
+                }) && [
+                  {
+                    icon: <FaExternalLinkAlt />,
+                    label: "Acknowledge IR",
+                    callBack: () => {},
+                  },
+                ]) ||
+                  []),
               ]}
               parameters={parameters}
             />
@@ -418,7 +433,7 @@ const MyDashboard = () => {
       <div className={s.legend}>
         <span>
           <span className={s.icon} style={{ color: "rgb(230, 16, 54)" }}>
-            <BsFillCircleFill />
+            <FaCircle />
           </span>{" "}
           Sentinel Event
         </span>
@@ -492,6 +507,19 @@ const SingleIr = ({ ir, focus, setFocus, className, actions, parameters }) => {
                     Complaint ID: <b>{ir.complaIntegerIdEntry}</b>
                   </p>
                 </span>
+              </>
+            )}
+            {ir.typeofInci === 8 && (
+              <>
+                <FaCircle className={s.sentinel} />
+              </>
+            )}
+            {parameters?.categories
+              .find((item) => item.id === ir.inciCateg)
+              ?.subCategorys?.find((item) => item.id === ir.inciSubCat)
+              ?.reportable?.length > 0 && (
+              <>
+                <BsFillExclamationTriangleFill className={s.reportable} />
               </>
             )}
           </span>
@@ -682,7 +710,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
       typeofInci: _filters.typeofInci?.split(",").map((c) => +c) || "",
       irInvestigator: _filters.irInvestigator?.split(",").map((c) => +c) || "",
       status: _filters.status?.split(",").map((c) => +c) || "",
-      view: "",
+      // view: "assigned",
       InciCateg: _filters.InciCateg?.split(",").map((c) => +c) || "",
     });
   }, [location.search]);
@@ -782,13 +810,20 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
             register={register}
             name="view"
             options={[
-              {
-                label: "Assigned IRs",
-                value: "assigned",
-              },
+              ...((checkPermission({
+                roleId: ["irInvestigator"],
+                permission:
+                  "Access to view IRs in quality dashboardAssigned IR",
+              }) && [
+                {
+                  label: "Assigned IRs",
+                  value: "assigned",
+                },
+              ]) ||
+                []),
               ...(checkPermission({
-                roleId: ["incidentReporter", "irInvestigator", "irManager"],
-                permission: "Access to view IRs",
+                roleId: ["irInvestigator"],
+                permission: "Access to view IRs in quality dashboardAll IRs",
               })
                 ? [
                     {
@@ -996,7 +1031,10 @@ const QualityDashboard = () => {
           for (var field in values) {
             if (values[field])
               _filters[field] = values[field]?.join?.(",") || values[field];
-            if (values[field] === "assigned") _filters.status = 3;
+            if (values[field] === "assigned") {
+              _filters.status = 3;
+              _filters.irInvestigator = user.id;
+            }
           }
           // delete _filters.view;
           navigate({
@@ -1079,8 +1117,8 @@ const QualityDashboard = () => {
                         callBack: () => {},
                       },
                       ...(checkPermission({
-                        roleId: ["irInvestigator", "irManager"],
-                        permission: "Cancel IRs",
+                        roleId: ["irInvestigator", "incidentManager"],
+                        permission: "Cancel IR",
                       })
                         ? [
                             {
@@ -1112,11 +1150,6 @@ const QualityDashboard = () => {
                         label: "IR Approval",
                         callBack: () => {},
                       },
-                      {
-                        icon: <FiCheckSquare />,
-                        label: "Acknowledge IR",
-                        callBack: () => {},
-                      },
                     ]
                   : []),
                 ...(checkPermission({
@@ -1125,7 +1158,7 @@ const QualityDashboard = () => {
                 })
                   ? [
                       {
-                        icon: <FiCheckSquare />,
+                        icon: <FaExternalLinkAlt />,
                         label: "Acknowledge IR",
                         callBack: () => {},
                       },
@@ -1159,7 +1192,7 @@ const QualityDashboard = () => {
       <div className={s.legend}>
         <span>
           <span className={s.icon} style={{ color: "rgb(230, 16, 54)" }}>
-            <BsFillCircleFill />
+            <FaCircle />
           </span>{" "}
           Sentinel Event
         </span>
