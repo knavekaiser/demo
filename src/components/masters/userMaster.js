@@ -210,8 +210,17 @@ export default function UserMaster() {
                 )?.label || user.department}
               </td>
               <td>
-                {parameters.role?.find((r) => r.value === user.role[0])
-                  ?.label || user.role}
+                {parameters.role?.find(
+                  (r) =>
+                    r.value ===
+                    user.role.sort((a, b) =>
+                      permissions.findIndex((item) => item.role === a) >
+                      permissions.findIndex((item) => item.role === b)
+                        ? 1
+                        : -1
+                    )[0]
+                )?.label || user.role}
+
                 {Array.isArray(user.role) && user.role.length > 1 && (
                   <div className={s.moreRoles}>
                     +{user.role.length - 1}
@@ -616,11 +625,7 @@ const UserForm = ({
         setValue={setValue}
         watch={watch}
         options={departments}
-        formOptions={
-          {
-            // ...(!addFromHis && { required: "Select Department" }),
-          }
-        }
+        formOptions={{ required: "Select Department" }}
         error={errors.department}
         clearErrors={clearErrors}
       />
@@ -637,6 +642,17 @@ const UserForm = ({
         multiple={true}
         error={errors.role}
         clearErrors={clearErrors}
+        onChange={({ value }) => {
+          if (
+            value === "incidentManager" &&
+            getValues("role").includes(value)
+          ) {
+            setValue(
+              "role",
+              role?.map((role) => role.value)
+            );
+          }
+        }}
       />
       <div className={s.btns}>
         <button className="btn secondary" type="submit" disabled={loading}>

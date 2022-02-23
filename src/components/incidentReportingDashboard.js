@@ -199,7 +199,7 @@ function IncidentReportingDashboard() {
   );
 }
 const MyDashboard = () => {
-  const { user } = useContext(SiteContext);
+  const { user, checkPermission } = useContext(SiteContext);
   const { parameters, count, setDashboard } = useContext(IrDashboardContext);
   const location = useLocation();
   const navigate = useNavigate();
@@ -278,7 +278,10 @@ const MyDashboard = () => {
           label="OPEN IRS"
           irs={[
             { label: "My IRs", count: count.myIr },
-            { label: "Department IRs", count: count.departmentIr },
+            ...((checkPermission({ roleId: "hod" }) && [
+              { label: "Department IRs", count: count.departmentIr },
+            ]) ||
+              []),
           ]}
         />
         <ReportCount
@@ -644,14 +647,11 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
   const navigate = useNavigate();
   const { checkPermission } = useContext(SiteContext);
   const { parameters } = useContext(IrDashboardContext);
-  const {
-    handleSubmit,
-    register,
-    watch,
-    reset,
-    setValue,
-    getValues,
-  } = useForm({ defaultValues: { view: "assigned", irBy: "self" } });
+  const { handleSubmit, register, watch, reset, setValue, getValues } = useForm(
+    {
+      defaultValues: { irBy: "self", status: "", view: "assigned" },
+    }
+  );
   const [categories, setCategories] = useState([]);
   const fromIncidentDateTime = watch("fromIncidentDateTime");
   const fromreportingDate = watch("fromreportingDate");
@@ -677,11 +677,12 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
       toreportingDate: "",
       fromIncidentDateTime: "",
       toIncidentDateTime: "",
-      view: _filters.status === "3" ? "assigned" : "all",
+      // view: _filters.status === "3" ? "assigned" : "all",
       ..._filters,
       typeofInci: _filters.typeofInci?.split(",").map((c) => +c) || "",
       irInvestigator: _filters.irInvestigator?.split(",").map((c) => +c) || "",
       status: _filters.status?.split(",").map((c) => +c) || "",
+      view: "",
       InciCateg: _filters.InciCateg?.split(",").map((c) => +c) || "",
     });
   }, [location.search]);
@@ -836,9 +837,9 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
               toIncidentDateTime: "",
               InciCateg: "",
               typeofInci: "",
-              view: "assigned",
               irInvestigator: "",
               status: "",
+              view: "all",
             });
             navigate(location.pathname);
             onSubmit({});
@@ -879,6 +880,7 @@ const QualityDashboard = () => {
       _filters.toreportingDate = _filters.toreportingDate + " 23:59:59";
     }
     setLoading(true);
+    console.log({ _filters, filters });
     if (Object.entries(_filters).length) {
       fetch(
         `${
@@ -996,7 +998,7 @@ const QualityDashboard = () => {
               _filters[field] = values[field]?.join?.(",") || values[field];
             if (values[field] === "assigned") _filters.status = 3;
           }
-          delete _filters.view;
+          // delete _filters.view;
           navigate({
             pathname: location.pathname,
             search: `?${createSearchParams(_filters)}`,
@@ -1110,6 +1112,18 @@ const QualityDashboard = () => {
                         label: "IR Approval",
                         callBack: () => {},
                       },
+                      {
+                        icon: <FiCheckSquare />,
+                        label: "Acknowledge IR",
+                        callBack: () => {},
+                      },
+                    ]
+                  : []),
+                ...(checkPermission({
+                  roleId: ["hod"],
+                  permission: "Acknowledge IR",
+                })
+                  ? [
                       {
                         icon: <FiCheckSquare />,
                         label: "Acknowledge IR",

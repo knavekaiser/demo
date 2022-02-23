@@ -11,6 +11,33 @@ import { permissions } from "../../config";
 import defaultEndpoints from "../../config/endpoints";
 import s from "./config.module.scss";
 
+const readOnly = [
+  {
+    role: "irAdmin",
+    permissions: ["IR Master", "IR Configuration"],
+  },
+  {
+    role: "incidentReporter",
+    permissions: ["Incident Reporting", "IR Query Dashboard"],
+  },
+  {
+    role: "irInvestigator",
+    permissions: [
+      "Access to view IRs in quality dashboardAssigned IR",
+      "Update IR investigation for assigned IRs",
+      "CAPA Dashboard - Update CAPA for assigned IRs and Re-Assign CAPA activities",
+      "Update CAPA tab for assigned IRs",
+      "Update IR Closure report for Assigned IRs",
+      "Add addendum",
+      "Re-portable IR for Assigned IRs",
+    ],
+  },
+  {
+    role: "incidentManager",
+    permissions: ["Access and update all IRs", "Assign IRs"],
+  },
+];
+
 export default function UserPermission() {
   const permissionRef = useRef(null);
   const { user, setRoles } = useContext(SiteContext);
@@ -65,6 +92,13 @@ export default function UserPermission() {
                                         false
                                       }
                                       onChange={() => {
+                                        if (
+                                          readOnly
+                                            .find((item) => item.role === role)
+                                            ?.permissions?.includes(permission)
+                                        ) {
+                                          return;
+                                        }
                                         setUserPermission((prev) =>
                                           prev.map((item) => {
                                             if (item.role !== role) return item;
@@ -105,6 +139,13 @@ export default function UserPermission() {
                           type="checkbox"
                           checked={_permission?.includes(key) || false}
                           onChange={() => {
+                            if (
+                              readOnly
+                                .find((item) => item.role === role)
+                                ?.permissions?.includes(key)
+                            ) {
+                              return;
+                            }
                             setUserPermission((prev) =>
                               prev.map((item) => {
                                 if (item.role !== role) return item;

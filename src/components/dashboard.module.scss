@@ -123,8 +123,9 @@
           border-left: 3px solid #2f3545;
           padding: 8px 10px;
           .count {
+            flex-shrink: 0;
             text-align: center;
-            padding: 4px 0;
+            padding: 4px 8px;
             min-width: 2rem;
             background-color: #0897c3;
             color: white;

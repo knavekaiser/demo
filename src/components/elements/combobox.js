@@ -207,14 +207,18 @@ export const Combobox = ({
                 "No options provided"}
               {selected &&
                 ["string", "number"].includes(typeof selected) &&
-                options?.find(({ value }) => value === selected)?.label}
+                options?.find(
+                  ({ value }) => value.toString() === selected.toString()
+                )?.label}
               {Array.isArray(selected) &&
                 (selected.length > 3
                   ? `${selected.length} items selected`
                   : selected.reduce(
                       (p, a, i, arr) =>
                         `${p} ${
-                          options.find(({ value }) => value === a)?.label
+                          options.find(
+                            ({ value }) => value.toString() === a.toString()
+                          )?.label
                         }${i < arr.length - 1 ? ", " : ""}`,
                       ""
                     ))}
