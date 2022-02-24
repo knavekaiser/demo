@@ -9,7 +9,6 @@ import { IoClose } from "react-icons/io5";
 import {
   Form,
   Input,
-  AutoComplete,
   SearchField,
   Combobox,
   Table,
@@ -54,7 +53,6 @@ export default function Location() {
       })
       .catch((err) => {
         setLoading(false);
-        console.log(err);
       });
   }, []);
   return (
@@ -201,18 +199,9 @@ const LocationForm = ({
           .catch((err) => {
             setLoading(false);
             Prompt({ type: "error", message: err.message });
-            console.log(err);
           });
       })}
     >
-      {
-        //   <Input
-        //   {...register("name", {
-        //     required: "Please enter a Name",
-        //   })}
-        //   error={errors.name}
-        // />
-      }
       <SearchField
         url={defaultEndpoints.locations}
         processData={(data, value) => {
@@ -240,40 +229,12 @@ const LocationForm = ({
         }}
         error={errors.name}
       />
-      {
-        //   <Combobox
-        //   register={register}
-        //   name="locationType"
-        //   options={locationTypes}
-        //   formOptions={{
-        //     required: "Please select Location Type",
-        //   }}
-        //   watch={watch}
-        //   setValue={setValue}
-        //   error={errors.locationType}
-        // />
-      }
       <Select
         options={locationTypes}
         name="locationType"
         control={control}
         formOptions={{ required: "Please select Location Type" }}
       />
-      {
-        // <AutoComplete
-        //   register={register}
-        //   formOptions={{
-        //     required: "Please select Location Type",
-        //   }}
-        //   name="locationType"
-        //   placeholder="Enter"
-        //   options={locationTypes}
-        //   error={errors.locationType}
-        //   clearErrors={clearErrors}
-        //   setValue={setValue}
-        //   watch={watch}
-        // />
-      }
       <Toggle
         name="status"
         register={register}

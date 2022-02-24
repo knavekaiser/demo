@@ -76,12 +76,7 @@ export const Combobox = ({
   );
   const keyDownHandler = useCallback(
     (e) => {
-      console.log("child", e.keyCode, open, name);
-      // e.preventDefault();
-      // e.stopPropagation();
       if (!options) return;
-      // if (!open) return;
-
       if (!open && e.keyCode === 32) {
         setOpen(true);
       }
@@ -216,7 +211,7 @@ export const Combobox = ({
                   : selected.reduce(
                       (p, a, i, arr) =>
                         `${p} ${
-                          options.find(
+                          options?.find(
                             ({ value }) => value.toString() === a.toString()
                           )?.label
                         }${i < arr.length - 1 ? ", " : ""}`,
@@ -240,202 +235,6 @@ export const Combobox = ({
         </span>
       </div>
       {error && <span className={s.errMsg}>{error.message}</span>}
-      <Modal
-        open={open}
-        className={s.comboboxModal}
-        backdropClass={s.comboboxBackdrop}
-        open={open}
-        setOpen={setOpen}
-        onBackdropClick={() => setOpen(false)}
-        clickThroughBackdrop={true}
-        style={style}
-      >
-        <ComboboxList
-          hover={hover}
-          setHover={setHover}
-          options={options}
-          setValue={setValue}
-          select={select}
-          selected={selected}
-          multiple={multiple}
-          name={name}
-          open={open}
-          setOpen={setOpen}
-          clearErrors={clearErrors}
-          item={item}
-        />
-      </Modal>
-    </section>
-  );
-};
-
-export const AutoComplete = ({
-  options: defaultOptions,
-  multiple,
-  register,
-  formOptions,
-  name,
-  watch,
-  setValue,
-  error,
-  clearErrors,
-  item,
-  onChange,
-}) => {
-  const container = useRef();
-  const clickHandlerAdded = useRef(false);
-  const [laoding, setLoading] = useState(false);
-  const [options, setOptions] = useState([...defaultOptions]);
-  const [displayValue, setDisplayValue] = useState("");
-  const [open, setOpen] = useState(false);
-  const [style, setStyle] = useState({});
-  const selected = watch(name);
-  const [hover, setHover] = useState(
-    options?.findIndex(({ label, value }) => {
-      return (
-        value === selected ||
-        (selected?.some && selected.some((s) => s === value))
-      );
-    })
-  );
-  const select = useCallback(
-    ({ label, value, ...rest }) => {
-      console.log("select");
-      const _selectedItem = selected?.find?.((item) => item === value);
-      if (_selectedItem) {
-        setValue(
-          name,
-          selected.filter((item) => item !== value)
-        );
-      } else {
-        if (multiple) {
-          setValue(name, [
-            ...(selected.filter?.((item) => item !== value) || []),
-            value,
-          ]);
-        } else {
-          setValue(name, value);
-          setDisplayValue(label);
-        }
-      }
-
-      if (!multiple) {
-        setOpen(false);
-      }
-      clearErrors?.(name);
-      onChange && onChange({ label, value, ...rest });
-    },
-    [selected]
-  );
-  const keyDownHandler = useCallback(
-    (e) => {
-      if (!options) return;
-
-      if (!open && e.keyCode === 32) {
-        setOpen(true);
-      }
-      if (e.keyCode === 9) {
-      }
-      if (e.keyCode === 27) {
-        setOpen(false);
-        return;
-      }
-      if (e.keyCode === 32 && options[hover]) {
-        select(options[hover]);
-        return;
-      }
-      if (e.keyCode === 38 || e.keyCode === 40) {
-        const index = options?.findIndex(({ label, value }) => {
-          return (
-            value === selected ||
-            (selected?.some && selected.some((s) => s === value))
-          );
-        });
-        const _hover = hover !== undefined ? hover : index;
-        if (e.keyCode === 38) {
-          setHover(Math.max(_hover - 1, 0));
-        } else if (e.keyCode === 40) {
-          setHover(Math.min(_hover + 1, options.length - 1));
-        }
-      }
-    },
-    [hover, selected, options]
-  );
-  useLayoutEffect(() => {
-    const { width, height, x, y } = container.current.getBoundingClientRect();
-    const top = window.innerHeight - y;
-    setStyle({
-      position: "absolute",
-      left: x,
-      top: Math.max(
-        Math.min(
-          y + height,
-          window.innerHeight - Math.min(35 * (options?.length || 0) + 8, 320)
-          // window.innerHeight - (35 * (options?.length || 0) + 8)
-        ),
-        8
-      ),
-      width: width,
-      maxHeight: Math.min(window.innerHeight - 16, 300),
-    });
-  }, [open, options]);
-  useEffect(() => {
-    const clickHandler = (e) => {
-      if (e.path && !e.path.includes(container.current)) {
-        setOpen(false);
-      }
-    };
-    if (!clickHandlerAdded.current) {
-      document.addEventListener("click", clickHandler);
-      return () => {
-        document.removeEventListener("click", clickHandler);
-      };
-      clickHandlerAdded.current = true;
-    }
-  }, [open]);
-  useEffect(() => {
-    if (selected) {
-      setOptions(
-        defaultOptions.filter((item) =>
-          new RegExp(selected, "i").test(item.label)
-        )
-      );
-    } else {
-      setOptions(defaultOptions);
-    }
-  }, [selected]);
-  useEffect(() => {
-    setOptions(defaultOptions);
-  }, [defaultOptions]);
-  return (
-    <section className={s.autoComplete} ref={container}>
-      <Input
-        {...register(name, formOptions)}
-        value={displayValue || selected}
-        onFocus={() => {
-          setValue(name, displayValue);
-          setDisplayValue("");
-          setOpen(true);
-        }}
-        error={error}
-        onBlur={() => {
-          const option = defaultOptions.find((item) =>
-            new RegExp(selected, "i").test(item.label)
-          );
-          console.log(option);
-          if (selected && option) {
-            setValue(name, option.value);
-            setDisplayValue(option.label);
-          } else {
-            setDisplayValue("");
-            setValue(name, "");
-          }
-          setOpen(false);
-        }}
-        onKeyDown={keyDownHandler}
-        icon={<FaSearch />}
-        autoComplete="off"
-      />
       <Modal
         open={open}
         className={s.comboboxModal}

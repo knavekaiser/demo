@@ -20,25 +20,6 @@ export const Modal = forwardRef(
     ref
   ) => {
     const backdropRef = useRef();
-    const clickHandler = useCallback(
-      (e) => {
-        // const backdrop = backdropRef?.current;
-        // const modal = backdropRef?.current?.nextElementSibling;
-        // console.log(!!backdrop, open, e);
-        // if (backdrop && onBackdropClick && !open) {
-        //   onBackdropClick();
-        // }
-      },
-      [backdropRef, clickThroughBackdrop, open]
-    );
-    useEffect(() => {
-      // if (clickThroughBackdrop) {
-      //   document.addEventListener("click", clickHandler);
-      //   return () => {
-      //     document.removeEventListener("click", clickHandler);
-      //   };
-      // }
-    }, []);
     if (open) {
       return createPortal(
         <>

@@ -53,7 +53,7 @@ import { Modal, Prompt } from "./modal";
 import paths from "./path";
 import { incidentTypes, irStatus } from "../config";
 import { CSVLink } from "react-csv";
-import s from "./incidentReportingDashboard.module.scss";
+import s from "./irDashboard.module.scss";
 import { useReactToPrint } from "react-to-print";
 
 function paramsToObject(entries) {
@@ -157,7 +157,7 @@ class Print extends Component {
   }
 }
 
-function IncidentReportingDashboard() {
+function IrDashboard() {
   const { user, checkPermission } = useContext(SiteContext);
   return (
     <div className={s.container}>
@@ -179,7 +179,7 @@ function IncidentReportingDashboard() {
                   label: "Quality Dashboard",
                   path: paths.incidentDashboard.qualityDashboard,
                   search: {
-                    status: 3,
+                    // status: 3,
                     irInvestigator: user.id,
                   },
                 },
@@ -198,11 +198,12 @@ function IncidentReportingDashboard() {
             element={<QualityDashboard />}
           />
         )}
+        <Route path={"/*"} element={<h1>Fallback</h1>} />
       </Routes>
     </div>
   );
 }
-const MyDashboard = () => {
+export const MyDashboard = () => {
   const { user, checkPermission } = useContext(SiteContext);
   const { parameters, count, setDashboard } = useContext(IrDashboardContext);
   const location = useLocation();
@@ -255,7 +256,6 @@ const MyDashboard = () => {
         })
         .catch((err) => {
           setLoading(false);
-          console.log(err);
         });
     } else {
       fetch(
@@ -274,7 +274,6 @@ const MyDashboard = () => {
         })
         .catch((err) => {
           setLoading(false);
-          console.log(err);
         });
     }
   }, [location.search]);
@@ -694,19 +693,15 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
   const fromIncidentDateTime = watch("fromIncidentDateTime");
   const fromreportingDate = watch("fromreportingDate");
   useEffect(() => {
-    Promise.all([
-      fetch(`${process.env.REACT_APP_HOST}/category`).then((res) => res.json()),
-    ]).then(([category, users]) => {
-      if (category._embedded?.category) {
-        setCategories(
-          category._embedded.category.map(({ id, name }) => ({
-            value: id,
-            label: name,
-          }))
-        );
-      }
-    });
-  }, []);
+    if (parameters.categories) {
+      setCategories(
+        parameters.categories.map(({ id, name }) => ({
+          value: id,
+          label: name,
+        }))
+      );
+    }
+  }, [parameters.categories]);
   useEffect(() => {
     const _filters = paramsToObject(new URLSearchParams(location.search));
     reset({
@@ -729,10 +724,10 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
     if (qualityDashboard) {
       if (view === "all") {
         setValue("irInvestigator", "");
-        setValue("status", "");
+        // setValue("status", "");
       } else if (view === "assigned") {
         setValue("irInvestigator", user.id);
-        setValue("status", 3);
+        // setValue("status", 3);
       }
     }
   }, [view]);
@@ -914,7 +909,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
   );
 };
 
-const QualityDashboard = () => {
+export const QualityDashboard = () => {
   const { user, checkPermission } = useContext(SiteContext);
   const { parameters, setDashboard } = useContext(IrDashboardContext);
   const printRef = useRef();
@@ -1023,7 +1018,6 @@ const QualityDashboard = () => {
         })
         .catch((err) => {
           setLoading(false);
-          console.log(err);
         });
     } else {
       fetch(
@@ -1042,7 +1036,6 @@ const QualityDashboard = () => {
         })
         .catch((err) => {
           setLoading(false);
-          console.log(err);
         });
     }
   }, [location.search]);
@@ -1058,7 +1051,7 @@ const QualityDashboard = () => {
             if (values[field])
               _filters[field] = values[field]?.join?.(",") || values[field];
             if (values[field] === "assigned") {
-              _filters.status = 3;
+              // _filters.status = 3;
               _filters.irInvestigator = user.id;
             }
           }
@@ -1378,7 +1371,6 @@ const AssignForm = ({ assign, users, setAssign, onSuccess }) => {
             .catch((err) => {
               setLoading(false);
               Prompt({ type: "error", message: err.message });
-              console.log(err);
             });
         })}
       >
@@ -1417,4 +1409,4 @@ const AssignForm = ({ assign, users, setAssign, onSuccess }) => {
   );
 };
 
-export default IncidentReportingDashboard;
+export default IrDashboard;

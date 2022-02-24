@@ -44,7 +44,6 @@ export default function PersonAffected() {
       })
       .catch((err) => {
         setLoading(false);
-        console.log(err);
       });
   }, []);
   return (
@@ -254,7 +253,6 @@ const PersonAffectedForm = ({
           .catch((err) => {
             setLoading(false);
             Prompt({ type: "error", message: err.message });
-            console.log(err);
           });
       })}
     >
@@ -429,7 +427,6 @@ const SinglePersonEffectedDetail = ({
               })
               .catch((err) => {
                 setLoading(false);
-                console.log(err);
               });
           }}
         />{" "}
@@ -534,7 +531,6 @@ const PersonAffectedDetailForm = ({
           .catch((err) => {
             setLoading(false);
             Prompt({ type: "error", message: err.message });
-            console.log(err);
           });
       })}
     >

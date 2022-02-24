@@ -143,7 +143,6 @@ export const SearchField = ({
           })
           .catch((err) => {
             setLoading(false);
-            console.log(err);
           });
       } else if (defaultData) {
         setData(
@@ -213,9 +212,9 @@ export const FileInput = ({ label, required, multiple, onChange, prefill }) => {
   useEffect(() => {
     if (prefill?.length !== files.length) {
       setFiles(
-        prefill.map((file) =>
+        prefill?.map((file) =>
           typeof file === "string" ? { name: file, uri: file } : file
-        )
+        ) || []
       );
     }
   }, [prefill]);

@@ -25,8 +25,7 @@ import {
   MastersIcon,
 } from "./svgs";
 import IncidentReport from "./incidentReport";
-import IncidentReportingDashboard from "./incidentReportingDashboard";
-import OtherPages from "./otherPages";
+import IrDashboard from "./irDashboard";
 import Masters from "./masters/index";
 import IrConfig from "./irConfig/index";
 import paths from "./path";
@@ -259,7 +258,7 @@ function Dashboard() {
           <Route path={paths.incidentReport} element={<IncidentReport />} />
           <Route
             path={paths.incidentDashboard.basePath + "/*"}
-            element={<IncidentReportingDashboard />}
+            element={<IrDashboard />}
           />
           <Route path={paths.irConfig.basePath + "/*"} element={<IrConfig />} />
           <Route
@@ -267,7 +266,7 @@ function Dashboard() {
             index
             element={<Masters />}
           />
-          <Route path="/:other" element={<OtherPages />} />
+          <Route path="/:other" render={({ match }) => <h1>test</h1>} />
           <Route path="/*" element={<IncidentReport />} />
         </Routes>
       </main>

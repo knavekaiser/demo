@@ -63,9 +63,7 @@ export default function Login() {
                 )
                   .then((res) => res.json())
                   .then((data) => data?.password)
-                  .catch((err) => {
-                    console.log(err);
-                  });
+                  .catch((err) => {});
                 if (!salt) {
                   return Prompt({
                     type: "error",
@@ -89,9 +87,7 @@ export default function Login() {
                 })
                   .then((res) => res.json())
                   .then((data) => data?.tokenID)
-                  .catch((err) => {
-                    console.log(err);
-                  });
+                  .catch((err) => {});
                 sessionStorage.setItem("token", token);
               }
               if (!token) {

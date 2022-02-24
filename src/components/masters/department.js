@@ -34,7 +34,6 @@ export default function Department() {
       })
       .catch((err) => {
         setLoading(false);
-        console.log(err);
       });
   }, []);
   return (
@@ -162,7 +161,6 @@ const DepartmentForm = ({ edit, onSuccess, clearForm, departments }) => {
           .catch((err) => {
             setLoading(false);
             Prompt({ type: "error", message: err.message });
-            console.log(err);
           });
       })}
     >
@@ -172,27 +170,6 @@ const DepartmentForm = ({ edit, onSuccess, clearForm, departments }) => {
         })}
         error={errors.name}
       />
-      {
-        //   <Input
-        //   name="name"
-        //   required={true}
-        //   placeholder="Enter"
-        //   icon={<BiSearch />}
-        // />
-        // <Combobox
-        //   name="type"
-        //   required={true}
-        //   placeholder="Enter"
-        //   multiple={true}
-        //   options={[
-        //     { value: 1, label: "Location type one" },
-        //     { value: 2, label: "Location type two" },
-        //     { value: 3, label: "Location type three" },
-        //     { value: 4, label: "Location type four" },
-        //   ]}
-        // />
-        // <Toggle name="status" />
-      }
       <div className={s.btns}>
         <button className="btn secondary" type="submit" disabled={loading}>
           {edit ? (

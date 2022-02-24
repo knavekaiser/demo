@@ -1,12 +1,16 @@
 import Dashboard, { Accordion } from "./dashboard";
-import { SiteContext } from "../SiteContext";
+import { SiteContext, IrDashboardContext } from "../SiteContext";
 import { BrowserRouter } from "react-router-dom";
 import { render, screen, fireEvent, act } from "@testing-library/react";
 
 const customRender = (ui, { providerProps, ...renderOptions }) => {
   return render(
     <BrowserRouter>
-      <SiteContext.Provider value={providerProps}>{ui}</SiteContext.Provider>
+      <SiteContext.Provider value={providerProps}>
+        <IrDashboardContext.Provider value={{ count: {} }}>
+          {ui}
+        </IrDashboardContext.Provider>
+      </SiteContext.Provider>
     </BrowserRouter>,
     renderOptions
   );

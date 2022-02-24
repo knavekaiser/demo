@@ -91,20 +91,13 @@ export default function UserMaster() {
       })
       .catch((err) => {
         setLoading(false);
-        console.log(err);
       });
   }, []);
   return (
     <div className={s.container} data-testid="users">
       <header>
         <h3>USER MASTER</h3>
-        {
-          //   <Checkbox
-          //   label="Import from HIS"
-          //   checked={addFromHis}
-          //   onChange={(e) => setAddFromHis(e.target.checked)}
-          // />
-        }
+
         <button
           onClick={() => {
             const newUsers = hisUsers.filter(
@@ -130,7 +123,6 @@ export default function UserMaster() {
                       }).then((res) => res.json())
                     )
                   ).then((result) => {
-                    console.log(result.length);
                     setUsers((prev) => [...prev, ...result]);
                     Prompt({
                       type: "success",
@@ -358,7 +350,6 @@ const UserForm = ({
           .catch((err) => {
             setLoading(false);
             Prompt({ type: "error", message: err.message });
-            console.log(err);
           });
       })}
     >

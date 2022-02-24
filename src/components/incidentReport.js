@@ -106,9 +106,7 @@ export default function IncidentReporting() {
               .then((data) => {
                 links = data?.map((item) => item.uri) || [];
               })
-              .catch((err) => {
-                console.log(err);
-              });
+              .catch((err) => {});
           }
 
           data.upload = [...uploaded, ...links].map((item) => ({
@@ -116,26 +114,6 @@ export default function IncidentReporting() {
             uploadFilePath: item,
           }));
         }
-        // if (edit) {
-        //   await fetch(
-        //     `${process.env.REACT_APP_HOST}/IncidentReport/${edit.id}`,
-        //     {
-        //       method: "PATCH",
-        //       headers: { "Content-Type": "application/json" },
-        //       body: JSON.stringify({
-        //         upload: [],
-        //         witness: [],
-        //         actionTaken: [],
-        //         notification: [],
-        //       }),
-        //     }
-        //   )
-        //     .then((res) => res.json())
-        //     .then((data) => {})
-        //     .catch((err) => {
-        //       console.log(err);
-        //     });
-        // }
         fetch(
           `${process.env.REACT_APP_HOST}/IncidentReport${
             edit ? `/${edit.id}` : ""
@@ -1114,9 +1092,7 @@ export const IncidentCategory = () => {
           setRows(rows);
         }
       })
-      .catch((err) => {
-        console.log(err);
-      });
+      .catch((err) => {});
   }, []);
   return (
     <ConnectForm>

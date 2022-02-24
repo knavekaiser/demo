@@ -72,7 +72,6 @@ export default function RiskAssessments() {
       })
       .catch((err) => {
         setLoading(false);
-        console.log(err);
       });
   }, []);
   return (
@@ -249,7 +248,6 @@ const RiskAssessmentForm = ({ edit, onSuccess, parameters, clearForm }) => {
           .catch((err) => {
             setLoading(false);
             Prompt({ type: "error", message: err.message });
-            console.log(err);
           });
       })}
     >

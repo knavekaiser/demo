@@ -2,15 +2,26 @@ import ReactDOM from "react-dom";
 import IncidentReport, { IncidentCategory, Box } from "./incidentReport";
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
-import { SiteContext } from "../SiteContext";
+import { SiteContext, IrDashboardContext } from "../SiteContext";
+import userEvent from "@testing-library/user-event";
 
-const customRender = (ui, { providerProps, ...renderOptions }) => {
-  return render(
-    <BrowserRouter>
-      <SiteContext.Provider value={providerProps}>{ui}</SiteContext.Provider>
-    </BrowserRouter>,
-    renderOptions
-  );
+const customRender = async (ui, { providerProps, ...renderOptions }) => {
+  return await act(async () => {
+    await render(
+      <BrowserRouter>
+        <SiteContext.Provider value={providerProps}>
+          <IrDashboardContext.Provider
+            value={{
+              count: {},
+            }}
+          >
+            {ui}
+          </IrDashboardContext.Provider>
+        </SiteContext.Provider>
+      </BrowserRouter>,
+      renderOptions
+    );
+  });
 };
 
 const setMockFetch = (data, status) => {
@@ -49,7 +60,7 @@ describe("Incident Report Form", () => {
         departments: "http://endpoints.com/departments",
       },
     };
-    await act(async () => customRender(<IncidentReport />, { providerProps }));
+    await customRender(<IncidentReport />, { providerProps });
   });
 
   test("Context test", async () => {
@@ -81,20 +92,32 @@ describe("Incident Report Form", () => {
     expect(notified.textContent).toMatch("NameDepartmentDate");
   });
 
-  test("useHisFetch", async () => {
-    setMockFetch({
-      errorMessage: "Invalid Token",
-    });
-    const providerProps = {
-      user: { id: 10, name: "Test User" },
-      endpoints: {
-        locations: "http://endpoints.com/locations",
-        users: "http://endpoints.com/users",
-        departments: "http://endpoints.com/departments",
-      },
-    };
-    await act(async () => customRender(<IncidentReport />, { providerProps }));
-  });
+  // test("Location Field", async () => {
+  //   const input = document.querySelector(".reactSelect__input-container");
+  //
+  //   await act(async () => {
+  //     await userEvent.type(input, `e`);
+  //   });
+  //
+  //   // await act(async () => {
+  //   //   await userEvent.type(input, `{arrowdown}{arrowup}{space}{esc}`);
+  //   // });
+  // });
+
+  // test("useHisFetch", async () => {
+  //   setMockFetch({
+  //     errorMessage: "Invalid Token",
+  //   });
+  //   const providerProps = {
+  //     user: { id: 10, name: "Test User" },
+  //     endpoints: {
+  //       locations: "http://endpoints.com/locations",
+  //       users: "http://endpoints.com/users",
+  //       departments: "http://endpoints.com/departments",
+  //     },
+  //   };
+  //   await act(async () => customRender(<IncidentReport />, { providerProps }));
+  // });
 });
 
 test("Box", () => {

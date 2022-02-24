@@ -35,7 +35,6 @@ export default function Rcas() {
       })
       .catch((err) => {
         setLoading(false);
-        console.log(err);
       });
   }, []);
   return (
@@ -194,7 +193,6 @@ const RcaForm = ({ edit, onSuccess, clearForm, rcas }) => {
           .catch((err) => {
             setLoading(false);
             Prompt({ type: "error", message: err.message });
-            console.log(err);
           });
       })}
     >
@@ -392,7 +390,6 @@ const RcaCauseForm = ({ edit, rcaId, onSuccess, clearForm, rcaCauses }) => {
           .catch((err) => {
             setLoading(false);
             Prompt({ type: "error", message: err.message });
-            console.log(err);
           });
       })}
     >

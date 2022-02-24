@@ -731,36 +731,6 @@ testParentChild({
   allRenderTextMatch: "Person 1Person 2",
   addConflictValue: "Person 1",
 });
-describe("Person affected more", () => {
-  beforeAll(() => {
-    ReactDOM.createPortal = jest.fn((element, node) => {
-      return element;
-    });
-  });
-  beforeEach(async () => {
-    let portal = document.querySelector("#portal");
-    if (!portal) {
-      portal = document.createElement("div");
-      portal.id = "portal";
-      document.body.appendChild(portal);
-    }
-
-    let prompt = document.querySelector("#prompt");
-    if (!prompt) {
-      const prompt = document.createElement("div");
-      prompt.id = "prompt";
-      document.body.appendChild(prompt);
-    }
-    await renderWithData(<PersonAffected />, personAffectedData);
-  });
-
-  test("Toggle", async () => {
-    const input = document.querySelector(`table td > input[type="checkbox"]`);
-    await act(async () => {
-      await userEvent.click(input);
-    });
-  });
-});
 
 testParent({
   testId: "riskAssessment",
@@ -913,74 +883,205 @@ testParentChild({
   addConflictValue: "Parent 1",
 });
 
+const userData = {
+  _embedded: {
+    user: [
+      {
+        id: 9,
+        name: "Sunny",
+        gender: "male",
+        dob: "1996-10-03T00:00:00.000+05:30",
+        employeeId: "13145",
+        contact: "9955414157",
+        email: "abc@abc.com",
+        department: 5,
+        role: "incidentReporter,irInvestigator",
+        password: "1234",
+      },
+      {
+        id: 10,
+        name: "Suresh Mallela",
+        gender: "male",
+        dob: "1998-01-04T00:00:00.000+05:30",
+        employeeId: "53535",
+        contact: "9988761616",
+        email: "abc1@abc.com",
+        department: 1,
+        role: "irInvestigator,incidentReporter",
+        password: "1234",
+      },
+      {
+        id: 11,
+        name: "Vishnu Reddy",
+        gender: "male",
+        dob: "1995-10-04T00:00:00.000+05:30",
+        employeeId: "1234",
+        contact: "997766518",
+        email: "abc@@abc.com",
+        department: 2,
+        role: "incidentReporter",
+        password: "71717",
+      },
+    ],
+    department: [
+      {
+        id: 1,
+        name: "Cardiology",
+      },
+      {
+        id: 2,
+        name: "Neurology",
+      },
+
+      {
+        id: 5,
+        name: "Paediatrics",
+      },
+    ],
+  },
+};
 testParent({
   testId: "users",
   name: "Users",
   ui: <User />,
   allRenderTextMatch: "SunnyMale03/10/1996131459955414157abc@abc.com",
-  data: {
-    _embedded: {
-      user: [
-        {
-          id: 9,
-          name: "Sunny",
-          gender: "male",
-          dob: "1996-10-03T00:00:00.000+05:30",
-          employeeId: "13145",
-          contact: "9955414157",
-          email: "abc@abc.com",
-          department: 5,
-          role: "incidentReporter,irInvestigator",
-          password: "1234",
-        },
-        {
-          id: 10,
-          name: "Suresh Mallela",
-          gender: "male",
-          dob: "1998-01-04T00:00:00.000+05:30",
-          employeeId: "53535",
-          contact: "9988761616",
-          email: "abc1@abc.com",
-          department: 1,
-          role: "irInvestigator,incidentReporter",
-          password: "1234",
-        },
-        {
-          id: 11,
-          name: "Vishnu Reddy",
-          gender: "male",
-          dob: "1995-10-04T00:00:00.000+05:30",
-          employeeId: "1234",
-          contact: "997766518",
-          email: "abc@@abc.com",
-          department: 2,
-          role: "incidentReporter",
-          password: "71717",
-        },
-      ],
-      department: [
-        {
-          id: 1,
-          name: "Cardiology",
-        },
-        {
-          id: 2,
-          name: "Neurology",
-        },
-
-        {
-          id: 5,
-          name: "Paediatrics",
-        },
-      ],
-    },
-  },
+  data: userData,
   addConflictValue: "Sunny",
   inputSelector: `input[name]`,
   addBtnSelector: `button[type="submit"]`,
   editBtnSelector: `button[title="Edit"]`,
   clearFormBtnSelector: `button[type="button"].btn`,
   dltBtnSelector: `button[title="Delete"]`,
+});
+describe("User Master more", () => {
+  beforeAll(() => {
+    ReactDOM.createPortal = jest.fn((element, node) => {
+      return element;
+    });
+  });
+  beforeEach(async () => {
+    let portal = document.querySelector("#portal");
+    if (!portal) {
+      portal = document.createElement("div");
+      portal.id = "portal";
+      document.body.appendChild(portal);
+    }
+    let prompt = document.querySelector("#prompt");
+    if (!prompt) {
+      const prompt = document.createElement("div");
+      prompt.id = "prompt";
+      document.body.appendChild(prompt);
+    }
+    await renderWithData(<User />, userData);
+  });
+
+  test("Add from HIS", async () => {
+    const input = document.querySelector(`header .btn.secondary`);
+    await act(async () => {
+      await userEvent.click(input);
+    });
+  });
+
+  test("Search for user", async () => {
+    const input = document.querySelector("table input");
+
+    setMockFetch(userData);
+
+    await act(async () => {
+      await userEvent.type(input, "sunn");
+    });
+
+    const optionOne = document.querySelector(`.modal .options li`);
+
+    await act(async () => {
+      await userEvent.click(optionOne);
+    });
+  });
+  test("Search for user", async () => {
+    const input = document.querySelector("table input");
+
+    setMockFailFetch();
+
+    await act(async () => {
+      await userEvent.type(input, "sunn");
+    });
+
+    const h3 = document.querySelector(`h3`);
+
+    await act(async () => {
+      await userEvent.click(h3);
+    });
+  });
+
+  test("Search for email", async () => {
+    const input = document.querySelector(`input[name="email"]`);
+
+    await act(async () => {
+      await userEvent.type(input, "abc");
+    });
+
+    const optionOne = document.querySelector(`.modal .options li`);
+
+    await act(async () => {
+      await userEvent.click(optionOne);
+    });
+  });
+
+  test("Search for email", async () => {
+    const input = document.querySelector(`input[name="email"]`);
+
+    setMockFetch(userData);
+
+    await act(async () => {
+      await userEvent.type(input, "abcasdfasdf");
+    });
+
+    const h3 = document.querySelector(`h3`);
+
+    await act(async () => {
+      await userEvent.click(h3);
+    });
+  });
+
+  test("Search for contact", async () => {
+    const input = document.querySelector(`input[name="contact"]`);
+
+    setMockFetch(userData);
+
+    await act(async () => {
+      await userEvent.type(input, "+8801989479749");
+    });
+
+    const h3 = document.querySelector(`h3`);
+
+    await act(async () => {
+      await userEvent.click(h3);
+    });
+  });
+
+  test("Search for role", async () => {
+    const input = document.querySelector(`input[name="role"]`);
+
+    await act(async () => {
+      await userEvent.click(input);
+    });
+
+    await act(async () => {
+      await userEvent.type(input, `{arrowdown}{arrowup}{space}{esc}`);
+    });
+
+    const optionOne = document.querySelector(`.modal .options li`);
+
+    await act(async () => {
+      await userEvent.click(optionOne);
+    });
+
+    const h3 = document.querySelector(`h3`);
+
+    await act(async () => {
+      await userEvent.click(h3);
+    });
+  });
 });
 
 describe("IR Code Configuration", () => {

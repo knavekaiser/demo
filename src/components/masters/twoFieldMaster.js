@@ -36,7 +36,6 @@ export default function TwoFieldMasters() {
       })
       .catch((err) => {
         setLoading(false);
-        console.log(err);
       });
   }, []);
   return (
@@ -204,7 +203,6 @@ const TwoFieldMasterForm = ({
           .catch((err) => {
             setLoading(false);
             Prompt({ type: "error", message: err.message });
-            console.log(err);
           });
       })}
     >
@@ -427,7 +425,6 @@ const TwoFieldMasterDetailForm = ({
           .catch((err) => {
             setLoading(false);
             Prompt({ type: "error", message: err.message });
-            console.log(err);
           });
       })}
     >

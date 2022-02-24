@@ -37,7 +37,6 @@ export default function Categories() {
       })
       .catch((err) => {
         setLoading(false);
-        console.log(err);
       });
   }, []);
   return (
@@ -198,7 +197,6 @@ const CategoryForm = ({ edit, onSuccess, clearForm, categories }) => {
           .catch((err) => {
             setLoading(false);
             Prompt({ type: "error", message: err.message });
-            console.log(err);
           });
       })}
     >
@@ -501,7 +499,6 @@ const SubCategoryForm = ({
             .catch((err) => {
               setLoading(false);
               Prompt({ type: "error", message: err.message });
-              console.log(err);
             });
         })}
       >
@@ -717,9 +714,7 @@ const ReportableInlineForm = ({
           );
         }
       })
-      .catch((err) => {
-        console.log(err);
-      });
+      .catch((err) => {});
   }, []);
   useEffect(() => {
     reset({ ...edit });
@@ -758,7 +753,6 @@ const ReportableInlineForm = ({
           .catch((err) => {
             setLoading(false);
             Prompt({ type: "error", message: err.message });
-            console.log(err);
           });
       })}
     >

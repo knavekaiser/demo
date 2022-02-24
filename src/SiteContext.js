@@ -80,9 +80,7 @@ export const Provider = ({ children }) => {
             alert("Could not fetch permissions");
           }
         })
-        .catch((err) => {
-          console.log(err);
-        });
+        .catch((err) => {});
     }
   }, [user]);
   return (
@@ -108,7 +106,7 @@ export const Provider = ({ children }) => {
 export const IrDashboardContext = createContext();
 export const IrDashboardContextProvider = ({ children }) => {
   const { user } = useContext(SiteContext);
-  const [parameters, setParameters] = useState();
+  const [parameters, setParameters] = useState({});
   const [dashboard, setDashboard] = useState("myDashboard");
   const [count, setCount] = useState({});
   useEffect(async () => {
@@ -158,9 +156,7 @@ export const IrDashboardContextProvider = ({ children }) => {
         }
         setParameters(_parameters);
       })
-      .catch((err) => {
-        console.log(err);
-      });
+      .catch((err) => {});
   }, []);
 
   useEffect(() => {
@@ -190,9 +186,7 @@ export const IrDashboardContextProvider = ({ children }) => {
             return p;
           }, {});
         })
-        .catch((err) => {
-          console.log(err);
-        });
+        .catch((err) => {});
       const otherCounts = await Promise.all([
         fetch(
           `${process.env.REACT_APP_HOST}/IncidentReport/search/countCurrentMonth`
@@ -204,10 +198,20 @@ export const IrDashboardContextProvider = ({ children }) => {
           `${process.env.REACT_APP_HOST}/IncidentReport/search/countByPatientYesOrNo?patientYesOrNo=yes`
         ).then((res) => res.json()),
         fetch(
-          `${process.env.REACT_APP_HOST}/IncidentReport/search/countByUserId?userId=${user.id}`
+          `${
+            process.env.REACT_APP_HOST
+          }/IncidentReport/search/countByStatusAndUserId?${new URLSearchParams({
+            status: "2,3,4,5,6,7,8,9",
+            userId: user.id,
+          }).toString()}`
         ).then((res) => res.json()),
         fetch(
-          `${process.env.REACT_APP_HOST}/IncidentReport/search/countByDepartment?department=${user.department}`
+          `${
+            process.env.REACT_APP_HOST
+          }/IncidentReport/search/countByDepartment?${new URLSearchParams({
+            department: user.department,
+            status: "2,3,4,5,6,7,8,9",
+          }).toString()}`
         ).then((res) => res.json()),
       ])
         .then(
@@ -219,9 +223,7 @@ export const IrDashboardContextProvider = ({ children }) => {
             departmentIr,
           })
         )
-        .catch((err) => {
-          console.log(err);
-        });
+        .catch((err) => {});
 
       setCount((prev) => ({ ...countByStatus, ...otherCounts }));
     })();

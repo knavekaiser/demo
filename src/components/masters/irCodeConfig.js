@@ -85,9 +85,7 @@ export default function IrCodeConfig() {
           });
         }
       })
-      .catch((err) => {
-        console.log(err);
-      });
+      .catch((err) => {});
   }, []);
   return (
     <div className={s.container} data-testid="irCodeConfig">
@@ -124,13 +122,9 @@ export default function IrCodeConfig() {
                     type: "information",
                     message: "IR Configuration updated.",
                   });
-                } else {
-                  console.log(data);
                 }
               })
-              .catch((err) => {
-                console.log(err);
-              });
+              .catch((err) => {});
           })}
         >
           <Table
