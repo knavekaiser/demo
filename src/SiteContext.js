@@ -113,7 +113,9 @@ export const IrDashboardContextProvider = ({ children }) => {
     Promise.all([
       fetch(`${process.env.REACT_APP_HOST}/location`).then((res) => res.json()),
       fetch(`${process.env.REACT_APP_HOST}/category`).then((res) => res.json()),
-      fetch(`${process.env.REACT_APP_HOST}/user`).then((res) => res.json()),
+      fetch(`${process.env.REACT_APP_HOST}/user?size=10000`).then((res) =>
+        res.json()
+      ),
     ])
       .then(async ([location, category, user]) => {
         const _parameters = { ...parameters };
@@ -201,7 +203,7 @@ export const IrDashboardContextProvider = ({ children }) => {
           `${
             process.env.REACT_APP_HOST
           }/IncidentReport/search/countByUserId?${new URLSearchParams({
-            // status: "2,3,4,5,6,7,8,9",
+            // status: "2,3,4,5,6,7,8",
             userId: user.id,
           }).toString()}`
         ).then((res) => res.json()),
@@ -210,7 +212,7 @@ export const IrDashboardContextProvider = ({ children }) => {
             process.env.REACT_APP_HOST
           }/IncidentReport/search/countByDepartment?${new URLSearchParams({
             department: user.department,
-            status: "2,3,4,5,6,7,8,9",
+            status: "2,3,4,5,6,7,8",
           }).toString()}`
         ).then((res) => res.json()),
       ])

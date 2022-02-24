@@ -35,7 +35,7 @@ import s from "./masters.module.scss";
 export default function UserMaster() {
   const { endpoints } = useContext(SiteContext);
   const { get: getAllDepartments } = useHisFetch(endpoints.departments);
-  const { get: getHisUsers } = useHisFetch(endpoints.users);
+  const { get: getHisUsers } = useHisFetch(endpoints.users + `?size=10000`);
   const [loading, setLoading] = useState(true);
   const [parameters, setParameters] = useState({
     genders: [
@@ -110,7 +110,7 @@ export default function UserMaster() {
                 callback: () => {
                   Promise.all(
                     newUsers.map((user) =>
-                      fetch(`${defaultEndpoints.users}`, {
+                      fetch(`${defaultEndpoints.users + `?size=10000`}`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
@@ -363,7 +363,9 @@ const UserForm = ({
         // />
       }
       <SearchField
-        url={addFromHis ? endpoints.users : defaultEndpoints.users}
+        url={
+          addFromHis ? endpoints.users : defaultEndpoints.users + `?size=10000`
+        }
         processData={(data, value) => {
           if (data?._embedded?.user) {
             return data._embedded.user
@@ -446,9 +448,10 @@ const UserForm = ({
         // />
       }
       <SearchField
-        url={defaultEndpoints.users}
+        url={defaultEndpoints.users + `?size=10000`}
         processData={(data, value) => {
           if (data?._embedded?.user) {
+            console.log(data._embedded?.user.length);
             return data._embedded.user
               .filter((user) => new RegExp(value, "i").test(user.employeeId))
               .map((user) => ({
@@ -491,7 +494,7 @@ const UserForm = ({
         // />
       }
       <SearchField
-        url={defaultEndpoints.users}
+        url={defaultEndpoints.users + `?size=10000`}
         processData={(data, value) => {
           if (data?._embedded?.user) {
             return data._embedded.user
@@ -567,7 +570,7 @@ const UserForm = ({
         // />
       }
       <SearchField
-        url={defaultEndpoints.users}
+        url={defaultEndpoints.users + `?size=10000`}
         processData={(data, value) => {
           if (data?._embedded?.user) {
             return data._embedded.user

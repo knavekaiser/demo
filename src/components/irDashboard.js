@@ -495,7 +495,7 @@ const SingleIr = ({ ir, focus, setFocus, className, actions, parameters }) => {
           setFocus && setFocus(ir.id);
         }}
       >
-        <td>
+        <td className={s.irCode}>
           <span className={s.icons}>
             {ir.patientYesOrNo && (
               <>

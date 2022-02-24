@@ -229,9 +229,11 @@ export default function IncidentReporting() {
 
   const { get: getLocations } = useHisFetch(endpoints.locations);
   const { get: getDepartments } = useHisFetch(endpoints.departments);
-  const { get: getUsersWithRoles } = useHisFetch(defaultEndpoints.users);
+  const { get: getUsersWithRoles } = useHisFetch(
+    defaultEndpoints.users + `?size=10000`
+  );
   const { get: getAllPatients } = useHisFetch(endpoints.patients);
-  const { get: getUsers } = useHisFetch(endpoints.users);
+  const { get: getUsers } = useHisFetch(endpoints.users + `?size=10000`);
 
   useEffect(() => {
     if (location.state?.edit) {
