@@ -200,8 +200,8 @@ export const IrDashboardContextProvider = ({ children }) => {
         fetch(
           `${
             process.env.REACT_APP_HOST
-          }/IncidentReport/search/countByStatusAndUserId?${new URLSearchParams({
-            status: "2,3,4,5,6,7,8,9",
+          }/IncidentReport/search/countByUserId?${new URLSearchParams({
+            // status: "2,3,4,5,6,7,8,9",
             userId: user.id,
           }).toString()}`
         ).then((res) => res.json()),
