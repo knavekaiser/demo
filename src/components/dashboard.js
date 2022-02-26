@@ -130,7 +130,7 @@ function Dashboard() {
             <button>
               <FaRegBell />
             </button>
-            <button onClick={logout}>
+            <button onClick={logout} data-testid="logout">
               <BiPowerOff />
             </button>
           </div>

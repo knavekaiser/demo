@@ -46,9 +46,6 @@ export default function RiskAssessments() {
       fetch(`${process.env.REACT_APP_HOST}/twoFieldMaster/4`).then((res) =>
         res.json()
       ),
-      // fetch(`${process.env.REACT_APP_HOST}/twoFieldMaster/5`).then((res) =>
-      //   res.json()
-      // ),
     ])
       .then((masters) => {
         const _parameters = { ...parameters };
@@ -206,12 +203,6 @@ export default function RiskAssessments() {
           ))}
         </Table>
       </div>
-      {
-        //   <div className={s.btns}>
-        //   <button className="btn secondary w-100">Clear</button>
-        //   <button className="btn w-100">Save</button>
-        // </div>
-      }
     </div>
   );
 }

@@ -75,7 +75,6 @@ export default function IncidentReporting() {
   const [readOnly, setReadOnly] = useState(false);
   const [parameters, setParameters] = useState(null);
   const [anonymous, setAnonymous] = useState(false);
-  // const involvedDept = methods.watch("deptsLookupMultiselect");
   const patientComplaint = methods.watch("patientYesOrNo");
   const uploads = methods.watch("upload");
   const submitForm = useCallback(
@@ -278,7 +277,9 @@ export default function IncidentReporting() {
       const _parameters = { ...parameters };
       const userDetails = (usersWithRoles?._embedded?.user || []).map(
         (user) => {
-          user.role = user.role?.split(",") || [];
+          user.role = Array.isArray(user.role)
+            ? user.role
+            : user.role?.split(",") || [];
           return user;
         }
       );
@@ -344,7 +345,9 @@ export default function IncidentReporting() {
         _parameters.hods = users._embedded.user
           .map((user) => ({
             ...user,
-            role: user.role?.split(",").filter((r) => r) || [],
+            role: Array.isArray(user.role)
+              ? user.role
+              : user.role?.split(",").filter((r) => r) || [],
           }))
           .filter(
             (u) => u.role.includes("hod") && u.department === user.department
@@ -460,57 +463,6 @@ export default function IncidentReporting() {
                 label="Incident Date & Time *"
                 type="datetime-local"
               />
-              {
-                //   <Combobox
-                //   name="location"
-                //   register={methods.register}
-                //   formOptions={{
-                //     validate: (v) => {
-                //       return (
-                //         +methods.getValues("status") === 1 ||
-                //         v ||
-                //         "Please select a location"
-                //       );
-                //     },
-                //   }}
-                //   onChange={() => {
-                //     methods.clearErrors("locationDetailsEntry");
-                //   }}
-                //   setValue={methods.setValue}
-                //   watch={methods.watch}
-                //   error={methods.formState.errors.location}
-                //   options={parameters?.locations}
-                //   clearErrors={methods.clearErrors}
-                // />
-              }
-              {
-                //   <SearchField
-                //   data={parameters?.locations}
-                //   label="Location of Incident *"
-                //   register={methods.register}
-                //   name="location"
-                //   formOptions={{
-                //     validate: (v) => {
-                //       if (v) return true;
-                //       return (
-                //         +methods.getValues("status") === 1 ||
-                //         "Please Paitent Name"
-                //       );
-                //     },
-                //   }}
-                //   renderListItem={(option) => <>{option.label}</>}
-                //   watch={methods.watch}
-                //   setValue={methods.setValue}
-                //   onChange={(item) => {
-                //     if (typeof item === "string") {
-                //       methods.setValue("location", item);
-                //     } else {
-                //       methods.setValue("location", item.value);
-                //     }
-                //   }}
-                //   error={methods.formState.errors.location}
-                // />
-              }
               <Select
                 control={methods.control}
                 name="location"
@@ -521,7 +473,7 @@ export default function IncidentReporting() {
                     if (v) return true;
                     return (
                       +methods.getValues("status") === 1 ||
-                      "Please Paitent Name"
+                      "Please Select a Location"
                     );
                   },
                 }}
@@ -563,23 +515,6 @@ export default function IncidentReporting() {
               />
               {patientComplaint && (
                 <>
-                  {
-                    //   <Input
-                    //   {...methods.register("patientname", {
-                    //     validate: (v) => {
-                    //       if (
-                    //         methods.getValues("patientYesOrNo") &&
-                    //         +methods.getValues("status") === 2
-                    //       ) {
-                    //         return "Please enter Patient Name";
-                    //       }
-                    //       return true;
-                    //     },
-                    //   })}
-                    //   error={methods.formState.errors.patientname}
-                    //   label="Patient Name / UHID"
-                    // />
-                  }
                   <Select
                     label="Patient Name / UHID *"
                     options={parameters?.patients}
@@ -589,64 +524,6 @@ export default function IncidentReporting() {
                       required: "Please enter Patient Name",
                     }}
                   />
-                  {
-                    //   <SearchField
-                    //   url={endpoints.patients}
-                    //   label="Patient Name / UHID *"
-                    //   processData={(data, value) => {
-                    //     if (Array.isArray(data)) {
-                    //       return data
-                    //         .filter(
-                    //           (p) =>
-                    //             new RegExp(value, "i").test(p.name) ||
-                    //             new RegExp(value, "i").test(p.uhid)
-                    //         )
-                    //         .map((p) => ({
-                    //           value: p.id,
-                    //           label: p.name,
-                    //           data: p,
-                    //         }));
-                    //     } else if (data?._embedded?.patients) {
-                    //       return data._embedded.patients
-                    //         .filter(
-                    //           (p) =>
-                    //             new RegExp(value, "i").test(p.name) ||
-                    //             new RegExp(value, "i").test(p.uhid)
-                    //         )
-                    //         .map((p) => ({
-                    //           value: p.id,
-                    //           label: p.name,
-                    //           data: p,
-                    //         }));
-                    //     }
-                    //     return [];
-                    //   }}
-                    //   register={methods.register}
-                    //   name="patientname"
-                    //   formOptions={{
-                    //     validate: (v) => {
-                    //       if (
-                    //         methods.getValues("patientYesOrNo") &&
-                    //         +methods.getValues("status") === 2
-                    //       ) {
-                    //         return "Please enter Patient Name";
-                    //       }
-                    //       return true;
-                    //     },
-                    //   }}
-                    //   renderListItem={(p) => <>{p.label}</>}
-                    //   watch={methods.watch}
-                    //   setValue={methods.setValue}
-                    //   onChange={(item) => {
-                    //     if (typeof item === "string") {
-                    //       methods.setValue("patientname", item);
-                    //     } else {
-                    //       methods.setValue("patientname", item.name);
-                    //     }
-                    //   }}
-                    //   error={methods.formState.errors.patientname}
-                    // />
-                  }
                   <Input
                     {...methods.register("complaIntegerDatetime", {
                       validate: (v) => {
@@ -732,108 +609,6 @@ export default function IncidentReporting() {
                   error={methods.formState.errors.typeofInci}
                 />
               </div>
-              {
-                //   <table className={s.adverseEvent} cellSpacing={0} cellPadding={0}>
-                //   <thead>
-                //     <tr>
-                //       <th>ADVERSE EVENT</th>
-                //     </tr>
-                //   </thead>
-                //   <tbody>
-                //     <tr>
-                //       <td className={s.label}>
-                //         Degree of harm to the patient / resident
-                //       </td>
-                //       <td>
-                //         <Radio
-                //           options={[
-                //             {
-                //               label: "Unsafe condition",
-                //               value: "unsafeCondtion",
-                //             },
-                //             {
-                //               label: "No Harm",
-                //               value: "noHarm",
-                //             },
-                //             {
-                //               label: "Near Miss",
-                //               value: "nearMiss",
-                //             },
-                //             {
-                //               label: "Adverse Event",
-                //               value: "adverseEvent",
-                //             },
-                //             {
-                //               label: "Sentinel Event",
-                //               value: "sentinelEvent",
-                //             },
-                //           ]}
-                //         />
-                //       </td>
-                //     </tr>
-                //     <tr>
-                //       <td className={s.label}>
-                //         Duration of harm to the patient / resident
-                //       </td>
-                //       <td>
-                //         <Radio
-                //           options={[
-                //             {
-                //               label:
-                //                 "Permanent: Not expected to revert to approximately normal. (ie. patient's baseline)",
-                //               value: "parmanent",
-                //               disabled: true,
-                //             },
-                //             {
-                //               label:
-                //                 "Temporary: Expected to revert to approximately normal. (ie. patient's baseline)",
-                //               value: "temporary",
-                //             },
-                //           ]}
-                //         />
-                //       </td>
-                //     </tr>
-                //     <tr>
-                //       <td className={s.label}>
-                //         Notification of the patient / resident
-                //       </td>
-                //       <td>
-                //         <Radio
-                //           options={[
-                //             {
-                //               label: "Was notified",
-                //               value: "notified",
-                //             },
-                //             {
-                //               label: "Not notified",
-                //               value: "notNotified",
-                //             },
-                //           ]}
-                //         />
-                //       </td>
-                //     </tr>
-                //     <tr>
-                //       <td className={s.label}>
-                //         Increased length of stay expected due to incident
-                //       </td>
-                //       <td>
-                //         <Radio
-                //           options={[
-                //             {
-                //               label: "Yes",
-                //               value: "yes",
-                //             },
-                //             {
-                //               label: "No",
-                //               value: "no",
-                //             },
-                //           ]}
-                //         />
-                //       </td>
-                //     </tr>
-                //   </tbody>
-                // </table>
-              }
               <div className={s.placeholder}>Placeholder</div>
             </div>
           </Box>
@@ -863,48 +638,13 @@ export default function IncidentReporting() {
                 className={s.description}
               />
               <section className={s.departments}>
-                {
-                  //   <Combobox
-                  //   label="Department Involved"
-                  //   name="deptsLookupMultiselect"
-                  //   register={methods.register}
-                  //   watch={methods.watch}
-                  //   setValue={methods.setValue}
-                  //   multiple={true}
-                  //   options={parameters?.departments || []}
-                  //   className={s.search}
-                  // />
-                }
                 <Select
                   label="Department Involved"
                   name="deptsLookupMultiselect"
                   control={methods.control}
                   multiple={true}
                   options={parameters?.departments}
-                  // className={s.search}
                 />
-                {
-                  // involvedDept?.map &&
-                  // involvedDept.map((department) => (
-                  //   <Chip
-                  //     key={department}
-                  //     label={
-                  //       parameters?.departments.find(
-                  //         (dept) =>
-                  //           dept.value.toString() === department.toString()
-                  //       )?.label || department
-                  //     }
-                  //     remove={() => {
-                  //       methods.setValue(
-                  //         "deptsLookupMultiselect",
-                  //         involvedDept.filter(
-                  //           (item) => item.toString() !== department.toString()
-                  //         )
-                  //       );
-                  //     }}
-                  //   />
-                  // ))
-                }
               </section>
               <button style={{ display: "none" }}>submit</button>
             </form>
@@ -1008,19 +748,6 @@ export default function IncidentReporting() {
                   }
                   readOnly={true}
                 />
-                {
-                  //   <Combobox
-                  //   label="Head of the department"
-                  //   placeholder="Enter"
-                  //   name="headofDepart"
-                  //   register={methods.register}
-                  //   options={parameters?.hods}
-                  //   watch={methods.watch}
-                  //   setValue={methods.setValue}
-                  //   error={methods.formState.errors.headofDepart}
-                  //   clearErrors={methods.clearErrors}
-                  // />
-                }
                 <Select
                   label="Head of the department"
                   name="headofDepart"
@@ -1114,65 +841,6 @@ export const IncidentCategory = () => {
             data-testid="incident-category-form"
           >
             <div className={s.form}>
-              {
-                //   <Combobox
-                //   label="Incident Category *"
-                //   name="inciCateg"
-                //   register={register}
-                //   formOptions={{
-                //     validate: (v) => {
-                //       return (
-                //         +getValues("status") === 1 ||
-                //         v ||
-                //         "Please select a Please select a Category"
-                //       );
-                //     },
-                //   }}
-                //   setValue={setValue}
-                //   watch={watch}
-                //   options={categories.map(({ id, name }) => ({
-                //     value: id,
-                //     label: name,
-                //   }))}
-                //   onChange={({ value }) => {
-                //     setValue("inciSubCat", "");
-                //     setTableValues({ category: value });
-                //   }}
-                //   error={errors.inciCateg}
-                //   clearErrors={clearErrors}
-                // />
-                // <Combobox
-                //   label="Incident Sub-category *"
-                //   name="inciSubCat"
-                //   register={register}
-                //   watch={watch}
-                //   setValue={setValue}
-                //   options={
-                //     categories
-                //       ?.find((c) => c.id === cat)
-                //       ?.subCategorys?.filter((c) => c.status)
-                //       .filter((item) => item.status)
-                //       .map(({ id, name }) => ({
-                //         value: id,
-                //         label: name,
-                //       })) || null
-                //   }
-                //   formOptions={{
-                //     validate: (v) => {
-                //       return (
-                //         +getValues("status") === 1 ||
-                //         v ||
-                //         "Please select a Please select a Subcategory"
-                //       );
-                //     },
-                //   }}
-                //   error={errors.inciSubCat}
-                //   onChange={({ value }) =>
-                //     setTableValues((prev) => ({ ...prev, subCat: value }))
-                //   }
-                //   clearErrors={clearErrors}
-                // />
-              }
               <Select
                 control={control}
                 name="inciCateg"
@@ -1182,7 +850,7 @@ export const IncidentCategory = () => {
                     return (
                       +getValues("status") === 1 ||
                       v ||
-                      "Please select a Please select a Category"
+                      "Please select a Category"
                     );
                   },
                 }}
@@ -1214,7 +882,7 @@ export const IncidentCategory = () => {
                     return (
                       +getValues("status") === 1 ||
                       v ||
-                      "Please select a Please select a Subcategory"
+                      "Please select a Subcategory"
                     );
                   },
                 }}
@@ -1443,20 +1111,6 @@ const ActionTakenForm = ({ edit, onSuccess, actions, users, clearForm }) => {
         {...register("immedActionTaken", { required: "Describe the Action" })}
         error={errors.immedActionTaken}
       />
-      {
-        //   <Combobox
-        //   options={users}
-        //   name="accessTakenBy"
-        //   register={register}
-        //   formOptions={{
-        //     required: "Action Taken By",
-        //   }}
-        //   setValue={setValue}
-        //   watch={watch}
-        //   error={errors.accessTakenBy}
-        //   clearErrors={clearErrors}
-        // />
-      }
       <Select
         options={users}
         name="accessTakenBy"
@@ -1612,25 +1266,6 @@ const WitnessesForm = ({
         reset();
       })}
     >
-      {
-        //   <Combobox
-        //   options={
-        //     users?.filter(
-        //       (user) => !witnesses.some((u) => u.witnessName === user.value)
-        //     ) || []
-        //   }
-        //   name="witnessName"
-        //   register={register}
-        //   formOptions={{
-        //     required: "Select a Witness",
-        //   }}
-        //   setValue={setValue}
-        //   watch={watch}
-        //   error={errors.witnessName}
-        //   clearErrors={clearErrors}
-        //   onChange={({ department }) => setValue("witnessDept", department)}
-        // />
-      }
       <Select
         options={
           users?.filter(
@@ -1794,21 +1429,6 @@ const NotificationForm = ({
         reset();
       })}
     >
-      {
-        //   <Combobox
-        //   options={users}
-        //   name="name"
-        //   register={register}
-        //   formOptions={{
-        //     required: "Select a Person",
-        //   }}
-        //   setValue={setValue}
-        //   watch={watch}
-        //   error={errors.name}
-        //   clearErrors={clearErrors}
-        //   onChange={({ department }) => setValue("dept", department)}
-        // />
-      }
       <Select
         options={users}
         name="name"

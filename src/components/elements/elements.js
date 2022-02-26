@@ -146,7 +146,11 @@ export const SearchField = ({
           });
       } else if (defaultData) {
         setData(
-          defaultData.filter((item) => new RegExp(value, "ig").test(item.label))
+          defaultData.filter((item) =>
+            new RegExp(value.replace(/[#-.]|[[-^]|[?|{}]/g, "\\$&"), "ig").test(
+              item.label
+            )
+          )
         );
       }
     }

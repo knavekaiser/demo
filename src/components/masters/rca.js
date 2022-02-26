@@ -1,20 +1,10 @@
 import { useState, useEffect } from "react";
-import { FaInfoCircle, FaPlus, FaCheck, FaRegTrashAlt } from "react-icons/fa";
+import { FaPlus, FaCheck, FaRegTrashAlt } from "react-icons/fa";
 import { BsPencilFill } from "react-icons/bs";
-import { BiSearch } from "react-icons/bi";
-import { RiCloseLine } from "react-icons/ri";
 import { IoClose } from "react-icons/io5";
-import { Box } from "../incidentReport";
-import {
-  Form,
-  Input,
-  Checkbox,
-  Table,
-  TableActions,
-  Toggle,
-} from "../elements";
+import { Input, Table, TableActions, Toggle } from "../elements";
 import { useForm } from "react-hook-form";
-import { Modal, Prompt } from "../modal";
+import { Prompt } from "../modal";
 import s from "./masters.module.scss";
 
 export default function Rcas() {

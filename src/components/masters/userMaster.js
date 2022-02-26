@@ -1,32 +1,20 @@
 import { useState, useEffect, useContext } from "react";
 import { SiteContext } from "../../SiteContext";
-import {
-  FaInfoCircle,
-  FaPlus,
-  FaCheck,
-  FaRegTrashAlt,
-  FaSearch,
-} from "react-icons/fa";
+import { FaPlus, FaCheck, FaRegTrashAlt, FaSearch } from "react-icons/fa";
 import { BsPencilFill } from "react-icons/bs";
 import { IoClose } from "react-icons/io5";
-import { BiSearch } from "react-icons/bi";
-import { Box } from "../incidentReport";
-import { TiTick } from "react-icons/ti";
-import { IoIosClose } from "react-icons/io";
 import {
   Input,
   SearchField,
   MobileNumberInput,
   Combobox,
-  Checkbox,
   Table,
   TableActions,
-  Toggle,
   Moment,
   moment,
 } from "../elements";
 import { useForm } from "react-hook-form";
-import { Modal, Prompt } from "../modal";
+import { Prompt } from "../modal";
 import { permissions } from "../../config";
 import { useHisFetch } from "../../hooks";
 import defaultEndpoints from "../../config/endpoints";
@@ -48,7 +36,7 @@ export default function UserMaster() {
   const [users, setUsers] = useState([]);
   const [hisUsers, setHisUsers] = useState([]);
   const [edit, setEdit] = useState(null);
-  const [addFromHis, setAddFromHis] = useState(false);
+
   useEffect(() => {
     setLoading(true);
     Promise.all([getAllDepartments(), getHisUsers()])
@@ -178,7 +166,6 @@ export default function UserMaster() {
                 }}
                 users={users}
                 role={parameters.role}
-                addFromHis={addFromHis}
               />
             </td>
           </tr>
@@ -280,7 +267,6 @@ const UserForm = ({
   departments,
   users,
   role,
-  addFromHis,
 }) => {
   const { endpoints } = useContext(SiteContext);
   const {
@@ -363,32 +349,35 @@ const UserForm = ({
         // />
       }
       <SearchField
-        url={
-          addFromHis ? endpoints.users : defaultEndpoints.users + `?size=10000`
-        }
-        processData={(data, value) => {
-          if (data?._embedded?.user) {
-            return data._embedded.user
-              .filter((user) => new RegExp(value, "i").test(user.name))
-              .map((user) => ({
-                value: user.id,
-                label: user.name,
-                data: {
-                  ...user,
-                  role: user.role?.split(",") || [],
-                },
-              }));
-          } else if (data.userViewList) {
-            return data.userViewList
-              .filter((user) => new RegExp(value, "i").test(user.userId))
-              .map((user) => ({
-                value: user.userId,
-                label: user.userId,
-                data: user,
-              }));
-          }
-          return [];
-        }}
+        data={users.map((user) => ({
+          label: user.name,
+          value: user.id,
+          data: user,
+        }))}
+        // url={defaultEndpoints.users + `?size=10000`}
+        // processData={(data, value) => {
+        //   if (data?._embedded?.user) {
+        //     return data._embedded.user
+        //       .filter((user) => new RegExp(value, "i").test(user.name))
+        //       .map((user) => ({
+        //         value: user.id,
+        //         label: user.name,
+        //         data: {
+        //           ...user,
+        //           role: user.role?.split(",") || [],
+        //         },
+        //       }));
+        //   } else if (data.userViewList) {
+        //     return data.userViewList
+        //       .filter((user) => new RegExp(value, "i").test(user.userId))
+        //       .map((user) => ({
+        //         value: user.userId,
+        //         label: user.userId,
+        //         data: user,
+        //       }));
+        //   }
+        //   return [];
+        // }}
         register={register}
         name="name"
         formOptions={{
@@ -401,15 +390,7 @@ const UserForm = ({
           if (typeof user === "string") {
             setValue("name", user);
           } else {
-            if (addFromHis) {
-              setValue("name", user.userId);
-              setValue("gender", user.gender?.toLowerCase() || "");
-              setValue("employeeId", user.employeeID);
-              setValue("department", user.departmentMaster?.code || "");
-              setValue("role", ["incidentReporter"]);
-            } else {
-              setEdit(user);
-            }
+            setEdit(user);
           }
         }}
         error={errors.name}
@@ -448,23 +429,28 @@ const UserForm = ({
         // />
       }
       <SearchField
-        url={defaultEndpoints.users + `?size=10000`}
-        processData={(data, value) => {
-          if (data?._embedded?.user) {
-            console.log(data._embedded?.user.length);
-            return data._embedded.user
-              .filter((user) => new RegExp(value, "i").test(user.employeeId))
-              .map((user) => ({
-                value: user.employeeId,
-                label: user.employeeId,
-                data: {
-                  ...user,
-                  role: user.role?.split(",") || [],
-                },
-              }));
-          }
-          return [];
-        }}
+        // url={defaultEndpoints.users + `?size=10000`}
+        // processData={(data, value) => {
+        //   if (data?._embedded?.user) {
+        //     console.log(data._embedded?.user.length);
+        //     return data._embedded.user
+        //       .filter((user) => new RegExp(value, "i").test(user.employeeId))
+        //       .map((user) => ({
+        //         value: user.employeeId,
+        //         label: user.employeeId,
+        //         data: {
+        //           ...user,
+        //           role: user.role?.split(",") || [],
+        //         },
+        //       }));
+        //   }
+        //   return [];
+        // }}
+        data={users.map((user) => ({
+          label: user.employeeId,
+          value: user.employeeId,
+          data: user,
+        }))}
         register={register}
         name="employeeId"
         formOptions={{
@@ -494,24 +480,29 @@ const UserForm = ({
         // />
       }
       <SearchField
-        url={defaultEndpoints.users + `?size=10000`}
-        processData={(data, value) => {
-          if (data?._embedded?.user) {
-            return data._embedded.user
-              .filter((user) =>
-                new RegExp(value.replace("+", ""), "i").test(user.contact)
-              )
-              .map((user) => ({
-                value: user.contact,
-                label: user.contact,
-                data: {
-                  ...user,
-                  role: user.role?.split(",") || [],
-                },
-              }));
-          }
-          return [];
-        }}
+        // url={defaultEndpoints.users + `?size=10000`}
+        // processData={(data, value) => {
+        //   if (data?._embedded?.user) {
+        //     return data._embedded.user
+        //       .filter((user) =>
+        //         new RegExp(value.replace("+", ""), "i").test(user.contact)
+        //       )
+        //       .map((user) => ({
+        //         value: user.contact,
+        //         label: user.contact,
+        //         data: {
+        //           ...user,
+        //           role: user.role?.split(",") || [],
+        //         },
+        //       }));
+        //   }
+        //   return [];
+        // }}
+        data={users.map((user) => ({
+          label: user.contact,
+          value: user.contact,
+          data: user,
+        }))}
         register={register}
         name="contact"
         formOptions={{
@@ -570,22 +561,27 @@ const UserForm = ({
         // />
       }
       <SearchField
-        url={defaultEndpoints.users + `?size=10000`}
-        processData={(data, value) => {
-          if (data?._embedded?.user) {
-            return data._embedded.user
-              .filter((user) => new RegExp(value, "i").test(user.email))
-              .map((user) => ({
-                value: user.email,
-                label: user.email,
-                data: {
-                  ...user,
-                  role: user.role?.split(",") || [],
-                },
-              }));
-          }
-          return [];
-        }}
+        // url={defaultEndpoints.users + `?size=10000`}
+        // processData={(data, value) => {
+        //   if (data?._embedded?.user) {
+        //     return data._embedded.user
+        //       .filter((user) => new RegExp(value, "i").test(user.email))
+        //       .map((user) => ({
+        //         value: user.email,
+        //         label: user.email,
+        //         data: {
+        //           ...user,
+        //           role: user.role?.split(",") || [],
+        //         },
+        //       }));
+        //   }
+        //   return [];
+        // }}
+        data={users.map((user) => ({
+          label: user.email,
+          value: user.email,
+          data: user,
+        }))}
         register={register}
         name="email"
         // formOptions={{

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { FaInfoCircle, FaPlus, FaCheck, FaRegTrashAlt } from "react-icons/fa";
+import { FaPlus, FaCheck, FaRegTrashAlt } from "react-icons/fa";
 import { BsPencilFill } from "react-icons/bs";
 import { BiSearch } from "react-icons/bi";
 import { RiCloseLine } from "react-icons/ri";

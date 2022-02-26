@@ -401,7 +401,7 @@ describe("IR Dashboard", () => {
       },
       checkPermission: () => true,
     };
-
+    setMockFetch(irData);
     await customRender(<IrDashboard />, { providerProps });
   });
 
@@ -438,6 +438,7 @@ describe("My Dashboard", () => {
       },
       checkPermission: () => true,
     };
+    setMockFetch(irData);
     await customRender(<MyDashboard />, { providerProps });
   });
 
@@ -446,8 +447,6 @@ describe("My Dashboard", () => {
     await act(async () => {
       await userEvent.type(input, "123");
     });
-
-    // setMockFetch(irData);
 
     const submitBtn = await screen.getByText("Search");
     await act(async () => {
@@ -486,6 +485,7 @@ describe("Quality Dashboard", () => {
       },
       checkPermission: () => true,
     };
+    setMockFetch(irData);
     await customRender(<QualityDashboard />, { providerProps });
   });
 
@@ -494,8 +494,6 @@ describe("Quality Dashboard", () => {
     await act(async () => {
       await userEvent.type(input, "123");
     });
-
-    setMockFetch(irData);
 
     const submitBtn = await screen.getByText("Search");
     await act(async () => {
@@ -507,7 +505,7 @@ describe("Quality Dashboard", () => {
       await fireEvent.click(actionButton);
     });
 
-    const reAssignBtn = document.querySelector(".modal.actionModal div button");
+    let reAssignBtn = document.querySelector(".modal.actionModal div button");
     await act(async () => {
       await fireEvent.click(reAssignBtn);
     });
@@ -534,6 +532,11 @@ describe("Quality Dashboard", () => {
 
     await act(async () => {
       await fireEvent.click(actionButton);
+    });
+
+    reAssignBtn = document.querySelector(".modal.actionModal div button");
+    await act(async () => {
+      await fireEvent.click(reAssignBtn);
     });
 
     const closeBtn = document.querySelector(`.modal form .btns button`);
