@@ -412,7 +412,7 @@ export const Select = ({
                 <Chip
                   key={department}
                   label={
-                    options.find(
+                    options?.find(
                       (dept) => dept.value.toString() === department.toString()
                     )?.label || department
                   }

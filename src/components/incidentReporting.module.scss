@@ -256,17 +256,6 @@ main {
     .description {
       margin-bottom: 1rem;
     }
-    .departments {
-      display: flex;
-      grid-gap: 0.5rem;
-      align-items: flex-start;
-      flex-wrap: wrap;
-      .search {
-        display: flex;
-        align-items: center;
-        grid-gap: 0.5rem;
-      }
-    }
   }
 }
 .categoryTable {
