@@ -75,6 +75,7 @@ export default function IncidentReporting() {
   const [readOnly, setReadOnly] = useState(false);
   const [parameters, setParameters] = useState(null);
   const [anonymous, setAnonymous] = useState(false);
+  const involvedDept = methods.watch("deptsLookupMultiselect");
   const patientComplaint = methods.watch("patientYesOrNo");
   const uploads = methods.watch("upload");
   const submitForm = useCallback(
@@ -338,7 +339,7 @@ export default function IncidentReporting() {
           }));
         _parameters.users = _users.map((item) => ({
           label: item.fullName,
-          value: item.userId,
+          value: item.id,
           department: item.departmentMaster?.code,
         }));
       } else if (users?._embedded?.user) {
@@ -643,8 +644,32 @@ export default function IncidentReporting() {
                   name="deptsLookupMultiselect"
                   control={methods.control}
                   multiple={true}
+                  renderMultipleValue={true}
+                  setValue={methods.setValue}
                   options={parameters?.departments}
                 />
+                {
+                  // involvedDept?.map &&
+                  // involvedDept.map((department) => (
+                  //   <Chip
+                  //     key={department}
+                  //     label={
+                  //       parameters?.departments.find(
+                  //         (dept) =>
+                  //           dept.value.toString() === department.toString()
+                  //       )?.label || department
+                  //     }
+                  //     remove={() => {
+                  //       methods.setValue(
+                  //         "deptsLookupMultiselect",
+                  //         involvedDept.filter(
+                  //           (item) => item.toString() !== department.toString()
+                  //         )
+                  //       );
+                  //     }}
+                  //   />
+                  // ))
+                }
               </section>
               <button style={{ display: "none" }}>submit</button>
             </form>
@@ -741,10 +766,14 @@ export default function IncidentReporting() {
                 <Input
                   label="Department"
                   value={
-                    parameters?.departments?.find(
-                      (item) =>
+                    parameters?.departments?.find((item, i) => {
+                      if (i === 1) {
+                        console.log(parameters.departments, user.department);
+                      }
+                      return (
                         item.value.toString() === user.department.toString()
-                    )?.label || ""
+                      );
+                    })?.label || ""
                   }
                   readOnly={true}
                 />

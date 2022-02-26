@@ -144,69 +144,90 @@ function Dashboard() {
           <BiChevronLeft />
         </button>
         <ul className={s.links}>
-          <li
-            className={`${s.sidebarItem} ${
-              location.pathname.startsWith(paths.incidentReport) ? s.active : ""
-            }`}
-          >
-            <Link to={paths.incidentReport}>
-              <span className={s.label}>
-                <IncidentReportIcon className={s.icon} />{" "}
-                <span className={s.text}>Incident Reporting</span>
+          {checkPermission({
+            roleId: ["incidentManager", "irInvestigator", "incidentReporter"],
+          }) && (
+            <li
+              className={`${s.sidebarItem} ${
+                location.pathname.startsWith(paths.incidentReport)
+                  ? s.active
+                  : ""
+              }`}
+            >
+              <Link to={paths.incidentReport}>
+                <span className={s.label}>
+                  <IncidentReportIcon className={s.icon} />{" "}
+                  <span className={s.text}>Incident Reporting</span>
+                </span>
+              </Link>
+            </li>
+          )}
+          {checkPermission({
+            roleId: ["incidentManager", "irInvestigator", "incidentReporter"],
+          }) && <SidebarItem_IrDashboard />}
+          {checkPermission({
+            roleId: ["incidentManager", "irInvestigator", "incidentReporter"],
+          }) && (
+            <li
+              className={`${s.sidebarItem} ${
+                location.pathname.startsWith(paths.capaReport) ? s.active : ""
+              }`}
+            >
+              <Link to={paths.capaReport}>
+                <span className={s.label}>
+                  <CapaIcon className={s.icon} />{" "}
+                  <span className={s.text}>CAPA Reporting</span>
+                </span>
+              </Link>
+            </li>
+          )}
+          {checkPermission({
+            roleId: ["incidentManager", "irInvestigator"],
+          }) && (
+            <li
+              className={`${s.sidebarItem} ${
+                location.pathname.startsWith(paths.reports) ? s.active : ""
+              }`}
+            >
+              <Link to={paths.reports}>
+                <span className={s.label}>
+                  <ReportsIcon className={s.icon} />{" "}
+                  <span className={s.text}>Reports</span>
+                </span>
+              </Link>
+            </li>
+          )}
+          {checkPermission({
+            roleId: "irAdmin",
+            permission: "IR Configuration",
+          }) && (
+            <Accordion
+              label=<span className={s.label}>
+                <IrConfigIcon className={s.icon} />{" "}
+                <span className={s.text}>IR Configuration</span>
               </span>
-            </Link>
-          </li>
-          <SidebarItem_IrDashboard />
-          <li
-            className={`${s.sidebarItem} ${
-              location.pathname.startsWith(paths.capaReport) ? s.active : ""
-            }`}
-          >
-            <Link to={paths.capaReport}>
-              <span className={s.label}>
-                <CapaIcon className={s.icon} />{" "}
-                <span className={s.text}>CAPA Reporting</span>
-              </span>
-            </Link>
-          </li>
-          <li
-            className={`${s.sidebarItem} ${
-              location.pathname.startsWith(paths.reports) ? s.active : ""
-            }`}
-          >
-            <Link to={paths.reports}>
-              <span className={s.label}>
-                <ReportsIcon className={s.icon} />{" "}
-                <span className={s.text}>Reports</span>
-              </span>
-            </Link>
-          </li>
-          <Accordion
-            label=<span className={s.label}>
-              <IrConfigIcon className={s.icon} />{" "}
-              <span className={s.text}>IR Configuration</span>
-            </span>
-            basePath={paths.irConfig.basePath}
-            className={`${s.sidebarItem} ${
-              location.pathname.startsWith(paths.irConfig.basePath)
-                ? s.active
-                : ""
-            }`}
-            items={[
-              {
-                label: <>Main Configuration</>,
-                path: paths.irConfig.mainConfig,
-              },
-              {
-                label: <>User Permission</>,
-                path: paths.irConfig.userPermission,
-              },
-              {
-                label: <>IR Data Analytics</>,
-                path: paths.irConfig.irDataAnalytics,
-              },
-            ]}
-          />
+              basePath={paths.irConfig.basePath}
+              className={`${s.sidebarItem} ${
+                location.pathname.startsWith(paths.irConfig.basePath)
+                  ? s.active
+                  : ""
+              }`}
+              items={[
+                {
+                  label: <>Main Configuration</>,
+                  path: paths.irConfig.mainConfig,
+                },
+                {
+                  label: <>User Permission</>,
+                  path: paths.irConfig.userPermission,
+                },
+                {
+                  label: <>IR Data Analytics</>,
+                  path: paths.irConfig.irDataAnalytics,
+                },
+              ]}
+            />
+          )}
           {checkPermission({ roleId: "irAdmin", permission: "IR Master" }) && (
             <Accordion
               label=<span className={s.label}>

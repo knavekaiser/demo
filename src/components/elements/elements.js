@@ -347,12 +347,16 @@ export const Radio = ({
       data-testid="radioInput"
     >
       {options.map(({ label, value: v, hint, disabled }) => (
-        <label key={v} htmlFor={v} className={disabled ? s.disabled : ""}>
+        <label
+          key={v}
+          htmlFor={name + v}
+          className={disabled ? s.disabled : ""}
+        >
           <input
             {...register(name, { ...formOptions })}
             type="radio"
             name={name}
-            id={v}
+            id={name + v}
             className="label"
             value={v}
           />

@@ -521,11 +521,11 @@
 .chip {
   display: flex;
   align-items: center;
-  grid-gap: 0.3rem;
+  grid-gap: 8px;
   border: 1px solid rgb(186, 194, 199);
   background: rgb(246, 246, 246);
   border-radius: 3px;
-  padding: 2px 6px;
+  padding: 0 8px;
   font-size: 14px;
   width: max-content;
   button {
@@ -701,12 +701,21 @@
 }
 
 .select {
+  width: 100%;
   display: grid;
   label {
     font-size: 0.8rem;
     font-weight: 600;
     margin-bottom: 0.2rem;
     white-space: nowrap;
+  }
+  .field {
+    display: flex;
+    flex-wrap: wrap;
+    grid-gap: 6px;
+    .reactSelect {
+      max-width: 15rem;
+    }
   }
   .errMsg {
     font-size: 10pt;

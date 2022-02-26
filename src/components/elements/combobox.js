@@ -10,7 +10,7 @@ import s from "./elements.module.scss";
 
 import { FaSortDown, FaSearch } from "react-icons/fa";
 import { Modal } from "../modal";
-import { Input } from "./elements";
+import { Input, Chip } from "./elements";
 import { Controller } from "react-hook-form";
 
 import ReactSelect, { components } from "react-select";
@@ -341,6 +341,8 @@ export const Select = ({
   label,
   className,
   placeholder,
+  renderMultipleValue,
+  setValue,
   onChange: _onChange,
 }) => {
   return (
@@ -354,52 +356,77 @@ export const Select = ({
       }) => (
         <section className={s.select}>
           {label && <label>{label}</label>}
-          <ReactSelect
-            placeholder={
-              !options || !options?.length
-                ? "No options provided"
-                : placeholder || "Enter"
-            }
-            components={{ DropdownIndicator }}
-            className={`reactSelect ${error && "err"} ${className || ""}`}
-            classNamePrefix="reactSelect"
-            isDisabled={!options || !options?.length}
-            inputRef={ref}
-            menuPortalTarget={document.querySelector("#portal")}
-            menuPlacement="auto"
-            options={options || []}
-            value={
-              options?.find((op) => op.value === value) ||
-              options?.filter((op) =>
-                value?.some?.((item) => item === op.value)
-              ) ||
-              ""
-            }
-            onChange={(val) => {
-              if (multiple) {
-                onChange(val.map((item) => item.value));
-              } else {
-                onChange(val.value);
+          <div className={s.field}>
+            <ReactSelect
+              placeholder={
+                !options || !options?.length
+                  ? "No options provided"
+                  : placeholder || "Enter"
               }
-              _onChange && _onChange(val);
-            }}
-            isMulti={multiple}
-            styles={{
-              option: (provided, state) => ({
-                ...provided,
-                background: state.isSelected
-                  ? "#e8e8e8;"
-                  : state.isFocused
-                  ? "#eeeeee"
-                  : "white",
-                padding: "6px 10px",
-                color: "black",
-                fontSize: "0.8rem",
-              }),
-              control: () => ({}),
-              singleValue: (provided, state) => {},
-            }}
-          />
+              components={{ DropdownIndicator }}
+              className={`reactSelect ${s.reactSelect} ${error ? "err" : ""} ${
+                className || ""
+              } ${renderMultipleValue ? "hideMultipleValue" : ""}`}
+              classNamePrefix="reactSelect"
+              isDisabled={!options || !options?.length}
+              inputRef={ref}
+              menuPortalTarget={document.querySelector("#portal")}
+              menuPlacement="auto"
+              options={options || []}
+              value={
+                options?.find((op) => op.value === value) ||
+                options?.filter((op) =>
+                  value?.some?.((item) => item === op.value)
+                ) ||
+                ""
+              }
+              onChange={(val) => {
+                if (multiple) {
+                  onChange(val.map((item) => item.value));
+                } else {
+                  onChange(val.value);
+                }
+                _onChange && _onChange(val);
+              }}
+              isMulti={multiple}
+              styles={{
+                option: (provided, state) => ({
+                  ...provided,
+                  background: state.isSelected
+                    ? "#e8e8e8;"
+                    : state.isFocused
+                    ? "#eeeeee"
+                    : "white",
+                  padding: "6px 10px",
+                  color: "black",
+                  fontSize: "0.8rem",
+                }),
+                control: () => ({}),
+                singleValue: (provided, state) => {},
+              }}
+            />
+            {renderMultipleValue &&
+              setValue &&
+              value.map &&
+              value.map((department) => (
+                <Chip
+                  key={department}
+                  label={
+                    options.find(
+                      (dept) => dept.value.toString() === department.toString()
+                    )?.label || department
+                  }
+                  remove={() => {
+                    setValue(
+                      "deptsLookupMultiselect",
+                      value.filter(
+                        (item) => item.toString() !== department.toString()
+                      )
+                    );
+                  }}
+                />
+              ))}
+          </div>
           {error && <span className={s.errMsg}>{error.message}</span>}
         </section>
       )}

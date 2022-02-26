@@ -179,8 +179,14 @@ function IrDashboard() {
                   label: "Quality Dashboard",
                   path: paths.incidentDashboard.qualityDashboard,
                   search: {
-                    // status: 3,
-                    irInvestigator: user.id,
+                    view: user.role.includes("incidentManager")
+                      ? "all"
+                      : "assigned",
+                    ...(user.role.includes("incidentManager")
+                      ? {}
+                      : {
+                          irInvestigator: user.id,
+                        }),
                   },
                 },
               ]
@@ -684,9 +690,16 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
   const navigate = useNavigate();
   const { user, checkPermission } = useContext(SiteContext);
   const { parameters } = useContext(IrDashboardContext);
+  const defaultView = user?.role.includes("incidentManager")
+    ? "all"
+    : "assigned";
   const { handleSubmit, register, watch, reset, setValue, getValues } = useForm(
     {
-      defaultValues: { irBy: "self", status: "", view: "assigned" },
+      defaultValues: {
+        irBy: "self",
+        status: "",
+        view: user.role.includes("incidentManager") ? "all" : "assigned",
+      },
     }
   );
   const [categories, setCategories] = useState([]);
@@ -710,12 +723,10 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
       toreportingDate: "",
       fromIncidentDateTime: "",
       toIncidentDateTime: "",
-      // view: _filters.status === "3" ? "assigned" : "all",
       ..._filters,
       typeofInci: _filters.typeofInci?.split(",").map((c) => +c) || "",
       irInvestigator: _filters.irInvestigator?.split(",").map((c) => +c) || "",
       status: _filters.status?.split(",").map((c) => +c) || "",
-      // view: "assigned",
       InciCateg: _filters.InciCateg?.split(",").map((c) => +c) || "",
     });
   }, [location.search]);
@@ -724,10 +735,8 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
     if (qualityDashboard) {
       if (view === "all") {
         setValue("irInvestigator", "");
-        // setValue("status", "");
       } else if (view === "assigned") {
         setValue("irInvestigator", user.id);
-        // setValue("status", 3);
       }
     }
   }, [view]);
@@ -883,22 +892,18 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
           onClick={() => {
             reset({
               irBy: "self",
-              view: "assigned",
+              view: defaultView,
             });
-            // navigate({
-            //   pathname: location.pathname,
-            //   search: `?${createSearchParams(_filters)}`,
-            // });
             navigate({
               pathname: location.pathname,
               search: `?${createSearchParams({
                 irBy: "self",
-                view: "assigned",
+                view: defaultView,
               })}`,
             });
             onSubmit({
               irBy: "self",
-              view: "assigned",
+              view: defaultView,
             });
           }}
         >
