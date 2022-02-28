@@ -97,12 +97,10 @@ export default function Login() {
                 });
               }
               const user = await fetch(
-                `${appConfig.orgUrl}/userMasterService/getUserDeatils?userId=yashtech`,
+                `${appConfig.orgUrl}/userMasterService/getUserDeatils?userId=${data.username}`,
                 {
                   method: "GET",
-                  headers: {
-                    SECURITY_TOKEN: token,
-                  },
+                  headers: { SECURITY_TOKEN: token },
                 }
               )
                 .then((res) => res.json())

@@ -383,6 +383,28 @@ export const MyDashboard = () => {
                           });
                         },
                       },
+                      {
+                        icon: <FaRegTrashAlt />,
+                        label: "Delete",
+                        callBack: () => {
+                          Prompt({
+                            type: "confirmation",
+                            message: `Are you sure you want to remove this incident?`,
+                            callback: () => {
+                              fetch(
+                                `${process.env.REACT_APP_HOST}/IncidentReport/${inc.id}`,
+                                { method: "DELETE" }
+                              ).then((res) => {
+                                if (res.status === 204) {
+                                  setIncidents((prev) =>
+                                    prev.filter((ir) => ir.id !== inc.id)
+                                  );
+                                }
+                              });
+                            },
+                          });
+                        },
+                      },
                       ...((checkPermission({
                         roleId: ["irInvestigator", "incidentManager"],
                         permission: "Cancel IR",
