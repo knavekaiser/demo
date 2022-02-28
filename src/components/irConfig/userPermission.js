@@ -192,8 +192,8 @@ export default function UserPermission() {
                   ).then((res) => res.json())
                 )
               )
-                .then((data) => {
-                  const currentUserUpdate = data.filter((item) =>
+                .then((resData) => {
+                  const currentUserUpdate = updatePending.filter((item) =>
                     user.role.includes(item.role)
                   );
                   if (currentUserUpdate.length) {

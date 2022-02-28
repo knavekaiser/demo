@@ -99,7 +99,7 @@ export default function IncidentReporting() {
           let links = [];
 
           if (newFiles.length) {
-            links = await fetch(endpoints.uploadFiles, {
+            links = await fetch(defaultEndpoints.uploadFiles, {
               method: "POST",
               body: formData,
             })
@@ -711,7 +711,7 @@ export default function IncidentReporting() {
           </form>
           <div className={s.tables}>
             <div className={s.actionWrapper}>
-              <h4>Immediate Action taken</h4>
+              <h4>Immediate Action Taken</h4>
               <ActionTaken
                 users={parameters?.users}
                 setValue={methods.setValue}
@@ -757,9 +757,6 @@ export default function IncidentReporting() {
                   label="Department"
                   value={
                     parameters?.departments?.find((item, i) => {
-                      if (i === 1) {
-                        console.log(parameters.departments, user.department);
-                      }
                       return (
                         item.value.toString() === user.department.toString()
                       );
@@ -776,7 +773,11 @@ export default function IncidentReporting() {
               </>
             )}
           </div>
-          <form className={s.btns} onSubmit={methods.handleSubmit(submitForm)}>
+          <form
+            className={s.btns}
+            onSubmit={methods.handleSubmit(submitForm)}
+            data-testid="irFormActions"
+          >
             <button
               className="btn secondary w-100"
               type="button"
@@ -1016,7 +1017,7 @@ export const ActionTaken = ({ actions, users, setValue }) => {
   return (
     <Table
       columns={[
-        { label: "Action taken" },
+        { label: "Action Taken" },
         { label: "Action Taken By" },
         { label: "Date & Time" },
         { label: "Action" },
@@ -1179,9 +1180,7 @@ const ActionTakenForm = ({ edit, onSuccess, actions, users, clearForm }) => {
   );
 };
 
-// Remove everyting related to Edit
 export const Witnesses = ({ users, departments, witnesses, setValue }) => {
-  const [edit, setEdit] = useState(null);
   return (
     <Table
       columns={[
@@ -1194,8 +1193,6 @@ export const Witnesses = ({ users, departments, witnesses, setValue }) => {
       <tr>
         <td className={s.inlineForm}>
           <WitnessesForm
-            {...(edit && { edit })}
-            key={edit ? "edit" : "add"}
             onSuccess={(newWitness) => {
               const newWitnesses = witnesses.find(
                 (wt) => wt.witnessName === newWitness.witnessName
@@ -1205,9 +1202,7 @@ export const Witnesses = ({ users, departments, witnesses, setValue }) => {
                   )
                 : [...witnesses, newWitness];
               setValue("witness", newWitnesses);
-              setEdit(null);
             }}
-            clearForm={() => setEdit(null)}
             witnesses={witnesses}
             users={users}
             departments={departments}
@@ -1248,14 +1243,7 @@ export const Witnesses = ({ users, departments, witnesses, setValue }) => {
     </Table>
   );
 };
-const WitnessesForm = ({
-  edit,
-  onSuccess,
-  witnesses,
-  users,
-  departments,
-  clearForm,
-}) => {
+const WitnessesForm = ({ onSuccess, witnesses, users, departments }) => {
   const {
     handleSubmit,
     control,
@@ -1266,21 +1254,10 @@ const WitnessesForm = ({
     formState: { errors },
     clearErrors,
   } = useForm();
-  useEffect(() => reset({ ...edit }), [edit]);
   const dept = watch("witnessDept");
   return (
     <form
       onSubmit={handleSubmit((data) => {
-        if (
-          !edit &&
-          witnesses?.some((witness) => witness.witnessName === data.witnessName)
-        ) {
-          Prompt({
-            type: "information",
-            message: `Winess already selected.`,
-          });
-          return;
-        }
         onSuccess(data);
         reset();
       })}
@@ -1306,25 +1283,8 @@ const WitnessesForm = ({
       />
       <div className={s.btns} data-testid="witnessBtns">
         <button className="btn secondary" type="submit">
-          {edit ? (
-            <FaCheck />
-          ) : (
-            <>
-              <FaPlus /> Add
-            </>
-          )}
+          <FaPlus /> Add
         </button>
-        {edit && (
-          <button
-            type="button"
-            onClick={() => {
-              clearForm();
-            }}
-            className="btn secondary"
-          >
-            <IoClose />
-          </button>
-        )}
       </div>
     </form>
   );

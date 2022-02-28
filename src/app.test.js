@@ -8,6 +8,9 @@ import {
 } from "./SiteContext";
 import { BrowserRouter } from "react-router-dom";
 import { render, screen, act, fireEvent } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+
+import reportWebVitals from "./reportWebVitals";
 
 const customRender = async (ui, providerProps) => {
   return act(async () => {
@@ -53,12 +56,6 @@ const setMockFailFetch = () => {
   jest.spyOn(global, "fetch").mockResolvedValue();
 };
 
-// test("App", async () => {
-//   await customRender(<App />);
-//   const comp = screen.getByTestId("app");
-//   expect(comp.textContent).toMatch("Sign In");
-// });
-
 const mockData = {
   _embedded: {
     userPermission: [
@@ -93,7 +90,7 @@ const mockData = {
     ],
     user: [
       {
-        id: 6,
+        id: 3,
         name: "admin",
         gender: "male",
         dob: null,
@@ -126,7 +123,7 @@ const mockData = {
         employeeId: "99",
         contact: "+919946455466",
         email: "cfr@sdd.vbn",
-        department: 2,
+        department: 4,
         role: "irInvestigator,incidentReporter",
         password: "12345",
       },
@@ -352,6 +349,40 @@ describe("App tests", () => {
     setMockFetch(mockData);
   });
 
+  test("whole form", async () => {
+    await customRender(<App />, {
+      user: { id: 10, name: "Test User", role: ["irAdmin"], department: 1 },
+    });
+
+    let dateInput = document.querySelector("input[name='incident_Date_Time']");
+    await act(async () => {
+      await fireEvent.change(dateInput, {
+        target: { value: "2020-05-12T20:20" },
+      });
+    });
+    expect(dateInput.value).toBe("2020-05-12T20:20");
+
+    const btns = await screen.getByTestId("irFormActions");
+
+    const clearBtn = btns.querySelector(`.btn.secondary[type="button"]`);
+    await act(async () => {
+      await fireEvent.click(clearBtn);
+    });
+
+    dateInput = document.querySelector("input[name='incident_Date_Time']");
+    await act(async () => {
+      await fireEvent.change(dateInput, {
+        target: { value: "2020-05-12T20:20" },
+      });
+    });
+    expect(dateInput.value).toBe("2020-05-12T20:20");
+
+    const saveBtn = btns.querySelector(`.btn.secondary[type="button"]`);
+    await act(async () => {
+      await fireEvent.click(saveBtn);
+    });
+  });
+
   test("No User", async () => {
     await customRender(<App />);
     const comp = screen.getByTestId("app");
@@ -371,26 +402,257 @@ describe("App tests", () => {
     });
   });
 
+  test("Categories", async () => {
+    await customRender(<App />, {
+      user: { id: 10, name: "Test User", role: ["irAdmin"], department: 1 },
+    });
+
+    let box = document.querySelector(".incidentCategory");
+
+    const category = box.querySelector(".select:nth-child(1) input");
+    await act(async () => {
+      await userEvent.type(category, "Medication Errors");
+      await userEvent.type(category, "{enter}");
+    });
+
+    const subCategory = box.querySelector(".select:nth-child(2) input");
+    await act(async () => {
+      await userEvent.type(subCategory, "Sub Cat1");
+      await userEvent.type(subCategory, "{enter}");
+    });
+
+    let infoBtn = box.querySelector("button.info");
+    await act(async () => {
+      await fireEvent.click(infoBtn);
+    });
+
+    const tableCat = document.querySelector(
+      ".modal table tr:nth-child(2) td:nth-child(2) label"
+    );
+    await act(async () => {
+      await fireEvent.click(tableCat);
+    });
+
+    const saveBtn = document.querySelector(".modal .btns .btn.secondary");
+    await act(async () => {
+      await fireEvent.click(saveBtn);
+    });
+
+    infoBtn = box.querySelector("button.info");
+    await act(async () => {
+      await fireEvent.click(infoBtn);
+    });
+
+    const infoCloseBtn = document.querySelector(".modal .head button.clear");
+    await act(async () => {
+      await fireEvent.click(infoCloseBtn);
+    });
+
+    infoBtn = box.querySelector("button.info");
+    await act(async () => {
+      await fireEvent.click(infoBtn);
+    });
+
+    const cancelButton = document.querySelector(".modal .btns .btn.ghost");
+    await act(async () => {
+      await fireEvent.click(cancelButton);
+    });
+  });
+
+  test("Action Table", async () => {
+    await customRender(<App />, {
+      user: { id: 10, name: "Test User", role: ["irAdmin"], department: 1 },
+    });
+
+    let table = document.querySelector(".actionTaken");
+
+    let textInput = table.querySelector("form textarea");
+    await act(async () => {
+      await userEvent.type(textInput, "description");
+    });
+
+    let selectInput = table.querySelector("form .reactSelect input");
+    await act(async () => {
+      await userEvent.type(selectInput, "admin");
+      await userEvent.type(selectInput, "{enter}");
+    });
+
+    let select = table.querySelector("form .reactSelect");
+    expect(select.textContent).toBe("admin");
+
+    let dateInput = table.querySelector(`form input[type="datetime-local"]`);
+    await act(async () => {
+      await fireEvent.change(dateInput, {
+        target: { value: "2020-05-12T20:20" },
+      });
+    });
+    expect(dateInput.value).toBe("2020-05-12T20:20");
+
+    let submitBtn = table.querySelector(`form button[type="submit"]`);
+    await act(async () => {
+      await fireEvent.click(submitBtn);
+    });
+
+    let editBtn = table.querySelector(`button[title="Edit"]`);
+    await act(async () => {
+      await fireEvent.click(editBtn);
+    });
+
+    let clearBtn = table.querySelector(`form .btns button[type="button"]`);
+    await act(async () => {
+      await fireEvent.click(clearBtn);
+    });
+
+    textInput = table.querySelector("form textarea");
+    await act(async () => {
+      await userEvent.type(textInput, "description for yashtech");
+    });
+
+    selectInput = table.querySelector("form .reactSelect input");
+    await act(async () => {
+      await userEvent.type(selectInput, "");
+      await userEvent.type(selectInput, "yashtech");
+      await userEvent.type(selectInput, "{enter}");
+    });
+
+    dateInput = table.querySelector(`form input[type="datetime-local"]`);
+    await act(async () => {
+      await fireEvent.change(dateInput, {
+        target: { value: "2020-05-12T20:20" },
+      });
+    });
+
+    submitBtn = table.querySelector(`form button[type="submit"]`);
+    await act(async () => {
+      await fireEvent.click(submitBtn);
+    });
+
+    editBtn = table.querySelector(`button[title="Edit"]`);
+    await act(async () => {
+      await fireEvent.click(editBtn);
+    });
+
+    clearBtn = table.querySelector(`form .btns button[type="button"]`);
+    await act(async () => {
+      await fireEvent.click(clearBtn);
+    });
+
+    editBtn = table.querySelector(`button[title="Edit"]`);
+    await act(async () => {
+      await fireEvent.click(editBtn);
+    });
+
+    dateInput = table.querySelector(`form input[type="datetime-local"]`);
+    await act(async () => {
+      await fireEvent.change(dateInput, {
+        target: { value: "2020-01-12T10:80" },
+      });
+    });
+
+    submitBtn = table.querySelector(`form button[type="submit"]`);
+    await act(async () => {
+      await fireEvent.click(submitBtn);
+    });
+
+    editBtn = table.querySelector(`button[title="Edit"]`);
+    await act(async () => {
+      await fireEvent.click(editBtn);
+    });
+
+    clearBtn = table.querySelector(`form .btns button[type="button"]`);
+    await act(async () => {
+      await fireEvent.click(clearBtn);
+    });
+
+    textInput = table.querySelector("form textarea");
+    await act(async () => {
+      await userEvent.type(textInput, "description");
+    });
+
+    selectInput = table.querySelector("form .reactSelect input");
+    await act(async () => {
+      await userEvent.type(selectInput, "");
+      await userEvent.type(selectInput, "admin");
+      await userEvent.type(selectInput, "{enter}");
+    });
+
+    dateInput = table.querySelector(`form input[type="datetime-local"]`);
+    await act(async () => {
+      await fireEvent.change(dateInput, {
+        target: { value: "2020-05-12T20:20" },
+      });
+    });
+
+    submitBtn = table.querySelector(`form button[type="submit"]`);
+    await act(async () => {
+      await fireEvent.click(submitBtn);
+    });
+
+    const deleteBtn = table.querySelector(`button[title="Delete"]`);
+    await act(async () => {
+      await fireEvent.click(deleteBtn);
+    });
+
+    const deleteYes = document.querySelector(".prompt .actions button.yes");
+    expect(deleteYes.textContent).toBe("Yes");
+
+    await act(async () => {
+      await fireEvent.click(deleteYes);
+    });
+
+    table = document.querySelector(".actionTaken");
+    expect(table.textContent).toMatch("Action TakenAction Taken By");
+  });
+
   test("Witness Table", async () => {
     await customRender(<App />, {
       user: { id: 10, name: "Test User", role: ["irAdmin"], department: 1 },
     });
 
-    const table = document.querySelector(".witnesses");
-    const selectInput = table.querySelector("form .select");
+    let table = document.querySelector(".witnesses");
+
+    let selectInput = table.querySelector("form .reactSelect input");
     await act(async () => {
-      await fireEvent.click(selectInput);
+      await userEvent.type(selectInput, "admin");
+      await userEvent.type(selectInput, "{enter}");
     });
 
-    // const optionsOne = document.querySelector(".modal ul li");
-    // await act(async () => {
-    //   await fireEvent.click(optionsOne);
-    // });
+    let select = table.querySelector("form .reactSelect");
+    expect(select.textContent).toBe("admin");
 
-    const submit = table.querySelector(`form .btns button[type="submit"]`);
+    let deparmentInput = table.querySelector("form input[readonly]");
+    expect(deparmentInput.value).toBe("Dept1");
+
+    let submitBtn = table.querySelector(`form button[type="submit"]`);
     await act(async () => {
-      await fireEvent.click(submit);
+      await fireEvent.click(submitBtn);
     });
+
+    selectInput = table.querySelector("form .reactSelect input");
+    await act(async () => {
+      await userEvent.type(selectInput, "yashtech");
+      await userEvent.type(selectInput, "{enter}");
+    });
+
+    submitBtn = table.querySelector(`form button[type="submit"]`);
+    await act(async () => {
+      await fireEvent.click(submitBtn);
+    });
+
+    const deleteBtn = table.querySelector(`button[title="Delete"]`);
+    await act(async () => {
+      await fireEvent.click(deleteBtn);
+    });
+
+    const deleteYes = document.querySelector(".prompt .actions button.yes");
+    expect(deleteYes.textContent).toBe("Yes");
+
+    await act(async () => {
+      await fireEvent.click(deleteYes);
+    });
+
+    table = document.querySelector(".witnesses");
+    expect(table.textContent).toMatch("NameDepartmentActionEnter");
   });
 
   test("Notification Table", async () => {
@@ -398,34 +660,109 @@ describe("App tests", () => {
       user: { id: 10, name: "Test User", role: ["irAdmin"], department: 1 },
     });
 
-    const table = document.querySelector(".notified");
-    const selectInput = table.querySelector("form .reactSelect__control");
+    let table = document.querySelector(".notified");
+
+    let selectInput = table.querySelector("form .reactSelect input");
     await act(async () => {
-      await fireEvent.click(selectInput);
+      await userEvent.type(selectInput, "admin");
+      await userEvent.type(selectInput, "{enter}");
     });
 
-    // const optionsOne = document.querySelector(
-    //   ".react-select__menu-list .react-select__option"
-    // );
-    // const test = screen.getByTestId("sdf");
+    let select = table.querySelector("form .reactSelect");
+    expect(select.textContent).toBe("admin");
 
-    // const optionsOne = document.querySelector(
-    //   ".react-select__menu-list .react-select__option"
-    // );
-    // await act(async () => {
-    //   await fireEvent.click(optionsOne);
-    // });
+    let deparmentInput = table.querySelector("form input[readonly]");
+    expect(deparmentInput.value).toBe("Dept1");
 
-    const dateInput = table.querySelector(`form input[type="datetime-local"]`);
+    let dateInput = table.querySelector(`form input[type="datetime-local"]`);
     await act(async () => {
       await fireEvent.change(dateInput, {
-        target: { value: "2020-01-01" },
+        target: { value: "2020-05-12T20:20" },
+      });
+    });
+    expect(dateInput.value).toBe("2020-05-12T20:20");
+
+    let submitBtn = table.querySelector(`form button[type="submit"]`);
+    await act(async () => {
+      await fireEvent.click(submitBtn);
+    });
+
+    let editBtn = table.querySelector(`button[title="Edit"]`);
+    await act(async () => {
+      await fireEvent.click(editBtn);
+    });
+
+    let clearBtn = table.querySelector(`form .btns button[type="button"]`);
+    await act(async () => {
+      await fireEvent.click(clearBtn);
+    });
+
+    selectInput = table.querySelector("form .reactSelect input");
+    await act(async () => {
+      await userEvent.type(selectInput, "");
+      await userEvent.type(selectInput, "yashtech");
+      await userEvent.type(selectInput, "{enter}");
+    });
+
+    dateInput = table.querySelector(`form input[type="datetime-local"]`);
+    await act(async () => {
+      await fireEvent.change(dateInput, {
+        target: { value: "2020-05-12T20:20" },
       });
     });
 
-    const submit = table.querySelector(`form .btns button[type="submit"]`);
+    submitBtn = table.querySelector(`form button[type="submit"]`);
     await act(async () => {
-      await fireEvent.click(submit);
+      await fireEvent.click(submitBtn);
     });
+
+    editBtn = table.querySelector(`button[title="Edit"]`);
+    await act(async () => {
+      await fireEvent.click(editBtn);
+    });
+
+    clearBtn = table.querySelector(`form .btns button[type="button"]`);
+    await act(async () => {
+      await fireEvent.click(clearBtn);
+    });
+
+    selectInput = table.querySelector("form .reactSelect input");
+    await act(async () => {
+      await userEvent.type(selectInput, "");
+      await userEvent.type(selectInput, "admin");
+      await userEvent.type(selectInput, "{enter}");
+    });
+
+    dateInput = table.querySelector(`form input[type="datetime-local"]`);
+    await act(async () => {
+      await fireEvent.change(dateInput, {
+        target: { value: "2020-05-12T20:20" },
+      });
+    });
+
+    submitBtn = table.querySelector(`form button[type="submit"]`);
+    await act(async () => {
+      await fireEvent.click(submitBtn);
+    });
+
+    const deleteBtn = table.querySelector(`button[title="Delete"]`);
+    await act(async () => {
+      await fireEvent.click(deleteBtn);
+    });
+
+    const deleteYes = document.querySelector(".prompt .actions button.yes");
+    expect(deleteYes.textContent).toBe("Yes");
+
+    await act(async () => {
+      await fireEvent.click(deleteYes);
+    });
+
+    table = document.querySelector(".notified");
+    expect(table.textContent).toMatch("NameDepartmentDate");
   });
+});
+
+test("Web Vital Report", () => {
+  const fun = jest.fn();
+  expect(reportWebVitals(fun));
 });

@@ -1,5 +1,9 @@
 import ReactDOM from "react-dom";
-import IncidentReport, { IncidentCategory, Box } from "./incidentReport";
+import IncidentReport, {
+  IncidentCategory,
+  Box,
+  Notifications,
+} from "./incidentReport";
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import { SiteContext, IrDashboardContext } from "../SiteContext";
@@ -53,7 +57,7 @@ describe("Incident Report Form", () => {
     }
 
     const providerProps = {
-      user: { id: 10, name: "Test User" },
+      user: { id: 10, name: "Test User", department: 3 },
       endpoints: {
         locations: "http://endpoints.com/locations",
         users: "http://endpoints.com/users",
@@ -80,52 +84,20 @@ describe("Incident Report Form", () => {
   });
 
   test("Reset form", async () => {
-    // const resetBtn = document.querySelector(".btns .btn.secondary");
     const resetBtn = screen.getByText("Clear");
     await act(async () => {
       await fireEvent.click(resetBtn);
     });
+    const btn = document.querySelector(".box .head button");
+    await act(async () => {
+      await fireEvent.click(btn);
+    });
+
+    const btn2 = document.querySelector(".box .head button");
   });
 
   test("Set notification", async () => {
     const notified = document.querySelector(".notified");
     expect(notified.textContent).toMatch("NameDepartmentDate");
   });
-
-  // test("Location Field", async () => {
-  //   const input = document.querySelector(".reactSelect__input-container");
-  //
-  //   await act(async () => {
-  //     await userEvent.type(input, `e`);
-  //   });
-  //
-  //   // await act(async () => {
-  //   //   await userEvent.type(input, `{arrowdown}{arrowup}{space}{esc}`);
-  //   // });
-  // });
-
-  // test("useHisFetch", async () => {
-  //   setMockFetch({
-  //     errorMessage: "Invalid Token",
-  //   });
-  //   const providerProps = {
-  //     user: { id: 10, name: "Test User" },
-  //     endpoints: {
-  //       locations: "http://endpoints.com/locations",
-  //       users: "http://endpoints.com/users",
-  //       departments: "http://endpoints.com/departments",
-  //     },
-  //   };
-  //   await act(async () => customRender(<IncidentReport />, { providerProps }));
-  // });
-});
-
-test("Box", () => {
-  const component = render(
-    <Box>
-      <div>Test box</div>
-    </Box>
-  );
-  const comp = component.getByTestId("box");
-  expect(comp.textContent).toMatch("Test box");
 });

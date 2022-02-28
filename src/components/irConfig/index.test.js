@@ -9,18 +9,26 @@ import IrDataAnalytics from "./irDataAnalytics";
 import MainConfiguration from "./mainConfiguration";
 import UserPermission from "./userPermission";
 
-const customRender = (ui, { providerProps, ...renderOptions }) => {
-  return render(
+const customRender = async (ui) => {
+  return await render(
     <BrowserRouter>
-      <SiteContext.Provider value={providerProps}>{ui}</SiteContext.Provider>
-    </BrowserRouter>,
-    renderOptions
+      <SiteContext.Provider
+        value={{
+          user: { id: 10, name: "Test User", role: ["irAdmin"] },
+          checkPermission: () => true,
+          setUser: jest.fn(),
+          setRole: jest.fn(),
+        }}
+      >
+        {ui}
+      </SiteContext.Provider>
+    </BrowserRouter>
   );
 };
 
 test("Dashboard", () => {
   const providerProps = {
-    user: { id: 10, name: "Test User" },
+    user: { id: 10, name: "Test User", role: ["hod"] },
     checkPermission: () => true,
     setUser: jest.fn(),
     setRole: jest.fn(),
@@ -57,17 +65,6 @@ const setMockFailFetch = () => {
   jest.spyOn(global, "fetch").mockResolvedValue();
 };
 
-const renderWithData = async (ui, data) => {
-  const providerProps = {
-    user: { id: 10, name: "Test User", role: ["irAdmin"] },
-    checkPermission: () => true,
-    setUser: jest.fn(),
-    setRole: jest.fn(),
-  };
-  setMockFetch(data);
-  await act(async () => customRender(ui, { providerProps }));
-};
-
 describe("User Permission", () => {
   beforeAll(() => {
     ReactDOM.createPortal = jest.fn((element, node) => {
@@ -89,7 +86,7 @@ describe("User Permission", () => {
       document.body.appendChild(prompt);
     }
 
-    await renderWithData(<UserPermission />, {
+    setMockFetch({
       _embedded: {
         userPermission: [
           {
@@ -100,10 +97,14 @@ describe("User Permission", () => {
           {
             id: 123,
             role: "hod",
-            permission: "Approve IRs,Acknowledge IRs,View Departments IRs",
+            permission: "Acknowledge IRs,View Departments IRs",
           },
         ],
       },
+    });
+
+    await act(async () => {
+      await customRender(<UserPermission />);
     });
   });
 
@@ -112,23 +113,10 @@ describe("User Permission", () => {
     expect(comp.textContent).toMatch("USER MANAGEMENT");
   });
 
-  test("Change input value", async () => {
-    const input = document.querySelector(`input[type="checkbox"]`);
-    await act(async () => {
-      await fireEvent.click(input);
-    });
-  });
-
   test("Save update success", async () => {
-    const input = document.querySelector(`input[type="checkbox"]`);
+    const input = screen.getByText("Acknowledge IR");
     await act(async () => {
       await fireEvent.click(input);
-    });
-
-    setMockFetch({
-      id: 342,
-      role: "irAdmin",
-      permission: "IR Master,IR Configuration",
     });
 
     const save = document.querySelector(`button.btn.w-100`);

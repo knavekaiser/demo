@@ -109,29 +109,18 @@ export const IrDashboardContextProvider = ({ children }) => {
   const [parameters, setParameters] = useState({});
   const [dashboard, setDashboard] = useState("myDashboard");
   const [count, setCount] = useState({});
-  useEffect(async () => {
-    Promise.all([
-      fetch(`${process.env.REACT_APP_HOST}/location`).then((res) => res.json()),
-      fetch(`${process.env.REACT_APP_HOST}/category`).then((res) => res.json()),
-      fetch(`${process.env.REACT_APP_HOST}/user?size=10000`).then((res) =>
-        res.json()
-      ),
-    ])
-      .then(async ([location, category, user]) => {
-        const _parameters = { ...parameters };
-        if (location?._embedded.location) {
-          _parameters.locations = location._embedded.location;
-        }
-        if (category?._embedded.category) {
-          _parameters.categories = category._embedded.category;
-        }
-        if (user?._embedded.user) {
-          _parameters.users = user._embedded.user.map((user) => ({
+  const updateUsers = useCallback(() => {
+    fetch(`${process.env.REACT_APP_HOST}/user?size=10000`)
+      .then((res) => res.json())
+      .then(async (users) => {
+        if (users?._embedded.user) {
+          const _parameters = {};
+          _parameters.users = users._embedded.user.map((user) => ({
             label: user.name,
             value: user.id,
           }));
           _parameters.investigators = await Promise.all(
-            user._embedded.user
+            users._embedded.user
               .map((user) => ({
                 ...user,
                 role: user.role?.split(",").filter((r) => r) || [],
@@ -155,8 +144,25 @@ export const IrDashboardContextProvider = ({ children }) => {
                 };
               })
           );
+          setParameters((prev) => ({ ...prev, ..._parameters }));
+        }
+      });
+  }, [parameters]);
+  useEffect(async () => {
+    Promise.all([
+      fetch(`${process.env.REACT_APP_HOST}/location`).then((res) => res.json()),
+      fetch(`${process.env.REACT_APP_HOST}/category`).then((res) => res.json()),
+    ])
+      .then(async ([location, category, user]) => {
+        const _parameters = { ...parameters };
+        if (location?._embedded.location) {
+          _parameters.locations = location._embedded.location;
+        }
+        if (category?._embedded.category) {
+          _parameters.categories = category._embedded.category;
         }
         setParameters(_parameters);
+        updateUsers();
       })
       .catch((err) => {});
   }, []);
@@ -240,6 +246,7 @@ export const IrDashboardContextProvider = ({ children }) => {
         setParameters,
         dashboard,
         setDashboard,
+        updateUsers,
       }}
     >
       {children}

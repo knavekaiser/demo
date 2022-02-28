@@ -129,11 +129,11 @@ class Print extends Component {
                       ?.label || [ir.typeofInci]}
                   </td>
                   <td>
-                    {parameters?.users.find(({ value }) => value === ir.userId)
+                    {parameters?.users?.find(({ value }) => value === ir.userId)
                       ?.label || "Anonymous"}
                   </td>
                   <td>
-                    {parameters?.investigators.find(
+                    {parameters?.investigators?.find(
                       ({ value }) => value === ir.irInvestigator
                     )?.label || ir.irInvestigator}
                   </td>
@@ -565,11 +565,11 @@ const SingleIr = ({ ir, focus, setFocus, className, actions, parameters }) => {
             ?.label || [ir.typeofInci]}
         </td>
         <td>
-          {parameters?.users.find(({ value }) => value === ir.userId)?.label ||
+          {parameters?.users?.find(({ value }) => value === ir.userId)?.label ||
             "Anonymous"}
         </td>
         <td>
-          {parameters?.investigators.find(
+          {parameters?.investigators?.find(
             ({ value }) => value === ir.irInvestigator
           )?.label || ir.irInvestigator}
         </td>
@@ -659,7 +659,7 @@ const TatDetails = ({ ir, parameters, setShowTatDetails }) => {
                   evt.status}
               </td>
               <td>
-                {parameters?.users.find((user) => user.value === evt.userid)
+                {parameters?.users?.find((user) => user.value === evt.userid)
                   ?.label || evt.userid}
               </td>
               <td>
@@ -690,7 +690,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
   const navigate = useNavigate();
   const { user, checkPermission } = useContext(SiteContext);
   const { parameters } = useContext(IrDashboardContext);
-  const defaultView = user?.role.includes("incidentManager")
+  const defaultView = user?.role?.includes?.("incidentManager")
     ? "all"
     : "assigned";
   const { handleSubmit, register, watch, reset, setValue, getValues } = useForm(
@@ -698,7 +698,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
       defaultValues: {
         irBy: "self",
         status: "",
-        view: user.role.includes("incidentManager") ? "all" : "assigned",
+        view: user?.role?.includes?.("incidentManager") ? "all" : "assigned",
       },
     }
   );
@@ -916,7 +916,9 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
 
 export const QualityDashboard = () => {
   const { user, checkPermission } = useContext(SiteContext);
-  const { parameters, setDashboard } = useContext(IrDashboardContext);
+  const { parameters, setDashboard, updateUsers } = useContext(
+    IrDashboardContext
+  );
   const printRef = useRef();
   const location = useLocation();
   const navigate = useNavigate();
@@ -1002,10 +1004,10 @@ export const QualityDashboard = () => {
                   ({ value }) => value === ir.typeofInci
                 )?.label || [ir.typeofInci],
                 userId:
-                  parameters?.users.find(({ value }) => value === ir.userId)
+                  parameters?.users?.find(({ value }) => value === ir.userId)
                     ?.label || "Anonymous",
                 irInvestigator:
-                  parameters?.investigators.find(
+                  parameters?.investigators?.find(
                     ({ value }) => value === ir.irInvestigator
                   )?.label || ir.irInvestigator,
                 status:
@@ -1289,6 +1291,7 @@ export const QualityDashboard = () => {
               setIncidents((prev) =>
                 prev.map((inc) => (inc.id === incident.id ? incident : inc))
               );
+              updateUsers();
             }}
           />
         </div>
@@ -1310,11 +1313,16 @@ const AssignForm = ({ assign, users, setAssign, onSuccess }) => {
   useEffect(() => {
     if (assign?.irStatusDetails?.length) {
       setTimeline(
-        assign.irStatusDetails.map((evt) => ({
-          ...evt,
-          status: "Assigned",
-          user: users.find((u) => u.value === evt.userid) || {},
-        }))
+        assign.irStatusDetails
+          .filter((evt) => evt.status === 3)
+          .sort((a, b) =>
+            new Date(a.dateTime) > new Date(b.dateTime) ? 1 : -1
+          )
+          .map((evt) => ({
+            ...evt,
+            status: "Assigned",
+            user: users.find((u) => u.value === evt.userid) || {},
+          }))
       );
     }
   }, []);
@@ -1406,7 +1414,7 @@ const AssignForm = ({ assign, users, setAssign, onSuccess }) => {
             Close
           </button>
           <button className="btn w-100" disabled={loading}>
-            {assign ? "Re-Assign" : "Assign"}
+            {timeline.length > 0 ? "Re-Assign" : "Assign"}
           </button>
         </section>
       </form>

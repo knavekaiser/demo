@@ -503,9 +503,16 @@
 
 .fileInputModal {
   .container {
+    max-width: 30rem;
     padding: 10px;
     table {
+      width: 100%;
       tr {
+        td {
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
         grid-template-columns: 1fr 4rem;
       }
     }
@@ -713,7 +720,8 @@
     flex-wrap: wrap;
     grid-gap: 6px;
     .reactSelect {
-      max-width: 15rem;
+      // width: 100%;
+      // max-width: 15rem;
     }
   }
   .errMsg {

@@ -3,7 +3,7 @@ import { SiteContext } from "../SiteContext";
 import { Prompt } from "../components/modal";
 
 export const useHisFetch = (url) => {
-  const { logout } = useContext(SiteContext);
+  const { user, logout } = useContext(SiteContext);
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
   const controller = useRef();
@@ -37,13 +37,13 @@ export const useHisFetch = (url) => {
 
         if (response?.errorMessage) {
           if (
-            ["Invalid Token" || "Token validation failed"].includes(
+            ["Invalid Token", "Token validation failed"].includes(
               response.errorMessage
             )
           ) {
             return Prompt({
               type: "error",
-              message: "Session expired. Please log in again.",
+              message: `${user.name} is logged in from another device. Please log in again.`,
               callback: logout,
             });
           }
