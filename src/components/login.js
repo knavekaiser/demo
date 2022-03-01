@@ -126,6 +126,14 @@ export default function Login() {
                 (u) => u.name.toLowerCase() === user.userId.toLowerCase()
               );
 
+              if (!userDetail) {
+                return Prompt({
+                  type: "error",
+                  message:
+                    "Please make sure that the logged in user is added in the Users master.",
+                });
+              }
+
               // get urls from database
               const endpoints = {
                 locations:
