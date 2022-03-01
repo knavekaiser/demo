@@ -122,8 +122,8 @@ export default function Login() {
                 });
               }
 
-              const userDetail = users.find((u) =>
-                new RegExp(u.name, "i").test(user.userId)
+              const userDetail = users.find(
+                (u) => u.name.toLowerCase() === user.userId.toLowerCase()
               );
 
               // get urls from database
