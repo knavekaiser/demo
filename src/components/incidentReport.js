@@ -161,32 +161,12 @@ export default function IncidentReporting() {
           .then((data) => {
             setLoading(false);
             if (data.id) {
-              if (edit) {
-                Prompt({
-                  type: "success",
-                  message: (
-                    <>
-                      Incident was successfully Submitted.
-                      {data.sequence && (
-                        <>
-                          <br />
-                          IR Code: {data.sequence}
-                        </>
-                      )}
-                    </>
-                  ),
-                  callback: () =>
-                    navigate(location.state.from, {
-                      state: { focus: location.state.focus },
-                    }),
-                });
-                return;
-              }
               Prompt({
                 type: "success",
                 message: (
                   <>
-                    Incident was successfully Saved.
+                    Incident was successfully{" "}
+                    {+data.status === 1 ? "Saved" : "Submitted"}.
                     {data.sequence && (
                       <>
                         <br />
@@ -195,6 +175,11 @@ export default function IncidentReporting() {
                     )}
                   </>
                 ),
+                callback: () =>
+                  edit &&
+                  navigate(location.state?.from, {
+                    state: { focus: location.state.focus },
+                  }),
               });
               resetForm();
             }
@@ -652,6 +637,7 @@ export default function IncidentReporting() {
               />
               <section className={s.departments}>
                 <Select
+                  className={s.select}
                   label="Department Involved"
                   name="deptsLookupMultiselect"
                   control={methods.control}

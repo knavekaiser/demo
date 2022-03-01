@@ -719,10 +719,12 @@
     display: flex;
     flex-wrap: wrap;
     grid-gap: 6px;
-    .reactSelect {
-      // width: 100%;
-      // max-width: 15rem;
+    .chip {
+      height: 30px;
     }
+  }
+  .customValue {
+    width: max-content;
   }
   .errMsg {
     font-size: 10pt;

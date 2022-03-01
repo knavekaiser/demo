@@ -366,7 +366,9 @@ export const Select = ({
               components={{ DropdownIndicator }}
               className={`reactSelect ${s.reactSelect} ${error ? "err" : ""} ${
                 className || ""
-              } ${renderMultipleValue ? "hideMultipleValue" : ""}`}
+              } ${
+                renderMultipleValue ? `hideMultipleValue ${s.customValue}` : ""
+              }`}
               classNamePrefix="reactSelect"
               isDisabled={!options || !options?.length}
               inputRef={ref}
