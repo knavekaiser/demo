@@ -8,4 +8,5 @@ export default {
   userPermissions: `${baseApiUrl}/userPermission`,
   userPermission_updateByRole: `${baseApiUrl}/userPermission/search/updateByRole`,
   uploadFiles: `${baseApiUrl}/upload-multiple-files`,
+  apiUrl: `${baseApiUrl}/apiurls`,
 };

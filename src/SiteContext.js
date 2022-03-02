@@ -109,44 +109,44 @@ export const IrDashboardContextProvider = ({ children }) => {
   const [parameters, setParameters] = useState({});
   const [dashboard, setDashboard] = useState("myDashboard");
   const [count, setCount] = useState({});
-  const updateUsers = useCallback(() => {
-    fetch(`${process.env.REACT_APP_HOST}/user?size=10000`)
+  const updateUsers = useCallback(async () => {
+    const users = await fetch(`${process.env.REACT_APP_HOST}/user?size=10000`)
       .then((res) => res.json())
-      .then(async (users) => {
-        if (users?._embedded.user) {
-          const _parameters = {};
-          _parameters.users = users._embedded.user.map((user) => ({
-            label: user.name,
-            value: user.id,
-          }));
-          _parameters.investigators = await Promise.all(
-            users._embedded.user
-              .map((user) => ({
-                ...user,
-                role: user.role?.split(",").filter((r) => r) || [],
-              }))
-              .filter((user) => user.role.includes("irInvestigator"))
-              .map(async (user) => {
-                const assignedIr = await fetch(
-                  `${
-                    process.env.REACT_APP_HOST
-                  }/IncidentReport/search/countByStatusAndUserId?${new URLSearchParams(
-                    {
-                      status: 3,
-                      userId: user.id,
-                    }
-                  ).toString()}`
-                ).then((res) => res.json());
-                return {
-                  label: user.name,
-                  value: user.id,
-                  assignedIr,
-                };
-              })
-          );
-          setParameters((prev) => ({ ...prev, ..._parameters }));
-        }
-      });
+      .then((data) =>
+        (data?._embedded?.user || []).map((user) => ({
+          ...user,
+          role: user.role?.split(",").filter((r) => r) || [],
+        }))
+      );
+
+    const counts = await fetch(
+      `${process.env.REACT_APP_HOST}/IrStatusDetailsCount/search/countByStatus?status=3`
+    )
+      .then((res) => res.json())
+      .then((data) =>
+        (data?._embedded?.IrStatusDetailsCount || []).map((detail) => ({
+          userid: detail.userid,
+          count: detail.count,
+        }))
+      );
+
+    const _parameters = {};
+    _parameters.users = users.map((user) => ({
+      label: user.name,
+      value: user.id,
+    }));
+
+    _parameters.investigators = users
+      .filter((user) => user.role.includes("irInvestigator"))
+      .map((user) => ({
+        label: user.name,
+        value: user.id,
+        assignedIr:
+          counts.find(({ userid, count } = {}) => user.id === userid)?.count ||
+          0,
+      }));
+
+    setParameters((prev) => ({ ...prev, ..._parameters }));
   }, [parameters]);
   useEffect(async () => {
     Promise.all([

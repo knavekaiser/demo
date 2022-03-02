@@ -1385,6 +1385,14 @@ const AssignForm = ({ assign, users, setAssign, onSuccess }) => {
                   ...evt,
                   id: undefined,
                 })),
+                ...((timeline.length && [
+                  {
+                    userid: timeline[timeline.length - 1].userid,
+                    status: 11,
+                    dateTime: new Date().toISOString(),
+                  },
+                ]) ||
+                  []),
                 {
                   userid: data.user,
                   status: 3,

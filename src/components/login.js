@@ -14,10 +14,11 @@ import bcrypt from "bcryptjs";
 import s from "./login.module.scss";
 import paths from "./path";
 
-import { appConfig } from "../config";
+import { appConfig, endpoints as defaultEndpoints } from "../config";
 
 export default function Login() {
   const { user, setUser, setEndpoints, his, setHis } = useContext(SiteContext);
+  const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState([]);
   const location = useLocation();
   const navigate = useNavigate();
@@ -55,16 +56,46 @@ export default function Login() {
         <img src="/asset/logo.jpg" />
         <form
           onSubmit={handleSubmit(async (data) => {
+            setLoading(true);
             if (his) {
               let token = sessionStorage.getItem("token");
+
+              const endpoints = await fetch(defaultEndpoints.apiUrl)
+                .then((res) => res.json())
+                .then((data) => {
+                  const _urls = {};
+                  if (data._embedded.apiurls) {
+                    data._embedded.apiurls.forEach(({ url, action }) => {
+                      _urls[action] = url;
+                    });
+                    return _urls;
+                  }
+                  return null;
+                })
+                .catch((err) => {
+                  setLoading(false);
+                });
+
+              if (!endpoints || !Object.keys(endpoints).length) {
+                setLoading(false);
+                return Prompt({
+                  type: "error",
+                  message:
+                    "Could not load HIS API endpoints. Please try again.",
+                });
+              }
+
               if (!token) {
                 const salt = await fetch(
-                  `${appConfig.orgUrl}/loginService/getSaltCode?userid=${data.username}`
+                  `${endpoints.getSalt}?userid=${data.username}`
                 )
                   .then((res) => res.json())
                   .then((data) => data?.password)
-                  .catch((err) => {});
+                  .catch((err) => {
+                    setLoading(false);
+                  });
                 if (!salt) {
+                  setLoading(false);
                   return Prompt({
                     type: "error",
                     message: "Could not load salt. Please try again.",
@@ -72,9 +103,9 @@ export default function Login() {
                 }
                 const hash = bcrypt.hashSync(data.password, salt);
                 await fetch(
-                  `${appConfig.orgUrl}/loginService/discardSessionAndCreateNew?userId=${data.username}`
+                  `${endpoints.discardSession}?userId=${data.username}`
                 );
-                token = await fetch(`${appConfig.orgUrl}/loginService/login`, {
+                token = await fetch(`${endpoints.login}`, {
                   method: "POST",
                   headers: { "Content-type": "application/json" },
                   body: JSON.stringify({
@@ -87,17 +118,20 @@ export default function Login() {
                 })
                   .then((res) => res.json())
                   .then((data) => data?.tokenID)
-                  .catch((err) => {});
+                  .catch((err) => {
+                    setLoading(false);
+                  });
                 sessionStorage.setItem("token", token);
               }
               if (!token) {
+                setLoading(false);
                 return Prompt({
                   type: "error",
                   message: "Could not load Token. Please try again.",
                 });
               }
               const user = await fetch(
-                `${appConfig.orgUrl}/userMasterService/getUserDeatils?userId=${data.username}`,
+                `${endpoints.users}?userId=${data.username}`,
                 {
                   method: "GET",
                   headers: { SECURITY_TOKEN: token },
@@ -108,6 +142,7 @@ export default function Login() {
                   data?.userViewList ? data.userViewList[0] : null
                 )
                 .catch((err) => {
+                  setLoading(false);
                   return Prompt({
                     type: "error",
                     message: "Could not get user data. Please try again.",
@@ -116,6 +151,7 @@ export default function Login() {
 
               if (!user) {
                 sessionStorage.removeItem("token");
+                setLoading(false);
                 return Prompt({
                   type: "error",
                   message: "Could not log in. Please try again.",
@@ -127,28 +163,13 @@ export default function Login() {
               );
 
               if (!userDetail) {
+                setLoading(false);
                 return Prompt({
                   type: "error",
                   message:
                     "Please make sure that the logged in user is added in the Users master.",
                 });
               }
-
-              // get urls from database
-              const endpoints = {
-                locations:
-                  "https://hisir.napierhealthcare.com:7654/napier-his-web/Integration/userMasterService/getAllLocations",
-                patients:
-                  "https://hisir.napierhealthcare.com:7654/napier-his-web/Integration/userMasterService/getAllPatients",
-                departments:
-                  "https://hisir.napierhealthcare.com:7654/napier-his-web/Integration/userMasterService/getAllDepartments",
-                users:
-                  "https://hisir.napierhealthcare.com:7654/napier-his-web/Integration/userMasterService/getUserDeatils",
-                logout:
-                  "https://hisir.napierhealthcare.com:7654/napier-his-web/Integration/loginService/logout",
-                discardSession:
-                  "https://hisir.napierhealthcare.com:7654/napier-his-web/Integration/loginService/discardSessionAndCreateNew",
-              };
 
               setEndpoints(endpoints);
               setUser({
@@ -164,6 +185,7 @@ export default function Login() {
                 setUser(_user);
                 navigate(paths.incidentReport);
               } else {
+                setLoading(false);
                 Prompt({
                   type: "error",
                   message: "Invalid credentials.",

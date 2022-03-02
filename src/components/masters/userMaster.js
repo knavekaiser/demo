@@ -305,8 +305,9 @@ const UserForm = ({
                 (data.contact &&
                   item.contact?.trim().toLowerCase() ===
                     data.contact.trim().toLowerCase()) ||
-                item.employeeId?.trim().toLowerCase() ===
-                  data.employeeId.trim().toLowerCase()) &&
+                (!edit &&
+                  item.employeeId?.trim().toLowerCase() ===
+                    data.employeeId.trim().toLowerCase())) &&
               item.id !== data.id
           )
         ) {
