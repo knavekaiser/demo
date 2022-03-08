@@ -1,3 +1,3 @@
-import useHisFetch from "./useHisFetch";
+import useFetch from "./useFetch";
 
-export { useHisFetch };
+export { useFetch };

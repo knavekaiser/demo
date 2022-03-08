@@ -12,16 +12,21 @@ import { Input, Checkbox } from "./elements";
 import { Prompt } from "./modal";
 import bcrypt from "bcryptjs";
 import s from "./login.module.scss";
-import paths from "./path";
-
+import { useFetch } from "../hooks";
 import { appConfig, endpoints as defaultEndpoints } from "../config";
+import paths from "./path";
 
 export default function Login() {
   const { user, setUser, setEndpoints, his, setHis } = useContext(SiteContext);
   const [loading, setLoading] = useState(false);
-  const [users, setUsers] = useState([]);
   const location = useLocation();
   const navigate = useNavigate();
+
+  const { get: getUserDetail } = useFetch(
+    defaultEndpoints.searchUserByUsername
+  );
+  const { get: getEndpoints } = useFetch(defaultEndpoints.apiUrl);
+
   const {
     handleSubmit,
     register,
@@ -33,21 +38,6 @@ export default function Login() {
       navigate("/");
       return;
     }
-    fetch(`${process.env.REACT_APP_HOST}/user?size=10000`)
-      .then((res) => res.json())
-      .then((users) => {
-        if (users._embedded.user) {
-          setUsers(
-            users._embedded.user.map((user) => ({
-              ...user,
-              role: user.role?.split(",").filter((r) => r) || [],
-            }))
-          );
-        }
-      })
-      .catch((err) => {
-        Prompt({ type: "error", message: err.message });
-      });
   }, []);
   return (
     <div className={s.login} data-testid="login">
@@ -57,16 +47,43 @@ export default function Login() {
         <form
           onSubmit={handleSubmit(async (data) => {
             setLoading(true);
-            if (his) {
-              let token = sessionStorage.getItem("token");
+            let token = sessionStorage.getItem("access-token");
 
-              const endpoints = await fetch(defaultEndpoints.apiUrl)
+            if (!token) {
+              await fetch(`${defaultEndpoints.token}`, {
+                method: "POST",
+                headers: {
+                  Authorization:
+                    "Basic " +
+                    Buffer.from(`napier:my-secret-key`).toString("base64"),
+                  "Content-Type": "application/x-www-form-urlencoded",
+                },
+                body: new URLSearchParams({
+                  grant_type: "password",
+                  username: data.username,
+                  password: data.password,
+                }).toString(),
+              })
                 .then((res) => res.json())
+                .then((data) => {
+                  if (data.access_token) {
+                    sessionStorage.setItem("access-token", data.access_token);
+                  }
+                })
+                .catch((err) => {
+                  setLoading(false);
+                });
+            }
+
+            if (his) {
+              let hisToken = sessionStorage.getItem("HIS-access-token");
+
+              const endpoints = await getEndpoints()
                 .then((data) => {
                   const _urls = {};
                   if (data._embedded.apiurls) {
-                    data._embedded.apiurls.forEach(({ url, action }) => {
-                      _urls[action] = url;
+                    data._embedded.apiurls.forEach((url) => {
+                      _urls[url.action] = url;
                     });
                     return _urls;
                   }
@@ -85,56 +102,98 @@ export default function Login() {
                 });
               }
 
-              if (!token) {
-                const salt = await fetch(
-                  `${endpoints.getSalt}?userid=${data.username}`
-                )
-                  .then((res) => res.json())
-                  .then((data) => data?.password)
-                  .catch((err) => {
+              if (!hisToken) {
+                let salt, hash;
+                if (endpoints.getSalt?.url) {
+                  salt = await fetch(
+                    `${endpoints.getSalt.url}?userid=${data.username}`
+                  )
+                    .then((res) => res.json())
+                    .then((data) => data?.password)
+                    .catch((err) => {
+                      setLoading(false);
+                    });
+                  if (!salt) {
                     setLoading(false);
-                  });
-                if (!salt) {
-                  setLoading(false);
-                  return Prompt({
-                    type: "error",
-                    message: "Could not load salt. Please try again.",
-                  });
+                    return Prompt({
+                      type: "error",
+                      message: "Could not load salt. Please try again.",
+                    });
+                  }
+                  hash = bcrypt.hashSync(data.password, salt);
+                  await fetch(
+                    `${endpoints.discardSession.url}?userId=${data.username}`
+                  );
                 }
-                const hash = bcrypt.hashSync(data.password, salt);
-                await fetch(
-                  `${endpoints.discardSession}?userId=${data.username}`
-                );
-                token = await fetch(`${endpoints.login}`, {
+
+                if (endpoints.tenantValidation?.url) {
+                  await fetch(endpoints.tenantValidation.url)
+                    .then((res) => res.json())
+                    .then((data) => {
+                      const key1 = endpoints.tenantValidation.key1;
+                      if (key1 && data[key1]) {
+                        sessionStorage.setItem(
+                          "tenant-id",
+                          data[key1].tenant.tenantId
+                        );
+                        sessionStorage.setItem(
+                          "tenant-timezone",
+                          data[key1].locale.timeZone
+                        );
+                      }
+                    });
+                }
+
+                hisToken = await fetch(`${endpoints.login.url}`, {
                   method: "POST",
-                  headers: { "Content-type": "application/json" },
+                  headers: {
+                    "x-tenantid": sessionStorage.getItem("tenant-id"),
+                    "x-timezone": sessionStorage.getItem("tenant-timezone"),
+                    "Content-Type": "application/json",
+                  },
                   body: JSON.stringify({
-                    userName: data.username,
-                    passWord: hash,
-                    authenticationType: 1,
-                    authPassword: "",
-                    isLDAPEnable: "Y",
+                    username: data.username,
+                    password: hash || data.password,
+                    overrideSession: true,
                   }),
                 })
                   .then((res) => res.json())
-                  .then((data) => data?.tokenID)
+                  .then((data) => {
+                    console.log(data);
+                    if (data.success) {
+                      return data?.dataBean.token;
+                    }
+                    Prompt({
+                      type: "error",
+                      message: data.errorMessage,
+                    });
+                  })
                   .catch((err) => {
                     setLoading(false);
                   });
-                sessionStorage.setItem("token", token);
+                if (hisToken) {
+                  sessionStorage.setItem("HIS-access-token", hisToken);
+                }
               }
-              if (!token) {
+              if (!hisToken) {
                 setLoading(false);
                 return Prompt({
                   type: "error",
                   message: "Could not load Token. Please try again.",
                 });
               }
+
               const user = await fetch(
-                `${endpoints.users}?userId=${data.username}`,
+                `${endpoints.users.url}?userName=${data.username}&status=1`,
                 {
                   method: "GET",
-                  headers: { SECURITY_TOKEN: token },
+                  headers: {
+                    DNT: null,
+                    "x-auth-token": sessionStorage.getItem("HIS-access-token"),
+                    "x-tenantid": sessionStorage.getItem("tenant-id"),
+                    "x-timezone": sessionStorage.getItem("tenant-timezone"),
+                    "Content-Type": "application/json",
+                  },
                 }
               )
                 .then((res) => res.json())
@@ -150,7 +209,7 @@ export default function Login() {
                 });
 
               if (!user) {
-                sessionStorage.removeItem("token");
+                // sessionStorage.removeItem("HIS-access-token");
                 setLoading(false);
                 return Prompt({
                   type: "error",
@@ -158,8 +217,15 @@ export default function Login() {
                 });
               }
 
-              const userDetail = users.find(
-                (u) => u.name.toLowerCase() === user.userId.toLowerCase()
+              const userDetail = await getUserDetail(null, {
+                query: { username: data.username },
+              }).then((user) =>
+                user
+                  ? {
+                      ...user,
+                      role: user.role.split(",").filter((role) => role),
+                    }
+                  : null
               );
 
               if (!userDetail) {
@@ -178,9 +244,17 @@ export default function Login() {
               });
               navigate(paths.incidentReport);
             } else {
-              const _user = users.find(
-                (u) => u.name === data.username && u.password === data.password
+              const _user = await getUserDetail(null, {
+                query: { username: data.username },
+              }).then((user) =>
+                user
+                  ? {
+                      ...user,
+                      role: user.role.split(",").filter((role) => role),
+                    }
+                  : null
               );
+
               if (_user) {
                 setUser(_user);
                 navigate(paths.incidentReport);

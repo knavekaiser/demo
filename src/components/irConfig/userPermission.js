@@ -8,6 +8,7 @@ import { TiTick } from "react-icons/ti";
 import { Input, Checkbox, Table, TableActions, Toggle } from "../elements";
 import { Modal, Prompt } from "../modal";
 import { permissions } from "../../config";
+import { useFetch } from "../../hooks";
 import defaultEndpoints from "../../config/endpoints";
 import s from "./config.module.scss";
 
@@ -42,19 +43,23 @@ export default function UserPermission() {
   const permissionRef = useRef(null);
   const { user, setRoles } = useContext(SiteContext);
   const [userPermission, setUserPermission] = useState(null);
+
+  const { get: getPermissions } = useFetch(defaultEndpoints.userPermissions);
+  const { get: updatePermissions } = useFetch(
+    defaultEndpoints.userPermission_updateByRole
+  );
+
   const fetchUserPermissions = useCallback(() => {
-    fetch(`${process.env.REACT_APP_HOST}/userPermission`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data._embedded.userPermission) {
-          const _permissions = data._embedded.userPermission.map((item) => ({
-            ...item,
-            permission: item.permission.split(","),
-          }));
-          setUserPermission(_permissions);
-          permissionRef.current = _permissions;
-        }
-      });
+    getPermissions().then((data) => {
+      if (data._embedded.userPermission) {
+        const _permissions = data._embedded.userPermission.map((item) => ({
+          ...item,
+          permission: item.permission.split(","),
+        }));
+        setUserPermission(_permissions);
+        permissionRef.current = _permissions;
+      }
+    });
   }, []);
   useEffect(() => {
     fetchUserPermissions();
@@ -182,14 +187,12 @@ export default function UserPermission() {
             if (updatePending.length > 0) {
               Promise.all(
                 updatePending.map((item) =>
-                  fetch(
-                    `${
-                      defaultEndpoints.userPermission_updateByRole
-                    }?${new URLSearchParams({
+                  updatePermissions(null, {
+                    query: {
                       role: item.role,
                       permission: item.permission.join(","),
-                    }).toString()}`
-                  ).then((res) => res.json())
+                    },
+                  })
                 )
               )
                 .then((resData) => {

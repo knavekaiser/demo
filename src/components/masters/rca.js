@@ -5,6 +5,8 @@ import { IoClose } from "react-icons/io5";
 import { Input, Table, TableActions, Toggle } from "../elements";
 import { useForm } from "react-hook-form";
 import { Prompt } from "../modal";
+import { endpoints as defaultEndpoints } from "../../config";
+import { useFetch } from "../../hooks";
 import s from "./masters.module.scss";
 
 export default function Rcas() {
@@ -12,10 +14,13 @@ export default function Rcas() {
   const [selected, setSelected] = useState(null);
   const [rcas, setRcas] = useState([]);
   const [edit, setEdit] = useState(null);
+
+  const { get: getRca } = useFetch(defaultEndpoints.rcas);
+  const { remove: deleteRca } = useFetch(defaultEndpoints.rcas + "/{ID}");
+
   useEffect(() => {
     setLoading(true);
-    fetch(`${process.env.REACT_APP_HOST}/rca`)
-      .then((res) => res.json())
+    getRca()
       .then((data) => {
         setLoading(false);
         if (data._embedded?.rca) {
@@ -99,10 +104,9 @@ export default function Rcas() {
                           type: "confirmation",
                           message: `Are you sure you want to remove ${rca.name}?`,
                           callback: () => {
-                            fetch(
-                              `${process.env.REACT_APP_HOST}/rca/${rca.id}`,
-                              { method: "DELETE" }
-                            ).then((res) => {
+                            deleteRca(null, {
+                              params: { "{ID}": rca.id },
+                            }).then(({ res }) => {
                               if (res.status === 204) {
                                 setRcas((prev) =>
                                   prev.filter((c) => c.id !== rca.id)
@@ -144,15 +148,18 @@ const RcaForm = ({ edit, onSuccess, clearForm, rcas }) => {
     formState: { errors },
   } = useForm({ ...edit });
   const [loading, setLoading] = useState(false);
+
+  const { post: postRca, put: updateRca } = useFetch(
+    defaultEndpoints.rcas + `/${edit?.id || ""}`,
+    { headers: { "Content-Type": "application/json" } }
+  );
+
   useEffect(() => {
     reset({ show: true, ...edit });
   }, [edit]);
   return (
     <form
       onSubmit={handleSubmit((data) => {
-        const url = `${process.env.REACT_APP_HOST}/rca${
-          edit ? `/${edit.id}` : ""
-        }`;
         if (
           rcas?.some(
             (item) =>
@@ -167,12 +174,7 @@ const RcaForm = ({ edit, onSuccess, clearForm, rcas }) => {
           return;
         }
         setLoading(true);
-        fetch(url, {
-          method: edit ? "PUT" : "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
-        })
-          .then((res) => res.json())
+        (edit ? updateRca : postRca)(data)
           .then((data) => {
             setLoading(false);
             if (data.name) {
@@ -227,8 +229,9 @@ const RcaForm = ({ edit, onSuccess, clearForm, rcas }) => {
 
 const RcaCauses = ({ rca: { id, name, rcaCauses }, setRcas }) => {
   const [edit, setEdit] = useState(null);
-  // <Box label="RCA CAUSES">
-  // </Box>
+  const { remove: deleteRcaCause } = useFetch(
+    defaultEndpoints.rcaCauses + "/{ID}"
+  );
   return (
     <div className={`${s.child} ${s.rcaDetail}`} data-testid="rcaDetail">
       <div className={s.head}>
@@ -301,10 +304,9 @@ const RcaCauses = ({ rca: { id, name, rcaCauses }, setRcas }) => {
                       type: "confirmation",
                       message: `Are you sure you want to remove ${rca.name}?`,
                       callback: () => {
-                        fetch(
-                          `${process.env.REACT_APP_HOST}/rcaCauses/${rca.id}`,
-                          { method: "DELETE" }
-                        ).then((res) => {
+                        deleteRcaCause(null, {
+                          params: { "{ID}": rca.id },
+                        }).then(({ res }) => {
                           if (res.status === 204) {
                             setRcas((prev) =>
                               prev.map((cat) =>
@@ -344,6 +346,14 @@ const RcaCauseForm = ({ edit, rcaId, onSuccess, clearForm, rcaCauses }) => {
     formState: { errors },
   } = useForm({ ...edit });
   const [loading, setLoading] = useState(false);
+
+  const {
+    post: postRcaCause,
+    put: updateRcaCause,
+  } = useFetch(defaultEndpoints.rcaCauses + `/${edit?.id || ""}`, {
+    headers: { "Content-Type": "application/json" },
+  });
+
   useEffect(() => {
     reset({ ...edit });
   }, [edit]);
@@ -364,12 +374,7 @@ const RcaCauseForm = ({ edit, rcaId, onSuccess, clearForm, rcaCauses }) => {
           return;
         }
         setLoading(true);
-        fetch(`${process.env.REACT_APP_HOST}/rcaCauses`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...data, rca: { id: rcaId } }),
-        })
-          .then((res) => res.json())
+        (edit ? updateRcaCause : postRcaCause)({ ...data, rca: { id: rcaId } })
           .then((data) => {
             setLoading(false);
             if (data.name) {

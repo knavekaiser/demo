@@ -7,13 +7,14 @@ import React, {
 } from "react";
 import { useNavigate } from "react-router-dom";
 import { irStatus } from "./config";
+import { useFetch } from "./hooks";
 import defaultEndpoints from "./config/endpoints";
 
 export const SiteContext = createContext();
 export const Provider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [roles, setRoles] = useState(null);
-  const [endpoints, setEndpoints] = useState(defaultEndpoints);
+  const [endpoints, setEndpoints] = useState(null);
   const [his, setHis] = useState(false);
   const navigate = useNavigate();
 
@@ -48,7 +49,7 @@ export const Provider = ({ children }) => {
             userName: user.name,
             clientRefId: "Napier123",
             appContext: "",
-            securityToken: sessionStorage.getItem("token"),
+            securityToken: sessionStorage.getItem("HIS-access-token"),
           }),
         });
       })();
@@ -57,14 +58,21 @@ export const Provider = ({ children }) => {
     setUser(null);
     setRoles(null);
     setHis(false);
-    setEndpoints(defaultEndpoints);
-    sessionStorage.removeItem("token");
+    setEndpoints(null);
+    sessionStorage.removeItem("HIS-access-token");
+    sessionStorage.removeItem("access-token");
+    sessionStorage.removeItem("tenant-id");
+    sessionStorage.removeItem("tenant-timezone");
     navigate("/login");
   }, [user, endpoints]);
 
   useEffect(() => {
     if (!roles && user) {
-      fetch(defaultEndpoints.userPermissions)
+      fetch(defaultEndpoints.userPermissions, {
+        headers: {
+          Authorization: "Bearer " + sessionStorage.getItem("access-token"),
+        },
+      })
         .then((res) => res.json())
         .then((data) => {
           if (data._embedded.userPermission) {
@@ -109,26 +117,50 @@ export const IrDashboardContextProvider = ({ children }) => {
   const [parameters, setParameters] = useState({});
   const [dashboard, setDashboard] = useState("myDashboard");
   const [count, setCount] = useState({});
-  const updateUsers = useCallback(async () => {
-    const users = await fetch(`${process.env.REACT_APP_HOST}/user?size=10000`)
-      .then((res) => res.json())
-      .then((data) =>
-        (data?._embedded?.user || []).map((user) => ({
-          ...user,
-          role: user.role?.split(",").filter((r) => r) || [],
-        }))
-      );
 
-    const counts = await fetch(
-      `${process.env.REACT_APP_HOST}/IrStatusDetailsCount/search/countByStatus?status=3`
-    )
-      .then((res) => res.json())
-      .then((data) =>
-        (data?._embedded?.IrStatusDetailsCount || []).map((detail) => ({
-          userid: detail.userid,
-          count: detail.count,
-        }))
-      );
+  const { get: getUsers } = useFetch(`${defaultEndpoints.users}?size=10000`);
+  const { get: getCountStatusDetailByState } = useFetch(
+    `${defaultEndpoints.countStateDetailByStatus}?status=3`
+  );
+  const { get: getLocations } = useFetch(defaultEndpoints.locations);
+  const { get: getCategories } = useFetch(defaultEndpoints.categories);
+
+  const { get: getIrCountCurrentMonth } = useFetch(
+    defaultEndpoints.countIrCurrentMonth
+  );
+  const { get: getSentinelIrCount } = useFetch(
+    defaultEndpoints.countIrByType + `?typeofInci=8`
+  );
+  const { get: getPatientComplaintIrCount } = useFetch(
+    defaultEndpoints.countIrByPatientComplaint + `?patientYesOrNo=yes`
+  );
+  const { get: getCurrentUserIrCount } = useFetch(
+    defaultEndpoints.countIrByUserId + `?userId=${user?.id}`
+  );
+  const { get: getDepartmentsIrCount } = useFetch(
+    defaultEndpoints.countIrByDepartment +
+      "?" +
+      new URLSearchParams({
+        department: user?.department,
+        status: "2,3,4,5,6,7,8",
+      }).toString()
+  );
+
+  const updateUsers = useCallback(async () => {
+    const users = await getUsers().then((data) =>
+      (data?._embedded?.user || []).map((user) => ({
+        ...user,
+        role: user.role?.split(",").filter((r) => r) || [],
+      }))
+    );
+
+    const counts = [];
+    await getCountStatusDetailByState().then((data) =>
+      (data?._embedded?.IrStatusDetailsCount || []).map((detail) => ({
+        userid: detail.userid,
+        count: detail.count,
+      }))
+    );
 
     const _parameters = {};
     _parameters.users = users.map((user) => ({
@@ -149,11 +181,8 @@ export const IrDashboardContextProvider = ({ children }) => {
     setParameters((prev) => ({ ...prev, ..._parameters }));
   }, [parameters]);
   useEffect(async () => {
-    Promise.all([
-      fetch(`${process.env.REACT_APP_HOST}/location`).then((res) => res.json()),
-      fetch(`${process.env.REACT_APP_HOST}/category`).then((res) => res.json()),
-    ])
-      .then(async ([location, category, user]) => {
+    Promise.all([getLocations(), getCategories()])
+      .then(async ([location, category]) => {
         const _parameters = { ...parameters };
         if (location?._embedded.location) {
           _parameters.locations = location._embedded.location;
@@ -164,7 +193,9 @@ export const IrDashboardContextProvider = ({ children }) => {
         setParameters(_parameters);
         updateUsers();
       })
-      .catch((err) => {});
+      .catch((err) => {
+        console.log(err);
+      });
   }, []);
 
   useEffect(() => {
@@ -173,18 +204,22 @@ export const IrDashboardContextProvider = ({ children }) => {
       const countByStatus = await Promise.all([
         ...irStatus.map((status) =>
           fetch(
-            dashboard === "myDashboard" // IncidentReport/search/countByStatusAndUserId?status=2&userId=15
+            dashboard === "myDashboard"
               ? `${
-                  process.env.REACT_APP_HOST
-                }/IncidentReport/search/countByStatusAndUserId?${new URLSearchParams(
-                  {
-                    status: status.id,
-                    ...(dashboard === "myDashboard" && {
-                      userId: user.id,
-                    }),
-                  }
-                ).toString()}`
-              : `${process.env.REACT_APP_HOST}/IncidentReport/search/countByStatus?status=${status.id}`
+                  defaultEndpoints.countIrByStatusAndUserId
+                }?${new URLSearchParams({
+                  status: status.id,
+                  ...(dashboard === "myDashboard" && {
+                    userId: user.id,
+                  }),
+                }).toString()}`
+              : `${defaultEndpoints.countIrByStatus}?status=${status.id}`,
+            {
+              headers: {
+                Authorization:
+                  "Bearer " + sessionStorage.getItem("access-token"),
+              },
+            }
           ).then((res) => res.json())
         ),
       ])
@@ -196,31 +231,11 @@ export const IrDashboardContextProvider = ({ children }) => {
         })
         .catch((err) => {});
       const otherCounts = await Promise.all([
-        fetch(
-          `${process.env.REACT_APP_HOST}/IncidentReport/search/countCurrentMonth`
-        ).then((res) => res.json()),
-        fetch(
-          `${process.env.REACT_APP_HOST}/IncidentReport/search/countByTypeofInci?typeofInci=8`
-        ).then((res) => res.json()),
-        fetch(
-          `${process.env.REACT_APP_HOST}/IncidentReport/search/countByPatientYesOrNo?patientYesOrNo=yes`
-        ).then((res) => res.json()),
-        fetch(
-          `${
-            process.env.REACT_APP_HOST
-          }/IncidentReport/search/countByUserId?${new URLSearchParams({
-            // status: "2,3,4,5,6,7,8",
-            userId: user.id,
-          }).toString()}`
-        ).then((res) => res.json()),
-        fetch(
-          `${
-            process.env.REACT_APP_HOST
-          }/IncidentReport/search/countByDepartment?${new URLSearchParams({
-            department: user.department,
-            status: "2,3,4,5,6,7,8",
-          }).toString()}`
-        ).then((res) => res.json()),
+        getIrCountCurrentMonth(),
+        getSentinelIrCount(),
+        getPatientComplaintIrCount(),
+        getCurrentUserIrCount(),
+        getDepartmentsIrCount(),
       ])
         .then(
           ([currentMonth, sentinel, patientComplaint, myIr, departmentIr]) => ({

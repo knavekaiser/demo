@@ -16,6 +16,8 @@ import {
 } from "../elements";
 import { Modal, Prompt } from "../modal";
 import { useForm } from "react-hook-form";
+import { endpoints as defaultEndpoints } from "../../config";
+import { useFetch } from "../../hooks";
 import s from "./masters.module.scss";
 
 export default function RiskAssessments() {
@@ -31,21 +33,22 @@ export default function RiskAssessments() {
   });
   const [risks, setRisks] = useState([]);
   const [edit, setEdit] = useState(null);
+
+  const { get: getTwoFieldMasters } = useFetch(
+    defaultEndpoints.twoFieldMasters + "/{ID}"
+  );
+  const { get: getRams } = useFetch(defaultEndpoints.riskAssessments);
+  const { remove: deleteRam } = useFetch(
+    defaultEndpoints.riskAssessments + "/{ID}"
+  );
+
   useEffect(() => {
     setLoading(true);
     Promise.all([
-      fetch(`${process.env.REACT_APP_HOST}/twoFieldMaster/9`).then((res) =>
-        res.json()
-      ),
-      fetch(`${process.env.REACT_APP_HOST}/twoFieldMaster/2`).then((res) =>
-        res.json()
-      ),
-      fetch(`${process.env.REACT_APP_HOST}/twoFieldMaster/3`).then((res) =>
-        res.json()
-      ),
-      fetch(`${process.env.REACT_APP_HOST}/twoFieldMaster/4`).then((res) =>
-        res.json()
-      ),
+      getTwoFieldMasters(null, { params: { "{ID}": 9 } }),
+      getTwoFieldMasters(null, { params: { "{ID}": 2 } }),
+      getTwoFieldMasters(null, { params: { "{ID}": 3 } }),
+      getTwoFieldMasters(null, { params: { "{ID}": 4 } }),
     ])
       .then((masters) => {
         const _parameters = { ...parameters };
@@ -58,9 +61,8 @@ export default function RiskAssessments() {
             }));
         });
         setParameters(_parameters);
-        return fetch(`${process.env.REACT_APP_HOST}/riskAssement`);
+        return getRams();
       })
-      .then((res) => res.json())
       .then((data) => {
         setLoading(false);
         if (data._embedded?.riskAssement) {
@@ -179,21 +181,20 @@ export default function RiskAssessments() {
                         type: "confirmation",
                         message: `Are you sure you want to remove this risk assessment?`,
                         callback: () => {
-                          fetch(
-                            `${process.env.REACT_APP_HOST}/riskAssement/${risk.id}`,
-                            { method: "DELETE" }
-                          ).then((res) => {
-                            if (res.status === 204) {
-                              setRisks((prev) =>
-                                prev.filter((r) => r.id !== risk.id)
-                              );
-                            } else if (res.status === 409) {
-                              Prompt({
-                                type: "error",
-                                message: "Could not remove risk assessment.",
-                              });
+                          deleteRam(null, { params: { "{ID}": risk.id } }).then(
+                            ({ res }) => {
+                              if (res.status === 204) {
+                                setRisks((prev) =>
+                                  prev.filter((r) => r.id !== risk.id)
+                                );
+                              } else if (res.status === 409) {
+                                Prompt({
+                                  type: "error",
+                                  message: "Could not remove risk assessment.",
+                                });
+                              }
                             }
-                          });
+                          );
                         },
                       }),
                   },
@@ -211,6 +212,14 @@ const RiskAssessmentForm = ({ edit, onSuccess, parameters, clearForm }) => {
     ...edit,
   });
   const [loading, setLoading] = useState(false);
+
+  const { post: postRam, put: updateRam } = useFetch(
+    defaultEndpoints.riskAssessments + `/${edit?.id || ""}`,
+    {
+      headers: { "Content-Type": "application/json" },
+    }
+  );
+
   useEffect(() => {
     reset({ status: true, ...edit });
   }, [edit]);
@@ -218,17 +227,7 @@ const RiskAssessmentForm = ({ edit, onSuccess, parameters, clearForm }) => {
     <form
       onSubmit={handleSubmit((data) => {
         setLoading(true);
-        fetch(
-          `${process.env.REACT_APP_HOST}/riskAssement${
-            edit ? `/${edit.id}` : ""
-          }`,
-          {
-            method: edit ? "PUT" : "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(data),
-          }
-        )
-          .then((res) => res.json())
+        (edit ? updateRam : postRam)(data)
           .then((data) => {
             setLoading(false);
             if (data.id) {

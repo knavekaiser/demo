@@ -15,6 +15,8 @@ import {
 } from "../elements";
 import { useForm } from "react-hook-form";
 import { Modal, Prompt } from "../modal";
+import { endpoints as defaultEndpoints } from "../../config";
+import { useFetch } from "../../hooks";
 import s from "./masters.module.scss";
 
 export default function TwoFieldMasters() {
@@ -23,10 +25,17 @@ export default function TwoFieldMasters() {
   const [twoFieldMasters, setTwoFieldMasters] = useState([]);
   const [edit, setEdit] = useState(null);
   const [filter, setFilter] = useState(null);
+
+  const { get: getTwoFieldMasters } = useFetch(
+    defaultEndpoints.twoFieldMasters
+  );
+  const { remove: deleteTwoFieldMaster } = useFetch(
+    defaultEndpoints.twoFieldMasters + "/{ID}"
+  );
+
   useEffect(() => {
     setLoading(true);
-    fetch(`${process.env.REACT_APP_HOST}/twoFieldMaster`)
-      .then((res) => res.json())
+    getTwoFieldMasters()
       .then((data) => {
         setLoading(false);
         if (data._embedded?.twoFieldMaster) {
@@ -112,12 +121,9 @@ export default function TwoFieldMasters() {
                             type: "confirmation",
                             message: `Are you sure you want to remove ${twoFieldMaster.name}?`,
                             callback: () => {
-                              fetch(
-                                `${process.env.REACT_APP_HOST}/twoFieldMaster/${twoFieldMaster.id}`,
-                                {
-                                  method: "DELETE",
-                                }
-                              ).then((res) => {
+                              deleteTwoFieldMaster(null, {
+                                params: { "{ID}": twoFieldMaster.id },
+                              }).then(({ res }) => {
                                 if (res.status === 204) {
                                   setTwoFieldMasters((prev) =>
                                     prev.filter(
@@ -164,6 +170,14 @@ const TwoFieldMasterForm = ({
     formState: { errors },
   } = useForm({ ...edit });
   const [loading, setLoading] = useState(false);
+
+  const { post: postTwoFieldMaster, put: updateTwoFieldMaster } = useFetch(
+    defaultEndpoints.twoFieldMasters + `/${edit?.id || ""}`,
+    {
+      headers: { "Content-Type": "application/json" },
+    }
+  );
+
   useEffect(() => {
     reset({ ...edit });
   }, [edit]);
@@ -187,12 +201,10 @@ const TwoFieldMasterForm = ({
           return;
         }
         setLoading(true);
-        fetch(url, {
-          method: edit ? "PUT" : "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...data, name: data.name.trim() }),
+        (edit ? updateTwoFieldMaster : postTwoFieldMaster)({
+          ...data,
+          name: data.name.trim(),
         })
-          .then((res) => res.json())
           .then((data) => {
             setLoading(false);
             if (data.name) {
@@ -243,8 +255,9 @@ const TwoFieldMasterDetails = ({
   setTwoFieldMasters,
 }) => {
   const [edit, setEdit] = useState(null);
-  // <Box label="MASTER DETAILS">
-  // </Box>
+  const { remove: deleteTwoFieldMasterDetails } = useFetch(
+    defaultEndpoints.twoFieldMasterDetails + "/{ID}"
+  );
   return (
     <div
       className={`${s.child} ${s.twoFieldMasterDetail}`}
@@ -340,10 +353,9 @@ const TwoFieldMasterDetails = ({
                       type: "confirmation",
                       message: `Are you sure you want to remove ${twoFieldMaster.name}?`,
                       callback: () => {
-                        fetch(
-                          `${process.env.REACT_APP_HOST}/twoFieldMasterDetails/${twoFieldMaster.id}`,
-                          { method: "DELETE" }
-                        ).then((res) => {
+                        deleteTwoFieldMasterDetails(null, {
+                          params: { "{ID}": twoFieldMaster.id },
+                        }).then(({ res }) => {
                           if (res.status === 204) {
                             setTwoFieldMasters((prev) =>
                               prev.map((cat) =>
@@ -386,6 +398,14 @@ const TwoFieldMasterDetailForm = ({
     formState: { errors },
   } = useForm({ ...edit });
   const [loading, setLoading] = useState(false);
+
+  const {
+    post: postTwoFieldMasterDetail,
+    put: updateTwoFieldMasterDetail,
+  } = useFetch(defaultEndpoints.twoFieldMasterDetails + `/${edit?.id || ""}`, {
+    headers: { "Content-Type": "application/json" },
+  });
+
   useEffect(() => {
     reset({ showToggle: true, ...edit });
   }, [edit]);
@@ -406,15 +426,10 @@ const TwoFieldMasterDetailForm = ({
           return;
         }
         setLoading(true);
-        fetch(`${process.env.REACT_APP_HOST}/twoFieldMasterDetails`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...data,
-            twoFieldMaster: { id: twoFieldMasterId },
-          }),
+        (edit ? updateTwoFieldMasterDetail : postTwoFieldMasterDetail)({
+          ...data,
+          twoFieldMaster: { id: twoFieldMasterId },
         })
-          .then((res) => res.json())
           .then((data) => {
             setLoading(false);
             if (data.name) {

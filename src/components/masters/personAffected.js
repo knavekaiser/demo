@@ -16,6 +16,8 @@ import {
 } from "../elements";
 import { useForm } from "react-hook-form";
 import { Modal, Prompt } from "../modal";
+import { endpoints as defaultEndpoints } from "../../config";
+import { useFetch } from "../../hooks";
 import s from "./masters.module.scss";
 
 export default function PersonAffected() {
@@ -31,10 +33,17 @@ export default function PersonAffected() {
   const [personAffecteds, setPersonAffecteds] = useState([]);
   const [filter, setFilter] = useState(null);
   const [edit, setEdit] = useState(null);
+
+  const { get: getPersonAffecteds } = useFetch(
+    defaultEndpoints.personAffecteds
+  );
+  const { remove: deletePersonAffected } = useFetch(
+    defaultEndpoints.personAffecteds + "/{ID}"
+  );
+
   useEffect(() => {
     setLoading(true);
-    fetch(`${process.env.REACT_APP_HOST}/personAffected`)
-      .then((res) => res.json())
+    getPersonAffecteds()
       .then((data) => {
         setLoading(false);
         if (data._embedded?.personAffected) {
@@ -134,12 +143,9 @@ export default function PersonAffected() {
                               type: "confirmation",
                               message: `Are you sure you want to remove ${personAffected.name}?`,
                               callback: () => {
-                                fetch(
-                                  `${process.env.REACT_APP_HOST}/personAffected/${personAffected.pa_id}`,
-                                  {
-                                    method: "DELETE",
-                                  }
-                                ).then((res) => {
+                                deletePersonAffected(null, {
+                                  params: { "{ID}": personAffected.pa_id },
+                                }).then(({ res }) => {
                                   if (res.status === 204) {
                                     setPersonAffecteds((prev) =>
                                       prev.filter(
@@ -214,6 +220,14 @@ const PersonAffectedForm = ({
     formState: { errors },
   } = useForm({ ...edit });
   const [loading, setLoading] = useState(false);
+
+  const { post: postPersonAffected, put: updatePersonAffected } = useFetch(
+    defaultEndpoints.personAffecteds + `/${edit?.id || ""}`,
+    {
+      headers: { "Content-Type": "application/json" },
+    }
+  );
+
   useEffect(() => {
     reset({ show: true, ...edit });
   }, [edit]);
@@ -237,12 +251,7 @@ const PersonAffectedForm = ({
           return;
         }
         setLoading(true);
-        fetch(url, {
-          method: edit ? "PUT" : "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
-        })
-          .then((res) => res.json())
+        (edit ? updatePersonAffected : postPersonAffected)(data)
           .then((data) => {
             setLoading(false);
             if (data.name) {
@@ -380,6 +389,16 @@ const SinglePersonEffectedDetail = ({
 }) => {
   const [loading, setLoading] = useState(false);
   const immutable = useRef(["name", "age", "gender"]);
+
+  const {
+    put: updatePersonAffectedDetail,
+  } = useFetch(defaultEndpoints.personAffectedDetails + "/{ID}", {
+    headers: { "Content-Type": "application/json" },
+  });
+  const { remove: deletePersonAffectedDetail } = useFetch(
+    defaultEndpoints.personAffectedDetails + "/{ID}"
+  );
+
   return (
     <tr className={loading ? s.loading : ""}>
       <td style={{ display: "flex", alignItems: "center", gridGap: "6px" }}>
@@ -388,19 +407,14 @@ const SinglePersonEffectedDetail = ({
           checked={personAffected.show}
           onChange={(e) => {
             setLoading(true);
-            fetch(
-              `${process.env.REACT_APP_HOST}/personAffectedDetails/${personAffected.id}`,
+            updatePersonAffectedDetail(
               {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  ...personAffected,
-                  show: !personAffected.show,
-                  personAffected: { pa_id },
-                }),
-              }
+                ...personAffected,
+                show: !personAffected.show,
+                personAffected: { pa_id },
+              },
+              { params: { "{ID}": personAffected.id } }
             )
-              .then((res) => res.json())
               .then((personAffectedDetail) => {
                 setLoading(false);
                 setPersonAffecteds((prev) =>
@@ -450,10 +464,9 @@ const SinglePersonEffectedDetail = ({
                   type: "confirmation",
                   message: `Are you sure you want to remove ${personAffected.name}?`,
                   callback: () => {
-                    fetch(
-                      `${process.env.REACT_APP_HOST}/personAffectedDetails/${personAffected.id}`,
-                      { method: "DELETE" }
-                    ).then((res) => {
+                    deletePersonAffectedDetail(null, {
+                      params: { "{ID}": personAffected.id },
+                    }).then(({ res }) => {
                       if (res.status === 204) {
                         setPersonAffecteds((prev) =>
                           prev.map((pa) =>
@@ -492,6 +505,14 @@ const PersonAffectedDetailForm = ({
     formState: { errors },
   } = useForm({ ...edit });
   const [loading, setLoading] = useState(false);
+
+  const {
+    post: postPersonAffectedDetail,
+    put: updatePersonAffectedDetail,
+  } = useFetch(defaultEndpoints.personAffectedDetails + `/${edit?.id || ""}`, {
+    headers: { "Content-Type": "application/json" },
+  });
+
   useEffect(() => {
     reset({ ...edit });
   }, [edit]);
@@ -512,15 +533,10 @@ const PersonAffectedDetailForm = ({
           return;
         }
         setLoading(true);
-        fetch(`${process.env.REACT_APP_HOST}/personAffectedDetails`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...data,
-            personAffected: { pa_id: personAffectedId },
-          }),
+        (edit ? updatePersonAffectedDetail : postPersonAffectedDetail)({
+          ...data,
+          personAffected: { pa_id: personAffectedId },
         })
-          .then((res) => res.json())
           .then((data) => {
             setLoading(false);
             if (data.name) {

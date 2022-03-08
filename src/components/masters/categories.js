@@ -16,6 +16,8 @@ import {
 } from "../elements";
 import { useForm } from "react-hook-form";
 import { Modal, Prompt } from "../modal";
+import { useFetch } from "../../hooks";
+import { endpoints as defaultEndpoints } from "../../config";
 import s from "./masters.module.scss";
 
 export default function Categories() {
@@ -24,10 +26,15 @@ export default function Categories() {
   const [categories, setCategories] = useState([]);
   const [filter, setFilter] = useState(null);
   const [edit, setEdit] = useState(null);
+
+  const { get: getCategories } = useFetch(defaultEndpoints.categories);
+  const { remove: deleteCategory } = useFetch(
+    defaultEndpoints.categories + "/" + "{ID}"
+  );
+
   useEffect(() => {
     setLoading(true);
-    fetch(`${process.env.REACT_APP_HOST}/category`)
-      .then((res) => res.json())
+    getCategories()
       .then((data) => {
         setLoading(false);
         if (data._embedded?.category) {
@@ -113,12 +120,9 @@ export default function Categories() {
                             type: "confirmation",
                             message: `Are you sure you want to remove ${category.name}?`,
                             callback: () => {
-                              fetch(
-                                `${process.env.REACT_APP_HOST}/category/${category.id}`,
-                                {
-                                  method: "DELETE",
-                                }
-                              ).then((res) => {
+                              deleteCategory(null, {
+                                params: { "{ID}": category.id },
+                              }).then(({ res }) => {
                                 if (res.status === 204) {
                                   setCategories((prev) =>
                                     prev.filter((c) => c.id !== category.id)
@@ -158,15 +162,20 @@ const CategoryForm = ({ edit, onSuccess, clearForm, categories }) => {
     formState: { errors },
   } = useForm();
   const [loading, setLoading] = useState(false);
+
+  const { post: postCategory, put: updateCategory } = useFetch(
+    defaultEndpoints.categories + `/${edit?.id || ""}`,
+    {
+      headers: { "Content-Type": "application/json" },
+    }
+  );
+
   useEffect(() => {
     reset({ ...edit });
   }, [edit]);
   return (
     <form
       onSubmit={handleSubmit((data) => {
-        const url = `${process.env.REACT_APP_HOST}/category${
-          edit ? `/${edit.id}` : ""
-        }`;
         if (
           categories?.some(
             (item) =>
@@ -181,12 +190,8 @@ const CategoryForm = ({ edit, onSuccess, clearForm, categories }) => {
           return;
         }
         setLoading(true);
-        fetch(url, {
-          method: edit ? "PUT" : "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
-        })
-          .then((res) => res.json())
+
+        (edit ? updateCategory : postCategory)(data)
           .then((data) => {
             setLoading(false);
             if (data.name) {
@@ -352,6 +357,9 @@ const SubCategories = ({
 };
 const SingleSubCategory = ({ id, subCategory, setCategories, setEdit }) => {
   const [addReporable, setAddReportable] = useState(false);
+
+  const { remove: deleteSubCategory } = useFetch(defaultEndpoints.categories);
+
   return (
     <tr>
       <td>{subCategory.name}</td>
@@ -385,10 +393,9 @@ const SingleSubCategory = ({ id, subCategory, setCategories, setEdit }) => {
                 type: "confirmation",
                 message: `Are you sure you want to remove ${subCategory.name}?`,
                 callback: () => {
-                  fetch(
-                    `${process.env.REACT_APP_HOST}/subCategory/${subCategory.id}`,
-                    { method: "DELETE" }
-                  ).then((res) => {
+                  deleteSubCategory(null, {
+                    params: { "{ID}": subCategory.id },
+                  }).then(({ res }) => {
                     if (res.status === 204) {
                       setCategories((prev) =>
                         prev.map((cat) =>
@@ -454,6 +461,14 @@ const SubCategoryForm = ({
   const [showReportableForm, setShowReportableForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const reportable = watch("reportable");
+
+  const { post: postSubCategory, put: updateSubCategory } = useFetch(
+    defaultEndpoints.subCategories + `/${edit?.id || ""}`,
+    {
+      headers: { "Content-Type": "application/json" },
+    }
+  );
+
   useEffect(() => {
     reset({
       status: true,
@@ -479,16 +494,11 @@ const SubCategoryForm = ({
             return;
           }
           setLoading(true);
-          fetch(`${process.env.REACT_APP_HOST}/subCategory`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              ...data,
-              reportable: undefined,
-              category: { id: categoryId },
-            }),
+          (edit ? updateSubCategory : postSubCategory)({
+            ...data,
+            reportable: undefined,
+            category: { id: categoryId },
           })
-            .then((res) => res.json())
             .then((newSubCategory) => {
               setLoading(false);
               if (newSubCategory.name) {
@@ -580,19 +590,25 @@ export const ReportableForm = ({
   const [parameters, setParameters] = useState({});
   const [reportables, setReportabels] = useState([...(_reportables || [])]);
   const [edit, setEdit] = useState(null);
+  const { get: getReportables } = useFetch(
+    `${defaultEndpoints.twoFieldMasters}/10`
+  );
+
+  const { remove: deleteReportable } = useFetch(
+    defaultEndpoints.reportables + "/" + "{ID}"
+  );
+
   useEffect(() => {
-    fetch(`${process.env.REACT_APP_HOST}/twoFieldMaster/10`)
-      .then((res) => res.json())
-      .then((data) => {
-        const _parameters = { ...parameters };
-        if (data.id) {
-          _parameters.reportTo = data.twoFieldMasterDetails.map((item) => ({
-            label: item.name,
-            value: item.id,
-          }));
-        }
-        setParameters(_parameters);
-      });
+    getReportables().then((data) => {
+      const _parameters = { ...parameters };
+      if (data.id) {
+        _parameters.reportTo = data.twoFieldMasterDetails.map((item) => ({
+          label: item.name,
+          value: item.id,
+        }));
+      }
+      setParameters(_parameters);
+    });
   }, []);
   useEffect(() => {
     setCategories((prev) => {
@@ -664,10 +680,9 @@ export const ReportableForm = ({
                     type: "confirmation",
                     message: `Are you sure you want to remove reportable event?`,
                     callback: () => {
-                      fetch(
-                        `${process.env.REACT_APP_HOST}/reportable/${item.id}`,
-                        { method: "DELETE" }
-                      ).then((res) => {
+                      deleteReportable(null, {
+                        params: { "{ID}": item.id },
+                      }).then(({ res }) => {
                         if (res.status === 204) {
                           setReportabels((prev) =>
                             prev.filter((c) => c.id !== item.id)
@@ -699,9 +714,17 @@ const ReportableInlineForm = ({
   const { handleSubmit, register, reset, watch, setValue } = useForm();
   const [loading, setLoading] = useState(false);
   const [reportTo, setReportTo] = useState([]);
+
+  const { get: getReportTo } = useFetch(
+    defaultEndpoints.twoFieldMaster + "/10"
+  );
+
+  const { post: addReportable } = useFetch(defaultEndpoints.reportables, {
+    headers: { "Content-Type": "application/json" },
+  });
+
   useEffect(() => {
-    fetch(`${process.env.REACT_APP_HOST}/twoFieldMaster/10`)
-      .then((res) => res.json())
+    getReportTo()
       .then((data) => {
         if (data.id) {
           setReportTo(
@@ -734,15 +757,7 @@ const ReportableInlineForm = ({
           return;
         }
         setLoading(true);
-        fetch(`${process.env.REACT_APP_HOST}/reportable`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...data,
-            subCategory: { id: subCategoryId },
-          }),
-        })
-          .then((res) => res.json())
+        addReportable({ ...data, subCategory: { id: subCategoryId } })
           .then((data) => {
             setLoading(false);
             if (data.id) {

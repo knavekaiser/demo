@@ -22,7 +22,7 @@ import {
 import { Prompt, Modal } from "./modal";
 import { useForm, FormProvider, useFormContext } from "react-hook-form";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useHisFetch } from "../hooks";
+import { useHisFetch, useFetch } from "../hooks";
 import { incidentTypes } from "../config";
 import defaultEndpoints from "../config/endpoints";
 import s from "./incidentReporting.module.scss";
@@ -78,6 +78,13 @@ export default function IncidentReporting() {
   const [anonymous, setAnonymous] = useState(false);
   const patientComplaint = methods.watch("patientYesOrNo");
   const uploads = methods.watch("upload");
+
+  const { post: uploadFiles } = useFetch(defaultEndpoints.uploadFiles);
+  const { post: postIr, put: updateIr } = useFetch(
+    `${defaultEndpoints.incidentReport}${edit ? `/${edit.id}` : ""}`,
+    { headers: { "Content-Type": "application/json" } }
+  );
+
   const submitForm = useCallback(
     (data) => {
       const postData = async () => {
@@ -99,11 +106,7 @@ export default function IncidentReporting() {
           let links = [];
 
           if (newFiles.length) {
-            links = await fetch(defaultEndpoints.uploadFiles, {
-              method: "POST",
-              body: formData,
-            })
-              .then((res) => res.json())
+            links = await uploadFiles(formData)
               .then((data) => (links = data?.map((item) => item.uri) || []))
               .catch((err) => {
                 setLoading(false);
@@ -124,40 +127,30 @@ export default function IncidentReporting() {
             uploadFilePath: item,
           }));
         }
-        fetch(
-          `${process.env.REACT_APP_HOST}/IncidentReport${
-            edit ? `/${edit.id}` : ""
-          }`,
-          {
-            method: edit ? "PUT" : "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              ...data,
-              actionTakens: undefined,
-              deptsLookupMultiselect:
-                data.deptsLookupMultiselect?.join?.(",") || "",
-              ...(anonymous
-                ? {
-                    userId: undefined,
-                    department: undefined,
-                  }
-                : {
-                    userId: user.id,
-                    department: user.department,
-                  }),
-              ...(data.status === 2 && {
-                irStatusDetails: [
-                  {
-                    status: 2,
-                    dateTime: new Date().toISOString(),
-                    ...(!anonymous && { userid: user.id }),
-                  },
-                ],
+        (edit ? updateIr : postIr)({
+          ...data,
+          actionTakens: undefined,
+          deptsLookupMultiselect:
+            data.deptsLookupMultiselect?.join?.(",") || "",
+          ...(anonymous
+            ? {
+                userId: undefined,
+                department: undefined,
+              }
+            : {
+                userId: user.id,
+                department: user.department,
               }),
-            }),
-          }
-        )
-          .then((res) => res.json())
+          ...(data.status === 2 && {
+            irStatusDetails: [
+              {
+                status: 2,
+                dateTime: new Date().toISOString(),
+                ...(!anonymous && { userid: user.id }),
+              },
+            ],
+          }),
+        })
           .then((data) => {
             setLoading(false);
             if (data.id) {
@@ -224,13 +217,24 @@ export default function IncidentReporting() {
   const actions = methods.watch("actionTaken");
   const notifications = methods.watch("notification");
 
-  const { get: getLocations } = useHisFetch(endpoints.locations);
-  const { get: getDepartments } = useHisFetch(endpoints.departments);
-  const { get: getUsersWithRoles } = useHisFetch(
+  const { get: getLocations } = useFetch(
+    endpoints?.location.url || defaultEndpoints.locations,
+    { his: endpoints?.location.url }
+  );
+  const { get: getDepartments } = useFetch(
+    endpoints?.departments.url || defaultEndpoints.departments,
+    { his: endpoints?.departments.url }
+  );
+  const { get: getUsersWithRoles } = useFetch(
     defaultEndpoints.users + `?size=10000`
   );
-  const { get: getAllPatients } = useHisFetch(endpoints.patients);
-  const { get: getUsers } = useHisFetch(endpoints.users + `?size=10000`);
+  const { get: getAllPatients } = useFetch(
+    endpoints?.patients.url || defaultEndpoints.patients,
+    { his: endpoints?.patients.url }
+  );
+  const { get: getUsers } = useFetch(endpoints?.users.url + `?size=10000`, {
+    his: true,
+  });
 
   useEffect(() => {
     if (location.state?.edit) {
@@ -271,108 +275,112 @@ export default function IncidentReporting() {
       getUsers(),
       getUsersWithRoles(),
       getAllPatients(),
-    ]).then(([location, department, users, usersWithRoles, patients]) => {
-      const _parameters = { ...parameters };
-      const userDetails = (usersWithRoles?._embedded?.user || []).map(
-        (user) => {
-          user.role = Array.isArray(user.role)
-            ? user.role
-            : user.role?.split(",") || [];
-          return user;
-        }
-      );
-
-      if (Array.isArray(location)) {
-        _parameters.locations = location
-          .filter((item) => +item.status)
-          .map((item) => ({
-            label: item.locationName,
-            value: item.locationID,
-          }));
-      } else if (location?._embedded?.location) {
-        _parameters.locations = location._embedded.location
-          .filter((item) => item.status)
-          .map((item) => ({
-            label: item.name,
-            value: item.id,
-          }));
-      }
-
-      if (Array.isArray(department)) {
-        _parameters.departments = department.map((dept) => ({
-          label: dept.description,
-          value: dept.code,
-        }));
-      } else if (department?._embedded?.department) {
-        _parameters.departments = department._embedded.department.map(
-          (item) => ({
-            label: item.name,
-            value: item.id,
-          })
-        );
-      }
-
-      if (users?.userViewList) {
-        const _users = users.userViewList.map((user) => {
-          const userDetail = userDetails.find((u) =>
-            new RegExp(u.name, "i").test(user.userId)
-          );
-          if (userDetail) {
-            user.id = userDetail.id;
-            user.role = userDetail.role;
-            user.department = userDetail.department.toString();
-          }
-          return user;
-        });
-        _parameters.hods = _users
-          .filter(
-            (u) =>
-              u.role?.includes("hod") &&
-              u.department.toString() === user.department.toString()
-          )
-          .map((item) => ({
-            label: item.userId,
-            value: item.id,
-          }));
-        _parameters.users = _users.map((item) => ({
-          label: item.fullName,
-          value: item.id,
-          department: item.departmentMaster?.code,
-        }));
-      } else if (users?._embedded?.user) {
-        _parameters.hods = users._embedded.user
-          .map((user) => ({
-            ...user,
-            role: Array.isArray(user.role)
+    ])
+      .then(([location, department, users, usersWithRoles, patients]) => {
+        const _parameters = {};
+        const userDetails = (usersWithRoles?._embedded?.user || []).map(
+          (user) => {
+            user.role = Array.isArray(user.role)
               ? user.role
-              : user.role?.split(",").filter((r) => r) || [],
-          }))
-          .filter(
-            (u) => u.role.includes("hod") && u.department === user.department
-          )
-          .map((item) => ({
+              : user.role?.split(",") || [];
+            return user;
+          }
+        );
+
+        if (Array.isArray(location)) {
+          _parameters.locations = location
+            .filter((item) => +item.status)
+            .map((item) => ({
+              label: item.locationName,
+              value: item.locationID,
+            }));
+        } else if (location?._embedded?.location) {
+          _parameters.locations = location._embedded.location
+            .filter((item) => item.status)
+            .map((item) => ({
+              label: item.name,
+              value: item.id,
+            }));
+        }
+
+        if (Array.isArray(department)) {
+          _parameters.departments = department.map((dept) => ({
+            label: dept.description,
+            value: dept.code,
+          }));
+        } else if (department?._embedded?.department) {
+          _parameters.departments = department._embedded.department.map(
+            (item) => ({
+              label: item.name,
+              value: item.id,
+            })
+          );
+        }
+
+        if (users?.userViewList) {
+          const _users = users.userViewList.map((user) => {
+            const userDetail = userDetails.find((u) =>
+              new RegExp(u.name, "i").test(user.userId)
+            );
+            if (userDetail) {
+              user.id = userDetail.id;
+              user.role = userDetail.role;
+              user.department = userDetail.department.toString();
+            }
+            return user;
+          });
+          _parameters.hods = _users
+            .filter(
+              (u) =>
+                u.role?.includes("hod") &&
+                u.department.toString() === user.department.toString()
+            )
+            .map((item) => ({
+              label: item.userId,
+              value: item.id,
+            }));
+          _parameters.users = _users.map((item) => ({
+            label: item.fullName,
+            value: item.id,
+            department: item.departmentMaster?.code,
+          }));
+        } else if (users?._embedded?.user) {
+          _parameters.hods = users._embedded.user
+            .map((user) => ({
+              ...user,
+              role: Array.isArray(user.role)
+                ? user.role
+                : user.role?.split(",").filter((r) => r) || [],
+            }))
+            .filter(
+              (u) => u.role.includes("hod") && u.department === user.department
+            )
+            .map((item) => ({
+              label: item.name,
+              value: item.id,
+            }));
+          _parameters.users = users._embedded.user.map((item) => ({
             label: item.name,
             value: item.id,
+            department: item.department,
           }));
-        _parameters.users = users._embedded.user.map((item) => ({
-          label: item.name,
-          value: item.id,
-          department: item.department,
-        }));
-        if (!edit && _parameters.hods?.length === 1) {
-          methods.setValue("headofDepart", _parameters.hods[0].value);
+          if (!edit && _parameters.hods?.length === 1) {
+            methods.setValue("headofDepart", _parameters.hods[0].value);
+          }
         }
-      }
 
-      if (Array.isArray(patients)) {
-        _parameters.patients = patients.map((patient) => ({
-          value: patient.uhid,
-          label: patient.name,
-        }));
-      }
+        if (Array.isArray(patients)) {
+          _parameters.patients = patients.map((patient) => ({
+            value: patient.uhid,
+            label: patient.name,
+          }));
+        }
 
-      active && setParameters(_parameters);
-    });
+        active && setParameters((prev) => ({ ...prev, ..._parameters }));
+      })
+      .catch((err) => {
+        console.log(err);
+      });
     return () => {
       active = false;
     };
@@ -807,9 +815,11 @@ export const IncidentCategory = () => {
   const [showCategoryTable, setShowCategoryTable] = useState(false);
   const [rows, setRows] = useState([]);
   const [tableValues, setTableValues] = useState({});
+
+  const { get: getCategories } = useFetch(defaultEndpoints.categories);
+
   useEffect(() => {
-    fetch(`${process.env.REACT_APP_HOST}/category`)
-      .then((res) => res.json())
+    getCategories()
       .then((data) => {
         if (data._embedded.category) {
           setCategories(data._embedded.category);

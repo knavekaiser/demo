@@ -19,7 +19,8 @@ import {
 
 import { Modal, Prompt } from "../modal";
 import { useForm, Controller } from "react-hook-form";
-import defaultEndpoints from "../../config/endpoints";
+import { endpoints as defaultEndpoints } from "../../config";
+import { useFetch } from "../../hooks";
 import s from "./masters.module.scss";
 
 export default function Location() {
@@ -27,10 +28,18 @@ export default function Location() {
   const [locations, setLocations] = useState([]);
   const [locationTypes, setLocationTypes] = useState([]);
   const [edit, setEdit] = useState(null);
+
+  const { get: getLocationTypes } = useFetch(
+    defaultEndpoints.twoFieldMasters + "/6"
+  );
+  const { get: getLocations } = useFetch(defaultEndpoints.locations);
+  const { remove: deleteLocation } = useFetch(
+    defaultEndpoints.locations + "/{ID}"
+  );
+
   useEffect(() => {
     setLoading(true);
-    fetch(`${process.env.REACT_APP_HOST}/twoFieldMaster/6`)
-      .then((res) => res.json())
+    getLocationTypes()
       .then((data) => {
         if (data.twoFieldMasterDetails) {
           setLocationTypes(
@@ -41,10 +50,9 @@ export default function Location() {
                 label: name,
               }))
           );
-          return fetch(`${process.env.REACT_APP_HOST}/location`);
+          return getLocations();
         }
       })
-      .then((res) => res.json())
       .then((data) => {
         setLoading(false);
         if (data._embedded?.location) {
@@ -118,10 +126,9 @@ export default function Location() {
                         type: "confirmation",
                         message: `Are you sure you want to remove ${loc.name}?`,
                         callback: () => {
-                          fetch(
-                            `${process.env.REACT_APP_HOST}/location/${loc.id}`,
-                            { method: "DELETE" }
-                          ).then((res) => {
+                          deleteLocation(null, {
+                            params: { "{ID}": loc.id },
+                          }).then(({ res }) => {
                             if (res.status === 204) {
                               setLocations((prev) =>
                                 prev.filter((c) => c.id !== loc.id)
@@ -160,6 +167,14 @@ const LocationForm = ({
     control,
   } = useForm();
   const [loading, setLoading] = useState(false);
+
+  const { post: postLocation, put: updateLocation } = useFetch(
+    defaultEndpoints.locations + `/${edit?.id || ""}`,
+    {
+      headers: { "Content-Type": "application/json" },
+    }
+  );
+
   useEffect(() => {
     reset({ status: true, ...edit });
   }, [edit]);
@@ -183,12 +198,8 @@ const LocationForm = ({
           return;
         }
         setLoading(true);
-        fetch(url, {
-          method: edit ? "PUT" : "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
-        })
-          .then((res) => res.json())
+
+        (edit ? updateLocation : postLocation)(data)
           .then((data) => {
             setLoading(false);
             if (data.name) {

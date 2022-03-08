@@ -16,14 +16,12 @@ import {
 import { useForm } from "react-hook-form";
 import { Prompt } from "../modal";
 import { permissions } from "../../config";
-import { useHisFetch } from "../../hooks";
-import defaultEndpoints from "../../config/endpoints";
+import { endpoints as defaultEndpoints } from "../../config";
+import { useFetch } from "../../hooks";
 import s from "./masters.module.scss";
 
 export default function UserMaster() {
   const { endpoints } = useContext(SiteContext);
-  const { get: getAllDepartments } = useHisFetch(endpoints.departments);
-  const { get: getHisUsers } = useHisFetch(endpoints.users + `?size=10000`);
   const [loading, setLoading] = useState(true);
   const [parameters, setParameters] = useState({
     genders: [
@@ -36,6 +34,20 @@ export default function UserMaster() {
   const [users, setUsers] = useState([]);
   const [hisUsers, setHisUsers] = useState([]);
   const [edit, setEdit] = useState(null);
+
+  const { get: getAllDepartments } = useFetch(
+    endpoints?.departments?.url || defaultEndpoints.departments,
+    { his: endpoints?.departments?.url }
+  );
+  const { get: getHisUsers } = useFetch(
+    endpoints?.users?.url || defaultEndpoints.users + `?size=10000`,
+    { his: endpoints?.users?.url }
+  );
+  const { get: getUsers } = useFetch(defaultEndpoints.users);
+  const { post: postUser } = useFetch(defaultEndpoints.users, {
+    headers: { "Content-Type": "application/json" },
+  });
+  const { remove: deleteUser } = useFetch(defaultEndpoints.users + "/{ID}");
 
   useEffect(() => {
     setLoading(true);
@@ -63,9 +75,8 @@ export default function UserMaster() {
         }
 
         setParameters((prev) => ({ ...prev, ..._parameters }));
-        return fetch(`${process.env.REACT_APP_HOST}/user?size=10000`);
+        return getUsers(null, { query: { size: 10000 } });
       })
-      .then((res) => res.json())
       .then((data) => {
         setLoading(false);
         if (data._embedded?.user) {
@@ -98,17 +109,13 @@ export default function UserMaster() {
                 callback: () => {
                   Promise.all(
                     newUsers.map((user) =>
-                      fetch(`${defaultEndpoints.users + `?size=10000`}`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                          name: user.userId,
-                          gender: user.gender?.toLowerCase() || "",
-                          employeeId: user.employeeID,
-                          role: "incidentReporter",
-                          department: +user.departmentMaster?.code || undefined,
-                        }),
-                      }).then((res) => res.json())
+                      postUser({
+                        name: user.userId,
+                        gender: user.gender?.toLowerCase() || "",
+                        employeeId: user.employeeID,
+                        role: "incidentReporter",
+                        department: +user.departmentMaster?.code || undefined,
+                      })
                     )
                   ).then((result) => {
                     setUsers((prev) => [...prev, ...result]);
@@ -235,12 +242,9 @@ export default function UserMaster() {
                         type: "confirmation",
                         message: `Are you sure you want to remove ${user.name}?`,
                         callback: () => {
-                          fetch(
-                            `${process.env.REACT_APP_HOST}/user/${user.id}`,
-                            {
-                              method: "DELETE",
-                            }
-                          ).then((res) => {
+                          deleteUser(null, {
+                            params: { "{ID}": user.id },
+                          }).then(({ res }) => {
                             if (res.status === 204) {
                               setUsers((prev) =>
                                 prev.filter((c) => c.id !== user.id)
@@ -280,6 +284,12 @@ const UserForm = ({
     clearErrors,
   } = useForm();
   const [loading, setLoading] = useState(false);
+
+  const { post: postUser, put: updateUser } = useFetch(
+    defaultEndpoints.users + `/${edit?.id || ""}`,
+    { headers: { "Content-Type": "application/json" } }
+  );
+
   useEffect(() => {
     reset({
       role: ["incidentReporter"],
@@ -287,15 +297,13 @@ const UserForm = ({
       ...(edit?.dob && {
         dob: moment({ time: edit.dob, format: "YYYY-MM-DD" }),
       }),
+      password: "",
     });
   }, [edit]);
   return (
     <form
       autoComplete="off"
       onSubmit={handleSubmit((data) => {
-        const url = `${process.env.REACT_APP_HOST}/user${
-          edit ? `/${edit.id}` : ""
-        }`;
         if (
           users?.some(
             (item) =>
@@ -318,12 +326,10 @@ const UserForm = ({
           return;
         }
         setLoading(true);
-        fetch(url, {
-          method: edit ? "PUT" : "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...data, role: data.role.join(",") }),
+        (edit ? updateUser : postUser)({
+          ...data,
+          role: data.role.join(","),
         })
-          .then((res) => res.json())
           .then((data) => {
             setLoading(false);
             if (data.name) {

@@ -8,6 +8,8 @@ import { Box } from "../incidentReport";
 import { Form, Input, Table, TableActions, Toggle } from "../elements";
 import { useForm } from "react-hook-form";
 import { Modal, Prompt } from "../modal";
+import { useFetch } from "../../hooks";
+import { endpoints as defaultEndpoints } from "../../config";
 import s from "./masters.module.scss";
 
 export default function ContributingFactor() {
@@ -16,10 +18,17 @@ export default function ContributingFactor() {
   const [contributingFactors, setContributingFactors] = useState([]);
   const [filter, setFilter] = useState(null);
   const [edit, setEdit] = useState(null);
+
+  const { get: getContributingFactors } = useFetch(
+    defaultEndpoints.contributingFactors
+  );
+  const { remove: deleteContributingFactor } = useFetch(
+    defaultEndpoints.contributingFactors + "/{ID}"
+  );
+
   useEffect(() => {
     setLoading(true);
-    fetch(`${process.env.REACT_APP_HOST}/contributingFactors`)
-      .then((res) => res.json())
+    getContributingFactors()
       .then((data) => {
         setLoading(false);
         if (data._embedded?.contributingFactors) {
@@ -121,10 +130,9 @@ export default function ContributingFactor() {
                             type: "confirmation",
                             message: `Are you sure you want to remove ${contributingFactor.name}?`,
                             callback: () => {
-                              fetch(
-                                `${process.env.REACT_APP_HOST}/contributingFactors/${contributingFactor.cf_id}`,
-                                { method: "DELETE" }
-                              ).then((res) => {
+                              deleteContributingFactor(null, {
+                                params: { "{ID}": contributingFactor.cf_id },
+                              }).then(({ res }) => {
                                 if (res.status === 204) {
                                   setContributingFactors((prev) =>
                                     prev.filter(
@@ -175,15 +183,20 @@ const ContributingFactorForm = ({
     formState: { errors },
   } = useForm({ ...edit });
   const [loading, setLoading] = useState(false);
+
+  const {
+    post: postContributingFactor,
+    put: updateContributingFactor,
+  } = useFetch(defaultEndpoints.contributingFactors + `/${edit?.cf_id || ""}`, {
+    headers: { "Content-Type": "application/json" },
+  });
+
   useEffect(() => {
     reset({ show: true, ...edit });
   }, [edit]);
   return (
     <form
       onSubmit={handleSubmit((data) => {
-        const url = `${process.env.REACT_APP_HOST}/contributingFactors${
-          edit ? `/${edit.cf_id}` : ""
-        }`;
         if (
           contributingFactors?.some(
             (item) =>
@@ -198,12 +211,7 @@ const ContributingFactorForm = ({
           return;
         }
         setLoading(true);
-        fetch(url, {
-          method: edit ? "PUT" : "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
-        })
-          .then((res) => res.json())
+        (edit ? updateContributingFactor : postContributingFactor)(data)
           .then((data) => {
             setLoading(false);
             if (data.name) {
@@ -257,8 +265,9 @@ const ContributingFactorDetail = ({
   setContributingFactors,
 }) => {
   const [edit, setEdit] = useState(null);
-  // <Box label="CONTRIBUTING FACTOR DETAILS">
-  // </Box>
+  const { remove: deleteContributingFactorDetail } = useFetch(
+    defaultEndpoints.contributingFactorDetails + "/{ID}"
+  );
   return (
     <div className={s.child} data-testid="contributingFactorDetail">
       <div className={s.head}>
@@ -333,10 +342,9 @@ const ContributingFactorDetail = ({
                       type: "confirmation",
                       message: `Are you sure you want to remove ${contributingFactor.name}?`,
                       callback: () => {
-                        fetch(
-                          `${process.env.REACT_APP_HOST}/contributingFactorDetails/${contributingFactor.id}`,
-                          { method: "DELETE" }
-                        ).then((res) => {
+                        deleteContributingFactorDetail(null, {
+                          params: { "{ID}": contributingFactor.id },
+                        }).then(({ res }) => {
                           if (res.status === 204) {
                             setContributingFactors((prev) =>
                               prev.map((con) => {
@@ -376,6 +384,17 @@ const ContributingFactorDetailForm = ({
     formState: { errors },
   } = useForm({ ...edit });
   const [loading, setLoading] = useState(false);
+
+  const {
+    post: postContributingFactorDetail,
+    put: updateContributingFactorDetail,
+  } = useFetch(
+    defaultEndpoints.contributingFactorDetails + `/${edit?.id || ""}`,
+    {
+      headers: { "Content-Type": "application/json" },
+    }
+  );
+
   useEffect(() => {
     reset({ ...edit });
   }, [edit]);
@@ -396,20 +415,10 @@ const ContributingFactorDetailForm = ({
           return;
         }
         setLoading(true);
-        fetch(
-          `${process.env.REACT_APP_HOST}/contributingFactorDetails${
-            edit ? `/${edit.id}` : ""
-          }`,
-          {
-            method: edit ? "PUT" : "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              ...data,
-              contributingFactors: { cf_id: contributingFactorId },
-            }),
-          }
-        )
-          .then((res) => res.json())
+        (edit ? updateContributingFactorDetail : postContributingFactorDetail)({
+          ...data,
+          contributingFactors: { cf_id: contributingFactorId },
+        })
           .then((data) => {
             setLoading(false);
             if (data.name) {

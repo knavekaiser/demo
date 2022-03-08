@@ -9,6 +9,8 @@ import { IoClose, IoReorderThreeOutline } from "react-icons/io5";
 import { Input, Combobox, Table, TableActions, Toggle } from "../elements";
 import { Modal, Prompt } from "../modal";
 import { useForm } from "react-hook-form";
+import { endpoints as defaultEndpoints } from "../../config";
+import { useFetch } from "../../hooks";
 import s from "./masters.module.scss";
 
 const _periods = [
@@ -30,6 +32,13 @@ export default function IrCodeConfig() {
   } = useForm();
   const reseed = watch("reseed");
   const period = watch("period");
+
+  const { get: getSequence } = useFetch(defaultEndpoints.sequence);
+  const { put: updateSequence } = useFetch(
+    defaultEndpoints.sequence + "/{ID}",
+    { headers: { "Content-Type": "application/json" } }
+  );
+
   useEffect(() => {
     if (reseed === "M" && period === "YYYY") {
       setValue("period", "MM");
@@ -50,8 +59,7 @@ export default function IrCodeConfig() {
     }
   }, [reseed]);
   useEffect(() => {
-    fetch(`${process.env.REACT_APP_HOST}/sequence`)
-      .then((res) => res.json())
+    getSequence()
       .then((data) => {
         if (data._embedded.sequence) {
           const sequence = data._embedded.sequence[0].sequence
@@ -95,18 +103,16 @@ export default function IrCodeConfig() {
       <div className={s.irCodeConfig}>
         <form
           onSubmit={handleSubmit((data) => {
-            fetch(`${process.env.REACT_APP_HOST}/sequence/${data.id}`, {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
+            updateSequence(
+              {
                 ...data,
                 sequence: codeConfig
                   .filter((c) => c.order > 0)
                   .map((i) => i.order)
                   .join(","),
-              }),
-            })
-              .then((res) => res.json())
+              },
+              { params: { "{ID}": data.id } }
+            )
               .then((data) => {
                 if (data.id) {
                   reset({

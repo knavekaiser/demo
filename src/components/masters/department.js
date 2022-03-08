@@ -16,16 +16,23 @@ import {
 } from "../elements";
 import { Modal, Prompt } from "../modal";
 import { useForm } from "react-hook-form";
+import { endpoints as defaultEndpoints } from "../../config";
+import { useFetch } from "../../hooks";
 import s from "./masters.module.scss";
 
 export default function Department() {
   const [loading, setLoading] = useState(true);
   const [departments, setDepartments] = useState([]);
   const [edit, setEdit] = useState(null);
+
+  const { get: getDepartments } = useFetch(defaultEndpoints.departments);
+  const { remove: deleteDepartment } = useFetch(
+    defaultEndpoints.departments + "/{ID}"
+  );
+
   useEffect(() => {
     setLoading(true);
-    fetch(`${process.env.REACT_APP_HOST}/department`)
-      .then((res) => res.json())
+    getDepartments()
       .then((data) => {
         setLoading(false);
         if (data._embedded?.department) {
@@ -90,12 +97,9 @@ export default function Department() {
                         type: "confirmation",
                         message: `Are you sure you want to remove ${department.name}?`,
                         callback: () => {
-                          fetch(
-                            `${process.env.REACT_APP_HOST}/department/${department.id}`,
-                            {
-                              method: "DELETE",
-                            }
-                          ).then((res) => {
+                          deleteDepartment(null, {
+                            params: { "{ID}": department.id },
+                          }).then(({ res }) => {
                             if (res.status === 204) {
                               setDepartments((prev) =>
                                 prev.filter((c) => c.id !== department.id)
@@ -122,6 +126,14 @@ const DepartmentForm = ({ edit, onSuccess, clearForm, departments }) => {
     formState: { errors },
   } = useForm({ ...edit });
   const [loading, setLoading] = useState(false);
+
+  const {
+    post: postDepartment,
+    put: updateDepartment,
+  } = useFetch(defaultEndpoints.departments + `/${edit?.id || ""}`, {
+    headers: { "Content-Type": "application/json" },
+  });
+
   useEffect(() => {
     reset({ ...edit });
   }, [edit]);
@@ -145,12 +157,7 @@ const DepartmentForm = ({ edit, onSuccess, clearForm, departments }) => {
           return;
         }
         setLoading(true);
-        fetch(url, {
-          method: edit ? "PUT" : "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
-        })
-          .then((res) => res.json())
+        (edit ? updateDepartment : postDepartment)(data)
           .then((data) => {
             setLoading(false);
             if (data.name) {

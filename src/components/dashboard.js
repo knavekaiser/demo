@@ -207,6 +207,12 @@ function Dashboard() {
                 <span className={s.text}>IR Configuration</span>
               </span>
               basePath={paths.irConfig.basePath}
+              startPath={
+                paths.irConfig.basePath +
+                paths.irConfig.mainConfig.basePath +
+                "/" +
+                paths.irConfig.mainConfig.irScreen
+              }
               className={`${s.sidebarItem} ${
                 location.pathname.startsWith(paths.irConfig.basePath)
                   ? s.active
@@ -215,7 +221,44 @@ function Dashboard() {
               items={[
                 {
                   label: <>Main Configuration</>,
-                  path: paths.irConfig.mainConfig,
+                  accordion: true,
+                  basePath:
+                    paths.irConfig.basePath +
+                    paths.irConfig.mainConfig.basePath,
+                  items: [
+                    {
+                      label: "IR Screen",
+                      path: paths.irConfig.mainConfig.irScreen,
+                    },
+                    {
+                      label: "Type of Incident",
+                      path: paths.irConfig.mainConfig.typeOfIncident,
+                    },
+                    {
+                      label: "Sentinel Event Notification",
+                      path: paths.irConfig.mainConfig.sentinelEventNotification,
+                    },
+                    {
+                      label: "HOD Approval Notification",
+                      path: paths.irConfig.mainConfig.hodApprovalProcess,
+                    },
+                    {
+                      label: "Dashboard Data Element",
+                      path: paths.irConfig.mainConfig.dashboardDataElements,
+                    },
+                    {
+                      label: "IR Closure",
+                      path: paths.irConfig.mainConfig.irClosure,
+                    },
+                    {
+                      label: "Acceptable TAT",
+                      path: paths.irConfig.mainConfig.acceptableTat,
+                    },
+                    {
+                      label: "IR Investigation Detail",
+                      path: paths.irConfig.mainConfig.irInvestigationDetail,
+                    },
+                  ],
                 },
                 {
                   label: <>User Permission</>,

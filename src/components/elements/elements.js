@@ -22,7 +22,7 @@ import { Modal } from "../modal";
 import Sortable from "sortablejs";
 import s from "./elements.module.scss";
 import countries from "../../countries";
-import { useHisFetch } from "../../hooks";
+import { useFetch } from "../../hooks";
 import { phone } from "phone";
 
 import { Combobox } from "./combobox";
@@ -97,7 +97,7 @@ export const SearchField = ({
   const clickHandlerAdded = useState(false);
   const container = useRef();
 
-  const { get: hisFetch } = useHisFetch(url);
+  const { get: getData } = useFetch(url);
 
   useLayoutEffect(() => {
     const { width, height, x, y } = container.current.getBoundingClientRect();
@@ -135,7 +135,7 @@ export const SearchField = ({
     if (value) {
       if (url) {
         setLoading(true);
-        hisFetch(url)
+        getData(url)
           .then((rawData) => {
             setLoading(false);
             const data = processData(rawData, value);

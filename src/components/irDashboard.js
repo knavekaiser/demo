@@ -51,9 +51,14 @@ import { useNavigate, useLocation, createSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { Modal, Prompt } from "./modal";
 import paths from "./path";
-import { incidentTypes, irStatus } from "../config";
+import {
+  incidentTypes,
+  irStatus,
+  endpoints as defaultEndpoints,
+} from "../config";
 import { CSVLink } from "react-csv";
 import s from "./irDashboard.module.scss";
+import { useFetch } from "../hooks";
 import { useReactToPrint } from "react-to-print";
 
 function paramsToObject(entries) {
@@ -218,6 +223,12 @@ export const MyDashboard = () => {
   const [incidents, setIncidents] = useState([]);
   const [filters, setFilters] = useState({});
   const [focus, setFocus] = useState(null);
+
+  const { get: searchIrs } = useFetch(defaultEndpoints.searchIrs);
+  const { remove: deleteIr } = useFetch(
+    defaultEndpoints.incidentReport + "/" + "{ID}"
+  );
+
   useEffect(() => {
     setDashboard("myDashboard");
     if (location.state?.focus) {
@@ -246,14 +257,7 @@ export const MyDashboard = () => {
     }
     setLoading(true);
     if (Object.entries(_filters).length) {
-      fetch(
-        `${
-          process.env.REACT_APP_HOST
-        }/IncidentReport/search/byDetails?${new URLSearchParams({
-          ..._filters,
-        }).toString()}`
-      )
-        .then((res) => res.json())
+      searchIrs(null, { query: _filters })
         .then((data) => {
           setLoading(false);
           if (data._embedded?.IncidentReport) {
@@ -264,14 +268,7 @@ export const MyDashboard = () => {
           setLoading(false);
         });
     } else {
-      fetch(
-        `${
-          process.env.REACT_APP_HOST
-        }/IncidentReport/search/byDetails?${new URLSearchParams({
-          userId: user.id,
-        }).toString()}`
-      )
-        .then((res) => res.json())
+      searchIrs(null, { query: { userId: user.id } })
         .then((data) => {
           setLoading(false);
           if (data._embedded?.IncidentReport) {
@@ -391,10 +388,9 @@ export const MyDashboard = () => {
                             type: "confirmation",
                             message: `Are you sure you want to remove this incident?`,
                             callback: () => {
-                              fetch(
-                                `${process.env.REACT_APP_HOST}/IncidentReport/${inc.id}`,
-                                { method: "DELETE" }
-                              ).then((res) => {
+                              deleteIr(null, {
+                                params: { "{ID}": inc.id },
+                              }).then(({ res }) => {
                                 if (res.status === 204) {
                                   setIncidents((prev) =>
                                     prev.filter((ir) => ir.id !== inc.id)
@@ -418,10 +414,9 @@ export const MyDashboard = () => {
                               message:
                                 "Are you sure you want to delete this report?",
                               callback: () => {
-                                fetch(
-                                  `${process.env.REACT_APP_HOST}/IncidentReport/${inc.id}`,
-                                  { method: "DELETE" }
-                                ).then((res) => {
+                                deleteIr(null, {
+                                  params: { "{ID}": inc.id },
+                                }).then(({ res }) => {
                                   if (res.status === 204) {
                                     setIncidents((prev) =>
                                       prev.filter((ir) => ir.id !== inc.id)
@@ -950,6 +945,9 @@ export const QualityDashboard = () => {
   const [filters, setFilters] = useState({});
   const [assign, setAssign] = useState(null);
   const handlePrint = useReactToPrint({ content: () => printRef.current });
+
+  const { get: searchIrs } = useFetch(defaultEndpoints.searchIrs);
+
   useEffect(() => {
     const _filters = paramsToObject(new URLSearchParams(location.search));
     if (_filters.fromIncidentDateTime) {
@@ -967,16 +965,13 @@ export const QualityDashboard = () => {
     }
     setLoading(true);
     if (Object.entries(_filters).length) {
-      fetch(
-        `${
-          process.env.REACT_APP_HOST
-        }/IncidentReport/search/byDetails?${new URLSearchParams({
+      searchIrs(null, {
+        query: {
           ...filters,
           ..._filters,
           status: _filters.status ? _filters.status : "2,3,4,5,6,7,8,9",
-        }).toString()}`
-      )
-        .then((res) => res.json())
+        },
+      })
         .then((data) => {
           setLoading(false);
           if (data._embedded?.IncidentReport) {
@@ -1049,14 +1044,7 @@ export const QualityDashboard = () => {
           setLoading(false);
         });
     } else {
-      fetch(
-        `${
-          process.env.REACT_APP_HOST
-        }/IncidentReport/search/byDetails?${new URLSearchParams({
-          status: "2,3,4,5,6,7,8,9",
-        }).toString()}`
-      )
-        .then((res) => res.json())
+      searchIrs(null, { query: { status: "2,3,4,5,6,7,8,9" } })
         .then((data) => {
           setLoading(false);
           if (data._embedded?.IncidentReport) {
@@ -1324,6 +1312,12 @@ export const QualityDashboard = () => {
 const AssignForm = ({ assign, users, setAssign, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [timeline, setTimeline] = useState([]);
+
+  const { put: assignIr } = useFetch(
+    defaultEndpoints.incidentReport + "/" + (assign.id || ""),
+    { headers: { "Content-Type": "application/json" } }
+  );
+
   const {
     handleSubmit,
     register,
@@ -1373,37 +1367,32 @@ const AssignForm = ({ assign, users, setAssign, onSuccess }) => {
       <form
         onSubmit={handleSubmit((data) => {
           setLoading(true);
-          fetch(`${process.env.REACT_APP_HOST}/IncidentReport/${assign.id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              ...assign,
-              irInvestigator: data.user,
-              status: 3,
-              irStatusDetails: [
-                ...(assign.irStatusDetails || []).map((evt) => ({
-                  ...evt,
-                  id: undefined,
-                })),
-                ...((timeline.length && [
-                  {
-                    userid: timeline[timeline.length - 1].userid,
-                    status: 11,
-                    dateTime: new Date().toISOString(),
-                  },
-                ]) ||
-                  []),
+          assignIr({
+            ...assign,
+            irInvestigator: data.user,
+            status: 3,
+            irStatusDetails: [
+              ...(assign.irStatusDetails || []).map((evt) => ({
+                ...evt,
+                id: undefined,
+              })),
+              ...((timeline.length && [
                 {
-                  userid: data.user,
-                  status: 3,
+                  userid: timeline[timeline.length - 1].userid,
+                  status: 11,
                   dateTime: new Date().toISOString(),
                 },
-              ],
-              actionTakens: undefined,
-              _links: undefined,
-            }),
+              ]) ||
+                []),
+              {
+                userid: data.user,
+                status: 3,
+                dateTime: new Date().toISOString(),
+              },
+            ],
+            actionTakens: undefined,
+            _links: undefined,
           })
-            .then((res) => res.json())
             .then((data) => {
               setLoading(false);
               if (data.id) {
