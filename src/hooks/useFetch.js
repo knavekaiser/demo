@@ -62,7 +62,11 @@ export const useFetch = (url, { his, headers: hookHeaders } = {}) => {
               .json()
               .catch((err) => {})
               .finally(() => null);
-            return { ...data, res };
+            return {
+              ...data,
+              res,
+              ...(data && Object.keys({ ...data }).length === 0 && data),
+            };
           })
           .catch((err) => {
             throw err;

@@ -239,11 +239,11 @@ export const IrDashboardContextProvider = ({ children }) => {
       ])
         .then(
           ([currentMonth, sentinel, patientComplaint, myIr, departmentIr]) => ({
-            currentMonth,
-            sentinel,
-            patientComplaint,
-            myIr,
-            departmentIr,
+            currentMonth: currentMonth.data || 0,
+            sentinel: sentinel.data || 0,
+            patientComplaint: patientComplaint.data || 0,
+            myIr: myIr.data || 0,
+            departmentIr: departmentIr.data || 0,
           })
         )
         .catch((err) => {});
