@@ -159,7 +159,7 @@ export default function Login() {
                 })
                   .then((res) => res.json())
                   .then((data) => {
-                    console.log(data);
+                    // console.log(data);
                     if (data.success) {
                       return data?.dataBean.token;
                     }
@@ -183,6 +183,31 @@ export default function Login() {
                 });
               }
 
+              // const user = await fetch(
+              //   `${endpoints.users.url}?userName=${data.username}&status=1`,
+              //   {
+              //     method: "GET",
+              //     headers: {
+              //       DNT: null,
+              //       "x-auth-token": sessionStorage.getItem("HIS-access-token"),
+              //       "x-tenantid": sessionStorage.getItem("tenant-id"),
+              //       "x-timezone": sessionStorage.getItem("tenant-timezone"),
+              //       "Content-Type": "application/json",
+              //     },
+              //   }
+              // )
+              //   .then((res) => res.json())
+              //   .then((data) =>
+              //     data?.userViewList ? data.userViewList[0] : null
+              //   )
+              //   .catch((err) => {
+              //     setLoading(false);
+              //     return Prompt({
+              //       type: "error",
+              //       message: "Could not get user data. Please try again.",
+              //     });
+              //   });
+
               const user = await fetch(
                 `${endpoints.users.url}?userName=${data.username}&status=1`,
                 {
@@ -197,9 +222,7 @@ export default function Login() {
                 }
               )
                 .then((res) => res.json())
-                .then((data) =>
-                  data?.userViewList ? data.userViewList[0] : null
-                )
+                .then((data) => data?.[endpoints.users.key1]?.[0] || null)
                 .catch((err) => {
                   setLoading(false);
                   return Prompt({
@@ -207,6 +230,8 @@ export default function Login() {
                     message: "Could not get user data. Please try again.",
                   });
                 });
+
+              // console.log({ endpoints });
 
               if (!user) {
                 // sessionStorage.removeItem("HIS-access-token");
@@ -228,6 +253,21 @@ export default function Login() {
                   : null
               );
 
+              // const users = await fetch(defaultEndpoints.users + "?size=10000")
+              //   .then((res) => res.json())
+              //   .then((users) =>
+              //     (users?._embedded?.user || []).map((user) => ({
+              //       ...user,
+              //       role: user.role.split(","),
+              //     }))
+              //   )
+              //   .catch((err) => console.log(err));
+              //
+              // const userDetail = await users.find(
+              //   (user) => user.name === data.username
+              // );
+              // console.log({ users, userDetail });
+
               if (!userDetail) {
                 setLoading(false);
                 return Prompt({
@@ -246,14 +286,29 @@ export default function Login() {
             } else {
               const _user = await getUserDetail(null, {
                 query: { username: data.username },
-              }).then((user) =>
-                user
+              }).then((user) => {
+                console.log(user);
+                return user
                   ? {
                       ...user,
                       role: user.role.split(",").filter((role) => role),
                     }
-                  : null
-              );
+                  : null;
+              });
+
+              // const users = await fetch(defaultEndpoints.users + "?size=10000")
+              //   .then((res) => res.json())
+              //   .then((users) =>
+              //     (users?._embedded?.user || []).map((user) => ({
+              //       ...user,
+              //       role: user.role.split(","),
+              //     }))
+              //   )
+              //   .catch((err) => console.log(err));
+              //
+              // const _user = await users.find(
+              //   (user) => user.name === data.username
+              // );
 
               if (_user) {
                 setUser(_user);

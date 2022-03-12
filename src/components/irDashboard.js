@@ -4,6 +4,7 @@ import React, {
   useContext,
   Component,
   useRef,
+  Fragment,
 } from "react";
 import {
   SiteContext,
@@ -508,6 +509,43 @@ const ReportCount = ({ label, className, irs }) => {
 };
 const SingleIr = ({ ir, focus, setFocus, className, actions, parameters }) => {
   const [showTatDetails, setShowTatDetails] = useState(false);
+  const [timeline, setTimeline] = useState({});
+  const [totalTat, setTotalTat] = useState(0);
+  useEffect(() => {
+    let status = {};
+    ir.irStatusDetails.forEach((detail) => {
+      if (detail.status === 10) {
+        return;
+      }
+      if (Array.isArray(status[detail.status])) {
+        status[detail.status].push(detail);
+      } else {
+        status[detail.status] = [detail];
+      }
+    });
+    Object.entries(status).forEach(([sts, detail]) => {
+      status[sts] = detail.sort((a, b) =>
+        new Date(a.dateTime) < new Date(b.dateTime) ? 1 : -1
+      );
+    });
+    setTimeline(status);
+  }, [ir.irStatusDetails]);
+  useEffect(() => {
+    if (Object.keys(timeline).length) {
+      setTotalTat(
+        Math.floor(
+          (new Date(
+            Object.values(timeline)[Object.values(timeline).length - 1][
+              Object.values(timeline)[Object.values(timeline).length - 1]
+                .length - 1
+            ].dateTime
+          ) -
+            new Date(Object.values(timeline)[0][0].dateTime)) /
+            (1000 * 3600 * 24)
+        )
+      );
+    }
+  }, [timeline]);
   return (
     <>
       <tr
@@ -547,7 +585,7 @@ const SingleIr = ({ ir, focus, setFocus, className, actions, parameters }) => {
               </>
             )}
             {parameters?.categories
-              .find((item) => item.id === ir.inciCateg)
+              ?.find((item) => item.id === ir.inciCateg)
               ?.subCategorys?.find((item) => item.id === ir.inciSubCat)
               ?.reportable?.length > 0 && (
               <>
@@ -564,16 +602,16 @@ const SingleIr = ({ ir, focus, setFocus, className, actions, parameters }) => {
           <Moment format="DD/MM/YYYY hh:mm">{ir.incident_Date_Time}</Moment>
         </td>
         <td>
-          {parameters?.locations.find((item) => item.id === ir.location)
+          {parameters?.locations?.find((item) => item.id === ir.location)
             ?.name || ir.location}
         </td>
         <td>
-          {parameters?.categories.find((item) => item.id === ir.inciCateg)
+          {parameters?.categories?.find((item) => item.id === ir.inciCateg)
             ?.name || ir.inciCateg}
         </td>
         <td>
           {parameters?.categories
-            .find((item) => item.id === ir.inciCateg)
+            ?.find((item) => item.id === ir.inciCateg)
             ?.subCategorys?.find((item) => item.id === ir.inciSubCat)?.name ||
             ir.inciSubCat}
         </td>
@@ -594,10 +632,7 @@ const SingleIr = ({ ir, focus, setFocus, className, actions, parameters }) => {
           {irStatus.find((item) => item.id === +ir.status)?.name || ir.status}
         </td>
         <td className={s.tat} onClick={() => setShowTatDetails(true)}>
-          {Math.floor(
-            ((ir.closureDate || new Date()) - new Date(ir.reportingDate)) /
-              (1000 * 3600 * 24)
-          )}
+          {ir.status !== "1" && totalTat}
         </td>
         <TableActions actions={actions} />
       </tr>
@@ -611,13 +646,21 @@ const SingleIr = ({ ir, focus, setFocus, className, actions, parameters }) => {
         <TatDetails
           ir={ir}
           parameters={parameters}
+          timeline={timeline}
           setShowTatDetails={setShowTatDetails}
+          totalTat={totalTat}
         />
       </Modal>
     </>
   );
 };
-const TatDetails = ({ ir, parameters, setShowTatDetails }) => {
+const TatDetails = ({
+  ir,
+  parameters,
+  setShowTatDetails,
+  timeline,
+  totalTat,
+}) => {
   return (
     <div className={s.content}>
       <ul className={s.irDetail}>
@@ -633,7 +676,7 @@ const TatDetails = ({ ir, parameters, setShowTatDetails }) => {
         </li>
         <li>
           Category:{" "}
-          {parameters?.categories.find((item) => item.id === ir?.inciCateg)
+          {parameters?.categories?.find((item) => item.id === ir?.inciCateg)
             ?.name || ir?.inciCateg}
         </li>
         <li>
@@ -649,14 +692,7 @@ const TatDetails = ({ ir, parameters, setShowTatDetails }) => {
             ir?.inciSubCat}
         </li>
       </ul>
-      <p className={s.totalDays}>
-        TAT:{" "}
-        {Math.floor(
-          ((ir.closureDate || new Date()) - new Date(ir.reportingDate)) /
-            (1000 * 3600 * 24)
-        )}{" "}
-        Days
-      </p>
+      <p className={s.totalDays}>TAT: {totalTat} Days</p>
       <Table
         columns={[
           { label: "Status" },
@@ -665,31 +701,59 @@ const TatDetails = ({ ir, parameters, setShowTatDetails }) => {
           { label: "Days" },
         ]}
       >
-        {ir.irStatusDetails
+        {Object.entries(timeline)
+          .filter(([status]) => status !== "10")
           .sort((a, b) =>
-            new Date(a.dateTime) < new Date(b.dateTime) ? 1 : -1
+            irStatus.findIndex((s) => s.id === a.id) <
+            irStatus.findIndex((s) => s.id === b.id)
+              ? 1
+              : -1
           )
-          .map((evt) => (
-            <tr key={evt.dateTime}>
-              <td>
-                {irStatus.find((status) => status.id === evt.status)?.name ||
-                  evt.status}
-              </td>
-              <td>
-                {parameters?.users?.find((user) => user.value === evt.userid)
-                  ?.label || evt.userid}
-              </td>
-              <td>
-                <Moment format="MM/DD/YYYY hh:mm">{evt.dateTime}</Moment>
-              </td>
-              <td>
-                {Math.floor(
-                  (new Date(evt.dateTime) - new Date(ir.reportingDate)) /
-                    (1000 * 3600 * 24)
-                )}
-              </td>
-            </tr>
-          ))}
+          .map(([status, details], i, arr) => {
+            const prevFirstDetail = arr[i + 1]?.[1]?.[arr[i + 1][1].length - 1];
+            return (
+              <tr key={status}>
+                <td>
+                  {irStatus.find((sts) => sts.id === +status)?.name || status}
+                </td>
+                <td>
+                  {details.map((detail, i) => {
+                    return (
+                      <p key={detail.id}>
+                        {parameters?.users?.find(
+                          (user) => user.value === detail.userid
+                        )?.label || detail.userid}
+                      </p>
+                    );
+                  })}
+                </td>
+                <td>
+                  {details
+                    .sort((a, b) =>
+                      new Date(a.dateTime) < new Date(b.dateTime) ? 1 : -1
+                    )
+                    .map((detail) => {
+                      return (
+                        <p key={detail.id}>
+                          <Moment format="MM/DD/YYYY hh:mm">
+                            {detail.dateTime}
+                          </Moment>
+                        </p>
+                      );
+                    })}
+                </td>
+                <td>
+                  {prevFirstDetail
+                    ? Math.floor(
+                        (new Date(details[details.length - 1]?.dateTime) -
+                          new Date(prevFirstDetail.dateTime)) /
+                          (1000 * 3600 * 24)
+                      )
+                    : 0}
+                </td>
+              </tr>
+            );
+          })}
       </Table>
       <section className={s.btns}>
         <button
@@ -1379,7 +1443,7 @@ const AssignForm = ({ assign, users, setAssign, onSuccess }) => {
               ...((timeline.length && [
                 {
                   userid: timeline[timeline.length - 1].userid,
-                  status: 11,
+                  status: 10,
                   dateTime: new Date().toISOString(),
                 },
               ]) ||

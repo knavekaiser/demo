@@ -23,8 +23,7 @@ import { Prompt, Modal } from "./modal";
 import { useForm, FormProvider, useFormContext } from "react-hook-form";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useHisFetch, useFetch } from "../hooks";
-import { incidentTypes } from "../config";
-import defaultEndpoints from "../config/endpoints";
+import { incidentTypes, endpoints as defaultEndpoints } from "../config";
 import s from "./incidentReporting.module.scss";
 
 const defaultFormValues = {
@@ -218,21 +217,20 @@ export default function IncidentReporting() {
   const notifications = methods.watch("notification");
 
   const { get: getLocations } = useFetch(
-    endpoints?.location.url || defaultEndpoints.locations,
-    { his: endpoints?.location.url }
+    endpoints?.locations.url || defaultEndpoints.locations,
+    { his: endpoints?.locations.url }
   );
   const { get: getDepartments } = useFetch(
-    endpoints?.departments.url || defaultEndpoints.departments,
-    { his: endpoints?.departments.url }
+    endpoints?.departments?.url || defaultEndpoints.departments,
+    { his: endpoints?.departments?.url }
   );
   const { get: getUsersWithRoles } = useFetch(
     defaultEndpoints.users + `?size=10000`
   );
-  const { get: getAllPatients } = useFetch(
-    endpoints?.patients.url || defaultEndpoints.patients,
-    { his: endpoints?.patients.url }
-  );
-  const { get: getUsers } = useFetch(endpoints?.users.url + `?size=10000`, {
+  const { get: getAllPatients } = useFetch(endpoints?.patients?.url || "", {
+    his: endpoints?.patients?.url,
+  });
+  const { get: getUsers } = useFetch(endpoints?.users?.url || "", {
     his: true,
   });
 
@@ -271,12 +269,30 @@ export default function IncidentReporting() {
     let active = true;
     Promise.all([
       getLocations(),
-      getDepartments(),
-      getUsers(),
+      getDepartments(null, {
+        ...(endpoints?.departments?.url && {
+          query: {
+            departmentName: "",
+            departmentCode: "",
+            facilityId: 2,
+            status: 1,
+          },
+        }),
+      }),
+      ...[
+        (endpoints?.users?.url &&
+          getUsers(null, {
+            query: {
+              userName: "",
+              status: 1,
+            },
+          })) ||
+          null,
+      ],
       getUsersWithRoles(),
-      getAllPatients(),
+      ...[(endpoints?.patients?.url && getAllPatients()) || null],
     ])
-      .then(([location, department, users, usersWithRoles, patients]) => {
+      .then(([location, departments, users, usersWithRoles, patients]) => {
         const _parameters = {};
         const userDetails = (usersWithRoles?._embedded?.user || []).map(
           (user) => {
@@ -303,13 +319,20 @@ export default function IncidentReporting() {
             }));
         }
 
-        if (Array.isArray(department)) {
-          _parameters.departments = department.map((dept) => ({
+        if (Array.isArray(departments?.[endpoints?.departments.key1])) {
+          _parameters.departments = departments[
+            endpoints?.departments.key1
+          ].map(({ departmentId, departmentName }) => ({
+            value: departmentId.toString(),
+            label: departmentName,
+          }));
+        } else if (Array.isArray(departments)) {
+          _parameters.departments = departments.map((dept) => ({
             label: dept.description,
             value: dept.code,
           }));
-        } else if (department?._embedded?.department) {
-          _parameters.departments = department._embedded.department.map(
+        } else if (departments?._embedded?.department) {
+          _parameters.departments = departments._embedded.department.map(
             (item) => ({
               label: item.name,
               value: item.id,
@@ -317,8 +340,38 @@ export default function IncidentReporting() {
           );
         }
 
-        if (users?.userViewList) {
-          const _users = users.userViewList.map((user) => {
+        if (Array.isArray(users?.[endpoints?.users.key1])) {
+          const _users = users[endpoints?.users.key1].map((user) => {
+            const userDetail = userDetails.find((u) =>
+              new RegExp(u.name, "i").test(user.userName)
+            );
+            if (userDetail) {
+              user.id = userDetail.id;
+              user.role = userDetail.role;
+              user.department = userDetail.department.toString();
+            }
+            return user;
+          });
+          _parameters.hods = _users
+            .filter(
+              (u) =>
+                u.role?.includes("hod") &&
+                u.department.toString() === user.department.toString()
+            )
+            .map((item) => ({
+              label: item.userName,
+              value: item.userId,
+            }));
+          _parameters.users = _users.map((item) => ({
+            label: item.userName,
+            value: item.userId,
+            department:
+              departments?.[endpoints?.departments.key1]
+                .find((dept) => dept.departmentCode === item.departmentCode)
+                ?.departmentId.toString() || "",
+          }));
+        } else if (users?.[endpoints.users.key1]) {
+          const _users = users?.[endpoints.users.key1].map((user) => {
             const userDetail = userDetails.find((u) =>
               new RegExp(u.name, "i").test(user.userId)
             );
@@ -344,14 +397,8 @@ export default function IncidentReporting() {
             value: item.id,
             department: item.departmentMaster?.code,
           }));
-        } else if (users?._embedded?.user) {
-          _parameters.hods = users._embedded.user
-            .map((user) => ({
-              ...user,
-              role: Array.isArray(user.role)
-                ? user.role
-                : user.role?.split(",").filter((r) => r) || [],
-            }))
+        } else {
+          _parameters.hods = userDetails
             .filter(
               (u) => u.role.includes("hod") && u.department === user.department
             )
@@ -359,7 +406,7 @@ export default function IncidentReporting() {
               label: item.name,
               value: item.id,
             }));
-          _parameters.users = users._embedded.user.map((item) => ({
+          _parameters.users = userDetails.map((item) => ({
             label: item.name,
             value: item.id,
             department: item.department,

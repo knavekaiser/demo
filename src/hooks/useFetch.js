@@ -46,7 +46,7 @@ export const useFetch = (url, { his, headers: hookHeaders } = {}) => {
                   FACILITY_ID: 1,
                   CLIENT_REF_ID: "Napier123",
                   "x-auth-token": sessionStorage.getItem("HIS-access-token"),
-                  "x-tenantid": sessionStorage.getItem("tentant-timezone"),
+                  "x-tenantid": sessionStorage.getItem("tenant-id"),
                   "x-timezone": sessionStorage.getItem("tenant-timezone"),
                 }),
             ...hookHeaders,

@@ -7,10 +7,7 @@ import paths from "../path";
 export default function IrConfig() {
   return (
     <Routes>
-      <Route
-        path={paths.irConfig.mainConfig.basePath + "/*"}
-        element={<MainConfig />}
-      />
+      <Route path={paths.irConfig.mainConfig} element={<MainConfig />} />
       <Route
         path={paths.irConfig.userPermission}
         element={<UserPermission />}

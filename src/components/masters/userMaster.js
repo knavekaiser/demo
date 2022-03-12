@@ -51,10 +51,34 @@ export default function UserMaster() {
 
   useEffect(() => {
     setLoading(true);
-    Promise.all([getAllDepartments(), getHisUsers()])
+    Promise.all([
+      getAllDepartments(null, {
+        ...(endpoints?.departments?.url && {
+          query: {
+            departmentName: "",
+            departmentCode: "",
+            facilityId: 2,
+            status: 1,
+          },
+        }),
+      }),
+      getHisUsers(null, {
+        query: {
+          userName: "",
+          status: 1,
+        },
+      }),
+    ])
       .then(([departments, hisUsers]) => {
         const _parameters = {};
-        if (Array.isArray(departments)) {
+        if (Array.isArray(departments?.[endpoints?.departments.key1])) {
+          _parameters.departments = departments[
+            endpoints?.departments.key1
+          ].map(({ departmentId, departmentName }) => ({
+            value: departmentId,
+            label: departmentName,
+          }));
+        } else if (Array.isArray(departments)) {
           _parameters.departments = departments.map(
             ({ code, description }) => ({
               value: code,
@@ -70,8 +94,8 @@ export default function UserMaster() {
           );
         }
 
-        if (hisUsers.userViewList) {
-          setHisUsers(hisUsers.userViewList);
+        if (hisUsers?.[endpoints?.users?.key1]) {
+          setHisUsers(hisUsers[endpoints?.users?.key1]);
         }
 
         setParameters((prev) => ({ ...prev, ..._parameters }));
@@ -140,6 +164,7 @@ export default function UserMaster() {
         <Table
           columns={[
             { label: "Name" },
+            { label: "Username" },
             { label: "Gender" },
             { label: "DOB" },
             { label: "Employee ID" },
@@ -179,6 +204,7 @@ export default function UserMaster() {
           {users.map((user, i) => (
             <tr key={i}>
               <td>{user.name}</td>
+              <td>{user.username}</td>
               <td>
                 {parameters?.genders.find((u) => u.value === user.gender)
                   ?.label || user.gender}
@@ -328,6 +354,10 @@ const UserForm = ({
         setLoading(true);
         (edit ? updateUser : postUser)({
           ...data,
+          ...(edit &&
+            !data.password && {
+              password: undefined,
+            }),
           role: data.role.join(","),
         })
           .then((data) => {
@@ -346,15 +376,6 @@ const UserForm = ({
           });
       })}
     >
-      {
-        //   <Input
-        //   {...register("name", {
-        //     required: "Please enter a Name",
-        //   })}
-        //   placeholder="Enter"
-        //   error={errors.name}
-        // />
-      }
       <SearchField
         data={users.map((user) => ({
           label: user.name,
@@ -401,6 +422,13 @@ const UserForm = ({
           }
         }}
         error={errors.name}
+      />
+      <Input
+        {...register("username", {
+          required: "Please enter a Username",
+        })}
+        placeholder="Enter"
+        error={errors.username}
       />
       <Combobox
         name="gender"

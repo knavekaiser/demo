@@ -27,7 +27,7 @@ import { useForm } from "react-hook-form";
 import paths from "../path";
 import s from "./config.module.scss";
 
-const IrScreen = ({}) => {
+const IrScreen = () => {
   const [screens, setScreens] = useState([
     {
       option: "Location one",
@@ -66,6 +66,9 @@ const IrScreen = ({}) => {
           </tr>
         ))}
       </Table>
+      <div className={s.btns}>
+        <button className="btn w-100">Save</button>
+      </div>
     </Box>
   );
 };
@@ -149,6 +152,9 @@ const TypesOfIncident = () => {
             Send thank you notification to RCA team members.
           </label>
         </section>
+      </div>
+      <div className={s.btns}>
+        <button className="btn w-100">Save</button>
       </div>
     </Box>
   );
@@ -285,7 +291,31 @@ const SentinelEventNotification = () => {
         </section>
         <p>Please contact IR manager for further information.</p>
       </div>
+      <div className={s.btns}>
+        <button className="btn w-100">Save</button>
+      </div>
     </Box>
+  );
+};
+const NotifyForm = ({ edit, onChange }) => {
+  const { register, watch } = useForm();
+  return (
+    <form>
+      <Input required={true} name="name" placeholder="Enter" />
+      <Input required={true} name="dob" placeholder="Enter" />
+      <Input required={true} name="employeeId" placeholder="Enter" />
+      <MobileNumberInput
+        register={register}
+        required={true}
+        name="contact"
+        placeholder="Enter"
+        watch={watch}
+      />
+      <Input required={true} email="email" placeholder="Enter" />
+      <button className="btn secondary">
+        <FaPlus /> Add
+      </button>
+    </form>
   );
 };
 
@@ -332,6 +362,9 @@ const HodApprovalProcess = () => {
           </td>
         </tr>
       </Table>
+      <div className={s.btns}>
+        <button className="btn w-100">Save</button>
+      </div>
     </Box>
   );
 };
@@ -395,7 +428,7 @@ const DashboardDataElements = () => {
     },
   ]);
   return (
-    <Box label="DASHBOARD DATA ELEMENT">
+    <Box label="DASHBOARD DATA ELEMENT" collapsable={true}>
       <i>
         Configure the data elements to show in the left menu for specified user
         roles.
@@ -494,13 +527,16 @@ const DashboardDataElements = () => {
           </section>
         </div>
       </div>
+      <div className={s.btns}>
+        <button className="btn w-100">Save</button>
+      </div>
     </Box>
   );
 };
 
 const IncidentClosure = () => {
   return (
-    <Box label="INCIDENT CLOSURE">
+    <Box label="INCIDENT CLOSURE" collapsable={true}>
       <div className={s.incidentClosure}>
         <p>IR closure format to include</p>
         <section className={s.checkboxes}>
@@ -562,13 +598,16 @@ const IncidentClosure = () => {
           </section>
         </div>
       </div>
+      <div className={s.btns}>
+        <button className="btn w-100">Save</button>
+      </div>
     </Box>
   );
 };
 
 const AcceptableTat = () => {
   return (
-    <Box label="ACCEPTABLE TAT">
+    <Box label="ACCEPTABLE TAT" collapsable={true}>
       <div className={s.acceptableTat}>
         <p>IR closure TAT monitoring</p>
         <div className={s.tatMonitoring}>
@@ -635,13 +674,16 @@ const AcceptableTat = () => {
           </div>
         </div>
       </div>
+      <div className={s.btns}>
+        <button className="btn w-100">Save</button>
+      </div>
     </Box>
   );
 };
 
 const IrInvestigationDetails = () => {
   return (
-    <Box label="IR INVESTIGATION-DETAILS">
+    <Box label="IR INVESTIGATION-DETAILS" collapsable={true}>
       <div className={s.irInvestigationDetail}>
         <section className={s.section_1}>
           <section>
@@ -703,6 +745,9 @@ const IrInvestigationDetails = () => {
           </section>
         </section>
       </div>
+      <div className={s.btns}>
+        <button className="btn w-100">Save</button>
+      </div>
     </Box>
   );
 };
@@ -715,79 +760,14 @@ export default function MainConfig() {
       <header>
         <h3>IR CONFIGURATION</h3>
       </header>
-
-      <Routes>
-        <Route
-          path={paths.irConfig.mainConfig.irScreen}
-          element={<IrScreen />}
-        />
-      </Routes>
-      <Routes>
-        <Route
-          path={paths.irConfig.mainConfig.typeOfIncident}
-          element={<TypesOfIncident />}
-        />
-      </Routes>
-      <Routes>
-        <Route
-          path={paths.irConfig.mainConfig.sentinelEventNotification}
-          element={<SentinelEventNotification />}
-        />
-      </Routes>
-      <Routes>
-        <Route
-          path={paths.irConfig.mainConfig.hodApprovalProcess}
-          element={<HodApprovalProcess />}
-        />
-      </Routes>
-      <Routes>
-        <Route
-          path={paths.irConfig.mainConfig.dashboardDataElements}
-          element={<DashboardDataElements />}
-        />
-      </Routes>
-      <Routes>
-        <Route
-          path={paths.irConfig.mainConfig.irClosure}
-          element={<IncidentClosure />}
-        />
-      </Routes>
-      <Routes>
-        <Route
-          path={paths.irConfig.mainConfig.acceptableTat}
-          element={<AcceptableTat />}
-        />
-      </Routes>
-      <Routes>
-        <Route
-          path={paths.irConfig.mainConfig.irInvestigationDetail}
-          element={<IrInvestigationDetails />}
-        />
-      </Routes>
-      <div className={s.btns}>
-        <button className="btn w-100">Save</button>
-      </div>
+      <IrScreen />
+      <TypesOfIncident />
+      <SentinelEventNotification />
+      <HodApprovalProcess />
+      <DashboardDataElements />
+      <IncidentClosure />
+      <AcceptableTat />
+      <IrInvestigationDetails />
     </div>
   );
 }
-const NotifyForm = ({ edit, onChange }) => {
-  const { register, watch } = useForm();
-  return (
-    <form>
-      <Input required={true} name="name" placeholder="Enter" />
-      <Input required={true} name="dob" placeholder="Enter" />
-      <Input required={true} name="employeeId" placeholder="Enter" />
-      <MobileNumberInput
-        register={register}
-        required={true}
-        name="contact"
-        placeholder="Enter"
-        watch={watch}
-      />
-      <Input required={true} email="email" placeholder="Enter" />
-      <button className="btn secondary">
-        <FaPlus /> Add
-      </button>
-    </form>
-  );
-};
