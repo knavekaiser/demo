@@ -127,7 +127,9 @@ export default function Login() {
                 }
 
                 if (endpoints.tenantValidation?.url) {
-                  await fetch(endpoints.tenantValidation.url)
+                  const tenantDetail = await fetch(
+                    endpoints.tenantValidation.url
+                  )
                     .then((res) => res.json())
                     .then((data) => {
                       const key1 = endpoints.tenantValidation.key1;
@@ -140,8 +142,19 @@ export default function Login() {
                           "tenant-timezone",
                           data[key1].locale.timeZone
                         );
+                        return data[key1];
                       }
+                    })
+                    .catch((err) => {
+                      return Prompt({
+                        type: "error",
+                        message: "Could not validate Tenant.",
+                      });
                     });
+
+                  if (!tenantDetail) {
+                    return;
+                  }
                 }
 
                 hisToken = await fetch(`${endpoints.login.url}`, {
