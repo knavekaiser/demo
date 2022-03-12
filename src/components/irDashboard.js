@@ -217,7 +217,9 @@ function IrDashboard() {
 }
 export const MyDashboard = () => {
   const { user, checkPermission } = useContext(SiteContext);
-  const { parameters, count, setDashboard } = useContext(IrDashboardContext);
+  const { parameters, count, dashboard, setDashboard } = useContext(
+    IrDashboardContext
+  );
   const location = useLocation();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -251,11 +253,17 @@ export const MyDashboard = () => {
     if (_filters.toreportingDate) {
       _filters.toreportingDate = _filters.toreportingDate + " 23:59:59";
     }
-    if (_filters.irBy === "self") {
+
+    if (_filters.byIr !== "department") {
       _filters.userId = user.id;
     } else {
       delete _filters.userId;
     }
+    // if (_filters.irBy === "self") {
+    // } else {
+    //   delete _filters.userId;
+    // }
+
     setLoading(true);
     if (Object.entries(_filters).length) {
       searchIrs(null, { query: _filters })
