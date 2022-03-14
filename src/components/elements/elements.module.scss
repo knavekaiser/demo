@@ -282,11 +282,7 @@
   align-items: center;
   grid-gap: 1rem;
   input {
-    position: absolute;
-    left: 0;
-    max-width: 2rem;
-    opacity: 0;
-    pointer-events: none;
+    display: none;
   }
   .options {
     display: flex;

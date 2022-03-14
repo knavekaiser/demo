@@ -39,4 +39,8 @@ export default {
   countIrByPatientComplaint: `${baseApiUrl}/IncidentReport/search/countByPatientYesOrNo`,
   countIrByUserId: `${baseApiUrl}/IncidentReport/search/countByUserId`,
   countIrByDepartment: `${baseApiUrl}/IncidentReport/search/countByDepartment`,
+
+  typesOfIncident: `${baseApiUrl}/configTypeOfIncident`,
+  configTat: `${baseApiUrl}/configAcceptableTAT`,
+  dashboardElements: `${baseApiUrl}/dashboardElements`,
 };

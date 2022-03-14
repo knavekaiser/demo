@@ -23,8 +23,19 @@
     }
   }
   .typeOfIncident {
+    .inlineForm form,
     tr {
+      grid-gap: 20px;
       grid-template-columns: 10rem 1fr 15rem 5rem 15rem 4rem;
+    }
+    .inlineForm {
+      .btns {
+        margin: 0;
+        // grid-column: 1/-1;
+        // grid-row: -1/-2;
+      }
+    }
+    tr {
       .definition {
         overflow: hidden;
         text-overflow: ellipsis;
@@ -39,13 +50,13 @@
     flex-wrap: wrap;
     section {
       display: flex;
-      grid-gap: 1rem;
+      grid-gap: 20px;
       align-items: center;
     }
   }
   .btns {
     margin-top: 1.5rem;
-    grid-column: 1/-1;
+    // grid-column: 1/-1;
     display: flex;
     grid-gap: 0.5rem;
     justify-content: center;

@@ -377,43 +377,56 @@ export const CustomRadio = ({
   setValue,
   multiple,
   onChange,
-  required,
+  formOptions,
 }) => {
-  const [selected, setSelected] = useState(watch?.(name) || []);
-  useEffect(() => {
-    setValue?.(name, selected);
-  }, [selected]);
+  const selected = watch?.(name);
   return (
     <section className={s.customRadio} data-testid="customRadioInput">
       {label && (
         <label>
-          {label} {required && "*"}
+          {label} {formOptions?.required && "*"}
         </label>
       )}
-      <input {...register(name)} required={required} />
       <div className={s.options}>
         {options.map(({ label, value: v, disabled }) => (
-          <span
-            onClick={() => {
-              setSelected((prev) => {
-                const _selected = selected.find((item) => item === v);
-                if (_selected) {
-                  return prev.filter((item) => item !== v);
-                }
-                if (multiple) {
-                  return [...prev.filter((item) => item !== v), v];
-                } else {
-                  return [v];
-                }
-              });
-            }}
+          <label
+            htmlFor={name + v}
             key={v}
             className={`${s.option} ${
-              watch?.(name).includes(v) ? s.selected : ""
+              selected?.includes?.(v) ? s.selected : ""
             } ${disabled ? s.disabled : ""}`}
           >
+            <input
+              {...register(name)}
+              type="checkbox"
+              name={name}
+              id={name + v}
+              value={v}
+              checked={selected === v || selected?.includes?.(v) || ""}
+              onChange={(e) => {
+                if (
+                  e.target.value === selected ||
+                  selected?.includes?.(e.target.value)
+                ) {
+                  if (multiple) {
+                    setValue(
+                      name,
+                      (selected || []).filter(
+                        (value) => value !== e.target.value
+                      )
+                    );
+                  }
+                } else {
+                  if (multiple) {
+                    setValue(name, [...selected, e.target.value]);
+                  } else {
+                    setValue(name, e.target.value);
+                  }
+                }
+              }}
+            />
             {label}
-          </span>
+          </label>
         ))}
       </div>
     </section>

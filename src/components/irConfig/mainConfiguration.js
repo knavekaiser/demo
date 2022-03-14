@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   FaInfoCircle,
   FaPlus,
@@ -6,6 +6,7 @@ import {
   FaUndo,
   FaPlayCircle,
   FaStopCircle,
+  FaCheck,
 } from "react-icons/fa";
 import { Routes, Route } from "react-router-dom";
 import { BsPencilFill } from "react-icons/bs";
@@ -13,6 +14,7 @@ import { BiSearch } from "react-icons/bi";
 import { Box } from "../incidentReport";
 import { TiTick } from "react-icons/ti";
 import { IoIosClose } from "react-icons/io";
+import { IoClose } from "react-icons/io5";
 import {
   Input,
   MobileNumberInput,
@@ -22,9 +24,11 @@ import {
   TableActions,
   Toggle,
 } from "../elements";
-import { Modal } from "../modal";
+import { Modal, Prompt } from "../modal";
 import { useForm } from "react-hook-form";
 import paths from "../path";
+import { endpoints as defaultEndpoints } from "../../config";
+import { useFetch } from "../../hooks";
 import s from "./config.module.scss";
 
 const IrScreen = () => {
@@ -74,35 +78,20 @@ const IrScreen = () => {
 };
 
 const TypesOfIncident = () => {
-  const [typesOfIncident, setTypesOfIncident] = useState([
-    {
-      id: "1",
-      type: "Unsafe Condition",
-      definition:
-        "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
-      reportingScreen: "Neamiss Template",
-      rcaStatus: true,
-      rcaTempalte: "RCA-Template two",
-    },
-    {
-      id: "2",
-      type: "Unsafe Condition",
-      definition:
-        "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
-      reportingScreen: "Neamiss Template",
-      rcaStatus: true,
-      rcaTempalte: "RCA-Template two",
-    },
-    {
-      id: "3",
-      type: "Unsafe Condition",
-      definition:
-        "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
-      reportingScreen: "Neamiss Template",
-      rcaStatus: true,
-      rcaTempalte: "RCA-Template two",
-    },
-  ]);
+  const [typesOfIncident, setTypesOfIncident] = useState([]);
+  const [edit, setEdit] = useState(null);
+
+  const { get: getTypesOfIncidents } = useFetch(
+    defaultEndpoints.typesOfIncident
+  );
+
+  useEffect(() => {
+    getTypesOfIncidents().then((data) => {
+      if (data?._embedded?.configTypeOfIncident) {
+        setTypesOfIncident(data?._embedded?.configTypeOfIncident);
+      }
+    });
+  }, []);
   return (
     <Box label="TYPE OF INCIDENT" collapsable={true}>
       <Table
@@ -116,23 +105,47 @@ const TypesOfIncident = () => {
           { label: "Actions" },
         ]}
       >
+        <tr>
+          <td className={s.inlineForm}>
+            <IncidentReportForm
+              key={edit ? "edit" : "add"}
+              edit={edit}
+              clearForm={() => {
+                setEdit(null);
+              }}
+              typesOfIncident={typesOfIncident}
+              onSuccess={(newCat) => {
+                console.log(newCat);
+                setTypesOfIncident((prev) => {
+                  return prev.find((c) => c.id === newCat.id)
+                    ? prev.map((c) => (c.id === newCat.id ? newCat : c))
+                    : [...prev, newCat];
+                });
+                setEdit(null);
+              }}
+            />
+          </td>
+        </tr>
         {typesOfIncident.map((inc, i) => (
           <tr key={i}>
             <td>
-              <input type="checkbox" /> {inc.type}
+              {
+                // <input type="checkbox" />
+              }{" "}
+              {inc.type}
             </td>
             <td className={s.definition}>{inc.definition}</td>
-            <td>{inc.reportingScreen}</td>
+            <td>{inc.reportingTemplate}</td>
             <td>
-              <Toggle readOnly={true} defaultValue={inc.rcaStatus} />
+              <Toggle readOnly={true} defaultValue={inc.enableRca} />
             </td>
-            <td>{inc.rcaTempalte}</td>
+            <td>{inc.rcaTemplate}</td>
             <TableActions
               actions={[
                 {
                   icon: <BsPencilFill />,
                   label: "Edit",
-                  callBack: () => {},
+                  callBack: () => setEdit(inc),
                 },
                 {
                   icon: <FaUndo />,
@@ -157,6 +170,118 @@ const TypesOfIncident = () => {
         <button className="btn w-100">Save</button>
       </div>
     </Box>
+  );
+};
+const IncidentReportForm = ({
+  edit,
+  typesOfIncident,
+  onSuccess,
+  clearForm,
+}) => {
+  const {
+    handleSubmit,
+    register,
+    reset,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm({ ...edit });
+  const [loading, setLoading] = useState(false);
+
+  const { post: postType, put: updateType } = useFetch(
+    defaultEndpoints.typesOfIncident + `/${edit?.id || ""}`,
+    {
+      headers: { "Content-Type": "application/json" },
+    }
+  );
+
+  useEffect(() => {
+    reset({ ...edit });
+  }, [edit]);
+
+  return (
+    <form
+      onSubmit={handleSubmit((data) => {
+        if (
+          typesOfIncident?.some(
+            (item) => +item.type === +data.type && item.id !== data.id
+          )
+        ) {
+          Prompt({
+            type: "information",
+            message: `${data.type} already exists.`,
+          });
+          return;
+        }
+        setLoading(true);
+        (edit ? updateType : postType)(data)
+          .then((data) => {
+            setLoading(false);
+            if (data.id) {
+              onSuccess(data);
+              reset();
+            }
+          })
+          .catch((err) => {
+            setLoading(false);
+            Prompt({ type: "error", message: err.message });
+          });
+      })}
+    >
+      <Input
+        {...register("type", {
+          required: "Please enter a Option",
+        })}
+        error={errors.type}
+      />
+      <Input
+        {...register("definition", {
+          required: "Please enter a Deffination",
+        })}
+        error={errors.definition}
+      />
+      <Input
+        {...register("reportingTemplate", {
+          required: "Please enter a Rerpoting Template",
+        })}
+        error={errors.reportingTemplate}
+      />
+      <Toggle
+        register={register}
+        name="enableRca"
+        required={true}
+        watch={watch}
+        setValue={setValue}
+      />
+      <Input
+        {...register("rcaTemplate", {
+          required: "Please enter a RCA Template",
+        })}
+        error={errors.rcaTemplate}
+      />
+      <div className={s.btns}>
+        <button className="btn secondary" type="submit" disabled={loading}>
+          {edit ? (
+            <FaCheck />
+          ) : (
+            <>
+              <FaPlus /> Add
+            </>
+          )}
+        </button>
+        {edit && (
+          <button
+            type="button"
+            onClick={() => {
+              clearForm();
+            }}
+            className="btn secondary"
+          >
+            <IoClose />
+          </button>
+        )}
+      </div>
+    </form>
   );
 };
 
@@ -370,63 +495,38 @@ const HodApprovalProcess = () => {
 };
 
 const DashboardDataElements = () => {
-  const [dashboardDataElements, setDashboardDataElements] = useState([
-    {
-      option: "Submitted IRs",
-      irManager: true,
-      irInvestigator: true,
-    },
-    {
-      option: "Approved IRs",
-      irManager: true,
-      irInvestigator: true,
-    },
-    {
-      option: "Rejected IRs",
-      irManager: false,
-      irInvestigator: true,
-    },
-    {
-      option: "Re-approval request",
-      irManager: false,
-      irInvestigator: true,
-    },
-    {
-      option: "Assigned IRs",
-      irManager: true,
-      irInvestigator: true,
-    },
-    {
-      option: "Under Investigation",
-      irManager: false,
-      irInvestigator: false,
-    },
-    {
-      option: "CAPA planning",
-      irManager: false,
-      irInvestigator: false,
-    },
-    {
-      option: "Closure confirmation",
-      irManager: true,
-      irInvestigator: true,
-    },
-    {
-      option: "Closure confirmed",
-      irManager: false,
-      irInvestigator: false,
-    },
-    {
-      option: "IR Closure",
-      irManager: false,
-      irInvestigator: true,
-    },
-    {
-      option: "CAPA Closed",
-      irManager: false,
-      irInvestigator: true,
-    },
-  ]);
+  const dataElementRef = useRef([]);
+  const [dashboardDataElements, setDashboardDataElements] = useState([]);
+  const [update, setUpdate] = useState([]);
+  const { get: getDashboardElements } = useFetch(
+    defaultEndpoints.dashboardElements
+  );
+  const { patch: updateOption } = useFetch(
+    defaultEndpoints.dashboardElements + `/{ID}`,
+    { headers: { "Content-Type": "application/json" } }
+  );
+  useEffect(() => {
+    getDashboardElements().then((data) => {
+      if (data._embedded.dashboardElements) {
+        const _data = data._embedded.dashboardElements.map((item) => {
+          delete item._links;
+          return item;
+        });
+        setDashboardDataElements(_data);
+        dataElementRef.current = _data;
+      }
+    });
+  }, []);
+  useEffect(() => {
+    setUpdate(
+      dashboardDataElements.filter((newItem) => {
+        const oldItem = dataElementRef.current.find(
+          (old) => old.statusOption === newItem.statusOption
+        );
+        return JSON.stringify(oldItem) !== JSON.stringify(newItem);
+      })
+    );
+  }, [dashboardDataElements]);
   return (
     <Box label="DASHBOARD DATA ELEMENT" collapsable={true}>
       <i>
@@ -434,70 +534,35 @@ const DashboardDataElements = () => {
         roles.
       </i>
       <div className={s.dashboardDataElement}>
-        <Table
-          columns={[
-            { label: "Status Option" },
-            { label: "IR Manager" },
-            { label: "IR Investigator" },
-          ]}
-        >
-          {dashboardDataElements.map((item, i) => (
-            <tr key={i}>
-              <td>{item.option}</td>
-              <td>
-                <section>
-                  <input
-                    type="checkbox"
-                    id={`dashboardDataElements-${item.option}-manager`}
-                    checked={item.irManager}
-                    onChange={() => {}}
-                  />
-                  <label
-                    htmlFor={`dashboardDataElements-${item.option}-manager`}
-                  >
-                    Visible
-                  </label>
-                </section>
-              </td>
-              <td>
-                <section>
-                  <input
-                    type="checkbox"
-                    id={`dashboardDataElements-${item.option}-investigator`}
-                    checked={item.irInvestigator}
-                    onChange={() => {}}
-                  />
-                  <label
-                    htmlFor={`dashboardDataElements-${item.option}-investigator`}
-                  >
-                    Visible
-                  </label>
-                </section>
-              </td>
-            </tr>
-          ))}
-        </Table>
         <div>
           <Table
             columns={[
-              { label: "Statistics Option" },
+              { label: "Status Option" },
               { label: "IR Manager" },
               { label: "IR Investigator" },
             ]}
           >
             {dashboardDataElements.map((item, i) => (
               <tr key={i}>
-                <td>{item.option}</td>
+                <td>{item.statusOption}</td>
                 <td>
                   <section>
                     <input
                       type="checkbox"
-                      id={`dashboardDataElements-${item.option}-manager`}
-                      checked={item.irManager}
-                      onChange={() => {}}
+                      id={`dashboardDataElements-${item.statusOption}-irMgr`}
+                      checked={item.irMgr}
+                      onChange={() => {
+                        setDashboardDataElements((prev) =>
+                          prev.map((op) =>
+                            op.statusOption === item.statusOption
+                              ? { ...op, irMgr: !item.irMgr }
+                              : op
+                          )
+                        );
+                      }}
                     />
                     <label
-                      htmlFor={`dashboardDataElements-${item.option}-manager`}
+                      htmlFor={`dashboardDataElements-${item.statusOption}-irMgr`}
                     >
                       Visible
                     </label>
@@ -507,12 +572,20 @@ const DashboardDataElements = () => {
                   <section>
                     <input
                       type="checkbox"
-                      id={`dashboardDataElements-${item.option}-investigator`}
+                      id={`dashboardDataElements-${item.statusOption}-irInvestigator`}
                       checked={item.irInvestigator}
-                      onChange={() => {}}
+                      onChange={() => {
+                        setDashboardDataElements((prev) =>
+                          prev.map((op) =>
+                            op.statusOption === item.statusOption
+                              ? { ...op, irInvestigator: !item.irInvestigator }
+                              : op
+                          )
+                        );
+                      }}
                     />
                     <label
-                      htmlFor={`dashboardDataElements-${item.option}-investigator`}
+                      htmlFor={`dashboardDataElements-${item.statusOption}-irInvestigator`}
                     >
                       Visible
                     </label>
@@ -526,9 +599,96 @@ const DashboardDataElements = () => {
             <Toggle readOnly={true} defaultValue={true} />
           </section>
         </div>
+        {
+          //   <div>
+          //   <Table
+          //     columns={[
+          //       { label: "Statistics Option" },
+          //       { label: "IR Manager" },
+          //       { label: "IR Investigator" },
+          //     ]}
+          //   >
+          //     {dashboardDataElements.map((item, i) => (
+          //       <tr key={i}>
+          //         <td>{item.statusOption}</td>
+          //         <td>
+          //           <section>
+          //             <input
+          //               type="checkbox"
+          //               id={`dashboardDataElements-${item.option}-manager`}
+          //               checked={item.irMgr}
+          //               onChange={() => {}}
+          //             />
+          //             <label
+          //               htmlFor={`dashboardDataElements-${item.option}-manager`}
+          //             >
+          //               Visible
+          //             </label>
+          //           </section>
+          //         </td>
+          //         <td>
+          //           <section>
+          //             <input
+          //               type="checkbox"
+          //               id={`dashboardDataElements-${item.option}-investigator`}
+          //               checked={item.irInvestigator}
+          //               onChange={() => {}}
+          //             />
+          //             <label
+          //               htmlFor={`dashboardDataElements-${item.option}-investigator`}
+          //             >
+          //               Visible
+          //             </label>
+          //           </section>
+          //         </td>
+          //       </tr>
+          //     ))}
+          //   </Table>
+          //   <section className={s.enableIR}>
+          //     <label>Enable cancel IR function</label>
+          //     <Toggle readOnly={true} defaultValue={true} />
+          //   </section>
+          // </div>
+        }
       </div>
       <div className={s.btns}>
-        <button className="btn w-100">Save</button>
+        <button
+          disabled={!update.length}
+          onClick={() => {
+            Promise.all(
+              update.map((item) =>
+                updateOption(item, { params: { "{ID}": item.id } })
+              )
+            )
+              .then((resp) => {
+                if (resp?.length) {
+                  dataElementRef.current = [
+                    ...dashboardDataElements.filter(
+                      (item) =>
+                        !resp.some(
+                          (op) => op.statusOption === item.statusOption
+                        )
+                    ),
+                    ...resp,
+                  ];
+                  setDashboardDataElements((prev) =>
+                    prev.map(
+                      (item) =>
+                        resp.find(
+                          (op) => op.statusOption === item.statusOption
+                        ) || item
+                    )
+                  );
+                }
+              })
+              .catch((err) => {
+                console.log(err);
+              });
+          }}
+          className="btn w-100"
+        >
+          Save
+        </button>
       </div>
     </Box>
   );
@@ -606,77 +766,143 @@ const IncidentClosure = () => {
 };
 
 const AcceptableTat = () => {
+  const { handleSubmit, register, reset, watch, setValue } = useForm();
+  const [tat, setTat] = useState(null);
+  const { get: getTat } = useFetch(defaultEndpoints.configTat);
+  const { put: updateTat } = useFetch(
+    defaultEndpoints.configTat + `/${tat?.id}`,
+    { headers: { "Content-Type": "application/json" } }
+  );
+  useEffect(() => {
+    getTat().then((data) => {
+      if (data?._embedded?.configAcceptableTAT[0]) {
+        const _tat = data?._embedded?.configAcceptableTAT[0];
+        setTat({
+          ..._tat,
+          excludeWeek: _tat.excludeWeek.split(","),
+          sentinelExcludeWeek: _tat.sentinelExcludeWeek.split(","),
+        });
+        reset({
+          start: _tat.start,
+          endValue: _tat.endValue,
+          acceptableTAT: _tat.acceptableTAT,
+          acceptableTatSentinel: _tat.acceptableTatSentinel,
+          excludeWeek: _tat.excludeWeek.split(","),
+          sentinelExcludeWeek: _tat.sentinelExcludeWeek.split(","),
+        });
+      }
+    });
+  }, []);
   return (
     <Box label="ACCEPTABLE TAT" collapsable={true}>
-      <div className={s.acceptableTat}>
-        <p>IR closure TAT monitoring</p>
-        <div className={s.tatMonitoring}>
-          <section className={s.start}>
-            <label>
-              <FaPlayCircle /> Start:
-            </label>
-            <input
-              value="Incident reporting date"
+      <form
+        onSubmit={handleSubmit((data) => {
+          updateTat({
+            start: data.start,
+            endValue: data.endValue,
+            acceptableTAT: data.acceptableTAT,
+            acceptableTatSentinel: data.acceptableTatSentinel,
+            excludeWeek: data.excludeWeek.join(","),
+            sentinelExcludeWeek: data.sentinelExcludeWeek.join(","),
+          }).then((data) => {
+            if (data?.id) {
+              Prompt({
+                type: "information",
+                message: "Acceptable TAT has been updated.",
+              });
+              setTat({
+                ...data,
+                excludeWeek: data.excludeWeek.split(","),
+                sentinelExcludeWeek: data.sentinelExcludeWeek.split(","),
+              });
+              reset({
+                start: data.start,
+                endValue: data.endValue,
+                acceptableTAT: data.acceptableTAT,
+                acceptableTatSentinel: data.acceptableTatSentinel,
+                excludeWeek: data.excludeWeek.split(","),
+                sentinelExcludeWeek: data.sentinelExcludeWeek.split(","),
+              });
+            }
+          });
+        })}
+      >
+        <div className={s.acceptableTat}>
+          <p>IR closure TAT monitoring</p>
+          <div className={s.tatMonitoring}>
+            <Input
+              label={
+                <>
+                  <FaPlayCircle /> Start:
+                </>
+              }
+              className={s.start}
+              {...register("start")}
               readOnly={true}
-              disabled={true}
             />
-          </section>
-          <section className={s.stop}>
-            <label>
-              <FaStopCircle />
-            </label>
-            <input value="IR closure date" readOnly={true} disabled={true} />
-          </section>
-        </div>
-        <p>Acceptable TAT</p>
-        <div className={s.tatDays}>
-          <div className={s.days}>
             <Input
-              className={`flex ${s.numberOfDays}`}
-              label="Acceptable TAT"
-              placeholder="0"
-              type="number"
-              min={0}
-            />{" "}
-            days <span className={s.divider}>|</span>
-            <CustomRadio
-              label="Exclude Days of week:"
-              options={[
-                { label: "M", value: "mon" },
-                { label: "T", value: "tue" },
-                { label: "W", value: "wed" },
-                { label: "T", value: "thu" },
-                { label: "F", value: "fri" },
-                { label: "S", value: "sat" },
-              ]}
+              label={<FaStopCircle />}
+              className={s.stop}
+              {...register("endValue")}
+              readOnly={true}
             />
           </div>
-          <div className={s.days}>
-            <Input
-              className={`flex ${s.numberOfDays}`}
-              label="Acceptable TAT for sentinel event"
-              placeholder="0"
-              type="number"
-              min={0}
-            />{" "}
-            days <span className={s.divider}>|</span>
-            <CustomRadio
-              label="Exclude Days of week:"
-              options={[
-                { label: "M", value: "mon" },
-                { label: "T", value: "tue" },
-                { label: "W", value: "wed" },
-                { label: "T", value: "thu" },
-                { label: "F", value: "fri" },
-                { label: "S", value: "sat" },
-              ]}
-            />
+          <p>Acceptable TAT</p>
+          <div className={s.tatDays}>
+            <div className={s.days}>
+              <Input
+                className={`flex ${s.numberOfDays}`}
+                label="Acceptable TAT"
+                {...register("acceptableTAT")}
+              />{" "}
+              days <span className={s.divider}>|</span>
+              <CustomRadio
+                label="Exclude Days of week:"
+                options={[
+                  { label: "M", value: "monday" },
+                  { label: "T", value: "tuesday" },
+                  { label: "W", value: "wednesday" },
+                  { label: "T", value: "thursday" },
+                  { label: "F", value: "friday" },
+                  { label: "S", value: "saturday" },
+                ]}
+                name="excludeWeek"
+                multiple={true}
+                register={register}
+                watch={watch}
+                setValue={setValue}
+              />
+            </div>
+            <div className={s.days}>
+              <Input
+                className={`flex ${s.numberOfDays}`}
+                label="Acceptable TAT for sentinel event"
+                {...register("acceptableTatSentinel")}
+              />{" "}
+              days <span className={s.divider}>|</span>
+              <CustomRadio
+                label="Exclude Days of week:"
+                options={[
+                  { label: "M", value: "monday" },
+                  { label: "T", value: "tuesday" },
+                  { label: "W", value: "wednesday" },
+                  { label: "T", value: "thursday" },
+                  { label: "F", value: "friday" },
+                  { label: "S", value: "saturday" },
+                ]}
+                name="sentinelExcludeWeek"
+                multiple={true}
+                register={register}
+                watch={watch}
+                setValue={setValue}
+              />
+            </div>
           </div>
         </div>
-      </div>
-      <div className={s.btns}>
-        <button className="btn w-100">Save</button>
-      </div>
+        <div className={s.btns}>
+          <button className="btn w-100">Save</button>
+        </div>
+      </form>
     </Box>
   );
 };

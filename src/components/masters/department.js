@@ -140,9 +140,6 @@ const DepartmentForm = ({ edit, onSuccess, clearForm, departments }) => {
   return (
     <form
       onSubmit={handleSubmit((data) => {
-        const url = `${process.env.REACT_APP_HOST}/department${
-          edit ? `/${edit.id}` : ""
-        }`;
         if (
           departments?.some(
             (item) =>

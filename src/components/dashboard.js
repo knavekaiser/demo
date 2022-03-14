@@ -208,10 +208,7 @@ function Dashboard() {
               </span>
               basePath={paths.irConfig.basePath}
               startPath={
-                paths.irConfig.basePath +
-                paths.irConfig.mainConfig.basePath +
-                "/" +
-                paths.irConfig.mainConfig.irScreen
+                paths.irConfig.basePath + "/" + paths.irConfig.mainConfig
               }
               className={`${s.sidebarItem} ${
                 location.pathname.startsWith(paths.irConfig.basePath)
