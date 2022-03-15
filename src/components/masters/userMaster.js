@@ -43,11 +43,15 @@ export default function UserMaster() {
     endpoints?.users?.url || defaultEndpoints.users + `?size=10000`,
     { his: endpoints?.users?.url }
   );
-  const { get: getUsers } = useFetch(defaultEndpoints.users);
-  const { post: postUser } = useFetch(defaultEndpoints.users, {
-    headers: { "Content-Type": "application/json" },
+  const { get: getUsers } = useFetch(defaultEndpoints.users, {
+    headers: { "Content-Type": "application/json", tenantId: undefined },
   });
-  const { remove: deleteUser } = useFetch(defaultEndpoints.users + "/{ID}");
+  const { post: postUser } = useFetch(defaultEndpoints.users, {
+    headers: { "Content-Type": "application/json", tenantId: undefined },
+  });
+  const { remove: deleteUser } = useFetch(defaultEndpoints.users + "/{ID}", {
+    headers: { "Content-Type": "application/json", tenantId: undefined },
+  });
 
   useEffect(() => {
     setLoading(true);
@@ -311,9 +315,11 @@ const UserForm = ({
   } = useForm();
   const [loading, setLoading] = useState(false);
 
-  const { post: postUser, put: updateUser } = useFetch(
+  const { post: postUser, patch: updateUser } = useFetch(
     defaultEndpoints.users + `/${edit?.id || ""}`,
-    { headers: { "Content-Type": "application/json" } }
+    {
+      headers: { "Content-Type": "application/json", tenantId: undefined },
+    }
   );
 
   useEffect(() => {
