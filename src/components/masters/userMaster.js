@@ -139,10 +139,12 @@ export default function UserMaster() {
                     newUsers.map((user) =>
                       postUser({
                         name: user.userId,
+                        username: user.userName,
                         gender: user.gender?.toLowerCase() || "",
                         employeeId: user.employeeID,
                         role: "incidentReporter",
                         department: +user.departmentMaster?.code || undefined,
+                        password: "123",
                       })
                     )
                   ).then((result) => {
