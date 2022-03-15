@@ -494,6 +494,7 @@ export const SwitchInput = ({
 export const Toggle = ({
   register = () => {},
   watch,
+  checked,
   defaultValue,
   readOnly,
   name,
@@ -525,7 +526,7 @@ export const Toggle = ({
   return (
     <section
       data-testid="toggleInput"
-      className={`${s.toggle} ${value ? s.on : ""}`}
+      className={`${s.toggle} ${value || checked ? s.on : ""}`}
       onClick={(e) => {
         e.target.querySelector("label")?.click();
       }}
@@ -547,6 +548,10 @@ export const Toggle = ({
     >
       <input
         type="checkbox"
+        checked={checked}
+        onChange={(e) => {
+          onChange?.(e);
+        }}
         {...register(name)}
         style={{ display: "none" }}
         name={name}

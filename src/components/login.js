@@ -14,6 +14,7 @@ import bcrypt from "bcryptjs";
 import s from "./login.module.scss";
 import { useFetch } from "../hooks";
 import { appConfig, endpoints as defaultEndpoints } from "../config";
+import hisEndpoints from "../config/hisEndpoints.js";
 import paths from "./path";
 
 export default function Login() {
@@ -78,20 +79,26 @@ export default function Login() {
             if (his) {
               let hisToken = sessionStorage.getItem("HIS-access-token");
 
-              const endpoints = await getEndpoints()
-                .then((data) => {
-                  const _urls = {};
-                  if (data._embedded.apiurls) {
-                    data._embedded.apiurls.forEach((url) => {
-                      _urls[url.action] = url;
-                    });
-                    return _urls;
-                  }
-                  return null;
-                })
-                .catch((err) => {
-                  setLoading(false);
-                });
+              // const endpoints = await getEndpoints()
+              //   .then((data) => {
+              //     const _urls = {};
+              //     if (data._embedded.apiurls) {
+              //       data._embedded.apiurls.forEach((url) => {
+              //         _urls[url.action] = url;
+              //       });
+              //       return _urls;
+              //     }
+              //     return null;
+              //   })
+              //   .catch((err) => {
+              //     setLoading(false);
+              //   });
+
+              // const endpoints = await fetch(
+              //   `${defaultEndpoints.baseApiUrl}/uploads/endpoints.json`
+              // ).then((res) => res.json());
+
+              const endpoints = hisEndpoints;
 
               if (!endpoints || !Object.keys(endpoints).length) {
                 setLoading(false);

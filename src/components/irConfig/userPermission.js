@@ -51,7 +51,7 @@ export default function UserPermission() {
 
   const fetchUserPermissions = useCallback(() => {
     getPermissions().then((data) => {
-      if (data._embedded.userPermission) {
+      if (data?._embedded?.userPermission) {
         const _permissions = data._embedded.userPermission.map((item) => ({
           ...item,
           permission: item.permission.split(","),

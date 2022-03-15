@@ -4,6 +4,7 @@ import React, {
   useState,
   useEffect,
   useCallback,
+  useRef,
 } from "react";
 import { useNavigate } from "react-router-dom";
 import { irStatus } from "./config";
@@ -113,10 +114,13 @@ export const Provider = ({ children }) => {
 
 export const IrDashboardContext = createContext();
 export const IrDashboardContextProvider = ({ children }) => {
+  const parametersFetched = useRef(false);
+
   const { user } = useContext(SiteContext);
   const [parameters, setParameters] = useState({});
   const [dashboard, setDashboard] = useState("myDashboard");
   const [count, setCount] = useState({});
+  const [tatConfig, setTatConfig] = useState(null);
 
   const { get: getUsers } = useFetch(`${defaultEndpoints.users}?size=10000`);
   const { get: getCountStatusDetailByState } = useFetch(
@@ -145,6 +149,22 @@ export const IrDashboardContextProvider = ({ children }) => {
         status: "2,3,4,5,6,7,8",
       }).toString()
   );
+
+  const { get: getTatConfig } = useFetch(defaultEndpoints.configTat);
+  const updateTatConfig = useCallback(() => {
+    getTatConfig().then((data) => {
+      if (data?._embedded?.configAcceptableTAT[0]) {
+        const _tatConfig = data._embedded.configAcceptableTAT[0];
+        setTatConfig({
+          ..._tatConfig,
+          excludeWeek: _tatConfig.excludeWeek.split(",").map((d) => +d),
+          sentinelExcludeWeek: _tatConfig.sentinelExcludeWeek
+            .split(",")
+            .map((d) => +d),
+        });
+      }
+    });
+  });
 
   const updateUsers = useCallback(async () => {
     const users = await getUsers().then((data) =>
@@ -181,22 +201,26 @@ export const IrDashboardContextProvider = ({ children }) => {
     setParameters((prev) => ({ ...prev, ..._parameters }));
   }, [parameters]);
   useEffect(async () => {
-    Promise.all([getLocations(), getCategories()])
-      .then(async ([location, category]) => {
-        const _parameters = { ...parameters };
-        if (location?._embedded.location) {
-          _parameters.locations = location._embedded.location;
-        }
-        if (category?._embedded.category) {
-          _parameters.categories = category._embedded.category;
-        }
-        setParameters(_parameters);
-        updateUsers();
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  }, []);
+    if (user && !parametersFetched.current) {
+      Promise.all([getLocations(), getCategories()])
+        .then(async ([location, category]) => {
+          const _parameters = { ...parameters };
+          if (location?._embedded.location) {
+            _parameters.locations = location._embedded.location;
+          }
+          if (category?._embedded.category) {
+            _parameters.categories = category._embedded.category;
+          }
+          setParameters(_parameters);
+          updateUsers();
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+      updateTatConfig();
+      parametersFetched.current = true;
+    }
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -262,6 +286,8 @@ export const IrDashboardContextProvider = ({ children }) => {
         dashboard,
         setDashboard,
         updateUsers,
+        updateTatConfig,
+        tatConfig,
       }}
     >
       {children}

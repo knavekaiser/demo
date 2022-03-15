@@ -61,6 +61,38 @@ import { CSVLink } from "react-csv";
 import s from "./irDashboard.module.scss";
 import { useFetch } from "../hooks";
 import { useReactToPrint } from "react-to-print";
+import { countDays } from "../helpers";
+
+const calculateDays = (ir) => {
+  let status = {};
+  ir.irStatusDetails.forEach((detail) => {
+    if (detail.status === 10) {
+      return;
+    }
+    if (Array.isArray(status[detail.status])) {
+      status[detail.status].push(detail);
+    } else {
+      status[detail.status] = [detail];
+    }
+  });
+  if (ir.irStatusDetails.length === 0) {
+    return 0;
+  }
+  Object.entries(status).forEach(([sts, detail]) => {
+    status[sts] = detail.sort((a, b) =>
+      new Date(a.dateTime) < new Date(b.dateTime) ? 1 : -1
+    );
+  });
+
+  const startDate = new Date(Object.values(status)[0][0].dateTime);
+  const endDate = new Date(
+    Object.values(status)[Object.values(status).length - 1][
+      Object.values(status)[Object.values(status).length - 1].length - 1
+    ].dateTime
+  );
+
+  return countDays(startDate, endDate);
+};
 
 function paramsToObject(entries) {
   const result = {};
@@ -101,61 +133,64 @@ class Print extends Component {
               .sort((a, b) =>
                 new Date(a.reportingDate) > new Date(b.reportingDate) ? -1 : 1
               )
-              .map((ir, i) => (
-                <tr key={i}>
-                  <td>{ir.sequence}</td>
-                  <td>
-                    <Moment format="DD/MM/YYYY hh:mm">
-                      {ir.reportingDate}
-                    </Moment>
-                  </td>
-                  <td>
-                    <Moment format="DD/MM/YYYY hh:mm">
-                      {ir.incident_Date_Time}
-                    </Moment>
-                  </td>
-                  <td>
-                    {parameters?.locations.find(
-                      (item) => item.id === ir.location
-                    )?.name || ir.location}
-                  </td>
-                  <td>
-                    {parameters?.categories.find(
-                      (item) => item.id === ir.inciCateg
-                    )?.name || ir.inciCateg}
-                  </td>
-                  <td>
-                    {parameters?.categories
-                      .find((item) => item.id === ir.inciCateg)
-                      ?.subCategorys?.find((item) => item.id === ir.inciSubCat)
-                      ?.name || ir.inciSubCat}
-                  </td>
-                  <td>
-                    {incidentTypes.find(({ value }) => value === ir.typeofInci)
-                      ?.label || [ir.typeofInci]}
-                  </td>
-                  <td>
-                    {parameters?.users?.find(({ value }) => value === ir.userId)
-                      ?.label || "Anonymous"}
-                  </td>
-                  <td>
-                    {parameters?.investigators?.find(
-                      ({ value }) => value === ir.irInvestigator
-                    )?.label || ir.irInvestigator}
-                  </td>
-                  <td>
-                    {irStatus.find((item) => item.id === +ir.status)?.name ||
-                      ir.status}
-                  </td>
-                  <td className={s.tat}>
-                    {Math.floor(
-                      ((ir.closureDate || new Date()) -
-                        new Date(ir.reportingDate)) /
-                        (1000 * 3600 * 24)
-                    )}
-                  </td>
-                </tr>
-              ))}
+              .map((ir, i) => {
+                // return <SingleIr key={ir.id} ir={ir} parameters={parameters} />;
+
+                const tat = calculateDays(ir);
+
+                return (
+                  <tr key={i}>
+                    <td>{ir.sequence}</td>
+                    <td>
+                      <Moment format="DD/MM/YYYY hh:mm">
+                        {ir.reportingDate}
+                      </Moment>
+                    </td>
+                    <td>
+                      <Moment format="DD/MM/YYYY hh:mm">
+                        {ir.incident_Date_Time}
+                      </Moment>
+                    </td>
+                    <td>
+                      {parameters?.locations.find(
+                        (item) => item.id === ir.location
+                      )?.name || ir.location}
+                    </td>
+                    <td>
+                      {parameters?.categories.find(
+                        (item) => item.id === ir.inciCateg
+                      )?.name || ir.inciCateg}
+                    </td>
+                    <td>
+                      {parameters?.categories
+                        .find((item) => item.id === ir.inciCateg)
+                        ?.subCategorys?.find(
+                          (item) => item.id === ir.inciSubCat
+                        )?.name || ir.inciSubCat}
+                    </td>
+                    <td>
+                      {incidentTypes.find(
+                        ({ value }) => value === ir.typeofInci
+                      )?.label || [ir.typeofInci]}
+                    </td>
+                    <td>
+                      {parameters?.users?.find(
+                        ({ value }) => value === ir.userId
+                      )?.label || "Anonymous"}
+                    </td>
+                    <td>
+                      {parameters?.investigators?.find(
+                        ({ value }) => value === ir.irInvestigator
+                      )?.label || ir.irInvestigator}
+                    </td>
+                    <td>
+                      {irStatus.find((item) => item.id === +ir.status)?.name ||
+                        ir.status}
+                    </td>
+                    <td className={s.tat}>{tat}</td>
+                  </tr>
+                );
+              })}
           </tbody>
         </table>
       </div>
@@ -516,6 +551,7 @@ const ReportCount = ({ label, className, irs }) => {
   );
 };
 const SingleIr = ({ ir, focus, setFocus, className, actions, parameters }) => {
+  const { tatConfig } = useContext(IrDashboardContext);
   const [showTatDetails, setShowTatDetails] = useState(false);
   const [timeline, setTimeline] = useState({});
   const [totalTat, setTotalTat] = useState(0);
@@ -540,18 +576,14 @@ const SingleIr = ({ ir, focus, setFocus, className, actions, parameters }) => {
   }, [ir.irStatusDetails]);
   useEffect(() => {
     if (Object.keys(timeline).length) {
-      setTotalTat(
-        Math.floor(
-          (new Date(
-            Object.values(timeline)[Object.values(timeline).length - 1][
-              Object.values(timeline)[Object.values(timeline).length - 1]
-                .length - 1
-            ].dateTime
-          ) -
-            new Date(Object.values(timeline)[0][0].dateTime)) /
-            (1000 * 3600 * 24)
-        )
+      const startDate = new Date(Object.values(timeline)[0][0].dateTime);
+      const endDate = new Date(
+        Object.values(timeline)[Object.values(timeline).length - 1][
+          Object.values(timeline)[Object.values(timeline).length - 1].length - 1
+        ].dateTime
       );
+
+      setTotalTat(countDays(startDate, endDate, tatConfig?.excludeWeek || []));
     }
   }, [timeline]);
   return (
@@ -642,7 +674,7 @@ const SingleIr = ({ ir, focus, setFocus, className, actions, parameters }) => {
         <td className={s.tat} onClick={() => setShowTatDetails(true)}>
           {ir.status !== "1" && totalTat}
         </td>
-        <TableActions actions={actions} />
+        {actions && <TableActions actions={actions} />}
       </tr>
       <Modal
         open={showTatDetails}
@@ -752,10 +784,9 @@ const TatDetails = ({
                 </td>
                 <td>
                   {prevFirstDetail
-                    ? Math.floor(
-                        (new Date(details[details.length - 1]?.dateTime) -
-                          new Date(prevFirstDetail.dateTime)) /
-                          (1000 * 3600 * 24)
+                    ? countDays(
+                        new Date(prevFirstDetail.dateTime),
+                        new Date(details[details.length - 1]?.dateTime)
                       )
                     : 0}
                 </td>
@@ -1067,47 +1098,48 @@ export const QualityDashboard = () => {
               })),
               data: data._embedded.IncidentReport.sort((a, b) =>
                 new Date(a.reportingDate) > new Date(b.reportingDate) ? -1 : 1
-              ).map((ir) => ({
-                ...ir,
-                reportingDate: moment({
-                  time: ir.reportingDate,
-                  format: "DD/MM/YYYY hh:mm",
-                }),
-                incident_Date_Time: moment({
-                  time: ir.incident_Date_Time,
-                  format: "DD/MM/YYYY hh:mm",
-                }),
-                location:
-                  parameters?.locations.find((item) => item.id === ir.location)
-                    ?.name || ir.location,
-                inciCateg:
-                  parameters?.categories.find(
-                    (item) => item.id === ir.inciCateg
-                  )?.name || ir.inciCateg,
-                inciSubCat:
-                  parameters?.categories
-                    .find((item) => item.id === ir.inciCateg)
-                    ?.subCategorys?.find((item) => item.id === ir.inciSubCat)
-                    ?.name || ir.inciSubCat,
-                typeofInci: incidentTypes.find(
-                  ({ value }) => value === ir.typeofInci
-                )?.label || [ir.typeofInci],
-                userId:
-                  parameters?.users?.find(({ value }) => value === ir.userId)
-                    ?.label || "Anonymous",
-                irInvestigator:
-                  parameters?.investigators?.find(
-                    ({ value }) => value === ir.irInvestigator
-                  )?.label || ir.irInvestigator,
-                status:
-                  irStatus.find((item) => item.id === +ir.status)?.name ||
-                  ir.status,
-                tat: Math.floor(
-                  ((ir.closureDate || new Date()) -
-                    new Date(ir.reportingDate)) /
-                    (1000 * 3600 * 24)
-                ),
-              })),
+              ).map((ir) => {
+                const tat = calculateDays(ir);
+
+                return {
+                  ...ir,
+                  reportingDate: moment({
+                    time: ir.reportingDate,
+                    format: "DD/MM/YYYY hh:mm",
+                  }),
+                  incident_Date_Time: moment({
+                    time: ir.incident_Date_Time,
+                    format: "DD/MM/YYYY hh:mm",
+                  }),
+                  location:
+                    parameters?.locations.find(
+                      (item) => item.id === ir.location
+                    )?.name || ir.location,
+                  inciCateg:
+                    parameters?.categories.find(
+                      (item) => item.id === ir.inciCateg
+                    )?.name || ir.inciCateg,
+                  inciSubCat:
+                    parameters?.categories
+                      .find((item) => item.id === ir.inciCateg)
+                      ?.subCategorys?.find((item) => item.id === ir.inciSubCat)
+                      ?.name || ir.inciSubCat,
+                  typeofInci: incidentTypes.find(
+                    ({ value }) => value === ir.typeofInci
+                  )?.label || [ir.typeofInci],
+                  userId:
+                    parameters?.users?.find(({ value }) => value === ir.userId)
+                      ?.label || "Anonymous",
+                  irInvestigator:
+                    parameters?.investigators?.find(
+                      ({ value }) => value === ir.irInvestigator
+                    )?.label || ir.irInvestigator,
+                  status:
+                    irStatus.find((item) => item.id === +ir.status)?.name ||
+                    ir.status,
+                  tat,
+                };
+              }),
               filename: `Incident Report.csv`,
             });
           }

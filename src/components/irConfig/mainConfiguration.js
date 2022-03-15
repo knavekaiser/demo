@@ -507,7 +507,7 @@ const DashboardDataElements = () => {
   );
   useEffect(() => {
     getDashboardElements().then((data) => {
-      if (data._embedded.dashboardElements) {
+      if (data?._embedded?.dashboardElements) {
         const _data = data._embedded.dashboardElements.map((item) => {
           delete item._links;
           return item;
@@ -542,114 +542,159 @@ const DashboardDataElements = () => {
               { label: "IR Investigator" },
             ]}
           >
-            {dashboardDataElements.map((item, i) => (
-              <tr key={i}>
-                <td>{item.statusOption}</td>
-                <td>
-                  <section>
-                    <input
-                      type="checkbox"
-                      id={`dashboardDataElements-${item.statusOption}-irMgr`}
-                      checked={item.irMgr}
-                      onChange={() => {
-                        setDashboardDataElements((prev) =>
-                          prev.map((op) =>
-                            op.statusOption === item.statusOption
-                              ? { ...op, irMgr: !item.irMgr }
-                              : op
-                          )
-                        );
-                      }}
-                    />
-                    <label
-                      htmlFor={`dashboardDataElements-${item.statusOption}-irMgr`}
-                    >
-                      Visible
-                    </label>
-                  </section>
-                </td>
-                <td>
-                  <section>
-                    <input
-                      type="checkbox"
-                      id={`dashboardDataElements-${item.statusOption}-irInvestigator`}
-                      checked={item.irInvestigator}
-                      onChange={() => {
-                        setDashboardDataElements((prev) =>
-                          prev.map((op) =>
-                            op.statusOption === item.statusOption
-                              ? { ...op, irInvestigator: !item.irInvestigator }
-                              : op
-                          )
-                        );
-                      }}
-                    />
-                    <label
-                      htmlFor={`dashboardDataElements-${item.statusOption}-irInvestigator`}
-                    >
-                      Visible
-                    </label>
-                  </section>
-                </td>
-              </tr>
-            ))}
+            {[...dashboardDataElements]
+              .splice(0, 10)
+              .filter(
+                (item) => item.statusOption !== "Enable cancel IR function"
+              )
+              .map((item, i) => (
+                <tr key={i}>
+                  <td>{item.statusOption}</td>
+                  <td>
+                    <section>
+                      <input
+                        type="checkbox"
+                        id={`dashboardDataElements-${item.statusOption}-irMgr`}
+                        checked={item.irMgr}
+                        onChange={() => {
+                          setDashboardDataElements((prev) =>
+                            prev.map((op) =>
+                              op.statusOption === item.statusOption
+                                ? { ...op, irMgr: !item.irMgr }
+                                : op
+                            )
+                          );
+                        }}
+                      />
+                      <label
+                        htmlFor={`dashboardDataElements-${item.statusOption}-irMgr`}
+                      >
+                        Visible
+                      </label>
+                    </section>
+                  </td>
+                  <td>
+                    <section>
+                      <input
+                        type="checkbox"
+                        id={`dashboardDataElements-${item.statusOption}-irInvestigator`}
+                        checked={item.irInvestigator}
+                        onChange={() => {
+                          setDashboardDataElements((prev) =>
+                            prev.map((op) =>
+                              op.statusOption === item.statusOption
+                                ? {
+                                    ...op,
+                                    irInvestigator: !item.irInvestigator,
+                                  }
+                                : op
+                            )
+                          );
+                        }}
+                      />
+                      <label
+                        htmlFor={`dashboardDataElements-${item.statusOption}-irInvestigator`}
+                      >
+                        Visible
+                      </label>
+                    </section>
+                  </td>
+                </tr>
+              ))}
+          </Table>
+        </div>
+        <div>
+          <Table
+            columns={[
+              { label: "Statistics Option" },
+              { label: "IR Manager" },
+              { label: "IR Investigator" },
+            ]}
+          >
+            {[...dashboardDataElements]
+              .splice(10)
+              .filter(
+                (item) => item.statusOption !== "Enable cancel IR function"
+              )
+              .map((item, i) => (
+                <tr key={i}>
+                  <td>{item.statusOption}</td>
+                  <td>
+                    <section>
+                      <input
+                        type="checkbox"
+                        id={`dashboardDataElements-${item.statusOption}-irMgr`}
+                        checked={item.irMgr}
+                        onChange={() => {
+                          setDashboardDataElements((prev) =>
+                            prev.map((op) =>
+                              op.statusOption === item.statusOption
+                                ? { ...op, irMgr: !item.irMgr }
+                                : op
+                            )
+                          );
+                        }}
+                      />
+                      <label
+                        htmlFor={`dashboardDataElements-${item.statusOption}-irMgr`}
+                      >
+                        Visible
+                      </label>
+                    </section>
+                  </td>
+                  <td>
+                    <section>
+                      <input
+                        type="checkbox"
+                        id={`dashboardDataElements-${item.statusOption}-irInvestigator`}
+                        checked={item.irInvestigator}
+                        onChange={() => {
+                          setDashboardDataElements((prev) =>
+                            prev.map((op) =>
+                              op.statusOption === item.statusOption
+                                ? {
+                                    ...op,
+                                    irInvestigator: !item.irInvestigator,
+                                  }
+                                : op
+                            )
+                          );
+                        }}
+                      />
+                      <label
+                        htmlFor={`dashboardDataElements-${item.statusOption}-irInvestigator`}
+                      >
+                        Visible
+                      </label>
+                    </section>
+                  </td>
+                </tr>
+              ))}
           </Table>
           <section className={s.enableIR}>
             <label>Enable cancel IR function</label>
-            <Toggle readOnly={true} defaultValue={true} />
+            <Toggle
+              checked={
+                dashboardDataElements.find(
+                  (item) => item.statusOption === "Enable cancel IR function"
+                )?.irMgr || false
+              }
+              onChange={(e) => {
+                setDashboardDataElements((prev) =>
+                  prev.map((item) =>
+                    item.statusOption === "Enable cancel IR function"
+                      ? {
+                          ...item,
+                          irMgr: e.target.checked,
+                          irInvestigator: e.target.checked,
+                        }
+                      : item
+                  )
+                );
+              }}
+            />
           </section>
         </div>
-        {
-          //   <div>
-          //   <Table
-          //     columns={[
-          //       { label: "Statistics Option" },
-          //       { label: "IR Manager" },
-          //       { label: "IR Investigator" },
-          //     ]}
-          //   >
-          //     {dashboardDataElements.map((item, i) => (
-          //       <tr key={i}>
-          //         <td>{item.statusOption}</td>
-          //         <td>
-          //           <section>
-          //             <input
-          //               type="checkbox"
-          //               id={`dashboardDataElements-${item.option}-manager`}
-          //               checked={item.irMgr}
-          //               onChange={() => {}}
-          //             />
-          //             <label
-          //               htmlFor={`dashboardDataElements-${item.option}-manager`}
-          //             >
-          //               Visible
-          //             </label>
-          //           </section>
-          //         </td>
-          //         <td>
-          //           <section>
-          //             <input
-          //               type="checkbox"
-          //               id={`dashboardDataElements-${item.option}-investigator`}
-          //               checked={item.irInvestigator}
-          //               onChange={() => {}}
-          //             />
-          //             <label
-          //               htmlFor={`dashboardDataElements-${item.option}-investigator`}
-          //             >
-          //               Visible
-          //             </label>
-          //           </section>
-          //         </td>
-          //       </tr>
-          //     ))}
-          //   </Table>
-          //   <section className={s.enableIR}>
-          //     <label>Enable cancel IR function</label>
-          //     <Toggle readOnly={true} defaultValue={true} />
-          //   </section>
-          // </div>
-        }
       </div>
       <div className={s.btns}>
         <button
@@ -802,8 +847,10 @@ const AcceptableTat = () => {
             endValue: data.endValue,
             acceptableTAT: data.acceptableTAT,
             acceptableTatSentinel: data.acceptableTatSentinel,
-            excludeWeek: data.excludeWeek.join(","),
-            sentinelExcludeWeek: data.sentinelExcludeWeek.join(","),
+            excludeWeek: data.excludeWeek.filter((d) => d).join(","),
+            sentinelExcludeWeek: data.sentinelExcludeWeek
+              .filter((d) => d)
+              .join(","),
           }).then((data) => {
             if (data?.id) {
               Prompt({
@@ -859,12 +906,13 @@ const AcceptableTat = () => {
               <CustomRadio
                 label="Exclude Days of week:"
                 options={[
-                  { label: "M", value: "monday" },
-                  { label: "T", value: "tuesday" },
-                  { label: "W", value: "wednesday" },
-                  { label: "T", value: "thursday" },
-                  { label: "F", value: "friday" },
-                  { label: "S", value: "saturday" },
+                  { label: "S", value: "0" },
+                  { label: "M", value: "1" },
+                  { label: "T", value: "2" },
+                  { label: "W", value: "3" },
+                  { label: "T", value: "4" },
+                  { label: "F", value: "5" },
+                  { label: "S", value: "6" },
                 ]}
                 name="excludeWeek"
                 multiple={true}
@@ -883,12 +931,13 @@ const AcceptableTat = () => {
               <CustomRadio
                 label="Exclude Days of week:"
                 options={[
-                  { label: "M", value: "monday" },
-                  { label: "T", value: "tuesday" },
-                  { label: "W", value: "wednesday" },
-                  { label: "T", value: "thursday" },
-                  { label: "F", value: "friday" },
-                  { label: "S", value: "saturday" },
+                  { label: "S", value: "0" },
+                  { label: "M", value: "1" },
+                  { label: "T", value: "2" },
+                  { label: "W", value: "3" },
+                  { label: "T", value: "4" },
+                  { label: "F", value: "5" },
+                  { label: "S", value: "6" },
                 ]}
                 name="sentinelExcludeWeek"
                 multiple={true}
