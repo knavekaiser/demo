@@ -14,7 +14,7 @@ import bcrypt from "bcryptjs";
 import s from "./login.module.scss";
 import { useFetch } from "../hooks";
 import { appConfig, endpoints as defaultEndpoints } from "../config";
-import hisEndpoints from "../config/hisEndpoints.js";
+// import hisEndpoints from "../config/hisEndpoints.js";
 import jwt_decode from "jwt-decode";
 import paths from "./path";
 
@@ -43,18 +43,75 @@ export default function Login() {
       if (decoded && new Date() > new Date(decoded.exp)) {
         getUserDetail(null, {
           query: { username: decoded.user_name },
-        }).then((user) => {
+        }).then(async (user) => {
           if (user) {
-            setUser({
-              ...user,
-              role: user.role.split(",").filter((role) => role),
-            });
+            if (user.dbSchema) {
+              sessionStorage.setItem("db-schema", user.dbSchema);
+            }
+            if (hisAccessToken) {
+              setHis(true);
+              const endpoints = await getEndpoints()
+                .then((data) => {
+                  const _urls = {};
+                  if (data._embedded.apiurls) {
+                    data._embedded.apiurls.forEach((url) => {
+                      _urls[url.action] = url;
+                    });
+                    return _urls;
+                  }
+                  return null;
+                })
+                .catch((err) => {
+                  setLoading(false);
+                });
+
+              // const hisUser = await fetch(
+              //   `${endpoints.users.url}?userName=${user.username}&status=1`,
+              //   {
+              //     method: "GET",
+              //     headers: {
+              //       DNT: null,
+              //       "x-auth-token": sessionStorage.getItem("HIS-access-token"),
+              //       "x-tenantid": sessionStorage.getItem("tenant-id"),
+              //       "x-timezone": sessionStorage.getItem("tenant-timezone"),
+              //       "Content-Type": "application/json",
+              //     },
+              //   }
+              // )
+              //   .then((res) => res.json())
+              //   .then(
+              //     (data) =>
+              //       (data &&
+              //         data[endpoints.users.key1] &&
+              //         data[endpoints.users.key1][0]) ||
+              //       null
+              //   )
+              //   .catch((err) => {
+              //     setLoading(false);
+              //     return Prompt({
+              //       type: "error",
+              //       message: "Could not get user data. Please try again.",
+              //     });
+              //   });
+
+              setEndpoints(endpoints);
+
+              setUser({
+                ...user,
+                role: user.role.split(",").filter((role) => role),
+                // ...hisUser,
+              });
+            } else {
+              setUser({
+                ...user,
+                role: user.role.split(",").filter((role) => role),
+              });
+            }
             if (location.state?.lastLocation) {
               navigate(
                 location.state.lastLocation.pathname +
                   location.state.lastLocation.search
               );
-              console.log(location);
             } else {
               navigate(paths.incidentReport);
             }
@@ -106,26 +163,26 @@ export default function Login() {
             if (his) {
               let hisToken = sessionStorage.getItem("HIS-access-token");
 
-              // const endpoints = await getEndpoints()
-              //   .then((data) => {
-              //     const _urls = {};
-              //     if (data._embedded.apiurls) {
-              //       data._embedded.apiurls.forEach((url) => {
-              //         _urls[url.action] = url;
-              //       });
-              //       return _urls;
-              //     }
-              //     return null;
-              //   })
-              //   .catch((err) => {
-              //     setLoading(false);
-              //   });
+              const endpoints = await getEndpoints()
+                .then((data) => {
+                  const _urls = {};
+                  if (data._embedded.apiurls) {
+                    data._embedded.apiurls.forEach((url) => {
+                      _urls[url.action] = url;
+                    });
+                    return _urls;
+                  }
+                  return null;
+                })
+                .catch((err) => {
+                  setLoading(false);
+                });
 
               // const endpoints = await fetch(
               //   `${defaultEndpoints.baseApiUrl}/uploads/endpoints.json`
               // ).then((res) => res.json());
               // console.log(endpoints);
-              const endpoints = hisEndpoints;
+              // const endpoints = hisEndpoints;
 
               if (!endpoints || !Object.keys(endpoints).length) {
                 setLoading(false);
@@ -255,39 +312,39 @@ export default function Login() {
               //     });
               //   });
 
-              const user = await fetch(
-                `${endpoints.users.url}?userName=${data.username}&status=1`,
-                {
-                  method: "GET",
-                  headers: {
-                    DNT: null,
-                    "x-auth-token": sessionStorage.getItem("HIS-access-token"),
-                    "x-tenantid": sessionStorage.getItem("tenant-id"),
-                    "x-timezone": sessionStorage.getItem("tenant-timezone"),
-                    "Content-Type": "application/json",
-                  },
-                }
-              )
-                .then((res) => res.json())
-                .then((data) => data?.[endpoints.users.key1]?.[0] || null)
-                .catch((err) => {
-                  setLoading(false);
-                  return Prompt({
-                    type: "error",
-                    message: "Could not get user data. Please try again.",
-                  });
-                });
+              // const user = await fetch(
+              //   `${endpoints.users.url}?userName=${data.username}&status=1`,
+              //   {
+              //     method: "GET",
+              //     headers: {
+              //       DNT: null,
+              //       "x-auth-token": sessionStorage.getItem("HIS-access-token"),
+              //       "x-tenantid": sessionStorage.getItem("tenant-id"),
+              //       "x-timezone": sessionStorage.getItem("tenant-timezone"),
+              //       "Content-Type": "application/json",
+              //     },
+              //   }
+              // )
+              //   .then((res) => res.json())
+              //   .then((data) => data?.[endpoints.users.key1]?.[0] || null)
+              //   .catch((err) => {
+              //     setLoading(false);
+              //     return Prompt({
+              //       type: "error",
+              //       message: "Could not get user data. Please try again.",
+              //     });
+              //   });
 
               // console.log({ endpoints });
 
-              if (!user) {
-                // sessionStorage.removeItem("HIS-access-token");
-                setLoading(false);
-                return Prompt({
-                  type: "error",
-                  message: "Could not log in. Please try again.",
-                });
-              }
+              // if (!user) {
+              // sessionStorage.removeItem("HIS-access-token");
+              // setLoading(false);
+              // return Prompt({
+              //   type: "error",
+              //   message: "Could not log in. Please try again.",
+              // });
+              // }
 
               const userDetail = await getUserDetail(null, {
                 query: { username: data.username },
