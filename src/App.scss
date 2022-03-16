@@ -290,3 +290,14 @@ button {
     }
   }
 }
+
+.deathPage {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  text-align: center;
+  svg {
+    font-size: 3rem;
+  }
+  color: $primary-color;
+}

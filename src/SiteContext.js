@@ -42,18 +42,18 @@ export const Provider = ({ children }) => {
 
   const logout = useCallback(() => {
     if (his) {
-      (async () => {
-        await fetch(endpoints.logout.url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userName: user.name,
-            clientRefId: "Napier123",
-            appContext: "",
-            securityToken: sessionStorage.getItem("HIS-access-token"),
-          }),
-        });
-      })();
+      // (async () => {
+      //   await fetch(endpoints.logout.url, {
+      //     method: "POST",
+      //     headers: { "Content-Type": "application/json" },
+      //     body: JSON.stringify({
+      //       userName: user.name,
+      //       clientRefId: "Napier123",
+      //       appContext: "",
+      //       securityToken: sessionStorage.getItem("HIS-access-token"),
+      //     }),
+      //   });
+      // })();
     }
 
     setUser(null);
@@ -64,6 +64,7 @@ export const Provider = ({ children }) => {
     sessionStorage.removeItem("access-token");
     sessionStorage.removeItem("tenant-id");
     sessionStorage.removeItem("tenant-timezone");
+    sessionStorage.removeItem("db-schema");
     navigate("/login");
   }, [user, endpoints]);
 

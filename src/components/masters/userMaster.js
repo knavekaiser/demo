@@ -338,27 +338,27 @@ const UserForm = ({
     <form
       autoComplete="off"
       onSubmit={handleSubmit((data) => {
-        if (
-          users?.some(
-            (item) =>
-              ((data.email &&
-                item.email?.trim().toLowerCase() ===
-                  data.email.trim().toLowerCase()) ||
-                (data.contact &&
-                  item.contact?.trim().toLowerCase() ===
-                    data.contact.trim().toLowerCase()) ||
-                (!edit &&
-                  item.employeeId?.trim().toLowerCase() ===
-                    data.employeeId.trim().toLowerCase())) &&
-              item.id !== data.id
-          )
-        ) {
-          Prompt({
-            type: "information",
-            message: `User already exists. Please use different name, employeeId, contact email.`,
-          });
-          return;
-        }
+        // if (
+        //   users?.some(
+        //     (item) =>
+        //       ((data.email &&
+        //         item.email?.trim().toLowerCase() ===
+        //           data.email.trim().toLowerCase()) ||
+        //         (data.contact &&
+        //           item.contact?.trim().toLowerCase() ===
+        //             data.contact.trim().toLowerCase()) ||
+        //         (!edit &&
+        //           item.employeeId?.trim().toLowerCase() ===
+        //             data.employeeId.trim().toLowerCase())) &&
+        //       item.id !== data.id
+        //   )
+        // ) {
+        //   Prompt({
+        //     type: "information",
+        //     message: `User already exists. Please use different name, employeeId, contact email.`,
+        //   });
+        //   return;
+        // }
         setLoading(true);
         (edit ? updateUser : postUser)({
           ...data,

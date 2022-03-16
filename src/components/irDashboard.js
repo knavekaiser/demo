@@ -1379,20 +1379,20 @@ export const QualityDashboard = () => {
             </li>
             <li>
               Category:{" "}
-              {parameters?.categories.find(
+              {parameters?.categories?.find(
                 (item) => item.id === assign?.inciCateg
               )?.name || assign?.inciCateg}
             </li>
             <li>
               Location:{" "}
-              {parameters?.locations.find(
+              {parameters?.locations?.find(
                 (item) => item.id === assign?.location
               )?.name || assign?.location}
             </li>
             <li>
               Sub Category:{" "}
               {parameters?.categories
-                .find((item) => item.id === assign?.inciCateg)
+                ?.find((item) => item.id === assign?.inciCateg)
                 ?.subCategorys?.find((item) => item.id === assign?.inciSubCat)
                 ?.name || assign?.inciSubCat}
             </li>

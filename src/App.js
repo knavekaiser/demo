@@ -1,5 +1,5 @@
 import { useEffect, useContext } from "react";
-import { Routes, Route, useNavigate } from "react-router-dom";
+import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { IoLockClosedOutline } from "react-icons/io5";
 import { SiteContext } from "./SiteContext";
 import Login from "./components/login";
@@ -9,9 +9,10 @@ import "./App.scss";
 function App() {
   const { user } = useContext(SiteContext);
   const navigate = useNavigate();
+  const location = useLocation();
   useEffect(() => {
     if (!user) {
-      navigate("/login");
+      navigate("/login", { state: { lastLocation: location } });
     }
   }, []);
   return (

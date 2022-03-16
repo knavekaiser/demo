@@ -15,6 +15,7 @@ import s from "./login.module.scss";
 import { useFetch } from "../hooks";
 import { appConfig, endpoints as defaultEndpoints } from "../config";
 import hisEndpoints from "../config/hisEndpoints.js";
+import jwt_decode from "jwt-decode";
 import paths from "./path";
 
 export default function Login() {
@@ -35,6 +36,32 @@ export default function Login() {
     formState: { errors },
   } = useForm();
   useEffect(() => {
+    const accessToken = sessionStorage.getItem("access-token");
+    const hisAccessToken = sessionStorage.getItem("HIS-access-token");
+    if (accessToken) {
+      var decoded = jwt_decode(accessToken);
+      if (decoded && new Date() > new Date(decoded.exp)) {
+        getUserDetail(null, {
+          query: { username: decoded.user_name },
+        }).then((user) => {
+          if (user) {
+            setUser({
+              ...user,
+              role: user.role.split(",").filter((role) => role),
+            });
+            if (location.state?.lastLocation) {
+              navigate(
+                location.state.lastLocation.pathname +
+                  location.state.lastLocation.search
+              );
+              console.log(location);
+            } else {
+              navigate(paths.incidentReport);
+            }
+          }
+        });
+      }
+    }
     if (user) {
       navigate("/");
       return;
@@ -97,7 +124,7 @@ export default function Login() {
               // const endpoints = await fetch(
               //   `${defaultEndpoints.baseApiUrl}/uploads/endpoints.json`
               // ).then((res) => res.json());
-
+              // console.log(endpoints);
               const endpoints = hisEndpoints;
 
               if (!endpoints || !Object.keys(endpoints).length) {
@@ -298,6 +325,9 @@ export default function Login() {
               }
 
               setEndpoints(endpoints);
+              if (userDetail.dbSchema) {
+                sessionStorage.setItem("db-schema", userDetail.dbSchema);
+              }
               setUser({
                 ...userDetail,
                 ...user,
@@ -307,7 +337,6 @@ export default function Login() {
               const _user = await getUserDetail(null, {
                 query: { username: data.username },
               }).then((user) => {
-                console.log(user);
                 return user
                   ? {
                       ...user,
@@ -331,6 +360,9 @@ export default function Login() {
               // );
 
               if (_user) {
+                if (_user.dbSchema) {
+                  sessionStorage.setItem("db-schema", _user.dbSchema);
+                }
                 setUser(_user);
                 navigate(paths.incidentReport);
               } else {

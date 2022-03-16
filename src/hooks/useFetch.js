@@ -40,7 +40,7 @@ export const useFetch = (url, { his, headers: hookHeaders } = {}) => {
               ? {
                   Authorization:
                     "Bearer " + sessionStorage.getItem("access-token"),
-                  tenantId: "star",
+                  tenantId: sessionStorage.getItem("db-schema") || null,
                 }
               : {
                   SECURITY_TOKEN: sessionStorage.getItem("HIS-access-token"),
