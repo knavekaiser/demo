@@ -22,7 +22,6 @@ import s from "./masters.module.scss";
 
 export default function UserMaster() {
   const { endpoints } = useContext(SiteContext);
-  const [loading, setLoading] = useState(true);
   const [parameters, setParameters] = useState({
     genders: [
       { label: "Male", value: "male" },
@@ -43,7 +42,7 @@ export default function UserMaster() {
     endpoints?.users?.url || defaultEndpoints.users + `?size=10000`,
     { his: endpoints?.users?.url }
   );
-  const { get: getUsers } = useFetch(defaultEndpoints.users, {
+  const { get: getUsers, loading } = useFetch(defaultEndpoints.users, {
     headers: { "Content-Type": "application/json", tenantId: undefined },
   });
   const { post: postUser } = useFetch(defaultEndpoints.users, {
@@ -54,7 +53,6 @@ export default function UserMaster() {
   });
 
   useEffect(() => {
-    setLoading(true);
     Promise.all([
       getAllDepartments(null, {
         ...(endpoints?.departments?.url && {
@@ -106,7 +104,6 @@ export default function UserMaster() {
         return getUsers(null, { query: { size: 10000 } });
       })
       .then((data) => {
-        setLoading(false);
         if (data._embedded?.user) {
           setUsers(
             data._embedded.user.map((user) => ({
@@ -116,9 +113,7 @@ export default function UserMaster() {
           );
         }
       })
-      .catch((err) => {
-        setLoading(false);
-      });
+      .catch((err) => Prompt({ type: "error", message: err.message }));
   }, []);
   return (
     <div className={s.container} data-testid="users">
@@ -315,9 +310,8 @@ const UserForm = ({
     formState: { errors },
     clearErrors,
   } = useForm();
-  const [loading, setLoading] = useState(false);
 
-  const { post: postUser, patch: updateUser } = useFetch(
+  const { post: postUser, patch: updateUser, loading } = useFetch(
     defaultEndpoints.users + `/${edit?.id || ""}`,
     {
       headers: { "Content-Type": "application/json", tenantId: undefined },
@@ -359,7 +353,6 @@ const UserForm = ({
         //   });
         //   return;
         // }
-        setLoading(true);
         (edit ? updateUser : postUser)({
           ...data,
           ...(edit &&
@@ -369,7 +362,6 @@ const UserForm = ({
           role: data.role.join(","),
         })
           .then((data) => {
-            setLoading(false);
             if (data.name) {
               onSuccess({
                 ...data,
@@ -378,10 +370,7 @@ const UserForm = ({
               reset();
             }
           })
-          .catch((err) => {
-            setLoading(false);
-            Prompt({ type: "error", message: err.message });
-          });
+          .catch((err) => Prompt({ type: "error", message: err.message }));
       })}
     >
       <SearchField

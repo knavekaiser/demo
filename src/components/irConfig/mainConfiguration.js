@@ -98,6 +98,7 @@ const TypesOfIncident = () => {
         className={s.typeOfIncident}
         columns={[
           { label: "Option" },
+          { label: "Type Label" },
           { label: "Definition" },
           { label: "Reporting Screen Template" },
           { label: "Enable RCA" },
@@ -134,6 +135,7 @@ const TypesOfIncident = () => {
               }{" "}
               {inc.type}
             </td>
+            <td>{inc.type_descrip}</td>
             <td className={s.definition}>{inc.definition}</td>
             <td>{inc.reportingTemplate}</td>
             <td>
@@ -186,9 +188,8 @@ const IncidentReportForm = ({
     setValue,
     formState: { errors },
   } = useForm({ ...edit });
-  const [loading, setLoading] = useState(false);
 
-  const { post: postType, put: updateType } = useFetch(
+  const { post: postType, put: updateType, loading } = useFetch(
     defaultEndpoints.typesOfIncident + `/${edit?.id || ""}`,
     {
       headers: { "Content-Type": "application/json" },
@@ -204,28 +205,27 @@ const IncidentReportForm = ({
       onSubmit={handleSubmit((data) => {
         if (
           typesOfIncident?.some(
-            (item) => +item.type === +data.type && item.id !== data.id
+            (item) =>
+              (+item.type === +data.type ||
+                item.type_descrip?.trim().toLowerCase() ===
+                  data.type_descrip?.trim().toLowerCase()) &&
+              item.id !== data.id
           )
         ) {
           Prompt({
             type: "information",
-            message: `${data.type} already exists.`,
+            message: `Type already exists.`,
           });
           return;
         }
-        setLoading(true);
         (edit ? updateType : postType)(data)
           .then((data) => {
-            setLoading(false);
             if (data.id) {
               onSuccess(data);
               reset();
             }
           })
-          .catch((err) => {
-            setLoading(false);
-            Prompt({ type: "error", message: err.message });
-          });
+          .catch((err) => Prompt({ type: "error", message: err.message }));
       })}
     >
       <Input
@@ -233,6 +233,12 @@ const IncidentReportForm = ({
           required: "Please enter a Option",
         })}
         error={errors.type}
+      />
+      <Input
+        {...register("type_descrip", {
+          required: "Please enter a Type Label",
+        })}
+        error={errors.type_descrip}
       />
       <Input
         {...register("definition", {
@@ -543,7 +549,7 @@ const DashboardDataElements = () => {
             ]}
           >
             {[...dashboardDataElements]
-              .splice(0, 10)
+              .splice(0, 11)
               .filter(
                 (item) => item.statusOption !== "Enable cancel IR function"
               )
@@ -612,7 +618,7 @@ const DashboardDataElements = () => {
             ]}
           >
             {[...dashboardDataElements]
-              .splice(10)
+              .splice(11)
               .filter(
                 (item) => item.statusOption !== "Enable cancel IR function"
               )

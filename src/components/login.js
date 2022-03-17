@@ -29,6 +29,27 @@ export default function Login() {
   );
   const { get: getEndpoints } = useFetch(defaultEndpoints.apiUrl);
 
+  const handleUser = useCallback(
+    (user) => {
+      console.log(user);
+      setUser(user);
+      if (user.dbSchema) {
+        sessionStorage.setItem("db-schema", user.dbSchema);
+      } else {
+        sessionStorage.removeItem("db-schema");
+      }
+      if (location.state?.lastLocation) {
+        navigate(
+          location.state.lastLocation.pathname +
+            location.state.lastLocation.search
+        );
+      } else {
+        navigate(paths.incidentReport);
+      }
+    },
+    [location.state]
+  );
+
   const {
     handleSubmit,
     register,
@@ -45,9 +66,6 @@ export default function Login() {
           query: { username: decoded.user_name },
         }).then(async (user) => {
           if (user) {
-            if (user.dbSchema) {
-              sessionStorage.setItem("db-schema", user.dbSchema);
-            }
             if (hisAccessToken) {
               setHis(true);
               const endpoints = await getEndpoints()
@@ -61,60 +79,16 @@ export default function Login() {
                   }
                   return null;
                 })
-                .catch((err) => {
-                  setLoading(false);
-                });
-
-              // const hisUser = await fetch(
-              //   `${endpoints.users.url}?userName=${user.username}&status=1`,
-              //   {
-              //     method: "GET",
-              //     headers: {
-              //       DNT: null,
-              //       "x-auth-token": sessionStorage.getItem("HIS-access-token"),
-              //       "x-tenantid": sessionStorage.getItem("tenant-id"),
-              //       "x-timezone": sessionStorage.getItem("tenant-timezone"),
-              //       "Content-Type": "application/json",
-              //     },
-              //   }
-              // )
-              //   .then((res) => res.json())
-              //   .then(
-              //     (data) =>
-              //       (data &&
-              //         data[endpoints.users.key1] &&
-              //         data[endpoints.users.key1][0]) ||
-              //       null
-              //   )
-              //   .catch((err) => {
-              //     setLoading(false);
-              //     return Prompt({
-              //       type: "error",
-              //       message: "Could not get user data. Please try again.",
-              //     });
-              //   });
+                .catch((err) =>
+                  Prompt({ type: "error", message: err.message })
+                );
 
               setEndpoints(endpoints);
-
-              setUser({
-                ...user,
-                role: user.role.split(",").filter((role) => role),
-                // ...hisUser,
-              });
-            } else {
-              setUser({
-                ...user,
-                role: user.role.split(",").filter((role) => role),
-              });
             }
-            if (location.state?.lastLocation) {
-              navigate(
-                location.state.lastLocation.pathname +
-                  location.state.lastLocation.search
-              );
-            } else {
-              navigate(paths.incidentReport);
-            }
+            handleUser({
+              ...user,
+              role: user.role.split(",").filter((role) => role),
+            });
           }
         });
       }
@@ -176,13 +150,8 @@ export default function Login() {
                 })
                 .catch((err) => {
                   setLoading(false);
+                  Prompt({ type: "error", message: err.message });
                 });
-
-              // const endpoints = await fetch(
-              //   `${defaultEndpoints.baseApiUrl}/uploads/endpoints.json`
-              // ).then((res) => res.json());
-              // console.log(endpoints);
-              // const endpoints = hisEndpoints;
 
               if (!endpoints || !Object.keys(endpoints).length) {
                 setLoading(false);
@@ -287,92 +256,23 @@ export default function Login() {
                 });
               }
 
-              // const user = await fetch(
-              //   `${endpoints.users.url}?userName=${data.username}&status=1`,
-              //   {
-              //     method: "GET",
-              //     headers: {
-              //       DNT: null,
-              //       "x-auth-token": sessionStorage.getItem("HIS-access-token"),
-              //       "x-tenantid": sessionStorage.getItem("tenant-id"),
-              //       "x-timezone": sessionStorage.getItem("tenant-timezone"),
-              //       "Content-Type": "application/json",
-              //     },
-              //   }
-              // )
-              //   .then((res) => res.json())
-              //   .then((data) =>
-              //     data?.userViewList ? data.userViewList[0] : null
-              //   )
-              //   .catch((err) => {
-              //     setLoading(false);
-              //     return Prompt({
-              //       type: "error",
-              //       message: "Could not get user data. Please try again.",
-              //     });
-              //   });
-
-              // const user = await fetch(
-              //   `${endpoints.users.url}?userName=${data.username}&status=1`,
-              //   {
-              //     method: "GET",
-              //     headers: {
-              //       DNT: null,
-              //       "x-auth-token": sessionStorage.getItem("HIS-access-token"),
-              //       "x-tenantid": sessionStorage.getItem("tenant-id"),
-              //       "x-timezone": sessionStorage.getItem("tenant-timezone"),
-              //       "Content-Type": "application/json",
-              //     },
-              //   }
-              // )
-              //   .then((res) => res.json())
-              //   .then((data) => data?.[endpoints.users.key1]?.[0] || null)
-              //   .catch((err) => {
-              //     setLoading(false);
-              //     return Prompt({
-              //       type: "error",
-              //       message: "Could not get user data. Please try again.",
-              //     });
-              //   });
-
-              // console.log({ endpoints });
-
-              // if (!user) {
-              // sessionStorage.removeItem("HIS-access-token");
-              // setLoading(false);
-              // return Prompt({
-              //   type: "error",
-              //   message: "Could not log in. Please try again.",
-              // });
-              // }
-
-              const userDetail = await getUserDetail(null, {
+              const user = await getUserDetail(null, {
                 query: { username: data.username },
-              }).then((user) =>
-                user
-                  ? {
-                      ...user,
-                      role: user.role.split(",").filter((role) => role),
-                    }
-                  : null
-              );
+              })
+                .then((user) =>
+                  user
+                    ? {
+                        ...user,
+                        role: user.role.split(",").filter((role) => role),
+                      }
+                    : null
+                )
+                .catch((err) => {
+                  setLoading(false);
+                  Prompt({ type: "error", message: err.message });
+                });
 
-              // const users = await fetch(defaultEndpoints.users + "?size=10000")
-              //   .then((res) => res.json())
-              //   .then((users) =>
-              //     (users?._embedded?.user || []).map((user) => ({
-              //       ...user,
-              //       role: user.role.split(","),
-              //     }))
-              //   )
-              //   .catch((err) => console.log(err));
-              //
-              // const userDetail = await users.find(
-              //   (user) => user.name === data.username
-              // );
-              // console.log({ users, userDetail });
-
-              if (!userDetail) {
+              if (!user) {
                 setLoading(false);
                 return Prompt({
                   type: "error",
@@ -382,14 +282,8 @@ export default function Login() {
               }
 
               setEndpoints(endpoints);
-              if (userDetail.dbSchema) {
-                sessionStorage.setItem("db-schema", userDetail.dbSchema);
-              }
-              setUser({
-                ...userDetail,
-                ...user,
-              });
-              navigate(paths.incidentReport);
+
+              handleUser(user);
             } else {
               const _user = await getUserDetail(null, {
                 query: { username: data.username },
@@ -402,26 +296,8 @@ export default function Login() {
                   : null;
               });
 
-              // const users = await fetch(defaultEndpoints.users + "?size=10000")
-              //   .then((res) => res.json())
-              //   .then((users) =>
-              //     (users?._embedded?.user || []).map((user) => ({
-              //       ...user,
-              //       role: user.role.split(","),
-              //     }))
-              //   )
-              //   .catch((err) => console.log(err));
-              //
-              // const _user = await users.find(
-              //   (user) => user.name === data.username
-              // );
-
               if (_user) {
-                if (_user.dbSchema) {
-                  sessionStorage.setItem("db-schema", _user.dbSchema);
-                }
-                setUser(_user);
-                navigate(paths.incidentReport);
+                handleUser(_user);
               } else {
                 setLoading(false);
                 Prompt({

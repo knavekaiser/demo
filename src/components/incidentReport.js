@@ -23,7 +23,7 @@ import { Prompt, Modal } from "./modal";
 import { useForm, FormProvider, useFormContext } from "react-hook-form";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useHisFetch, useFetch } from "../hooks";
-import { incidentTypes, endpoints as defaultEndpoints } from "../config";
+import { endpoints as defaultEndpoints } from "../config";
 import s from "./incidentReporting.module.scss";
 
 const defaultFormValues = {
@@ -66,11 +66,10 @@ export const ConnectForm = ({ children }) => {
   return children({ ...methods });
 };
 export default function IncidentReporting() {
-  const { user, endpoints } = useContext(SiteContext);
+  const { user, endpoints, irTypes } = useContext(SiteContext);
   const location = useLocation();
   const navigate = useNavigate();
   const methods = useForm({ defaultValues: defaultFormValues });
-  const [loading, setLoading] = useState(false);
   const [edit, setEdit] = useState(null);
   const [readOnly, setReadOnly] = useState(false);
   const [parameters, setParameters] = useState(null);
@@ -78,8 +77,10 @@ export default function IncidentReporting() {
   const patientComplaint = methods.watch("patientYesOrNo");
   const uploads = methods.watch("upload");
 
-  const { post: uploadFiles } = useFetch(defaultEndpoints.uploadFiles);
-  const { post: postIr, put: updateIr } = useFetch(
+  const { post: uploadFiles, laoding: uploadingFiles } = useFetch(
+    defaultEndpoints.uploadFiles
+  );
+  const { post: postIr, put: updateIr, loading } = useFetch(
     `${defaultEndpoints.incidentReport}${edit ? `/${edit.id}` : ""}`,
     { headers: { "Content-Type": "application/json" } }
   );
@@ -87,7 +88,6 @@ export default function IncidentReporting() {
   const submitForm = useCallback(
     (data) => {
       const postData = async () => {
-        setLoading(true);
         if (data.upload?.length) {
           const formData = new FormData();
           const uploaded = [];
@@ -108,7 +108,6 @@ export default function IncidentReporting() {
             links = await uploadFiles(formData)
               .then((data) => (links = data?.map((item) => item.uri) || []))
               .catch((err) => {
-                setLoading(false);
                 Prompt({
                   type: "error",
                   message: "Invalid file, Please check",
@@ -151,7 +150,6 @@ export default function IncidentReporting() {
           }),
         })
           .then((data) => {
-            setLoading(false);
             if (data.id) {
               Prompt({
                 type: "success",
@@ -182,13 +180,12 @@ export default function IncidentReporting() {
               });
             }
           })
-          .catch((err) => {
-            setLoading(false);
+          .catch((err) =>
             Prompt({
               type: "error",
               message: err.message,
-            });
-          });
+            })
+          );
       };
       if (+data.status === 2) {
         Prompt({
@@ -638,7 +635,7 @@ export default function IncidentReporting() {
                     },
                   }}
                   name="typeofInci"
-                  options={incidentTypes.map((type) => {
+                  options={irTypes.map((type) => {
                     if (type.value === 8) {
                       return {
                         ...type,
@@ -827,7 +824,7 @@ export default function IncidentReporting() {
                 resetForm();
                 methods.clearErrors();
               }}
-              disabled={loading || readOnly}
+              disabled={loading || uploadingFiles || readOnly}
             >
               Clear
             </button>
@@ -837,7 +834,7 @@ export default function IncidentReporting() {
                 methods.clearErrors();
               }}
               className="btn secondary w-100"
-              disabled={loading || readOnly || anonymous}
+              disabled={loading || uploadingFiles || readOnly || anonymous}
             >
               Save
             </button>
@@ -846,7 +843,7 @@ export default function IncidentReporting() {
                 methods.setValue("status", 2);
               }}
               className="btn w-100"
-              disabled={loading || readOnly}
+              disabled={loading || uploadingFiles || readOnly}
             >
               Submit
             </button>
@@ -884,7 +881,7 @@ export const IncidentCategory = () => {
           setRows(rows);
         }
       })
-      .catch((err) => {});
+      .catch((err) => Prompt({ type: "error", message: err.message }));
   }, []);
   return (
     <ConnectForm>

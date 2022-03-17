@@ -5,6 +5,9 @@ import React, {
   Component,
   useRef,
   Fragment,
+  useCallback,
+  useMemo,
+  memo,
 } from "react";
 import {
   SiteContext,
@@ -52,11 +55,7 @@ import { useNavigate, useLocation, createSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { Modal, Prompt } from "./modal";
 import paths from "./path";
-import {
-  incidentTypes,
-  irStatus,
-  endpoints as defaultEndpoints,
-} from "../config";
+import { irStatus, endpoints as defaultEndpoints } from "../config";
 import { CSVLink } from "react-csv";
 import s from "./irDashboard.module.scss";
 import { useFetch } from "../hooks";
@@ -106,6 +105,7 @@ class Print extends Component {
   render() {
     const incidents = this.props.incidents;
     const parameters = this.props.parameters;
+    const irTypes = this.props.irTypes;
     return (
       <div className={s.paper}>
         <table cellPadding={0} cellSpacing={0}>
@@ -152,26 +152,25 @@ class Print extends Component {
                       </Moment>
                     </td>
                     <td>
-                      {parameters?.locations.find(
+                      {parameters?.locations?.find(
                         (item) => item.id === ir.location
                       )?.name || ir.location}
                     </td>
                     <td>
-                      {parameters?.categories.find(
+                      {parameters?.categories?.find(
                         (item) => item.id === ir.inciCateg
                       )?.name || ir.inciCateg}
                     </td>
                     <td>
                       {parameters?.categories
-                        .find((item) => item.id === ir.inciCateg)
+                        ?.find((item) => item.id === ir.inciCateg)
                         ?.subCategorys?.find(
                           (item) => item.id === ir.inciSubCat
                         )?.name || ir.inciSubCat}
                     </td>
                     <td>
-                      {incidentTypes.find(
-                        ({ value }) => value === ir.typeofInci
-                      )?.label || [ir.typeofInci]}
+                      {irTypes.find(({ value }) => value === ir.typeofInci)
+                        ?.label || [ir.typeofInci]}
                     </td>
                     <td>
                       {parameters?.users?.find(
@@ -197,6 +196,8 @@ class Print extends Component {
     );
   }
 }
+
+const PrintMemo = memo(Print);
 
 function IrDashboard() {
   const { user, checkPermission } = useContext(SiteContext);
@@ -257,15 +258,108 @@ export const MyDashboard = () => {
   );
   const location = useLocation();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
   const [incidents, setIncidents] = useState([]);
   const [filters, setFilters] = useState({});
   const [focus, setFocus] = useState(null);
 
-  const { get: searchIrs } = useFetch(defaultEndpoints.searchIrs);
+  const { get: searchIrs, loading } = useFetch(defaultEndpoints.searchIrs);
   const { remove: deleteIr } = useFetch(
     defaultEndpoints.incidentReport + "/" + "{ID}"
   );
+
+  const getActions = useCallback((inc) => [
+    ...(+inc.status === 1
+      ? [
+          {
+            icon: <BsPencilFill />,
+            label: "Edit",
+            callBack: () => {
+              navigate(paths.incidentReport, {
+                state: {
+                  edit: inc,
+                  focus: inc.id,
+                  from: location.pathname,
+                },
+              });
+            },
+          },
+          {
+            icon: <FaRegTrashAlt />,
+            label: "Delete",
+            callBack: () => {
+              Prompt({
+                type: "confirmation",
+                message: `Are you sure you want to remove this incident?`,
+                callback: () => {
+                  deleteIr(null, {
+                    params: { "{ID}": inc.id },
+                  }).then(({ res }) => {
+                    if (res.status === 204) {
+                      setIncidents((prev) =>
+                        prev.filter((ir) => ir.id !== inc.id)
+                      );
+                    }
+                  });
+                },
+              });
+            },
+          },
+          ...((checkPermission({
+            roleId: ["irInvestigator", "incidentManager"],
+            permission: "Cancel IR",
+          }) && [
+            {
+              icon: <FaRegTrashAlt />,
+              label: "Delete",
+              callBack: () => {
+                Prompt({
+                  type: "confirmation",
+                  message: "Are you sure you want to delete this report?",
+                  callback: () => {
+                    deleteIr(null, {
+                      params: { "{ID}": inc.id },
+                    }).then(({ res }) => {
+                      if (res.status === 204) {
+                        setIncidents((prev) =>
+                          prev.filter((ir) => ir.id !== inc.id)
+                        );
+                      }
+                    });
+                  },
+                });
+              },
+            },
+          ]) ||
+            []),
+        ]
+      : [
+          {
+            icon: <FaEye />,
+            label: "Review IR",
+            callBack: () => {
+              navigate(paths.incidentReport, {
+                state: {
+                  edit: inc,
+                  readOnly: true,
+                  focus: inc.id,
+                  from: location.pathname,
+                },
+              });
+            },
+          },
+        ]),
+    ...((checkPermission({
+      roleId: "hod",
+      permission: "Acknowledge IR",
+    }) && [
+      {
+        icon: <FaExternalLinkAlt />,
+        label: "Acknowledge IR",
+        callBack: () => {},
+      },
+    ]) ||
+      []),
+  ]);
 
   useEffect(() => {
     setDashboard("myDashboard");
@@ -299,29 +393,22 @@ export const MyDashboard = () => {
     //   delete _filters.userId;
     // }
 
-    setLoading(true);
     if (Object.entries(_filters).length) {
       searchIrs(null, { query: _filters })
         .then((data) => {
-          setLoading(false);
           if (data._embedded?.IncidentReport) {
             setIncidents(data._embedded.IncidentReport);
           }
         })
-        .catch((err) => {
-          setLoading(false);
-        });
+        .catch((err) => Prompt({ type: "error", message: err.message }));
     } else {
       searchIrs(null, { query: { userId: user.id } })
         .then((data) => {
-          setLoading(false);
           if (data._embedded?.IncidentReport) {
             setIncidents(data._embedded.IncidentReport);
           }
         })
-        .catch((err) => {
-          setLoading(false);
-        });
+        .catch((err) => Prompt({ type: "error", message: err.message }));
     }
   }, [location.search]);
   return (
@@ -408,100 +495,7 @@ export const MyDashboard = () => {
               setFocus={setFocus}
               key={inc.id}
               ir={inc}
-              actions={[
-                ...(+inc.status === 1
-                  ? [
-                      {
-                        icon: <BsPencilFill />,
-                        label: "Edit",
-                        callBack: () => {
-                          navigate(paths.incidentReport, {
-                            state: {
-                              edit: inc,
-                              focus: inc.id,
-                              from: location.pathname,
-                            },
-                          });
-                        },
-                      },
-                      {
-                        icon: <FaRegTrashAlt />,
-                        label: "Delete",
-                        callBack: () => {
-                          Prompt({
-                            type: "confirmation",
-                            message: `Are you sure you want to remove this incident?`,
-                            callback: () => {
-                              deleteIr(null, {
-                                params: { "{ID}": inc.id },
-                              }).then(({ res }) => {
-                                if (res.status === 204) {
-                                  setIncidents((prev) =>
-                                    prev.filter((ir) => ir.id !== inc.id)
-                                  );
-                                }
-                              });
-                            },
-                          });
-                        },
-                      },
-                      ...((checkPermission({
-                        roleId: ["irInvestigator", "incidentManager"],
-                        permission: "Cancel IR",
-                      }) && [
-                        {
-                          icon: <FaRegTrashAlt />,
-                          label: "Delete",
-                          callBack: () => {
-                            Prompt({
-                              type: "confirmation",
-                              message:
-                                "Are you sure you want to delete this report?",
-                              callback: () => {
-                                deleteIr(null, {
-                                  params: { "{ID}": inc.id },
-                                }).then(({ res }) => {
-                                  if (res.status === 204) {
-                                    setIncidents((prev) =>
-                                      prev.filter((ir) => ir.id !== inc.id)
-                                    );
-                                  }
-                                });
-                              },
-                            });
-                          },
-                        },
-                      ]) ||
-                        []),
-                    ]
-                  : [
-                      {
-                        icon: <FaEye />,
-                        label: "Review IR",
-                        callBack: () => {
-                          navigate(paths.incidentReport, {
-                            state: {
-                              edit: inc,
-                              readOnly: true,
-                              focus: inc.id,
-                              from: location.pathname,
-                            },
-                          });
-                        },
-                      },
-                    ]),
-                ...((checkPermission({
-                  roleId: "hod",
-                  permission: "Acknowledge IR",
-                }) && [
-                  {
-                    icon: <FaExternalLinkAlt />,
-                    label: "Acknowledge IR",
-                    callBack: () => {},
-                  },
-                ]) ||
-                  []),
-              ]}
+              actions={getActions(inc)}
               parameters={parameters}
             />
           ))}
@@ -550,150 +544,157 @@ const ReportCount = ({ label, className, irs }) => {
     </div>
   );
 };
-const SingleIr = ({ ir, focus, setFocus, className, actions, parameters }) => {
-  const { tatConfig } = useContext(IrDashboardContext);
-  const [showTatDetails, setShowTatDetails] = useState(false);
-  const [timeline, setTimeline] = useState({});
-  const [totalTat, setTotalTat] = useState(0);
-  useEffect(() => {
-    let status = {};
-    ir.irStatusDetails.forEach((detail) => {
-      if (detail.status === 10) {
-        return;
-      }
-      if (Array.isArray(status[detail.status])) {
-        status[detail.status].push(detail);
-      } else {
-        status[detail.status] = [detail];
-      }
-    });
-    Object.entries(status).forEach(([sts, detail]) => {
-      status[sts] = detail.sort((a, b) =>
-        new Date(a.dateTime) < new Date(b.dateTime) ? 1 : -1
-      );
-    });
-    setTimeline(status);
-  }, [ir.irStatusDetails]);
-  useEffect(() => {
-    if (Object.keys(timeline).length) {
-      const startDate = new Date(Object.values(timeline)[0][0].dateTime);
-      const endDate = new Date(
-        Object.values(timeline)[Object.values(timeline).length - 1][
-          Object.values(timeline)[Object.values(timeline).length - 1].length - 1
-        ].dateTime
-      );
+const SingleIr = memo(
+  ({ ir, focus, setFocus, className, actions, parameters }) => {
+    const { tatConfig } = useContext(IrDashboardContext);
+    const { irTypes } = useContext(SiteContext);
+    const [showTatDetails, setShowTatDetails] = useState(false);
+    const [timeline, setTimeline] = useState({});
+    const [totalTat, setTotalTat] = useState(0);
+    useEffect(() => {
+      let status = {};
+      ir.irStatusDetails.forEach((detail) => {
+        if (detail.status === 10) {
+          return;
+        }
+        if (Array.isArray(status[detail.status])) {
+          status[detail.status].push(detail);
+        } else {
+          status[detail.status] = [detail];
+        }
+      });
+      Object.entries(status).forEach(([sts, detail]) => {
+        status[sts] = detail.sort((a, b) =>
+          new Date(a.dateTime) < new Date(b.dateTime) ? 1 : -1
+        );
+      });
+      setTimeline(status);
+    }, [ir.irStatusDetails]);
+    useEffect(() => {
+      if (Object.keys(timeline).length) {
+        const startDate = new Date(Object.values(timeline)[0][0].dateTime);
+        const endDate = new Date(
+          Object.values(timeline)[Object.values(timeline).length - 1][
+            Object.values(timeline)[Object.values(timeline).length - 1].length -
+              1
+          ].dateTime
+        );
 
-      setTotalTat(countDays(startDate, endDate, tatConfig?.excludeWeek || []));
-    }
-  }, [timeline]);
-  return (
-    <>
-      <tr
-        className={`${ir.typeofInci === 8 ? s.sentinel : ""} ${
-          focus === ir.id ? s.focus : ""
-        } ${className || ""}`}
-        onClick={() => {
-          setFocus && setFocus(ir.id);
-        }}
-      >
-        <td className={s.irCode}>
-          <span className={s.icons}>
-            {ir.patientYesOrNo && (
-              <>
-                <FaUser className={s.user} />
-                <span className={s.patientDetail}>
-                  <p>
-                    Patient Name: <b>{ir.patientname}</b>
-                  </p>
-                  <p>
-                    Complaint Date & Time:{" "}
-                    <b>
-                      <Moment format="DD/MM/YYYY hh:mm">
-                        {ir.complaIntegerDatetime}
-                      </Moment>
-                    </b>
-                  </p>
-                  <p>
-                    Complaint ID: <b>{ir.complaIntegerIdEntry}</b>
-                  </p>
-                </span>
-              </>
-            )}
-            {ir.typeofInci === 8 && (
-              <>
-                <FaCircle className={s.sentinel} />
-              </>
-            )}
+        setTotalTat(
+          countDays(startDate, endDate, tatConfig?.excludeWeek || [])
+        );
+      }
+    }, [timeline]);
+    return (
+      <>
+        <tr
+          className={`${ir.typeofInci === 8 ? s.sentinel : ""} ${
+            focus === ir.id ? s.focus : ""
+          } ${className || ""}`}
+          onClick={() => {
+            setFocus && setFocus(ir.id);
+          }}
+        >
+          <td className={s.irCode}>
+            <span className={s.icons}>
+              {ir.patientYesOrNo && (
+                <>
+                  <FaUser className={s.user} />
+                  <span className={s.patientDetail}>
+                    <p>
+                      Patient Name: <b>{ir.patientname}</b>
+                    </p>
+                    <p>
+                      Complaint Date & Time:{" "}
+                      <b>
+                        <Moment format="DD/MM/YYYY hh:mm">
+                          {ir.complaIntegerDatetime}
+                        </Moment>
+                      </b>
+                    </p>
+                    <p>
+                      Complaint ID: <b>{ir.complaIntegerIdEntry}</b>
+                    </p>
+                  </span>
+                </>
+              )}
+              {ir.typeofInci === 8 && (
+                <>
+                  <FaCircle className={s.sentinel} />
+                </>
+              )}
+              {parameters?.categories
+                ?.find((item) => item.id === ir.inciCateg)
+                ?.subCategorys?.find((item) => item.id === ir.inciSubCat)
+                ?.reportable?.length > 0 && (
+                <>
+                  <BsFillExclamationTriangleFill className={s.reportable} />
+                </>
+              )}
+            </span>
+            {ir.sequence}
+          </td>
+          <td>
+            <Moment format="DD/MM/YYYY hh:mm">{ir.reportingDate}</Moment>
+          </td>
+          <td>
+            <Moment format="DD/MM/YYYY hh:mm">{ir.incident_Date_Time}</Moment>
+          </td>
+          <td>
+            {parameters?.locations?.find((item) => item.id === ir.location)
+              ?.name || ir.location}
+          </td>
+          <td>
+            {parameters?.categories?.find((item) => item.id === ir.inciCateg)
+              ?.name || ir.inciCateg}
+          </td>
+          <td>
             {parameters?.categories
               ?.find((item) => item.id === ir.inciCateg)
-              ?.subCategorys?.find((item) => item.id === ir.inciSubCat)
-              ?.reportable?.length > 0 && (
-              <>
-                <BsFillExclamationTriangleFill className={s.reportable} />
-              </>
-            )}
-          </span>
-          {ir.sequence}
-        </td>
-        <td>
-          <Moment format="DD/MM/YYYY hh:mm">{ir.reportingDate}</Moment>
-        </td>
-        <td>
-          <Moment format="DD/MM/YYYY hh:mm">{ir.incident_Date_Time}</Moment>
-        </td>
-        <td>
-          {parameters?.locations?.find((item) => item.id === ir.location)
-            ?.name || ir.location}
-        </td>
-        <td>
-          {parameters?.categories?.find((item) => item.id === ir.inciCateg)
-            ?.name || ir.inciCateg}
-        </td>
-        <td>
-          {parameters?.categories
-            ?.find((item) => item.id === ir.inciCateg)
-            ?.subCategorys?.find((item) => item.id === ir.inciSubCat)?.name ||
-            ir.inciSubCat}
-        </td>
-        <td>
-          {incidentTypes.find(({ value }) => value === ir.typeofInci)
-            ?.label || [ir.typeofInci]}
-        </td>
-        <td>
-          {parameters?.users?.find(({ value }) => value === ir.userId)?.label ||
-            "Anonymous"}
-        </td>
-        <td>
-          {parameters?.investigators?.find(
-            ({ value }) => value === ir.irInvestigator
-          )?.label || ir.irInvestigator}
-        </td>
-        <td>
-          {irStatus.find((item) => item.id === +ir.status)?.name || ir.status}
-        </td>
-        <td className={s.tat} onClick={() => setShowTatDetails(true)}>
-          {ir.status !== "1" && totalTat}
-        </td>
-        {actions && <TableActions actions={actions} />}
-      </tr>
-      <Modal
-        open={showTatDetails}
-        setOpen={setShowTatDetails}
-        head={true}
-        label="TAT DETAILS"
-        className={s.tatDetails}
-      >
-        <TatDetails
-          ir={ir}
-          parameters={parameters}
-          timeline={timeline}
-          setShowTatDetails={setShowTatDetails}
-          totalTat={totalTat}
-        />
-      </Modal>
-    </>
-  );
-};
+              ?.subCategorys?.find((item) => item.id === ir.inciSubCat)?.name ||
+              ir.inciSubCat}
+          </td>
+          <td>
+            {irTypes.find(({ value }) => value === ir.typeofInci)?.label || [
+              ir.typeofInci,
+            ]}
+          </td>
+          <td>
+            {parameters?.users?.find(({ value }) => value === ir.userId)
+              ?.label || "Anonymous"}
+          </td>
+          <td>
+            {parameters?.investigators?.find(
+              ({ value }) => value === ir.irInvestigator
+            )?.label || ir.irInvestigator}
+          </td>
+          <td>
+            {irStatus.find((item) => item.id === +ir.status)?.name || ir.status}
+          </td>
+          <td className={s.tat} onClick={() => setShowTatDetails(true)}>
+            {ir.status !== "1" && totalTat}
+          </td>
+          {actions && <TableActions actions={actions} />}
+        </tr>
+        <Modal
+          open={showTatDetails}
+          setOpen={setShowTatDetails}
+          head={true}
+          label="TAT DETAILS"
+          className={s.tatDetails}
+        >
+          <TatDetails
+            ir={ir}
+            parameters={parameters}
+            timeline={timeline}
+            setShowTatDetails={setShowTatDetails}
+            totalTat={totalTat}
+          />
+        </Modal>
+      </>
+    );
+  }
+);
 const TatDetails = ({
   ir,
   parameters,
@@ -701,6 +702,7 @@ const TatDetails = ({
   timeline,
   totalTat,
 }) => {
+  const { irTypes } = useContext(SiteContext);
   return (
     <div className={s.content}>
       <ul className={s.irDetail}>
@@ -711,7 +713,7 @@ const TatDetails = ({
         </li>
         <li>
           Incident Type:{" "}
-          {incidentTypes.find(({ value }) => value === ir?.typeofInci)?.label ||
+          {irTypes.find(({ value }) => value === ir?.typeofInci)?.label ||
             ir?.typeofInci}
         </li>
         <li>
@@ -721,13 +723,13 @@ const TatDetails = ({
         </li>
         <li>
           Location:{" "}
-          {parameters?.locations.find((item) => item.id === ir?.location)
+          {parameters?.locations?.find((item) => item.id === ir?.location)
             ?.name || ir?.location}
         </li>
         <li>
           Sub Category:{" "}
           {parameters?.categories
-            .find((item) => item.id === ir?.inciCateg)
+            ?.find((item) => item.id === ir?.inciCateg)
             ?.subCategorys?.find((item) => item.id === ir?.inciSubCat)?.name ||
             ir?.inciSubCat}
         </li>
@@ -808,7 +810,7 @@ const TatDetails = ({
 const Filters = ({ onSubmit, qualityDashboard }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, checkPermission } = useContext(SiteContext);
+  const { user, checkPermission, irTypes } = useContext(SiteContext);
   const { parameters } = useContext(IrDashboardContext);
   const defaultView = user?.role?.includes?.("incidentManager")
     ? "all"
@@ -919,7 +921,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
         watch={watch}
         multiple={true}
         register={register}
-        options={incidentTypes}
+        options={irTypes}
       />
       <section className={s.pair}>
         <Combobox
@@ -1035,21 +1037,115 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
 };
 
 export const QualityDashboard = () => {
-  const { user, checkPermission } = useContext(SiteContext);
+  const { user, checkPermission, irTypes } = useContext(SiteContext);
   const { parameters, setDashboard, updateUsers } = useContext(
     IrDashboardContext
   );
   const printRef = useRef();
   const location = useLocation();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
   const [incidents, setIncidents] = useState([]);
   const [csvDraft, setCsvDraft] = useState(null);
   const [filters, setFilters] = useState({});
   const [assign, setAssign] = useState(null);
   const handlePrint = useReactToPrint({ content: () => printRef.current });
 
-  const { get: searchIrs } = useFetch(defaultEndpoints.searchIrs);
+  const getActions = useCallback((inc) => [
+    ...(checkPermission({
+      roleId: "incidentManager",
+      permission: "Assign IRs",
+    }) && [2, 3].includes(+inc.status)
+      ? [
+          {
+            icon: <FaRegUser />,
+            label: +inc.status === 2 ? "Assign IR" : "Re-assign IR",
+            callBack: () => setAssign(inc),
+          },
+        ]
+      : []),
+    ...(+inc.status === 2
+      ? [
+          {
+            icon: <FaRegFileAlt />,
+            label: (
+              <>
+                Review IR <FaFlag style={{ color: "rgb(21, 164, 40)" }} />
+                <FiCheckSquare />
+              </>
+            ),
+            callBack: () => {},
+          },
+          ...(checkPermission({
+            roleId: ["irInvestigator", "incidentManager"],
+            permission: "Cancel IR",
+          })
+            ? [
+                {
+                  icon: <FaRegTimesCircle />,
+                  label: "Cancel IR",
+                  callBack: () => {},
+                },
+              ]
+            : []),
+          {
+            icon: <FaExternalLinkAlt />,
+            label: "Reportable Incident",
+            callBack: () => {},
+          },
+          {
+            icon: <FaAdjust />,
+            label: "Merge/Un-Merge IR",
+            callBack: () => {},
+          },
+        ]
+      : []),
+    ...(checkPermission({
+      roleId: ["incidentManager", "hod"],
+      permission: "Approve IRs",
+    })
+      ? [
+          {
+            icon: <FiCheckSquare />,
+            label: "IR Approval",
+            callBack: () => {},
+          },
+        ]
+      : []),
+    ...(checkPermission({
+      roleId: ["hod"],
+      permission: "Acknowledge IR",
+    })
+      ? [
+          {
+            icon: <FaExternalLinkAlt />,
+            label: "Acknowledge IR",
+            callBack: () => {},
+          },
+        ]
+      : []),
+    {
+      icon: <FaAdjust />,
+      label: "IR Combine",
+      callBack: () => {},
+    },
+    {
+      icon: <FaCrosshairs />,
+      label: "IR Investigation",
+      callBack: () => {},
+    },
+    {
+      icon: <FaRegStar />,
+      label: "CAPA",
+      callBack: () => {},
+    },
+    {
+      icon: <svg />,
+      label: "IR Closure",
+      callBack: () => {},
+    },
+  ]);
+
+  const { get: searchIrs, loading } = useFetch(defaultEndpoints.searchIrs);
 
   useEffect(() => {
     const _filters = paramsToObject(new URLSearchParams(location.search));
@@ -1066,7 +1162,6 @@ export const QualityDashboard = () => {
     if (_filters.toreportingDate) {
       _filters.toreportingDate = _filters.toreportingDate + " 23:59:59";
     }
-    setLoading(true);
     if (Object.entries(_filters).length) {
       searchIrs(null, {
         query: {
@@ -1076,7 +1171,6 @@ export const QualityDashboard = () => {
         },
       })
         .then((data) => {
-          setLoading(false);
           if (data._embedded?.IncidentReport) {
             setIncidents(data._embedded.IncidentReport);
             setCsvDraft({
@@ -1112,19 +1206,19 @@ export const QualityDashboard = () => {
                     format: "DD/MM/YYYY hh:mm",
                   }),
                   location:
-                    parameters?.locations.find(
+                    parameters?.locations?.find(
                       (item) => item.id === ir.location
                     )?.name || ir.location,
                   inciCateg:
-                    parameters?.categories.find(
+                    parameters?.categories?.find(
                       (item) => item.id === ir.inciCateg
                     )?.name || ir.inciCateg,
                   inciSubCat:
                     parameters?.categories
-                      .find((item) => item.id === ir.inciCateg)
+                      ?.find((item) => item.id === ir.inciCateg)
                       ?.subCategorys?.find((item) => item.id === ir.inciSubCat)
                       ?.name || ir.inciSubCat,
-                  typeofInci: incidentTypes.find(
+                  typeofInci: irTypes.find(
                     ({ value }) => value === ir.typeofInci
                   )?.label || [ir.typeofInci],
                   userId:
@@ -1144,20 +1238,15 @@ export const QualityDashboard = () => {
             });
           }
         })
-        .catch((err) => {
-          setLoading(false);
-        });
+        .catch((err) => Prompt({ type: "error", message: err.message }));
     } else {
       searchIrs(null, { query: { status: "2,3,4,5,6,7,8,9" } })
         .then((data) => {
-          setLoading(false);
           if (data._embedded?.IncidentReport) {
             setIncidents(data._embedded.IncidentReport);
           }
         })
-        .catch((err) => {
-          setLoading(false);
-        });
+        .catch((err) => Prompt({ type: "error", message: err.message }));
     }
   }, [location.search]);
   useEffect(() => {
@@ -1230,101 +1319,7 @@ export const QualityDashboard = () => {
             <SingleIr
               key={inc.id}
               ir={inc}
-              actions={[
-                ...(checkPermission({
-                  roleId: "incidentManager",
-                  permission: "Assign IRs",
-                }) && [2, 3].includes(+inc.status)
-                  ? [
-                      {
-                        icon: <FaRegUser />,
-                        label: +inc.status === 2 ? "Assign IR" : "Re-assign IR",
-                        callBack: () => setAssign(inc),
-                      },
-                    ]
-                  : []),
-                ...(+inc.status === 2
-                  ? [
-                      {
-                        icon: <FaRegFileAlt />,
-                        label: (
-                          <>
-                            Review IR{" "}
-                            <FaFlag style={{ color: "rgb(21, 164, 40)" }} />
-                            <FiCheckSquare />
-                          </>
-                        ),
-                        callBack: () => {},
-                      },
-                      ...(checkPermission({
-                        roleId: ["irInvestigator", "incidentManager"],
-                        permission: "Cancel IR",
-                      })
-                        ? [
-                            {
-                              icon: <FaRegTimesCircle />,
-                              label: "Cancel IR",
-                              callBack: () => {},
-                            },
-                          ]
-                        : []),
-                      {
-                        icon: <FaExternalLinkAlt />,
-                        label: "Reportable Incident",
-                        callBack: () => {},
-                      },
-                      {
-                        icon: <FaAdjust />,
-                        label: "Merge/Un-Merge IR",
-                        callBack: () => {},
-                      },
-                    ]
-                  : []),
-                ...(checkPermission({
-                  roleId: ["incidentManager", "hod"],
-                  permission: "Approve IRs",
-                })
-                  ? [
-                      {
-                        icon: <FiCheckSquare />,
-                        label: "IR Approval",
-                        callBack: () => {},
-                      },
-                    ]
-                  : []),
-                ...(checkPermission({
-                  roleId: ["hod"],
-                  permission: "Acknowledge IR",
-                })
-                  ? [
-                      {
-                        icon: <FaExternalLinkAlt />,
-                        label: "Acknowledge IR",
-                        callBack: () => {},
-                      },
-                    ]
-                  : []),
-                {
-                  icon: <FaAdjust />,
-                  label: "IR Combine",
-                  callBack: () => {},
-                },
-                {
-                  icon: <FaCrosshairs />,
-                  label: "IR Investigation",
-                  callBack: () => {},
-                },
-                {
-                  icon: <FaRegStar />,
-                  label: "CAPA",
-                  callBack: () => {},
-                },
-                {
-                  icon: <svg />,
-                  label: "IR Closure",
-                  callBack: () => {},
-                },
-              ]}
+              actions={getActions(inc)}
               parameters={parameters}
             />
           ))}
@@ -1355,7 +1350,12 @@ export const QualityDashboard = () => {
           Patient Complaint
         </span>
       </div>
-      <Print incidents={incidents} parameters={parameters} ref={printRef} />
+      <PrintMemo
+        incidents={incidents}
+        parameters={parameters}
+        ref={printRef}
+        irTypes={irTypes}
+      />
       <Modal
         head={true}
         label={+assign?.status === 2 ? "ASSIGN IR" : "RE-ASSIGN IR"}
@@ -1374,7 +1374,7 @@ export const QualityDashboard = () => {
             </li>
             <li>
               Incident Type:{" "}
-              {incidentTypes.find(({ value }) => value === assign?.typeofInci)
+              {irTypes.find(({ value }) => value === assign?.typeofInci)
                 ?.label || assign?.typeofInci}
             </li>
             <li>
@@ -1414,10 +1414,9 @@ export const QualityDashboard = () => {
   );
 };
 const AssignForm = ({ assign, users, setAssign, onSuccess }) => {
-  const [loading, setLoading] = useState(false);
   const [timeline, setTimeline] = useState([]);
 
-  const { put: assignIr } = useFetch(
+  const { put: assignIr, loading } = useFetch(
     defaultEndpoints.incidentReport + "/" + (assign.id || ""),
     { headers: { "Content-Type": "application/json" } }
   );
@@ -1470,7 +1469,6 @@ const AssignForm = ({ assign, users, setAssign, onSuccess }) => {
       )}
       <form
         onSubmit={handleSubmit((data) => {
-          setLoading(true);
           assignIr({
             ...assign,
             irInvestigator: data.user,
@@ -1498,16 +1496,12 @@ const AssignForm = ({ assign, users, setAssign, onSuccess }) => {
             _links: undefined,
           })
             .then((data) => {
-              setLoading(false);
               if (data.id) {
                 setAssign(null);
                 onSuccess(data);
               }
             })
-            .catch((err) => {
-              setLoading(false);
-              Prompt({ type: "error", message: err.message });
-            });
+            .catch((err) => Prompt({ type: "error", message: err.message }));
         })}
       >
         <Combobox

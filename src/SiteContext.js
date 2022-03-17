@@ -9,6 +9,7 @@ import React, {
 import { useNavigate } from "react-router-dom";
 import { irStatus } from "./config";
 import { useFetch } from "./hooks";
+import { Prompt } from "./components/modal";
 import defaultEndpoints from "./config/endpoints";
 
 export const SiteContext = createContext();
@@ -17,6 +18,7 @@ export const Provider = ({ children }) => {
   const [roles, setRoles] = useState(null);
   const [endpoints, setEndpoints] = useState(null);
   const [his, setHis] = useState(false);
+  const [irTypes, setIrTypes] = useState([]);
   const navigate = useNavigate();
 
   const checkPermission = useCallback(
@@ -90,7 +92,7 @@ export const Provider = ({ children }) => {
             alert("Could not fetch permissions");
           }
         })
-        .catch((err) => {});
+        .catch((err) => Prompt({ type: "error", message: err.message }));
     }
   }, [user]);
   return (
@@ -106,6 +108,8 @@ export const Provider = ({ children }) => {
         his,
         setHis,
         logout,
+        irTypes,
+        setIrTypes,
       }}
     >
       {children}
@@ -117,11 +121,12 @@ export const IrDashboardContext = createContext();
 export const IrDashboardContextProvider = ({ children }) => {
   const parametersFetched = useRef(false);
 
-  const { user } = useContext(SiteContext);
+  const { user, setIrTypes } = useContext(SiteContext);
   const [parameters, setParameters] = useState({});
   const [dashboard, setDashboard] = useState("myDashboard");
   const [count, setCount] = useState({});
   const [tatConfig, setTatConfig] = useState(null);
+  const [dataElements, setDataElements] = useState({});
 
   const { get: getUsers } = useFetch(`${defaultEndpoints.users}?size=10000`);
   const { get: getCountStatusDetailByState } = useFetch(
@@ -166,6 +171,40 @@ export const IrDashboardContextProvider = ({ children }) => {
       }
     });
   });
+
+  const { get: getIrTypes } = useFetch(defaultEndpoints.typesOfIncident);
+  const updateIrTypes = useCallback(() => {
+    getIrTypes().then((data) => {
+      if (data?._embedded?.configTypeOfIncident) {
+        setIrTypes(
+          data._embedded.configTypeOfIncident.map((type) => ({
+            label: type.type_descrip,
+            value: type.type,
+          }))
+        );
+      }
+    });
+  });
+
+  const { get: getDataElements } = useFetch(defaultEndpoints.dashboardElements);
+  const updateDataElements = useCallback(() => {
+    getDataElements().then((data) => {
+      if (data?._embedded?.dashboardElements) {
+        setDataElements(
+          data._embedded.dashboardElements.reduce((p, a) => {
+            p[a.statusOption] = [];
+            if (a.irMgr) p[a.statusOption].push("incidentManager");
+            if (a.irInvestigator) p[a.statusOption].push("irInvestigator");
+            return p;
+          }, {})
+        );
+      }
+    });
+  });
+  const checkDataElements = useCallback(
+    (element) => user.role.some((r) => dataElements[element]?.includes(r)),
+    [dataElements, user]
+  );
 
   const updateUsers = useCallback(async () => {
     const users = await getUsers().then((data) =>
@@ -219,6 +258,8 @@ export const IrDashboardContextProvider = ({ children }) => {
           console.log(err);
         });
       updateTatConfig();
+      updateIrTypes();
+      updateDataElements();
       parametersFetched.current = true;
     }
   }, [user]);
@@ -254,7 +295,7 @@ export const IrDashboardContextProvider = ({ children }) => {
             return p;
           }, {});
         })
-        .catch((err) => {});
+        .catch((err) => Prompt({ type: "error", message: err.message }));
       const otherCounts = await Promise.all([
         getIrCountCurrentMonth(),
         getSentinelIrCount(),
@@ -271,7 +312,7 @@ export const IrDashboardContextProvider = ({ children }) => {
             departmentIr: departmentIr.data || 0,
           })
         )
-        .catch((err) => {});
+        .catch((err) => Prompt({ type: "error", message: err.message }));
 
       setCount((prev) => ({ ...countByStatus, ...otherCounts }));
     })();
@@ -288,6 +329,9 @@ export const IrDashboardContextProvider = ({ children }) => {
         setDashboard,
         updateUsers,
         updateTatConfig,
+        updateIrTypes,
+        updateDataElements,
+        checkDataElements,
         tatConfig,
       }}
     >

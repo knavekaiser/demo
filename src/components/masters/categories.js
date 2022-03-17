@@ -21,30 +21,25 @@ import { endpoints as defaultEndpoints } from "../../config";
 import s from "./masters.module.scss";
 
 export default function Categories() {
-  const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
   const [categories, setCategories] = useState([]);
   const [filter, setFilter] = useState(null);
   const [edit, setEdit] = useState(null);
 
-  const { get: getCategories } = useFetch(defaultEndpoints.categories);
+  const { get: getCategories, loading } = useFetch(defaultEndpoints.categories);
   const { remove: deleteCategory } = useFetch(
     defaultEndpoints.categories + "/" + "{ID}"
   );
 
   useEffect(() => {
-    setLoading(true);
     getCategories()
       .then((data) => {
-        setLoading(false);
         if (data._embedded?.category) {
           setCategories(data._embedded.category);
           setSelected(data._embedded.category[0]?.id);
         }
       })
-      .catch((err) => {
-        setLoading(false);
-      });
+      .catch((err) => Prompt({ type: "error", message: err.message }));
   }, []);
   return (
     <div className={s.container} data-testid="categories">
@@ -161,9 +156,8 @@ const CategoryForm = ({ edit, onSuccess, clearForm, categories }) => {
     reset,
     formState: { errors },
   } = useForm();
-  const [loading, setLoading] = useState(false);
 
-  const { post: postCategory, put: updateCategory } = useFetch(
+  const { post: postCategory, put: updateCategory, loading } = useFetch(
     defaultEndpoints.categories + `/${edit?.id || ""}`,
     {
       headers: { "Content-Type": "application/json" },
@@ -189,18 +183,15 @@ const CategoryForm = ({ edit, onSuccess, clearForm, categories }) => {
           });
           return;
         }
-        setLoading(true);
 
         (edit ? updateCategory : postCategory)(data)
           .then((data) => {
-            setLoading(false);
             if (data.name) {
               onSuccess(data);
               reset();
             }
           })
           .catch((err) => {
-            setLoading(false);
             Prompt({ type: "error", message: err.message });
           });
       })}
@@ -459,10 +450,9 @@ const SubCategoryForm = ({
     formState: { errors },
   } = useForm();
   const [showReportableForm, setShowReportableForm] = useState(false);
-  const [loading, setLoading] = useState(false);
   const reportable = watch("reportable");
 
-  const { post: postSubCategory, put: updateSubCategory } = useFetch(
+  const { post: postSubCategory, put: updateSubCategory, loading } = useFetch(
     defaultEndpoints.subCategories + `/${edit?.id || ""}`,
     {
       headers: { "Content-Type": "application/json" },
@@ -493,21 +483,18 @@ const SubCategoryForm = ({
             });
             return;
           }
-          setLoading(true);
           (edit ? updateSubCategory : postSubCategory)({
             ...data,
             reportable: undefined,
             category: { id: categoryId },
           })
             .then((newSubCategory) => {
-              setLoading(false);
               if (newSubCategory.name) {
                 onSuccess({ ...newSubCategory, reportable: data.reportable });
                 reset();
               }
             })
             .catch((err) => {
-              setLoading(false);
               Prompt({ type: "error", message: err.message });
             });
         })}
@@ -712,10 +699,9 @@ const ReportableInlineForm = ({
   reportables,
 }) => {
   const { handleSubmit, register, reset, watch, setValue } = useForm();
-  const [loading, setLoading] = useState(false);
   const [reportTo, setReportTo] = useState([]);
 
-  const { get: getReportTo } = useFetch(
+  const { get: getReportTo, loading } = useFetch(
     defaultEndpoints.twoFieldMaster + "/10"
   );
 
@@ -737,7 +723,7 @@ const ReportableInlineForm = ({
           );
         }
       })
-      .catch((err) => {});
+      .catch((err) => Prompt({ type: "error", message: err.message }));
   }, []);
   useEffect(() => {
     reset({ ...edit });
@@ -756,17 +742,14 @@ const ReportableInlineForm = ({
           });
           return;
         }
-        setLoading(true);
         addReportable({ ...data, subCategory: { id: subCategoryId } })
           .then((data) => {
-            setLoading(false);
             if (data.id) {
               onSuccess(data);
             }
             reset();
           })
           .catch((err) => {
-            setLoading(false);
             Prompt({ type: "error", message: err.message });
           });
       })}

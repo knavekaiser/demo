@@ -7,14 +7,13 @@ export const useFetch = (url, { his, headers: hookHeaders } = {}) => {
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
   const controller = useRef();
-
   useEffect(() => {
     controller.current = new AbortController();
 
     return () => {
       controller.current.abort();
       setError(false);
-      // setLoading(false);
+      setLoading(false);
     };
   }, [url]);
 
@@ -93,9 +92,9 @@ export const useFetch = (url, { his, headers: hookHeaders } = {}) => {
           return response;
         }
       } catch (err) {
-        // setError(err);
+        setError(err);
       } finally {
-        // setLoading(false);
+        setLoading(false);
       }
     },
     [url]

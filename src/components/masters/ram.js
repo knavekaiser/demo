@@ -21,7 +21,6 @@ import { useFetch } from "../../hooks";
 import s from "./masters.module.scss";
 
 export default function RiskAssessments() {
-  const [loading, setLoading] = useState(true);
   const [parameters, setParameters] = useState({
     colors: [
       { label: "Green", value: "1", hex: "#68ad03" },
@@ -37,13 +36,12 @@ export default function RiskAssessments() {
   const { get: getTwoFieldMasters } = useFetch(
     defaultEndpoints.twoFieldMasters + "/{ID}"
   );
-  const { get: getRams } = useFetch(defaultEndpoints.riskAssessments);
+  const { get: getRams, loading } = useFetch(defaultEndpoints.riskAssessments);
   const { remove: deleteRam } = useFetch(
     defaultEndpoints.riskAssessments + "/{ID}"
   );
 
   useEffect(() => {
-    setLoading(true);
     Promise.all([
       getTwoFieldMasters(null, { params: { "{ID}": 9 } }),
       getTwoFieldMasters(null, { params: { "{ID}": 2 } }),
@@ -64,14 +62,11 @@ export default function RiskAssessments() {
         return getRams();
       })
       .then((data) => {
-        setLoading(false);
         if (data._embedded?.riskAssement) {
           setRisks(data._embedded.riskAssement);
         }
       })
-      .catch((err) => {
-        setLoading(false);
-      });
+      .catch((err) => Prompt({ type: "error", message: err.message }));
   }, []);
   return (
     <div className={s.container} data-testid="riskAssessment">
@@ -211,9 +206,8 @@ const RiskAssessmentForm = ({ edit, onSuccess, parameters, clearForm }) => {
   const { handleSubmit, reset, watch, setValue, register } = useForm({
     ...edit,
   });
-  const [loading, setLoading] = useState(false);
 
-  const { post: postRam, put: updateRam } = useFetch(
+  const { post: postRam, put: updateRam, loading } = useFetch(
     defaultEndpoints.riskAssessments + `/${edit?.id || ""}`,
     {
       headers: { "Content-Type": "application/json" },
@@ -226,19 +220,14 @@ const RiskAssessmentForm = ({ edit, onSuccess, parameters, clearForm }) => {
   return (
     <form
       onSubmit={handleSubmit((data) => {
-        setLoading(true);
         (edit ? updateRam : postRam)(data)
           .then((data) => {
-            setLoading(false);
             if (data.id) {
               onSuccess(data);
               reset();
             }
           })
-          .catch((err) => {
-            setLoading(false);
-            Prompt({ type: "error", message: err.message });
-          });
+          .catch((err) => Prompt({ type: "error", message: err.message }));
       })}
     >
       <Combobox

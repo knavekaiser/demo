@@ -300,7 +300,7 @@ function Dashboard() {
 const SidebarItem_IrDashboard = () => {
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const { count } = useContext(IrDashboardContext);
+  const { count, checkDataElements } = useContext(IrDashboardContext);
   return (
     <Accordion
       label=<span className={s.label}>
@@ -329,104 +329,132 @@ const SidebarItem_IrDashboard = () => {
               : ""
           }`,
           items: [
-            {
-              label: (
-                <>
-                  Submitted IRs{" "}
-                  {count["2"] ? (
-                    <span className={s.count}>{count["2"]}</span>
-                  ) : null}
-                </>
-              ),
-              path: {
-                pathname: location.pathname,
-                search: `status=2`,
-              },
-            },
-            {
-              label: (
-                <>
-                  Assigned IRs{" "}
-                  {count["3"] ? (
-                    <span className={s.count}>{count["3"]}</span>
-                  ) : null}
-                </>
-              ),
-              path: {
-                pathname: location.pathname,
-                search: `status=3`,
-              },
-            },
-            {
-              label: (
-                <>
-                  Under Investigation{" "}
-                  {count["4"] ? (
-                    <span className={s.count}>{count["4"]}</span>
-                  ) : null}
-                </>
-              ),
-              path: {
-                pathname: location.pathname,
-                search: `status=4`,
-              },
-            },
-            {
-              label: (
-                <>
-                  CAPA planning{" "}
-                  {count["5"] ? (
-                    <span className={s.count}>{count["5"]}</span>
-                  ) : null}
-                </>
-              ),
-              path: {
-                pathname: location.pathname,
-                search: `status=5`,
-              },
-            },
-            {
-              label: (
-                <>
-                  Closure confirmation{" "}
-                  {count["6"] ? (
-                    <span className={s.count}>{count["6"]}</span>
-                  ) : null}
-                </>
-              ),
-              path: {
-                pathname: location.pathname,
-                search: `status=6`,
-              },
-            },
-            {
-              label: (
-                <>
-                  Closure confirmed{" "}
-                  {count["7"] ? (
-                    <span className={s.count}>{count["7"]}</span>
-                  ) : null}
-                </>
-              ),
-              path: {
-                pathname: location.pathname,
-                search: `status=7`,
-              },
-            },
-            {
-              label: (
-                <>
-                  IR closure{" "}
-                  {count["8"] ? (
-                    <span className={s.count}>{count["8"]}</span>
-                  ) : null}
-                </>
-              ),
-              path: {
-                pathname: location.pathname,
-                search: `status=8`,
-              },
-            },
+            ...(checkDataElements("Submitted IRs")
+              ? [
+                  {
+                    label: (
+                      <>
+                        Submitted IRs{" "}
+                        {count["2"] ? (
+                          <span className={s.count}>{count["2"]}</span>
+                        ) : null}
+                      </>
+                    ),
+                    path: {
+                      pathname: location.pathname,
+                      search: `status=2`,
+                    },
+                  },
+                ]
+              : []),
+            ...(checkDataElements("Assigned IRs")
+              ? [
+                  {
+                    label: (
+                      <>
+                        Assigned IRs{" "}
+                        {count["3"] ? (
+                          <span className={s.count}>{count["3"]}</span>
+                        ) : null}
+                      </>
+                    ),
+                    path: {
+                      pathname: location.pathname,
+                      search: `status=3`,
+                    },
+                  },
+                ]
+              : []),
+            ...(checkDataElements("Under Investigation")
+              ? [
+                  {
+                    label: (
+                      <>
+                        Under Investigation{" "}
+                        {count["4"] ? (
+                          <span className={s.count}>{count["4"]}</span>
+                        ) : null}
+                      </>
+                    ),
+                    path: {
+                      pathname: location.pathname,
+                      search: `status=4`,
+                    },
+                  },
+                ]
+              : []),
+            ...(checkDataElements("CAPA Planning")
+              ? [
+                  {
+                    label: (
+                      <>
+                        CAPA planning{" "}
+                        {count["5"] ? (
+                          <span className={s.count}>{count["5"]}</span>
+                        ) : null}
+                      </>
+                    ),
+                    path: {
+                      pathname: location.pathname,
+                      search: `status=5`,
+                    },
+                  },
+                ]
+              : []),
+            ...(checkDataElements("Closure confirmation")
+              ? [
+                  {
+                    label: (
+                      <>
+                        Closure confirmation{" "}
+                        {count["6"] ? (
+                          <span className={s.count}>{count["6"]}</span>
+                        ) : null}
+                      </>
+                    ),
+                    path: {
+                      pathname: location.pathname,
+                      search: `status=6`,
+                    },
+                  },
+                ]
+              : []),
+            ...(checkDataElements("Closure confirmed")
+              ? [
+                  {
+                    label: (
+                      <>
+                        Closure confirmed{" "}
+                        {count["7"] ? (
+                          <span className={s.count}>{count["7"]}</span>
+                        ) : null}
+                      </>
+                    ),
+                    path: {
+                      pathname: location.pathname,
+                      search: `status=7`,
+                    },
+                  },
+                ]
+              : []),
+            ...(checkDataElements("IR closure")
+              ? [
+                  {
+                    label: (
+                      <>
+                        IR closure{" "}
+                        {count["8"] ? (
+                          <span className={s.count}>{count["8"]}</span>
+                        ) : null}
+                      </>
+                    ),
+                    path: {
+                      pathname: location.pathname,
+                      search: `status=8`,
+                    },
+                  },
+                ]
+              : []),
           ],
         },
         {
@@ -439,40 +467,48 @@ const SidebarItem_IrDashboard = () => {
               : ""
           }`,
           items: [
-            {
-              label: (
-                <>
-                  Current Months IRs{" "}
-                  {count.currentMonth ? (
-                    <span className={s.count}>{count.currentMonth}</span>
-                  ) : null}
-                </>
-              ),
-              path: {
-                pathname: location.pathname,
-                search: `fromIncidentDateTime=${moment({
-                  time: new Date().setDate(1),
-                  format: "YYYY-MM-DD",
-                })}&toIncidentDateTime=${moment({
-                  time: new Date(),
-                  format: "YYYY-MM-DD",
-                })}`,
-              },
-            },
-            {
-              label: (
-                <>
-                  Open sentinel events{" "}
-                  {count.sentinel ? (
-                    <span className={s.count}>{count.sentinel}</span>
-                  ) : null}
-                </>
-              ),
-              path: {
-                pathname: location.pathname,
-                search: `typeofInci=8`,
-              },
-            },
+            ...(checkDataElements("Current Months IRs")
+              ? [
+                  {
+                    label: (
+                      <>
+                        Current Months IRs{" "}
+                        {count.currentMonth ? (
+                          <span className={s.count}>{count.currentMonth}</span>
+                        ) : null}
+                      </>
+                    ),
+                    path: {
+                      pathname: location.pathname,
+                      search: `fromIncidentDateTime=${moment({
+                        time: new Date().setDate(1),
+                        format: "YYYY-MM-DD",
+                      })}&toIncidentDateTime=${moment({
+                        time: new Date(),
+                        format: "YYYY-MM-DD",
+                      })}`,
+                    },
+                  },
+                ]
+              : []),
+            ...(checkDataElements("Open sentinel event")
+              ? [
+                  {
+                    label: (
+                      <>
+                        Open sentinel events{" "}
+                        {count.sentinel ? (
+                          <span className={s.count}>{count.sentinel}</span>
+                        ) : null}
+                      </>
+                    ),
+                    path: {
+                      pathname: location.pathname,
+                      search: `typeofInci=8`,
+                    },
+                  },
+                ]
+              : []),
             {
               label: <>Open Reportable event</>,
               path: {
@@ -487,27 +523,37 @@ const SidebarItem_IrDashboard = () => {
                 search: `capaClosure=active`,
               },
             },
-            {
-              label: (
-                <>
-                  Open Patient complaints{" "}
-                  {count.patientComplaint ? (
-                    <span className={s.count}>{count.patientComplaint}</span>
-                  ) : null}
-                </>
-              ),
-              path: {
-                pathname: location.pathname,
-                search: `patientYesOrNo=true`,
-              },
-            },
-            {
-              label: <>Open IR beyond Acceptable TAT</>,
-              path: {
-                pathname: location.pathname,
-                search: `tat=beyond`,
-              },
-            },
+            ...(checkDataElements("Open Patient complaints")
+              ? [
+                  {
+                    label: (
+                      <>
+                        Open Patient complaints{" "}
+                        {count.patientComplaint ? (
+                          <span className={s.count}>
+                            {count.patientComplaint}
+                          </span>
+                        ) : null}
+                      </>
+                    ),
+                    path: {
+                      pathname: location.pathname,
+                      search: `patientYesOrNo=true`,
+                    },
+                  },
+                ]
+              : []),
+            ...(checkDataElements("IR beyond acceptable TAT")
+              ? [
+                  {
+                    label: <>Open IR beyond Acceptable TAT</>,
+                    path: {
+                      pathname: location.pathname,
+                      search: `tat=beyond`,
+                    },
+                  },
+                ]
+              : []),
           ],
         },
       ]}
