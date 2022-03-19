@@ -548,11 +548,8 @@ const DashboardDataElements = () => {
               { label: "IR Investigator" },
             ]}
           >
-            {[...dashboardDataElements]
-              .splice(0, 11)
-              .filter(
-                (item) => item.statusOption !== "Enable cancel IR function"
-              )
+            {dashboardDataElements
+              .filter((item) => item.type === 1)
               .map((item, i) => (
                 <tr key={i}>
                   <td>{item.statusOption}</td>
@@ -617,11 +614,8 @@ const DashboardDataElements = () => {
               { label: "IR Investigator" },
             ]}
           >
-            {[...dashboardDataElements]
-              .splice(11)
-              .filter(
-                (item) => item.statusOption !== "Enable cancel IR function"
-              )
+            {dashboardDataElements
+              .filter((item) => item.type === 2)
               .map((item, i) => (
                 <tr key={i}>
                   <td>{item.statusOption}</td>

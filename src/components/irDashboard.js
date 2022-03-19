@@ -62,7 +62,7 @@ import { useFetch } from "../hooks";
 import { useReactToPrint } from "react-to-print";
 import { countDays } from "../helpers";
 
-const calculateDays = (ir) => {
+const calculateDays = (ir, exclude = []) => {
   let status = {};
   ir.irStatusDetails.forEach((detail) => {
     if (detail.status === 10) {
@@ -90,7 +90,7 @@ const calculateDays = (ir) => {
     ].dateTime
   );
 
-  return countDays(startDate, endDate);
+  return countDays(startDate, endDate, exclude);
 };
 
 function paramsToObject(entries) {
@@ -106,6 +106,7 @@ class Print extends Component {
     const incidents = this.props.incidents;
     const parameters = this.props.parameters;
     const irTypes = this.props.irTypes;
+    const tatConfig = this.props.tatConfig;
     return (
       <div className={s.paper}>
         <table cellPadding={0} cellSpacing={0}>
@@ -136,7 +137,7 @@ class Print extends Component {
               .map((ir, i) => {
                 // return <SingleIr key={ir.id} ir={ir} parameters={parameters} />;
 
-                const tat = calculateDays(ir);
+                const tat = calculateDays(ir, tatConfig.excludeWeek);
 
                 return (
                   <tr key={i}>
@@ -278,7 +279,7 @@ export const MyDashboard = () => {
                 state: {
                   edit: inc,
                   focus: inc.id,
-                  from: location.pathname,
+                  from: location?.pathname,
                 },
               });
             },
@@ -342,7 +343,7 @@ export const MyDashboard = () => {
                   edit: inc,
                   readOnly: true,
                   focus: inc.id,
-                  from: location.pathname,
+                  from: location?.pathname,
                 },
               });
             },
@@ -460,7 +461,7 @@ export const MyDashboard = () => {
           }
           // delete _filters.irBy;
           navigate({
-            pathname: location.pathname,
+            pathname: location?.pathname,
             search: `?${createSearchParams(_filters)}`,
           });
           // setFilters(_filters);
@@ -703,6 +704,7 @@ const TatDetails = ({
   totalTat,
 }) => {
   const { irTypes } = useContext(SiteContext);
+  const { tatConfig } = useContext(IrDashboardContext);
   return (
     <div className={s.content}>
       <ul className={s.irDetail}>
@@ -788,7 +790,8 @@ const TatDetails = ({
                   {prevFirstDetail
                     ? countDays(
                         new Date(prevFirstDetail.dateTime),
-                        new Date(details[details.length - 1]?.dateTime)
+                        new Date(details[details.length - 1]?.dateTime),
+                        tatConfig?.excludeWeek || []
                       )
                     : 0}
                 </td>
@@ -1017,7 +1020,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
               view: defaultView,
             });
             navigate({
-              pathname: location.pathname,
+              pathname: location?.pathname,
               search: `?${createSearchParams({
                 irBy: "self",
                 view: defaultView,
@@ -1038,7 +1041,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
 
 export const QualityDashboard = () => {
   const { user, checkPermission, irTypes } = useContext(SiteContext);
-  const { parameters, setDashboard, updateUsers } = useContext(
+  const { parameters, setDashboard, updateUsers, tatConfig } = useContext(
     IrDashboardContext
   );
   const printRef = useRef();
@@ -1193,7 +1196,7 @@ export const QualityDashboard = () => {
               data: data._embedded.IncidentReport.sort((a, b) =>
                 new Date(a.reportingDate) > new Date(b.reportingDate) ? -1 : 1
               ).map((ir) => {
-                const tat = calculateDays(ir);
+                const tat = calculateDays(ir, tatConfig.excludeWeek);
 
                 return {
                   ...ir,
@@ -1267,7 +1270,7 @@ export const QualityDashboard = () => {
           }
           // delete _filters.view;
           navigate({
-            pathname: location.pathname,
+            pathname: location?.pathname,
             search: `?${createSearchParams(_filters)}`,
           });
           // setFilters(_filters);
@@ -1355,6 +1358,7 @@ export const QualityDashboard = () => {
         parameters={parameters}
         ref={printRef}
         irTypes={irTypes}
+        tatConfig={tatConfig}
       />
       <Modal
         head={true}

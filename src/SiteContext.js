@@ -126,7 +126,7 @@ export const IrDashboardContextProvider = ({ children }) => {
   const [dashboard, setDashboard] = useState("myDashboard");
   const [count, setCount] = useState({});
   const [tatConfig, setTatConfig] = useState(null);
-  const [dataElements, setDataElements] = useState({});
+  const [dataElements, setDataElements] = useState([]);
 
   const { get: getUsers } = useFetch(`${defaultEndpoints.users}?size=10000`);
   const { get: getCountStatusDetailByState } = useFetch(
@@ -190,19 +190,29 @@ export const IrDashboardContextProvider = ({ children }) => {
   const updateDataElements = useCallback(() => {
     getDataElements().then((data) => {
       if (data?._embedded?.dashboardElements) {
-        setDataElements(
-          data._embedded.dashboardElements.reduce((p, a) => {
-            p[a.statusOption] = [];
-            if (a.irMgr) p[a.statusOption].push("incidentManager");
-            if (a.irInvestigator) p[a.statusOption].push("irInvestigator");
-            return p;
-          }, {})
-        );
+        setDataElements(data._embedded.dashboardElements);
+        // setDataElements(
+        //   data._embedded.dashboardElements.reduce((p, a) => {
+        //     p[a.statusOption] = [];
+        //     if (a.irMgr) p[a.statusOption].push("incidentManager");
+        //     if (a.irInvestigator) p[a.statusOption].push("irInvestigator");
+        //     return p;
+        //   }, {})
+        // );
       }
     });
   });
   const checkDataElements = useCallback(
-    (element) => user.role.some((r) => dataElements[element]?.includes(r)),
+    (element) => {
+      const dataEl = dataElements.find(
+        (dataEl) => dataEl.statusOption === element
+      );
+      if (!dataEl) return false;
+      return (
+        (dataEl.irMgr && user.role.includes("incidentManager")) ||
+        (dataEl.irInvestigator && user.role.includes("irInvestigator"))
+      );
+    },
     [dataElements, user]
   );
 
@@ -305,11 +315,11 @@ export const IrDashboardContextProvider = ({ children }) => {
       ])
         .then(
           ([currentMonth, sentinel, patientComplaint, myIr, departmentIr]) => ({
-            currentMonth: currentMonth.data || 0,
-            sentinel: sentinel.data || 0,
-            patientComplaint: patientComplaint.data || 0,
-            myIr: myIr.data || 0,
-            departmentIr: departmentIr.data || 0,
+            currentMonth: currentMonth?.data || 0,
+            sentinel: sentinel?.data || 0,
+            patientComplaint: patientComplaint?.data || 0,
+            myIr: myIr?.data || 0,
+            departmentIr: departmentIr?.data || 0,
           })
         )
         .catch((err) => Prompt({ type: "error", message: err.message }));
@@ -333,6 +343,7 @@ export const IrDashboardContextProvider = ({ children }) => {
         updateDataElements,
         checkDataElements,
         tatConfig,
+        dataElements,
       }}
     >
       {children}

@@ -31,7 +31,6 @@ export default function Login() {
 
   const handleUser = useCallback(
     (user) => {
-      console.log(user);
       setUser(user);
       if (user.dbSchema) {
         sessionStorage.setItem("db-schema", user.dbSchema);
@@ -39,12 +38,13 @@ export default function Login() {
         sessionStorage.removeItem("db-schema");
       }
       if (location.state?.lastLocation) {
-        navigate(
-          location.state.lastLocation.pathname +
-            location.state.lastLocation.search
-        );
+        navigate({
+          pathname: location.state.lastLocation.pathname,
+          search: location.state.lastLocation.search,
+          replace: true,
+        });
       } else {
-        navigate(paths.incidentReport);
+        navigate(paths.incidentReport, { replace: true });
       }
     },
     [location.state]
