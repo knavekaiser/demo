@@ -32,10 +32,11 @@ export const Combobox = ({
   item,
   renderValue,
   required,
+  value,
 }) => {
   const id = useRef(Math.random().toString(36).substr(-8));
   const container = useRef();
-  const selected = watch?.(name);
+  const selected = watch ? watch(name) : value;
   const [open, setOpen] = useState(false);
   const [style, setStyle] = useState({});
   const [hover, setHover] = useState(

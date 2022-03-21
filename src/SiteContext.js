@@ -127,6 +127,7 @@ export const IrDashboardContextProvider = ({ children }) => {
   const [count, setCount] = useState({});
   const [tatConfig, setTatConfig] = useState(null);
   const [dataElements, setDataElements] = useState([]);
+  const [irConfig, setIrConfig] = useState({});
 
   const { get: getUsers } = useFetch(`${defaultEndpoints.users}?size=10000`);
   const { get: getCountStatusDetailByState } = useFetch(
@@ -216,6 +217,18 @@ export const IrDashboardContextProvider = ({ children }) => {
     [dataElements, user]
   );
 
+  const { get: getHodApproval } = useFetch(defaultEndpoints.hodApproval);
+  const updateHodApproval = useCallback(() => {
+    getHodApproval().then((data) => {
+      if (data?._embedded?.configHodapproval?.length) {
+        setIrConfig((prev) => ({
+          ...prev,
+          hodAcknowledgement: data._embedded.configHodapproval[0].options,
+        }));
+      }
+    });
+  }, []);
+
   const updateUsers = useCallback(async () => {
     const users = await getUsers().then((data) =>
       (data?._embedded?.user || []).map((user) => ({
@@ -270,6 +283,7 @@ export const IrDashboardContextProvider = ({ children }) => {
       updateTatConfig();
       updateIrTypes();
       updateDataElements();
+      updateHodApproval();
       parametersFetched.current = true;
     }
   }, [user]);
@@ -344,6 +358,8 @@ export const IrDashboardContextProvider = ({ children }) => {
         checkDataElements,
         tatConfig,
         dataElements,
+        updateHodApproval,
+        irConfig,
       }}
     >
       {children}

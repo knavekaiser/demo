@@ -767,13 +767,15 @@ export const Table = ({
       cellPadding={0}
       cellSpacing={0}
     >
-      <thead>
-        <tr>
-          {columns.map((column, i) => (
-            <th key={i}>{column.label}</th>
-          ))}
-        </tr>
-      </thead>
+      {columns && (
+        <thead>
+          <tr>
+            {columns.map((column, i) => (
+              <th key={i}>{column.label}</th>
+            ))}
+          </tr>
+        </thead>
+      )}
       <tbody ref={tbody}>
         {loading ? (
           <tr className={s.loading}>

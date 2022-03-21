@@ -254,7 +254,7 @@ function IrDashboard() {
 }
 export const MyDashboard = () => {
   const { user, checkPermission } = useContext(SiteContext);
-  const { parameters, count, dashboard, setDashboard } = useContext(
+  const { parameters, count, dashboard, setDashboard, irConfig } = useContext(
     IrDashboardContext
   );
   const location = useLocation();
@@ -352,13 +352,14 @@ export const MyDashboard = () => {
     ...((checkPermission({
       roleId: "hod",
       permission: "Acknowledge IR",
-    }) && [
-      {
-        icon: <FaExternalLinkAlt />,
-        label: "Acknowledge IR",
-        callBack: () => {},
-      },
-    ]) ||
+    }) &&
+      irConfig.hodAcknowledgement && [
+        {
+          icon: <FaExternalLinkAlt />,
+          label: "Acknowledge IR",
+          callBack: () => {},
+        },
+      ]) ||
       []),
   ]);
 
@@ -1041,9 +1042,13 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
 
 export const QualityDashboard = () => {
   const { user, checkPermission, irTypes } = useContext(SiteContext);
-  const { parameters, setDashboard, updateUsers, tatConfig } = useContext(
-    IrDashboardContext
-  );
+  const {
+    parameters,
+    setDashboard,
+    updateUsers,
+    tatConfig,
+    irConfig,
+  } = useContext(IrDashboardContext);
   const printRef = useRef();
   const location = useLocation();
   const navigate = useNavigate();
@@ -1117,7 +1122,7 @@ export const QualityDashboard = () => {
     ...(checkPermission({
       roleId: ["hod"],
       permission: "Acknowledge IR",
-    })
+    }) && irConfig.hodAcknowledgement
       ? [
           {
             icon: <FaExternalLinkAlt />,

@@ -519,6 +519,9 @@
   display: flex;
   align-items: center;
   grid-gap: 6px;
+  input {
+    flex-shrink: 0;
+  }
 }
 
 .chip {
