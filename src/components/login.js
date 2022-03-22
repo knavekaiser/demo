@@ -37,7 +37,10 @@ export default function Login() {
       } else {
         sessionStorage.removeItem("db-schema");
       }
-      if (location.state?.lastLocation) {
+      if (
+        location.state?.lastLocation &&
+        location.state.lastLocation.pathname !== "/login"
+      ) {
         navigate({
           pathname: location.state.lastLocation.pathname,
           search: location.state.lastLocation.search,
