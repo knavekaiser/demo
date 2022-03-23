@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useContext } from "react";
 import { SiteContext } from "../SiteContext";
 import { Prompt } from "../components/modal";
+import { endpoints as defaultEndpoints } from "../config";
 
 export const useFetch = (url, { his, headers: hookHeaders } = {}) => {
   const { user, logout } = useContext(SiteContext);
@@ -30,9 +31,15 @@ export const useFetch = (url, { his, headers: hookHeaders } = {}) => {
           query
         ).toString()}`;
       }
-      // if (!his) {
-      //   _url += `${_url.includes("?") ? "" : "?"}&tenantId=star`;
-      // }
+      if (
+        !his &&
+        sessionStorage.getItem("db-schema") &&
+        !_url.startsWith(defaultEndpoints.apiUrl)
+      ) {
+        _url += `${
+          _url.includes("?") ? "" : "?"
+        }&tenantId=${sessionStorage.getItem("db-schema")}`;
+      }
       try {
         setLoading(true);
         const response = await fetch(_url, {
