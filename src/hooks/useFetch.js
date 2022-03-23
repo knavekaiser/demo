@@ -30,6 +30,9 @@ export const useFetch = (url, { his, headers: hookHeaders } = {}) => {
           query
         ).toString()}`;
       }
+      // if (!his) {
+      //   _url += `${_url.includes("?") ? "" : "?"}&tenantId=star`;
+      // }
       try {
         setLoading(true);
         const response = await fetch(_url, {
@@ -39,7 +42,7 @@ export const useFetch = (url, { his, headers: hookHeaders } = {}) => {
               ? {
                   Authorization:
                     "Bearer " + sessionStorage.getItem("access-token"),
-                  tenantId: sessionStorage.getItem("db-schema") || null,
+                  // tenantId: sessionStorage.getItem("db-schema") || null,
                 }
               : {
                   SECURITY_TOKEN: sessionStorage.getItem("HIS-access-token"),

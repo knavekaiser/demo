@@ -1,0 +1,451 @@
+[
+    {
+        "title": "Score  Multi Check",
+        "template": "componentBuilder/components/multiSelectScoreCheckbox.html",
+        "icon": "fa fa-check-square-o",
+        "isScoreType": true,
+        "settings": {
+            "icon": true,
+            "inputType": "checkbox",
+            "inputMask": "",
+            "key": "multiSelectScoreCheckbox",
+            "isModelNeeded": true,
+            "isScoreModelNeeded": true,
+            "properties": {
+                "label": "Check Box Text",
+                "name": "multiSelectScoreCheckbox91284",
+                "id": "multiSelectScoreCheckbox91284",
+                "value": "",
+                "labelSize": "",
+                "labelColor": "",
+                "defaultValue": false,
+                "readonly": false,
+                "disabled": false,
+                "isScoreDisabled": false,
+                "click": false,
+                "show": true,
+                "inline": false,
+                "model": "multiSelectScoreCheckbox91284",
+                "icon": true,
+                "hidden": false,
+                "hideLabel": false,
+                "hideScore": false,
+                "bootstrapClass": "",
+                "scoreType": "sum",
+                "scoreIdentificationLabel": "",
+                "others": false,
+                "isOthersMandatory": false,
+                "options": [
+                    {
+                        "key": 1,
+                        "value": "option 1",
+                        "score": "1",
+                        "$$hashKey": "object:21001"
+                    },
+                    {
+                        "key": 2,
+                        "value": "option 2",
+                        "score": "2",
+                        "$$hashKey": "object:21002"
+                    },
+                    {
+                        "key": 3,
+                        "value": "option 3",
+                        "score": "3",
+                        "$$hashKey": "object:21003"
+                    },
+                    {
+                        "key": 4,
+                        "value": "option 4",
+                        "score": "4",
+                        "$$hashKey": "object:21004",
+                        "selected": true
+                    }
+                ],
+                "scoreModel": "multiSelectScoreCheckbox91284-score"
+            },
+            "divstyles": {
+                "backgroundColor": "",
+                "customCss": "",
+                "customClass": "",
+                "marginLeft": "",
+                "marginRight": "",
+                "marginTop": "",
+                "marginBottom": "",
+                "paddingLeft": "",
+                "paddingRight": "",
+                "paddingTop": "",
+                "paddingBottom": "",
+                "display": "",
+                "width": "",
+                "float": "left",
+                "bootstrapGridClass": "",
+                "wordWrap": "break-word"
+            },
+            "checkBoxStyles": {
+                "color": "",
+                "fontSize": "",
+                "fontWeight": "",
+                "marginLeft": "",
+                "marginRight": "",
+                "marginTop": "",
+                "backgroundColor": "",
+                "marginBottom": "",
+                "display": "inline",
+                "wordWrap": "break-word"
+            },
+            "scoreStyles": {
+                "width": 100,
+                "marginLeft": 10,
+                "marginRight": "",
+                "marginTop": "",
+                "marginBottom": "",
+                "display": "inline"
+            },
+            "othersStyles": {
+                "width": 100,
+                "marginLeft": 10,
+                "marginRight": "",
+                "marginTop": "",
+                "marginBottom": "",
+                "display": "inline"
+            },
+            "labelStyles": {
+                "color": "",
+                "fontSize": "",
+                "fontWeight": "",
+                "backgroundColor": "",
+                "marginLeft": "",
+                "marginRight": "",
+                "marginTop": "",
+                "marginBottom": "",
+                "wordWrap": "break-word"
+            },
+            "validations": {
+                "required": false
+            },
+            "others": {
+                "errorColor": "",
+                "customCss": "",
+                "customClass": "",
+                "bootstrapGridClass": ""
+            },
+            "conditional": {
+                "show": null,
+                "when": null,
+                "eq": ""
+            },
+            "type": "multiSelectScoreCheckbox"
+        },
+        "configurations": [
+            {
+                "show": true,
+                "title": "Display",
+                "template": "componentBuilder/components/multiSelectScoreCheckbox/settings.html"
+            },
+            {
+                "title": "Styles - Label",
+                "template": "componentBuilder/components/multiSelectScoreCheckbox/stylesLabel.html"
+            },
+            {
+                "title": "Styles - Checkbox",
+                "template": "componentBuilder/components/multiSelectScoreCheckbox/stylesCheckbox.html"
+            },
+            {
+                "title": "Styles - Score",
+                "template": "componentBuilder/components/multiSelectScoreCheckbox/stylesScore.html"
+            },
+            {
+                "title": "Styles - Others",
+                "template": "componentBuilder/components/multiSelectScoreCheckbox/stylesOthers.html"
+            },
+            {
+                "title": "Conditions",
+                "template": "componentBuilder/components/common/conditional.html"
+            }
+        ],
+        "componentId": "component-10682"
+    },
+    {
+        "title": "Score  Multi Check",
+        "template": "componentBuilder/components/multiSelectScoreCheckbox.html",
+        "icon": "fa fa-check-square-o",
+        "isScoreType": true,
+        "settings": {
+            "icon": true,
+            "inputType": "checkbox",
+            "inputMask": "",
+            "key": "multiSelectScoreCheckbox",
+            "isModelNeeded": true,
+            "isScoreModelNeeded": true,
+            "properties": {
+                "label": "Check score",
+                "name": "multiSelectScoreCheckbox34901",
+                "id": "multiSelectScoreCheckbox34901",
+                "value": "",
+                "labelSize": "",
+                "labelColor": "",
+                "defaultValue": false,
+                "readonly": false,
+                "disabled": false,
+                "isScoreDisabled": false,
+                "click": false,
+                "show": true,
+                "inline": false,
+                "model": "multiSelectScoreCheckbox34901",
+                "icon": true,
+                "hidden": false,
+                "hideLabel": false,
+                "hideScore": false,
+                "bootstrapClass": "",
+                "scoreType": "sum",
+                "scoreIdentificationLabel": "",
+                "others": false,
+                "isOthersMandatory": false,
+                "options": [
+                    {
+                        "key": 1,
+                        "value": "option 1",
+                        "score": "1",
+                        "$$hashKey": "object:21017"
+                    },
+                    {
+                        "key": 2,
+                        "value": "option 2",
+                        "score": "2",
+                        "$$hashKey": "object:21018"
+                    },
+                    {
+                        "key": 3,
+                        "value": "option 3",
+                        "score": "3",
+                        "$$hashKey": "object:21019"
+                    },
+                    {
+                        "key": 4,
+                        "value": "option 4",
+                        "score": "4",
+                        "$$hashKey": "object:21020",
+                        "selected": true
+                    }
+                ],
+                "scoreModel": "multiSelectScoreCheckbox34901-score"
+            },
+            "divstyles": {
+                "backgroundColor": "",
+                "customCss": "",
+                "customClass": "",
+                "marginLeft": "",
+                "marginRight": "",
+                "marginTop": "",
+                "marginBottom": "",
+                "paddingLeft": "",
+                "paddingRight": "",
+                "paddingTop": "",
+                "paddingBottom": "",
+                "display": "",
+                "width": "",
+                "float": "left",
+                "bootstrapGridClass": "",
+                "wordWrap": "break-word"
+            },
+            "checkBoxStyles": {
+                "color": "",
+                "fontSize": "",
+                "fontWeight": "",
+                "marginLeft": "",
+                "marginRight": "",
+                "marginTop": "",
+                "backgroundColor": "",
+                "marginBottom": "",
+                "display": "inline",
+                "wordWrap": "break-word"
+            },
+            "scoreStyles": {
+                "width": 100,
+                "marginLeft": 10,
+                "marginRight": "",
+                "marginTop": "",
+                "marginBottom": "",
+                "display": "inline"
+            },
+            "othersStyles": {
+                "width": 100,
+                "marginLeft": 10,
+                "marginRight": "",
+                "marginTop": "",
+                "marginBottom": "",
+                "display": "inline"
+            },
+            "labelStyles": {
+                "color": "",
+                "fontSize": "",
+                "fontWeight": "",
+                "backgroundColor": "",
+                "marginLeft": "",
+                "marginRight": "",
+                "marginTop": "",
+                "marginBottom": "",
+                "wordWrap": "break-word"
+            },
+            "validations": {
+                "required": false
+            },
+            "others": {
+                "errorColor": "",
+                "customCss": "",
+                "customClass": "",
+                "bootstrapGridClass": ""
+            },
+            "conditional": {
+                "show": null,
+                "when": null,
+                "eq": ""
+            },
+            "type": "multiSelectScoreCheckbox"
+        },
+        "configurations": [
+            {
+                "show": true,
+                "title": "Display",
+                "template": "componentBuilder/components/multiSelectScoreCheckbox/settings.html"
+            },
+            {
+                "title": "Styles - Label",
+                "template": "componentBuilder/components/multiSelectScoreCheckbox/stylesLabel.html"
+            },
+            {
+                "title": "Styles - Checkbox",
+                "template": "componentBuilder/components/multiSelectScoreCheckbox/stylesCheckbox.html"
+            },
+            {
+                "title": "Styles - Score",
+                "template": "componentBuilder/components/multiSelectScoreCheckbox/stylesScore.html"
+            },
+            {
+                "title": "Styles - Others",
+                "template": "componentBuilder/components/multiSelectScoreCheckbox/stylesOthers.html"
+            },
+            {
+                "title": "Conditions",
+                "template": "componentBuilder/components/common/conditional.html"
+            }
+        ],
+        "componentId": "component-82867"
+    },
+    {
+        "title": "Score Sum",
+        "template": "componentBuilder/components/scoreSum.html",
+        "icon": "fa fa-plus",
+        "settings": {
+            "icon": true,
+            "tableView": true,
+            "inputType": "number",
+            "backupType": "number",
+            "inputMask": "",
+            "key": "scoreSum",
+            "hide": false,
+            "isModelNeeded": true,
+            "isAutoScore": true,
+            "identificationLabel": "",
+            "properties": {
+                "label": "Total Score",
+                "placeholder": "Enter Number",
+                "name": "scoreSum52198",
+                "id": "scoreSum52198",
+                "model": "scoreSum52198",
+                "defaultValue": "",
+                "readonly": false,
+                "disabled": false,
+                "hidden": false,
+                "hideLabel": false,
+                "bootstrapClass": "",
+                "scoreFields": [
+                    {
+                        "scoreModel": "multiSelectScoreCheckbox91284-score"
+                    },
+                    {
+                        "scoreModel": "multiSelectScoreCheckbox34901-score"
+                    }
+                ]
+            },
+            "styles": {
+                "color": "",
+                "backgroundColor": "",
+                "borderColor": "",
+                "marginLeft": "",
+                "marginRight": "",
+                "marginTop": "",
+                "marginBottom": "",
+                "paddingLeft": "",
+                "paddingRight": "",
+                "paddingTop": "",
+                "paddingBottom": ""
+            },
+            "labelStyles": {
+                "lableColor": "",
+                "labelSize": "",
+                "wordWrap": "break-word"
+            },
+            "divStyles": {
+                "color": "black",
+                "backgroundColor": "",
+                "customCss": "",
+                "customClass": "",
+                "marginLeft": "",
+                "marginRight": 5,
+                "marginTop": "",
+                "marginBottom": "",
+                "paddingLeft": "",
+                "paddingRight": "",
+                "paddingTop": "",
+                "paddingBottom": "",
+                "borderColor": "",
+                "display": "",
+                "width": ""
+            },
+            "validations": {
+                "required": false,
+                "requiredCharacter": "*"
+            },
+            "others": {
+                "errorColor": "",
+                "customCss": "",
+                "customClass": "",
+                "bootstrapGridClass": ""
+            },
+            "conditional": {
+                "show": null,
+                "when": null,
+                "operator": "",
+                "compareValue": ""
+            },
+            "type": "scoreSum"
+        },
+        "configurations": [
+            {
+                "show": true,
+                "title": "Display",
+                "template": "componentBuilder/components/scoreSum/settings.html"
+            },
+            {
+                "title": "Styles",
+                "template": "componentBuilder/components/scoreSum/styles.html"
+            },
+            {
+                "title": "Validations",
+                "template": "componentBuilder/components/scoreSum/validations.html"
+            },
+            {
+                "title": "Conditions",
+                "template": "componentBuilder/components/common/conditional.html"
+            },
+            {
+                "title": "Conditions-Sum",
+                "template": "componentBuilder/components/scoreSum/sum.html",
+                "show": true
+            }
+        ],
+        "componentId": "component-20874"
+    }
+]

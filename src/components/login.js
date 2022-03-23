@@ -112,7 +112,7 @@ export default function Login() {
             let token = sessionStorage.getItem("access-token");
 
             if (!token) {
-              await fetch(`${defaultEndpoints.token}`, {
+              await fetch(`${defaultEndpoints.token}?tenantId=star`, {
                 method: "POST",
                 headers: {
                   Authorization:
