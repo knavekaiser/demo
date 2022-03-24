@@ -11,8 +11,10 @@ function App() {
   const navigate = useNavigate();
   const location = useLocation();
   useEffect(() => {
-    if (!user) {
-      navigate("/login", { state: { lastLocation: location } });
+    if (!user && location.pathname !== "/login") {
+      navigate("/login", {
+        state: { lastLocation: location },
+      });
     }
   }, []);
   return (

@@ -66,8 +66,14 @@ export const Provider = ({ children }) => {
     sessionStorage.removeItem("access-token");
     sessionStorage.removeItem("tenant-id");
     sessionStorage.removeItem("tenant-timezone");
-    sessionStorage.removeItem("db-schema");
-    navigate("/login");
+    // sessionStorage.removeItem("db-schema");
+    navigate(
+      `/login${
+        sessionStorage.getItem("db-schema")
+          ? `?tenantId=${sessionStorage.getItem("db-schema")}`
+          : ""
+      }`
+    );
   }, [user, endpoints]);
 
   useEffect(() => {

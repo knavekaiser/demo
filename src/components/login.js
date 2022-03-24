@@ -77,30 +77,10 @@ export default function Login() {
               })
               .catch((err) => Prompt({ type: "error", message: err.message }));
 
-            console.log(endpoints);
-
             if (hisAccessToken) {
               setHis(true);
 
               setEndpoints(endpoints);
-
-              if (endpoints.login.url) {
-                sessionStorage.setItem(
-                  "db-schema",
-                  new URLSearchParams(
-                    endpoints.login.url.replace(/.*\?/, "")
-                  ).get("tenantId")
-                );
-              }
-            } else {
-              if (endpoints.indiLogin.url) {
-                sessionStorage.setItem(
-                  "db-schema",
-                  new URLSearchParams(
-                    endpoints.indiLogin.url.replace(/.*\?/, "")
-                  ).get("tenantId")
-                );
-              }
             }
             handleUser({
               ...user,
@@ -114,6 +94,12 @@ export default function Login() {
       navigate("/");
       return;
     }
+    if (new URLSearchParams(location.search).get("tenantId")) {
+      sessionStorage.setItem(
+        "db-schema",
+        new URLSearchParams(location.search).get("tenantId")
+      );
+    }
   }, []);
   return (
     <div className={s.login} data-testid="login">
@@ -122,6 +108,13 @@ export default function Login() {
         <img src="/asset/logo.jpg" />
         <form
           onSubmit={handleSubmit(async (data) => {
+            if (!new URLSearchParams(location.search).get("tenantId")) {
+              return Prompt({
+                type: "error",
+                message: "No Tenant ID found",
+              });
+            }
+
             setLoading(true);
             let token = sessionStorage.getItem("access-token");
 
@@ -177,15 +170,6 @@ export default function Login() {
                   message:
                     "Could not load HIS API endpoints. Please try again.",
                 });
-              }
-
-              if (endpoints.login.url) {
-                sessionStorage.setItem(
-                  "db-schema",
-                  new URLSearchParams(
-                    endpoints.login.url.replace(/.*\?/, "")
-                  ).get("tenantId")
-                );
               }
 
               if (!hisToken) {
@@ -334,14 +318,6 @@ export default function Login() {
                   message:
                     "Could not load HIS API endpoints. Please try again.",
                 });
-              }
-              if (endpoints.indiLogin.url) {
-                sessionStorage.setItem(
-                  "db-schema",
-                  new URLSearchParams(
-                    endpoints.indiLogin.url.replace(/.*\?/, "")
-                  ).get("tenantId")
-                );
               }
 
               const _user = await getUserDetail(null, {
