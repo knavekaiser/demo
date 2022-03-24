@@ -119,20 +119,25 @@ export default function Login() {
             let token = sessionStorage.getItem("access-token");
 
             if (!token) {
-              await fetch(`${defaultEndpoints.token}?tenantId=star`, {
-                method: "POST",
-                headers: {
-                  Authorization:
-                    "Basic " +
-                    Buffer.from(`napier:my-secret-key`).toString("base64"),
-                  "Content-Type": "application/x-www-form-urlencoded",
-                },
-                body: new URLSearchParams({
-                  grant_type: "password",
-                  username: data.username,
-                  password: data.password,
-                }).toString(),
-              })
+              await fetch(
+                `${defaultEndpoints.token}?tenantId=${sessionStorage.getItem(
+                  "db-schema"
+                )}`,
+                {
+                  method: "POST",
+                  headers: {
+                    Authorization:
+                      "Basic " +
+                      Buffer.from(`napier:my-secret-key`).toString("base64"),
+                    "Content-Type": "application/x-www-form-urlencoded",
+                  },
+                  body: new URLSearchParams({
+                    grant_type: "password",
+                    username: data.username,
+                    password: data.password,
+                  }).toString(),
+                }
+              )
                 .then((res) => res.json())
                 .then((data) => {
                   if (data.access_token) {
