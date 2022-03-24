@@ -64,21 +64,22 @@ export default function Login() {
           query: { username: decoded.user_name },
         }).then(async (user) => {
           if (user) {
-            const endpoints = await getEndpoints()
-              .then((data) => {
-                const _urls = {};
-                if (data._embedded.apiurls) {
-                  data._embedded.apiurls.forEach((url) => {
-                    _urls[url.action] = url;
-                  });
-                  return _urls;
-                }
-                return null;
-              })
-              .catch((err) => Prompt({ type: "error", message: err.message }));
-
             if (hisAccessToken) {
               setHis(true);
+              const endpoints = await getEndpoints()
+                .then((data) => {
+                  const _urls = {};
+                  if (data._embedded.apiurls) {
+                    data._embedded.apiurls.forEach((url) => {
+                      _urls[url.action] = url;
+                    });
+                    return _urls;
+                  }
+                  return null;
+                })
+                .catch((err) =>
+                  Prompt({ type: "error", message: err.message })
+                );
 
               setEndpoints(endpoints);
             }
@@ -300,31 +301,6 @@ export default function Login() {
 
               handleUser(user);
             } else {
-              const endpoints = await getEndpoints()
-                .then((data) => {
-                  const _urls = {};
-                  if (data._embedded.apiurls) {
-                    data._embedded.apiurls.forEach((url) => {
-                      _urls[url.action] = url;
-                    });
-                    return _urls;
-                  }
-                  return null;
-                })
-                .catch((err) => {
-                  setLoading(false);
-                  Prompt({ type: "error", message: err.message });
-                });
-
-              if (!endpoints || !Object.keys(endpoints).length) {
-                setLoading(false);
-                return Prompt({
-                  type: "error",
-                  message:
-                    "Could not load HIS API endpoints. Please try again.",
-                });
-              }
-
               const _user = await getUserDetail(null, {
                 query: { username: data.username },
               }).then((user) => {
