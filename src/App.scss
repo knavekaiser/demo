@@ -18,73 +18,73 @@ input[type="radio"] {
   width: 16px;
 }
 
-button {
-  display: flex;
-  &.clear {
-    border: none;
-    background: none !important;
-    color: $primary-color;
-    outline: none;
-    cursor: pointer;
-  }
-  &.btn {
-    grid-gap: 6px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    background: #499c17;
-    border: none;
-    color: #fff;
-    border-radius: 2px;
-    padding: 6px;
-    font-size: 1rem;
-    text-align: center;
-    justify-content: center;
-    &.w-100 {
-      width: clamp(10px, 100%, 100px);
-    }
-    &:hover {
-      background: #3e8e0d;
-    }
-    &:active {
-      background: #2e7900;
-    }
-    &:disabled {
-      opacity: 0.5;
-    }
-    &.secondary {
-      background: white;
-      color: #20306b;
-      border: 1px solid #20306b;
-      padding: 5px;
-      &:hover {
-        background: #3849a4;
-        color: white;
-      }
-      &:active {
-        background: #283683;
-        color: white;
-      }
-      &:disabled {
-        opacity: 0.5;
-      }
-    }
-    &.ghost {
-      border: 1px solid #9d9d9d;
-      background: white;
-      color: #616161;
-      &:hover {
-        background: #e6e6e6;
-      }
-      &:active {
-        background: #dfdfdf;
-      }
-      &:disabled {
-        opacity: 0.5;
-      }
-    }
-  }
-}
+// button {
+//   display: flex;
+//   &.clear {
+//     border: none;
+//     background: none !important;
+//     color: $primary-color;
+//     outline: none;
+//     cursor: pointer;
+//   }
+//   &.btn {
+//     grid-gap: 6px;
+//     cursor: pointer;
+//     display: flex;
+//     align-items: center;
+//     background: #499c17;
+//     border: none;
+//     color: #fff;
+//     border-radius: 2px;
+//     padding: 6px;
+//     font-size: 1rem;
+//     text-align: center;
+//     justify-content: center;
+//     &.w-100 {
+//       width: clamp(10px, 100%, 100px);
+//     }
+//     &:hover {
+//       background: #3e8e0d;
+//     }
+//     &:active {
+//       background: #2e7900;
+//     }
+//     &:disabled {
+//       opacity: 0.5;
+//     }
+//     &.secondary {
+//       background: white;
+//       color: #20306b;
+//       border: 1px solid #20306b;
+//       padding: 5px;
+//       &:hover {
+//         background: #3849a4;
+//         color: white;
+//       }
+//       &:active {
+//         background: #283683;
+//         color: white;
+//       }
+//       &:disabled {
+//         opacity: 0.5;
+//       }
+//     }
+//     &.ghost {
+//       border: 1px solid #9d9d9d;
+//       background: white;
+//       color: #616161;
+//       &:hover {
+//         background: #e6e6e6;
+//       }
+//       &:active {
+//         background: #dfdfdf;
+//       }
+//       &:disabled {
+//         opacity: 0.5;
+//       }
+//     }
+//   }
+// }
 
 .flex {
   display: flex !important;

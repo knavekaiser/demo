@@ -1,29 +1,29 @@
-.login {
-  height: 100vh;
-  width: 100vw;
-  display: grid;
-  grid-template-columns: 1fr clamp(30rem, 40%, 40rem);
-  img {
-    max-height: 100vh;
-    width: 100%;
-  }
-  .formWrapper {
-    padding: 7.5rem;
-    padding-top: 7.25rem;
-    img {
-      height: 3.5rem;
-      width: auto;
-    }
-    form {
-      margin-top: 0.5rem;
-      display: grid;
-      grid-gap: 1rem;
-      h1 {
-        color: #2d4d8e;
-      }
-      button {
-        margin: auto;
-      }
-    }
-  }
-}
+// .login {
+//   height: 100vh;
+//   width: 100vw;
+//   display: grid;
+//   grid-template-columns: 1fr clamp(30rem, 40%, 40rem);
+//   img {
+//     max-height: 100vh;
+//     width: 100%;
+//   }
+//   .formWrapper {
+//     padding: 7.5rem;
+//     padding-top: 7.25rem;
+//     img {
+//       height: 3.5rem;
+//       width: auto;
+//     }
+//     form {
+//       margin-top: 0.5rem;
+//       display: grid;
+//       grid-gap: 1rem;
+//       h1 {
+//         color: #2d4d8e;
+//       }
+//       button {
+//         margin: auto;
+//       }
+//     }
+//   }
+// }

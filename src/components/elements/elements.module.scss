@@ -1,161 +1,161 @@
 @import "../variables";
 
-.input {
-  display: grid;
-  position: relative;
-  label {
-    font-size: 0.8rem;
-    font-weight: 600;
-    margin-bottom: 0.2rem;
-    white-space: nowrap;
-  }
-  .wrapper {
-    position: relative;
-    .field {
-      position: relative;
-      & > svg {
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-        margin: auto;
-        right: 6px;
-        z-index: 10;
-      }
-    }
-  }
-  input,
-  textarea {
-    width: 100%;
-    border: 1px solid #b7b7b7;
-    padding: 6.5px;
-    outline: none;
-    border-radius: 4px;
-    min-width: 4rem;
-    &:focus {
-      border-color: #3450a3;
-    }
-    &[type="datetime-local"],
-    &[type="date"] {
-      padding: 4px 6px;
-    }
-    &:read-only {
-      background: #f5f4f4;
-    }
-    padding-right: 1.5rem;
-  }
-  textarea {
-    resize: vertical;
-    min-height: 3rem;
-  }
-  &.err {
-    input,
-    textarea {
-      border-color: red;
-    }
-  }
-  .errIcon {
-    position: absolute;
-    right: 6px;
-    top: 50%;
-    color: red;
-    font-size: 0.8em;
-    pointer-events: none;
-    display: grid;
-    place-items: center;
-    transform: translateY(-50%);
-    svg {
-      position: static;
-    }
-  }
-  .errMsg {
-    font-size: 10pt;
-    color: red;
-    text-align: left;
-    display: block;
-  }
-  .calenderIcon {
-    font-size: 15pt;
-    z-index: 10;
-    background: rgba(255, 255, 255, 1);
-    color: rgb(39, 47, 77);
-    top: 50%;
-    transform: translateY(-50%);
-    pointer-events: none;
-    width: 2rem;
-    position: absolute;
-    right: 2px;
-    border-radius: 4px;
-    height: 90%;
-    display: grid;
-    place-items: center;
-  }
-  &.mobileNumberInput {
-    .wrapper {
-      & > .field {
-        border: 1px solid #b7b7b7;
-        border-radius: 4px;
-        display: grid;
-        .country {
-          grid-column: 1/2;
-          grid-row: 1/2;
-          .countryFlags {
-            .field {
-              height: 28px;
-              align-items: center;
-              .displayValue {
-                height: min-content;
-                border: none;
-                display: grid;
-                width: 20px;
-                img {
-                  display: relative;
-                }
-              }
-              & > input {
-                padding: 0;
-                border: none;
-                width: 0;
-              }
-              .btn {
-                left: 33px;
-                svg {
-                  position: unset;
-                  margin-top: -3px;
-                }
-              }
-            }
-          }
-        }
-        & > input {
-          z-index: 10;
-          margin-left: 3rem;
-          width: calc(100% - 3rem);
-          grid-column: 1/2;
-          grid-row: 1/2;
-          border: none;
-        }
-      }
-      .errIcon {
-        z-index: 15;
-      }
-    }
-    &.err {
-      .wrapper > .field {
-        border-color: red;
-      }
-    }
-  }
-  &.textarea {
-    .field {
-      position: relative;
-    }
-    .errIcon {
-      top: 6px;
-      right: 8px;
-      transform: none;
-    }
-  }
-}
+// .input {
+//   display: grid;
+//   position: relative;
+//   label {
+//     font-size: 0.8rem;
+//     font-weight: 600;
+//     margin-bottom: 0.2rem;
+//     white-space: nowrap;
+//   }
+//   .wrapper {
+//     position: relative;
+//     .field {
+//       position: relative;
+//       & > svg {
+//         position: absolute;
+//         top: 50%;
+//         transform: translateY(-50%);
+//         margin: auto;
+//         right: 6px;
+//         z-index: 10;
+//       }
+//     }
+//   }
+//   input,
+//   textarea {
+//     width: 100%;
+//     border: 1px solid #b7b7b7;
+//     padding: 6.5px;
+//     outline: none;
+//     border-radius: 4px;
+//     min-width: 4rem;
+//     &:focus {
+//       border-color: #3450a3;
+//     }
+//     &[type="datetime-local"],
+//     &[type="date"] {
+//       padding: 4px 6px;
+//     }
+//     &:read-only {
+//       background: #f5f4f4;
+//     }
+//     padding-right: 1.5rem;
+//   }
+//   textarea {
+//     resize: vertical;
+//     min-height: 3rem;
+//   }
+//   &.err {
+//     input,
+//     textarea {
+//       border-color: red;
+//     }
+//   }
+//   .errIcon {
+//     position: absolute;
+//     right: 6px;
+//     top: 50%;
+//     color: red;
+//     font-size: 0.8em;
+//     pointer-events: none;
+//     display: grid;
+//     place-items: center;
+//     transform: translateY(-50%);
+//     svg {
+//       position: static;
+//     }
+//   }
+//   .errMsg {
+//     font-size: 10pt;
+//     color: red;
+//     text-align: left;
+//     display: block;
+//   }
+//   .calenderIcon {
+//     font-size: 15pt;
+//     z-index: 10;
+//     background: rgba(255, 255, 255, 1);
+//     color: rgb(39, 47, 77);
+//     top: 50%;
+//     transform: translateY(-50%);
+//     pointer-events: none;
+//     width: 2rem;
+//     position: absolute;
+//     right: 2px;
+//     border-radius: 4px;
+//     height: 90%;
+//     display: grid;
+//     place-items: center;
+//   }
+//   &.mobileNumberInput {
+//     .wrapper {
+//       & > .field {
+//         border: 1px solid #b7b7b7;
+//         border-radius: 4px;
+//         display: grid;
+//         .country {
+//           grid-column: 1/2;
+//           grid-row: 1/2;
+//           .countryFlags {
+//             .field {
+//               height: 28px;
+//               align-items: center;
+//               .displayValue {
+//                 height: min-content;
+//                 border: none;
+//                 display: grid;
+//                 width: 20px;
+//                 img {
+//                   display: relative;
+//                 }
+//               }
+//               & > input {
+//                 padding: 0;
+//                 border: none;
+//                 width: 0;
+//               }
+//               .btn {
+//                 left: 33px;
+//                 svg {
+//                   position: unset;
+//                   margin-top: -3px;
+//                 }
+//               }
+//             }
+//           }
+//         }
+//         & > input {
+//           z-index: 10;
+//           margin-left: 3rem;
+//           width: calc(100% - 3rem);
+//           grid-column: 1/2;
+//           grid-row: 1/2;
+//           border: none;
+//         }
+//       }
+//       .errIcon {
+//         z-index: 15;
+//       }
+//     }
+//     &.err {
+//       .wrapper > .field {
+//         border-color: red;
+//       }
+//     }
+//   }
+//   &.textarea {
+//     .field {
+//       position: relative;
+//     }
+//     .errIcon {
+//       top: 6px;
+//       right: 8px;
+//       transform: none;
+//     }
+//   }
+// }
 .fileInput {
   .label {
     margin-bottom: 0.2rem;
