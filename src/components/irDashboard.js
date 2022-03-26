@@ -625,6 +625,23 @@ const SingleIr = memo(
                   <FaCircle className={s.sentinel} />
                 </>
               )}
+              {ir.typeofInci === 8
+                ? totalTat >= tatConfig.acceptableTatSentinel && (
+                    <span
+                      className={s.icon}
+                      style={{ color: "rgb(230, 163, 16)" }}
+                    >
+                      <WiTime9 />
+                    </span>
+                  )
+                : totalTat >= tatConfig.acceptableTat && (
+                    <span
+                      className={s.icon}
+                      style={{ color: "rgb(230, 163, 16)", fontSize: "2rem" }}
+                    >
+                      <WiTime9 />
+                    </span>
+                  )}
               {parameters?.categories
                 ?.find((item) => item.id === ir.inciCateg)
                 ?.subCategorys?.find((item) => item.id === ir.inciSubCat)
