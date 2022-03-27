@@ -43,13 +43,13 @@ export default function UserMaster() {
     { his: endpoints?.users?.url }
   );
   const { get: getUsers, loading } = useFetch(defaultEndpoints.users, {
-    headers: { "Content-Type": "application/json", tenantId: undefined },
+    headers: { "Content-Type": "application/json" },
   });
   const { post: postUser } = useFetch(defaultEndpoints.users, {
-    headers: { "Content-Type": "application/json", tenantId: undefined },
+    headers: { "Content-Type": "application/json" },
   });
   const { remove: deleteUser } = useFetch(defaultEndpoints.users + "/{ID}", {
-    headers: { "Content-Type": "application/json", tenantId: undefined },
+    headers: { "Content-Type": "application/json" },
   });
 
   useEffect(() => {
@@ -314,7 +314,7 @@ const UserForm = ({
   const { post: postUser, patch: updateUser, loading } = useFetch(
     defaultEndpoints.users + `/${edit?.id || ""}`,
     {
-      headers: { "Content-Type": "application/json", tenantId: undefined },
+      headers: { "Content-Type": "application/json" },
     }
   );
 
