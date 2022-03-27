@@ -26,6 +26,9 @@ import { useHisFetch, useFetch } from "../hooks";
 import { endpoints as defaultEndpoints } from "../config";
 import s from "./incidentReporting.module.scss";
 
+import { ComponentRender } from "component-builder-renderer";
+import formTemplate from "./data.json";
+
 const defaultFormValues = {
   id: "",
   action: "",
@@ -659,7 +662,15 @@ export default function IncidentReporting() {
                   error={methods.formState.errors.typeofInci}
                 />
               </div>
-              <div className={s.placeholder}>Placeholder</div>
+              {
+                // <div className={s.placeholder}>Placeholder</div>
+              }
+              <ComponentRender
+                renderData={formTemplate}
+                sendFormData={(data) => {
+                  console.log(data);
+                }}
+              />
             </div>
           </Box>
           <Box label="INCIDENT CATEGORY" collapsable={true}>

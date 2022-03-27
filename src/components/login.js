@@ -103,254 +103,252 @@ export default function Login() {
     }
   }, []);
   return (
-    <div className="container-fluid p-0 m-0" data-testid="login">
-      <div className="row vh-100 vw-100">
-        <img className="col-8 vh-100" src="/asset/new_login_img.jpg" />
-        <div className="col-4 p-5">
-          <img src="/asset/logo.jpg" />
-          <form
-            onSubmit={handleSubmit(async (data) => {
-              if (!new URLSearchParams(location.search).get("tenantId")) {
+    <div className={s.login} data-testid="login">
+      <img src="/asset/new_login_img.jpg" />
+      <div className={s.formWrapper}>
+        <img src="/asset/logo.jpg" />
+        <form
+          onSubmit={handleSubmit(async (data) => {
+            if (!new URLSearchParams(location.search).get("tenantId")) {
+              return Prompt({
+                type: "error",
+                message: "No Tenant ID found",
+              });
+            }
+
+            setLoading(true);
+            let token = sessionStorage.getItem("access-token");
+
+            if (!token) {
+              await fetch(
+                `${defaultEndpoints.token}?tenantId=${sessionStorage.getItem(
+                  "db-schema"
+                )}`,
+                {
+                  method: "POST",
+                  headers: {
+                    Authorization:
+                      "Basic " +
+                      Buffer.from(`napier:my-secret-key`).toString("base64"),
+                    "Content-Type": "application/x-www-form-urlencoded",
+                  },
+                  body: new URLSearchParams({
+                    grant_type: "password",
+                    username: data.username,
+                    password: data.password,
+                  }).toString(),
+                }
+              )
+                .then((res) => res.json())
+                .then((data) => {
+                  if (data.access_token) {
+                    sessionStorage.setItem("access-token", data.access_token);
+                  }
+                })
+                .catch((err) => {
+                  setLoading(false);
+                });
+            }
+
+            if (his) {
+              let hisToken = sessionStorage.getItem("HIS-access-token");
+
+              const endpoints = await getEndpoints()
+                .then((data) => {
+                  const _urls = {};
+                  if (data._embedded.apiurls) {
+                    data._embedded.apiurls.forEach((url) => {
+                      _urls[url.action] = url;
+                    });
+                    return _urls;
+                  }
+                  return null;
+                })
+                .catch((err) => {
+                  setLoading(false);
+                  Prompt({ type: "error", message: err.message });
+                });
+
+              if (!endpoints || !Object.keys(endpoints).length) {
+                setLoading(false);
                 return Prompt({
                   type: "error",
-                  message: "No Tenant ID found",
+                  message:
+                    "Could not load HIS API endpoints. Please try again.",
                 });
               }
 
-              setLoading(true);
-              let token = sessionStorage.getItem("access-token");
-
-              if (!token) {
-                await fetch(
-                  `${defaultEndpoints.token}?tenantId=${sessionStorage.getItem(
-                    "db-schema"
-                  )}`,
-                  {
-                    method: "POST",
-                    headers: {
-                      Authorization:
-                        "Basic " +
-                        Buffer.from(`napier:my-secret-key`).toString("base64"),
-                      "Content-Type": "application/x-www-form-urlencoded",
-                    },
-                    body: new URLSearchParams({
-                      grant_type: "password",
-                      username: data.username,
-                      password: data.password,
-                    }).toString(),
-                  }
-                )
-                  .then((res) => res.json())
-                  .then((data) => {
-                    if (data.access_token) {
-                      sessionStorage.setItem("access-token", data.access_token);
-                    }
-                  })
-                  .catch((err) => {
-                    setLoading(false);
-                  });
-              }
-
-              if (his) {
-                let hisToken = sessionStorage.getItem("HIS-access-token");
-
-                const endpoints = await getEndpoints()
-                  .then((data) => {
-                    const _urls = {};
-                    if (data._embedded.apiurls) {
-                      data._embedded.apiurls.forEach((url) => {
-                        _urls[url.action] = url;
-                      });
-                      return _urls;
-                    }
-                    return null;
-                  })
-                  .catch((err) => {
-                    setLoading(false);
-                    Prompt({ type: "error", message: err.message });
-                  });
-
-                if (!endpoints || !Object.keys(endpoints).length) {
-                  setLoading(false);
-                  return Prompt({
-                    type: "error",
-                    message:
-                      "Could not load HIS API endpoints. Please try again.",
-                  });
-                }
-
-                if (!hisToken) {
-                  let salt, hash;
-                  if (endpoints.getSalt?.url) {
-                    salt = await fetch(
-                      `${endpoints.getSalt.url}?userid=${data.username}`
-                    )
-                      .then((res) => res.json())
-                      .then((data) => data?.password)
-                      .catch((err) => {
-                        setLoading(false);
-                      });
-                    if (!salt) {
-                      setLoading(false);
-                      return Prompt({
-                        type: "error",
-                        message: "Could not load salt. Please try again.",
-                      });
-                    }
-                    hash = bcrypt.hashSync(data.password, salt);
-                    await fetch(
-                      `${endpoints.discardSession.url}?userId=${data.username}`
-                    );
-                  }
-
-                  if (endpoints.tenantValidation?.url) {
-                    const tenantDetail = await fetch(
-                      endpoints.tenantValidation.url
-                    )
-                      .then((res) => res.json())
-                      .then((data) => {
-                        const key1 = endpoints.tenantValidation.key1;
-                        if (key1 && data[key1]) {
-                          sessionStorage.setItem(
-                            "tenant-id",
-                            data[key1].tenant.tenantId
-                          );
-                          sessionStorage.setItem(
-                            "tenant-timezone",
-                            data[key1].locale.timeZone
-                          );
-                          return data[key1];
-                        }
-                      })
-                      .catch((err) => {
-                        return Prompt({
-                          type: "error",
-                          message: "Could not validate Tenant.",
-                        });
-                      });
-
-                    if (!tenantDetail) {
-                      return;
-                    }
-                  }
-
-                  hisToken = await fetch(`${endpoints.login.url}`, {
-                    method: "POST",
-                    headers: {
-                      "x-tenantid": sessionStorage.getItem("tenant-id"),
-                      "x-timezone": sessionStorage.getItem("tenant-timezone"),
-                      "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                      username: data.username,
-                      password: hash || data.password,
-                      overrideSession: true,
-                    }),
-                  })
+              if (!hisToken) {
+                let salt, hash;
+                if (endpoints.getSalt?.url) {
+                  salt = await fetch(
+                    `${endpoints.getSalt.url}?userid=${data.username}`
+                  )
                     .then((res) => res.json())
-                    .then((data) => {
-                      // console.log(data);
-                      if (data.success) {
-                        return data?.dataBean.token;
-                      }
-                      Prompt({
-                        type: "error",
-                        message: data.errorMessage,
-                      });
-                    })
+                    .then((data) => data?.password)
                     .catch((err) => {
                       setLoading(false);
                     });
-                  if (hisToken) {
-                    sessionStorage.setItem("HIS-access-token", hisToken);
+                  if (!salt) {
+                    setLoading(false);
+                    return Prompt({
+                      type: "error",
+                      message: "Could not load salt. Please try again.",
+                    });
+                  }
+                  hash = bcrypt.hashSync(data.password, salt);
+                  await fetch(
+                    `${endpoints.discardSession.url}?userId=${data.username}`
+                  );
+                }
+
+                if (endpoints.tenantValidation?.url) {
+                  const tenantDetail = await fetch(
+                    endpoints.tenantValidation.url
+                  )
+                    .then((res) => res.json())
+                    .then((data) => {
+                      const key1 = endpoints.tenantValidation.key1;
+                      if (key1 && data[key1]) {
+                        sessionStorage.setItem(
+                          "tenant-id",
+                          data[key1].tenant.tenantId
+                        );
+                        sessionStorage.setItem(
+                          "tenant-timezone",
+                          data[key1].locale.timeZone
+                        );
+                        return data[key1];
+                      }
+                    })
+                    .catch((err) => {
+                      return Prompt({
+                        type: "error",
+                        message: "Could not validate Tenant.",
+                      });
+                    });
+
+                  if (!tenantDetail) {
+                    return;
                   }
                 }
-                if (!hisToken) {
-                  setLoading(false);
-                  return Prompt({
-                    type: "error",
-                    message: "Could not load Token. Please try again.",
-                  });
-                }
 
-                const user = await getUserDetail(null, {
-                  query: { username: data.username },
+                hisToken = await fetch(`${endpoints.login.url}`, {
+                  method: "POST",
+                  headers: {
+                    "x-tenantid": sessionStorage.getItem("tenant-id"),
+                    "x-timezone": sessionStorage.getItem("tenant-timezone"),
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    username: data.username,
+                    password: hash || data.password,
+                    overrideSession: true,
+                  }),
                 })
-                  .then((user) =>
-                    user
-                      ? {
-                          ...user,
-                          role: user.role.split(",").filter((role) => role),
-                        }
-                      : null
-                  )
+                  .then((res) => res.json())
+                  .then((data) => {
+                    // console.log(data);
+                    if (data.success) {
+                      return data?.dataBean.token;
+                    }
+                    Prompt({
+                      type: "error",
+                      message: data.errorMessage,
+                    });
+                  })
                   .catch((err) => {
                     setLoading(false);
-                    Prompt({ type: "error", message: err.message });
                   });
-
-                if (!user) {
-                  setLoading(false);
-                  return Prompt({
-                    type: "error",
-                    message:
-                      "Please make sure that the logged in user is added in the Users master.",
-                  });
+                if (hisToken) {
+                  sessionStorage.setItem("HIS-access-token", hisToken);
                 }
+              }
+              if (!hisToken) {
+                setLoading(false);
+                return Prompt({
+                  type: "error",
+                  message: "Could not load Token. Please try again.",
+                });
+              }
 
-                setEndpoints(endpoints);
-
-                handleUser(user);
-              } else {
-                const _user = await getUserDetail(null, {
-                  query: { username: data.username },
-                }).then((user) => {
-                  return user
+              const user = await getUserDetail(null, {
+                query: { username: data.username },
+              })
+                .then((user) =>
+                  user
                     ? {
                         ...user,
                         role: user.role.split(",").filter((role) => role),
                       }
-                    : null;
+                    : null
+                )
+                .catch((err) => {
+                  setLoading(false);
+                  Prompt({ type: "error", message: err.message });
                 });
 
-                if (_user) {
-                  handleUser(_user);
-                } else {
-                  setLoading(false);
-                  Prompt({
-                    type: "error",
-                    message: "Invalid credentials.",
-                  });
-                }
+              if (!user) {
+                setLoading(false);
+                return Prompt({
+                  type: "error",
+                  message:
+                    "Please make sure that the logged in user is added in the Users master.",
+                });
               }
+
+              setEndpoints(endpoints);
+
+              handleUser(user);
+            } else {
+              const _user = await getUserDetail(null, {
+                query: { username: data.username },
+              }).then((user) => {
+                return user
+                  ? {
+                      ...user,
+                      role: user.role.split(",").filter((role) => role),
+                    }
+                  : null;
+              });
+
+              if (_user) {
+                handleUser(_user);
+              } else {
+                setLoading(false);
+                Prompt({
+                  type: "error",
+                  message: "Invalid credentials.",
+                });
+              }
+            }
+          })}
+        >
+          <h1>Sign In</h1>
+          <section>
+            <Checkbox
+              label="Login with HIS"
+              checked={his}
+              onChange={(e) => setHis(e.target.checked)}
+            />
+          </section>
+          <Input
+            label={"Username"}
+            {...register("username", {
+              required: `Plase enter a Username`,
             })}
-          >
-            <h1>Sign In</h1>
-            <section>
-              <Checkbox
-                label="Login with HIS"
-                checked={his}
-                onChange={(e) => setHis(e.target.checked)}
-              />
-            </section>
-            <Input
-              label={"Username"}
-              {...register("username", {
-                required: `Plase enter a Username`,
-              })}
-              error={errors.username}
-            />
-            <Input
-              type="password"
-              label="Password"
-              {...register("password", {
-                required: "Plase enter your password",
-              })}
-              error={errors.password}
-            />
-            <button className="btn w-100">Sign in</button>
-          </form>
-        </div>
+            error={errors.username}
+          />
+          <Input
+            type="password"
+            label="Password"
+            {...register("password", {
+              required: "Plase enter your password",
+            })}
+            error={errors.password}
+          />
+          <button className="btn w-100">Sign in</button>
+        </form>
       </div>
     </div>
   );

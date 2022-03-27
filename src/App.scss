@@ -2,11 +2,32 @@
 
 ul {
   list-style: none;
+  padding: 0;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+  margin: 0;
 }
 
 a {
   text-decoration: inherit;
   color: inherit;
+  &:hover {
+    color: inherit;
+  }
+}
+
+.content {
+  border: none;
+  padding: 0;
+  margin: 0;
+  width: auto;
 }
 
 input[type="checkbox"] {
@@ -16,75 +37,81 @@ input[type="checkbox"] {
 input[type="radio"] {
   height: 16px;
   width: 16px;
+  &::before {
+    display: none !important;
+  }
 }
 
-// button {
-//   display: flex;
-//   &.clear {
-//     border: none;
-//     background: none !important;
-//     color: $primary-color;
-//     outline: none;
-//     cursor: pointer;
-//   }
-//   &.btn {
-//     grid-gap: 6px;
-//     cursor: pointer;
-//     display: flex;
-//     align-items: center;
-//     background: #499c17;
-//     border: none;
-//     color: #fff;
-//     border-radius: 2px;
-//     padding: 6px;
-//     font-size: 1rem;
-//     text-align: center;
-//     justify-content: center;
-//     &.w-100 {
-//       width: clamp(10px, 100%, 100px);
-//     }
-//     &:hover {
-//       background: #3e8e0d;
-//     }
-//     &:active {
-//       background: #2e7900;
-//     }
-//     &:disabled {
-//       opacity: 0.5;
-//     }
-//     &.secondary {
-//       background: white;
-//       color: #20306b;
-//       border: 1px solid #20306b;
-//       padding: 5px;
-//       &:hover {
-//         background: #3849a4;
-//         color: white;
-//       }
-//       &:active {
-//         background: #283683;
-//         color: white;
-//       }
-//       &:disabled {
-//         opacity: 0.5;
-//       }
-//     }
-//     &.ghost {
-//       border: 1px solid #9d9d9d;
-//       background: white;
-//       color: #616161;
-//       &:hover {
-//         background: #e6e6e6;
-//       }
-//       &:active {
-//         background: #dfdfdf;
-//       }
-//       &:disabled {
-//         opacity: 0.5;
-//       }
-//     }
-//   }
-// }
+button {
+  display: flex;
+  outline: none;
+  &.clear {
+    border: none;
+    background: none !important;
+    color: $primary-color;
+    outline: none;
+    cursor: pointer;
+  }
+  &.btn {
+    min-height: 30px;
+    grid-gap: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    background: #499c17;
+    border: none;
+    color: #fff;
+    border-radius: 2px;
+    padding: 3px 6px;
+    font-size: 1rem;
+    text-align: center;
+    justify-content: center;
+    &.w-100 {
+      width: clamp(10px, 100%, 100px) !important;
+    }
+    &:hover {
+      background: #3e8e0d;
+      color: white;
+    }
+    &:active {
+      background: #2e7900;
+    }
+    &:disabled {
+      opacity: 0.5;
+    }
+    &.secondary {
+      background: white;
+      color: #20306b;
+      border: 1px solid #20306b;
+      padding: 2px 5px;
+      &:hover {
+        background: #3849a4;
+        color: white;
+      }
+      &:active {
+        background: #283683;
+        color: white;
+      }
+      &:disabled {
+        opacity: 0.5;
+      }
+    }
+    &.ghost {
+      border: 1px solid #9d9d9d;
+      background: white;
+      color: #616161;
+      &:hover {
+        background: #e6e6e6;
+      }
+      &:active {
+        background: #dfdfdf;
+      }
+      &:disabled {
+        opacity: 0.5;
+      }
+    }
+  }
+}
 
 .flex {
   display: flex !important;
@@ -141,6 +168,8 @@ input[type="radio"] {
   border-radius: 4px;
   display: grid;
   overflow: auto;
+  top: auto;
+  left: auto;
   .head {
     background: #323d4f;
     border-radius: 4px;
@@ -250,6 +279,9 @@ input[type="radio"] {
   .reactSelect__control {
     display: flex;
     height: min-content;
+    .reactSelect__value-container {
+      padding: 5px 7px;
+    }
     .reactSelect__single-value,
     .reactSelect__input-container {
       align-items: center;
