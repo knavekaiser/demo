@@ -243,8 +243,7 @@ export const IrDashboardContextProvider = ({ children }) => {
       }))
     );
 
-    const counts = [];
-    await getCountStatusDetailByState().then((data) =>
+    const counts = await getCountStatusDetailByState().then((data) =>
       (data?._embedded?.IrStatusDetailsCount || []).map((detail) => ({
         userid: detail.userid,
         count: detail.count,
