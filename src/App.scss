@@ -170,6 +170,8 @@ button {
   overflow: auto;
   top: auto;
   left: auto;
+  height: max-content;
+  width: max-content;
   .head {
     background: #323d4f;
     border-radius: 4px;
