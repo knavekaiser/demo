@@ -625,6 +625,26 @@ const SingleIr = memo(
                   <FaCircle className={s.sentinel} />
                 </>
               )}
+              {ir.typeofInci === 8
+                ? totalTat > tatConfig.acceptableTatSentinel && (
+                    <span
+                      className={s.icon}
+                      style={{ color: "rgb(230, 163, 16)", fontSize: "1.15em" }}
+                    >
+                      <WiTime9 />
+                    </span>
+                  )
+                : totalTat > tatConfig.acceptableTAT && (
+                    <span
+                      className={s.icon}
+                      style={{
+                        color: "rgb(230, 163, 16)",
+                        fontSize: "1.15rem",
+                      }}
+                    >
+                      <WiTime9 />
+                    </span>
+                  )}
               {parameters?.categories
                 ?.find((item) => item.id === ir.inciCateg)
                 ?.subCategorys?.find((item) => item.id === ir.inciSubCat)
@@ -788,13 +808,13 @@ const TatDetails = ({
                     })}
                 </td>
                 <td>
-                  {prevFirstDetail
+                  {(prevFirstDetail
                     ? countDays(
                         new Date(prevFirstDetail.dateTime),
                         new Date(details[details.length - 1]?.dateTime),
                         tatConfig?.excludeWeek || []
                       )
-                    : 0}
+                    : 0) || null}
                 </td>
               </tr>
             );
@@ -1201,7 +1221,7 @@ export const QualityDashboard = () => {
               data: data._embedded.IncidentReport.sort((a, b) =>
                 new Date(a.reportingDate) > new Date(b.reportingDate) ? -1 : 1
               ).map((ir) => {
-                const tat = calculateDays(ir, tatConfig.excludeWeek);
+                const tat = calculateDays(ir, tatConfig?.excludeWeek);
 
                 return {
                   ...ir,
