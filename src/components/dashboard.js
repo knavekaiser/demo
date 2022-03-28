@@ -305,6 +305,13 @@ const SidebarItem_IrDashboard = () => {
   );
   const [listItems, setListItems] = useState({});
   useEffect(() => {
+    const pathname = location.pathname.startsWith(
+      paths.incidentDashboard.basePath
+    )
+      ? location.pathname
+      : paths.incidentDashboard.basePath +
+        "/" +
+        paths.incidentDashboard.myDashboard;
     setListItems({
       "Submitted IRs": {
         label: (
@@ -314,7 +321,7 @@ const SidebarItem_IrDashboard = () => {
           </>
         ),
         path: {
-          pathname: location.pathname,
+          pathname,
           search: `status=2`,
         },
       },
@@ -328,7 +335,7 @@ const SidebarItem_IrDashboard = () => {
           </>
         ),
         path: {
-          pathname: location.pathname,
+          pathname,
           // search: `status=2`,
         },
       },
@@ -342,7 +349,7 @@ const SidebarItem_IrDashboard = () => {
           </>
         ),
         path: {
-          pathname: location.pathname,
+          pathname,
           // search: `status=2`,
         },
       },
@@ -356,7 +363,7 @@ const SidebarItem_IrDashboard = () => {
           </>
         ),
         path: {
-          pathname: location.pathname,
+          pathname,
           // search: `status=2`,
         },
       },
@@ -368,7 +375,7 @@ const SidebarItem_IrDashboard = () => {
           </>
         ),
         path: {
-          pathname: location.pathname,
+          pathname,
           search: `status=3`,
         },
       },
@@ -380,7 +387,7 @@ const SidebarItem_IrDashboard = () => {
           </>
         ),
         path: {
-          pathname: location.pathname,
+          pathname,
           search: `status=4`,
         },
       },
@@ -392,7 +399,7 @@ const SidebarItem_IrDashboard = () => {
           </>
         ),
         path: {
-          pathname: location.pathname,
+          pathname,
           search: `status=5`,
         },
       },
@@ -404,7 +411,7 @@ const SidebarItem_IrDashboard = () => {
           </>
         ),
         path: {
-          pathname: location.pathname,
+          pathname,
           search: `status=6`,
         },
       },
@@ -416,7 +423,7 @@ const SidebarItem_IrDashboard = () => {
           </>
         ),
         path: {
-          pathname: location.pathname,
+          pathname,
           search: `status=7`,
         },
       },
@@ -428,7 +435,7 @@ const SidebarItem_IrDashboard = () => {
           </>
         ),
         path: {
-          pathname: location.pathname,
+          pathname,
           search: `status=8`,
         },
       },
@@ -442,7 +449,7 @@ const SidebarItem_IrDashboard = () => {
           </>
         ),
         path: {
-          pathname: location.pathname,
+          pathname,
           // search: `status=8`,
         },
       },
@@ -456,7 +463,7 @@ const SidebarItem_IrDashboard = () => {
           </>
         ),
         path: {
-          pathname: location.pathname,
+          pathname,
           search: `fromIncidentDateTime=${moment({
             time: new Date().setDate(1),
             format: "YYYY-MM-DD",
@@ -476,14 +483,14 @@ const SidebarItem_IrDashboard = () => {
           </>
         ),
         path: {
-          pathname: location.pathname,
+          pathname,
           search: `typeofInci=8`,
         },
       },
       "Open Reportable event": {
         label: <>Open Reportable event</>,
         path: {
-          pathname: location.pathname,
+          pathname,
           search: `reportable=yes`,
         },
       },
@@ -497,21 +504,21 @@ const SidebarItem_IrDashboard = () => {
           </>
         ),
         path: {
-          pathname: location.pathname,
+          pathname,
           search: `patientYesOrNo=true`,
         },
       },
       "IR beyond acceptable TAT": {
         label: <>Open IR beyond Acceptable TAT</>,
         path: {
-          pathname: location.pathname,
+          pathname,
           search: `tat=beyond`,
         },
       },
       "CAPA closure enabled": {
         label: <>CAPA closure enabled</>,
         path: {
-          pathname: location.pathname,
+          pathname,
           // search: `tat=beyond`,
         },
       },

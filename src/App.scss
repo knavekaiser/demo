@@ -45,6 +45,7 @@ input[type="radio"] {
 button {
   display: flex;
   outline: none;
+  box-shadow: none;
   &.clear {
     border: none;
     background: none !important;

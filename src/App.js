@@ -12,9 +12,14 @@ function App() {
   const location = useLocation();
   useEffect(() => {
     if (!user && location.pathname !== "/login") {
-      navigate("/login", {
-        state: { lastLocation: location },
-      });
+      navigate(
+        `/login${
+          sessionStorage.getItem("db-schema")
+            ? `?tenantId=${sessionStorage.getItem("db-schema")}`
+            : ""
+        }`,
+        { state: { lastLocation: location } }
+      );
     }
   }, []);
   return (

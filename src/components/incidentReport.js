@@ -667,9 +667,7 @@ export default function IncidentReporting() {
               }
               <ComponentRender
                 renderData={formTemplate}
-                sendFormData={(data) => {
-                  console.log(data);
-                }}
+                sendFormData={(data) => {}}
               />
             </div>
           </Box>

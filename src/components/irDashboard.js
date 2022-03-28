@@ -626,7 +626,7 @@ const SingleIr = memo(
                 </>
               )}
               {ir.typeofInci === 8
-                ? totalTat > tatConfig.acceptableTatSentinel && (
+                ? totalTat > tatConfig?.acceptableTatSentinel && (
                     <span
                       className={s.icon}
                       style={{ color: "rgb(230, 163, 16)", fontSize: "1.15em" }}
@@ -634,7 +634,7 @@ const SingleIr = memo(
                       <WiTime9 />
                     </span>
                   )
-                : totalTat > tatConfig.acceptableTAT && (
+                : totalTat > tatConfig?.acceptableTAT && (
                     <span
                       className={s.icon}
                       style={{
