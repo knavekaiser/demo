@@ -3,7 +3,10 @@ import { SiteContext } from "../SiteContext";
 import { Prompt } from "../components/modal";
 import { endpoints as defaultEndpoints } from "../config";
 
-export const useFetch = (url, { his, headers: hookHeaders } = {}) => {
+export const useFetch = (
+  url,
+  { his, headers: hookHeaders, defaultHeaders } = {}
+) => {
   const { user, logout } = useContext(SiteContext);
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -45,20 +48,21 @@ export const useFetch = (url, { his, headers: hookHeaders } = {}) => {
         const response = await fetch(_url, {
           method: method,
           headers: {
-            ...(!his
-              ? {
-                  Authorization:
-                    "Bearer " + sessionStorage.getItem("access-token"),
-                  // tenantId: sessionStorage.getItem("db-schema") || null,
-                }
-              : {
-                  SECURITY_TOKEN: sessionStorage.getItem("HIS-access-token"),
-                  FACILITY_ID: 1,
-                  CLIENT_REF_ID: "Napier123",
-                  "x-auth-token": sessionStorage.getItem("HIS-access-token"),
-                  "x-tenantid": sessionStorage.getItem("tenant-id"),
-                  "x-timezone": sessionStorage.getItem("tenant-timezone"),
-                }),
+            ...(defaultHeaders !== false &&
+              (!his
+                ? {
+                    Authorization:
+                      "Bearer " + sessionStorage.getItem("access-token"),
+                    // tenantId: sessionStorage.getItem("db-schema") || null,
+                  }
+                : {
+                    SECURITY_TOKEN: sessionStorage.getItem("HIS-access-token"),
+                    FACILITY_ID: 1,
+                    CLIENT_REF_ID: "Napier123",
+                    "x-auth-token": sessionStorage.getItem("HIS-access-token"),
+                    "x-tenantid": sessionStorage.getItem("tenant-id"),
+                    "x-timezone": sessionStorage.getItem("tenant-timezone"),
+                  })),
             ...hookHeaders,
             ...headers,
           },

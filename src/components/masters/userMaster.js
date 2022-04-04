@@ -379,30 +379,6 @@ const UserForm = ({
           value: user.id,
           data: user,
         }))}
-        // url={defaultEndpoints.users + `?size=10000`}
-        // processData={(data, value) => {
-        //   if (data?._embedded?.user) {
-        //     return data._embedded.user
-        //       .filter((user) => new RegExp(value, "i").test(user.name))
-        //       .map((user) => ({
-        //         value: user.id,
-        //         label: user.name,
-        //         data: {
-        //           ...user,
-        //           role: user.role?.split(",") || [],
-        //         },
-        //       }));
-        //   } else if (data.userViewList) {
-        //     return data.userViewList
-        //       .filter((user) => new RegExp(value, "i").test(user.userId))
-        //       .map((user) => ({
-        //         value: user.userId,
-        //         label: user.userId,
-        //         data: user,
-        //       }));
-        //   }
-        //   return [];
-        // }}
         register={register}
         name="name"
         formOptions={{

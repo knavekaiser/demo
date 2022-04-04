@@ -7,7 +7,9 @@ import { IoClose } from "react-icons/io5";
 import { Box } from "../incidentReport";
 import {
   Textarea,
+  Select,
   Combobox,
+  SearchField,
   Input,
   Checkbox,
   Table,
@@ -31,12 +33,33 @@ export default function Categories() {
     defaultEndpoints.categories + "/" + "{ID}"
   );
 
+  const [formTemplates, setFormTemplates] = useState([]);
+  const { post: getFormTemplates } = useFetch(defaultEndpoints.formTemplates, {
+    his: true,
+    defaultHeaders: false,
+    headers: { "Content-Type": "application/json" },
+  });
+
   useEffect(() => {
     getCategories()
       .then((data) => {
         if (data._embedded?.category) {
           setCategories(data._embedded.category);
           setSelected(data._embedded.category[0]?.id);
+        }
+      })
+      .catch((err) => Prompt({ type: "error", message: err.message }));
+    getFormTemplates({
+      isChildRequired: false,
+    })
+      .then((data) => {
+        if (data?.success) {
+          setFormTemplates(
+            data.dataBean.map((template) => ({
+              value: template.formId,
+              label: template.formName,
+            }))
+          );
         }
       })
       .catch((err) => Prompt({ type: "error", message: err.message }));
@@ -143,6 +166,7 @@ export default function Categories() {
           <SubCategories
             category={categories.find((cat) => cat.id === selected)}
             setCategories={setCategories}
+            formTemplates={formTemplates}
           />
         )}
       </div>
@@ -231,11 +255,10 @@ const CategoryForm = ({ edit, onSuccess, clearForm, categories }) => {
 const SubCategories = ({
   category: { id, name, subCategorys },
   setCategories,
+  formTemplates,
 }) => {
   const [edit, setEdit] = useState(null);
   const [addReporable, setAddReportable] = useState(false);
-  // <Box label="SUBCATEGORY DETAILS">
-  // </Box>
   return (
     <div className={`${s.subCategory} ${s.child}`} data-testid="subcategories">
       <div className={s.head}>
@@ -270,6 +293,7 @@ const SubCategories = ({
               {...(edit && { edit })}
               key={edit ? "edit" : "add"}
               categoryId={id}
+              formTemplates={formTemplates}
               onSuccess={(subCategory) => {
                 if (edit) {
                   setCategories((prev) =>
@@ -323,6 +347,7 @@ const SubCategories = ({
             subCategory={category}
             setCategories={setCategories}
             setEdit={setEdit}
+            formTemplates={formTemplates}
           />
         ))}
       </Table>
@@ -346,7 +371,13 @@ const SubCategories = ({
     </div>
   );
 };
-const SingleSubCategory = ({ id, subCategory, setCategories, setEdit }) => {
+const SingleSubCategory = ({
+  id,
+  subCategory,
+  setCategories,
+  setEdit,
+  formTemplates,
+}) => {
   const [addReporable, setAddReportable] = useState(false);
 
   const { remove: deleteSubCategory } = useFetch(defaultEndpoints.categories);
@@ -354,7 +385,10 @@ const SingleSubCategory = ({ id, subCategory, setCategories, setEdit }) => {
   return (
     <tr>
       <td>{subCategory.name}</td>
-      <td>{subCategory.template}</td>
+      <td>
+        {formTemplates.find((l) => l.value === subCategory.template)?.label ||
+          subCategory.template}
+      </td>
       <td>{subCategory.sentinel ? "Sentinel" : ""}</td>
       <td>
         {(subCategory.reportStatus || subCategory.reportable?.length > 0) && (
@@ -440,8 +474,10 @@ const SubCategoryForm = ({
   onSuccess,
   clearForm,
   subCategorys,
+  formTemplates,
 }) => {
   const {
+    control,
     handleSubmit,
     register,
     reset,
@@ -505,12 +541,13 @@ const SubCategoryForm = ({
           })}
           error={errors.name}
         />
-        <Input
-          {...register("template", {
-            required: "Please enter a Name",
-          })}
-          type="number"
-          error={errors.name}
+        <Select
+          control={control}
+          name="template"
+          formOptions={{
+            required: "Please Select a Template",
+          }}
+          options={formTemplates}
         />
         <Checkbox {...register("sentinel")} />
         <Checkbox
@@ -548,22 +585,6 @@ const SubCategoryForm = ({
           )}
         </div>
       </form>
-      {
-        //   <Modal
-        //   open={showReportableForm}
-        //   head={true}
-        //   setOpen={() => {
-        //     setShowReportableForm(false);
-        //     setValue("reportable", false);
-        //   }}
-        //   label="REPORTABLE EVENT"
-        //   className={s.reportableForm}
-        // >
-        //   <div className={s.content}>
-        //     <ReportableForm />
-        //   </div>
-        // </Modal>
-      }
     </>
   );
 };

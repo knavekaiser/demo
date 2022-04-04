@@ -27,7 +27,7 @@ import { endpoints as defaultEndpoints } from "../config";
 import s from "./incidentReporting.module.scss";
 
 import { ComponentRender } from "component-builder-renderer";
-import formTemplate from "./data.json";
+// import tempFormTemplate from "./data.json";
 
 const defaultFormValues = {
   id: "",
@@ -79,6 +79,7 @@ export default function IncidentReporting() {
   const [anonymous, setAnonymous] = useState(false);
   const patientComplaint = methods.watch("patientYesOrNo");
   const uploads = methods.watch("upload");
+  const [templateData, setTemplateData] = useState({});
 
   const { post: uploadFiles, laoding: uploadingFiles } = useFetch(
     defaultEndpoints.uploadFiles
@@ -87,9 +88,33 @@ export default function IncidentReporting() {
     `${defaultEndpoints.incidentReport}${edit ? `/${edit.id}` : ""}`,
     { headers: { "Content-Type": "application/json" } }
   );
+  const { post: saveTemplateData } = useFetch(defaultEndpoints.templateData, {
+    headers: { "Content-Type": "application/json" },
+  });
 
   const submitForm = useCallback(
     (data) => {
+      if (Object.entries(templateData).length) {
+        const templateValues = {};
+        // get the data from templates
+        // save the in the server
+
+        Object.entries(templateValues).forEach(async ([section, value], i) => {
+          await saveTemplateData({
+            section,
+            template: value.template,
+            field: value.field,
+            dataType: value.dataType,
+            value: value.value,
+            incidentReport: {
+              id: 3,
+            },
+          }).then((res) => {
+            console.log(res);
+          });
+        });
+      }
+      return console.log(templateData);
       const postData = async () => {
         if (data.upload?.length) {
           const formData = new FormData();
@@ -163,7 +188,7 @@ export default function IncidentReporting() {
                     {data.sequence && (
                       <>
                         <br />
-                        IR Code: {data.sequence}
+                        IR Code: <span id="irCode">{data.sequence}</span>
                       </>
                     )}
                   </>
@@ -201,7 +226,7 @@ export default function IncidentReporting() {
         postData();
       }
     },
-    [edit, user, anonymous]
+    [edit, user, anonymous, templateData]
   );
   const resetForm = useCallback(() => {
     methods.reset({
@@ -428,6 +453,7 @@ export default function IncidentReporting() {
       .catch((err) => {
         console.log(err);
       });
+
     return () => {
       active = false;
     };
@@ -662,17 +688,31 @@ export default function IncidentReporting() {
                   error={methods.formState.errors.typeofInci}
                 />
               </div>
+              <div className={s.placeholder}>Placeholder</div>
               {
-                // <div className={s.placeholder}>Placeholder</div>
+                // <ComponentRender
+                //   key="typeOfInci"
+                //   renderData={tempFormTemplate}
+                //   sendFormData={(data) => {
+                //     if (
+                //       JSON.stringify(data) !==
+                //       JSON.stringify(templateData.typeOfIncident)
+                //     ) {
+                //       setTemplateData((prev) => ({
+                //         ...prev,
+                //         typeOfIncident: data,
+                //       }));
+                //     }
+                //   }}
+                // />
               }
-              <ComponentRender
-                renderData={formTemplate}
-                sendFormData={(data) => {}}
-              />
             </div>
           </Box>
           <Box label="INCIDENT CATEGORY" collapsable={true}>
-            <IncidentCategory />
+            <IncidentCategory
+              templateData={templateData}
+              setTemplateData={setTemplateData}
+            />
           </Box>
           <Box label="PERSON AFFECTED" collapsable={true}>
             <div className={s.placeholder}>Placeholder</div>
@@ -863,12 +903,20 @@ export default function IncidentReporting() {
   );
 }
 
-export const IncidentCategory = () => {
+export const IncidentCategory = ({ templateData, setTemplateData }) => {
   const [categories, setCategories] = useState([]);
   const [showCategoryTable, setShowCategoryTable] = useState(false);
   const [rows, setRows] = useState([]);
   const [tableValues, setTableValues] = useState({});
-
+  const [formTemplate, setFormTemplate] = useState(null);
+  const { post: getFormTemplate, loading: loadingFormTemplate } = useFetch(
+    defaultEndpoints.formTemplates,
+    {
+      his: true,
+      defaultHeaders: false,
+      headers: { "Content-Type": "application/json" },
+    }
+  );
   const { get: getCategories } = useFetch(defaultEndpoints.categories);
 
   useEffect(() => {
@@ -892,6 +940,21 @@ export const IncidentCategory = () => {
       })
       .catch((err) => Prompt({ type: "error", message: err.message }));
   }, []);
+  const updateFormTemplate = useCallback((id) => {
+    getFormTemplate({ formMapId: id })
+      .then((data) => {
+        if (data?.success && data.dataBean[0]) {
+          setFormTemplate(JSON.parse(data.dataBean[0].buildedFormData));
+        } else {
+          setFormTemplate(null);
+          Prompt({ type: "error", message: "No Form template was found" });
+        }
+      })
+      .catch((err) => {
+        setFormTemplate(null);
+        Prompt({ type: "error", message: err.message });
+      });
+  }, []);
   return (
     <ConnectForm>
       {({
@@ -904,6 +967,7 @@ export const IncidentCategory = () => {
         control,
       }) => {
         const cat = watch("inciCateg");
+        const subCat = watch("inciSubCat");
         return (
           <div
             className={s.incidentCategory}
@@ -941,9 +1005,10 @@ export const IncidentCategory = () => {
                     ?.find((c) => c.id === cat)
                     ?.subCategorys?.filter((c) => c.status)
                     .filter((item) => item.status)
-                    .map(({ id, name }) => ({
+                    .map(({ id, name, template }) => ({
                       value: id,
                       label: name,
+                      template: template,
                     })) || null
                 }
                 formOptions={{
@@ -955,9 +1020,12 @@ export const IncidentCategory = () => {
                     );
                   },
                 }}
-                onChange={({ value }) =>
-                  setTableValues((prev) => ({ ...prev, subCat: value }))
-                }
+                onChange={({ value, template }) => {
+                  setTableValues((prev) => ({ ...prev, subCat: value }));
+                  if (template) {
+                    updateFormTemplate(template);
+                  }
+                }}
               />
               <button
                 className={`clear ${s.info}`}
@@ -1010,6 +1078,9 @@ export const IncidentCategory = () => {
                                     category: categories[j]?.id,
                                     subCat: subCat[i].id,
                                   });
+                                  if (subCat.template) {
+                                    updateFormTemplate(subCat.template);
+                                  }
                                 }}
                               />
                               {subCat[i]?.name}
@@ -1053,7 +1124,27 @@ export const IncidentCategory = () => {
                 </section>
               </div>
             </Modal>
-            <div className={s.placeholder}>Placeholder</div>
+            {loadingFormTemplate ? (
+              <div className={s.placeholder}>Loading Form Template...</div>
+            ) : formTemplate ? (
+              <ComponentRender
+                key="category"
+                renderData={formTemplate}
+                sendFormData={(data) => {
+                  if (
+                    JSON.stringify(data) !==
+                    JSON.stringify(templateData.category)
+                  ) {
+                    setTemplateData((prev) => ({
+                      ...prev,
+                      category: data,
+                    }));
+                  }
+                }}
+              />
+            ) : (
+              <div className={s.placeholder}>No Form Template was found.</div>
+            )}
           </div>
         );
       }}
