@@ -225,7 +225,7 @@ export default function IrCodeConfig() {
             })}
           </Table>
           <section className={s.btns}>
-            <button className="btn primary w-100" disabled={updating}>
+            <button className="btn primary wd-100" disabled={updating}>
               Save
             </button>
           </section>

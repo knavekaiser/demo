@@ -53,10 +53,11 @@ export default function Categories() {
       isChildRequired: false,
     })
       .then((data) => {
+        console.log(data);
         if (data?.success) {
           setFormTemplates(
             data.dataBean.map((template) => ({
-              value: template.formId,
+              value: template.formMapId,
               label: template.formName,
             }))
           );

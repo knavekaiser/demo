@@ -25,10 +25,11 @@ import {
   MastersIcon,
 } from "./svgs";
 import IncidentReport from "./incidentReport";
+import IrPreview from "./irPreview";
 import IrDashboard from "./irDashboard";
 import Masters from "./masters/index";
 import IrConfig from "./irConfig/index";
-import paths from "./path";
+import { paths } from "../config";
 import s from "./dashboard.module.scss";
 
 export const Accordion = ({ label, basePath, items, className, startPath }) => {
@@ -162,6 +163,18 @@ function Dashboard() {
               </Link>
             </li>
           )}
+          <li
+            className={`${s.sidebarItem} ${
+              location.pathname.startsWith(paths.irPreview) ? s.active : ""
+            }`}
+          >
+            <Link to={paths.irPreview}>
+              <span className={s.label}>
+                <IncidentReportIcon className={s.icon} />{" "}
+                <span className={s.text}>IR Inputs/Queries</span>
+              </span>
+            </Link>
+          </li>
           {checkPermission({
             roleId: ["incidentManager", "irInvestigator", "incidentReporter"],
           }) && <SidebarItem_IrDashboard />}
@@ -280,6 +293,7 @@ function Dashboard() {
       <main>
         <Routes>
           <Route path={paths.incidentReport} element={<IncidentReport />} />
+          <Route path={paths.irPreview} element={<IrPreview />} />
           <Route
             path={paths.incidentDashboard.basePath + "/*"}
             element={<IrDashboard />}

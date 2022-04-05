@@ -54,8 +54,7 @@ import {
 import { useNavigate, useLocation, createSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { Modal, Prompt } from "./modal";
-import paths from "./path";
-import { irStatus, endpoints as defaultEndpoints } from "../config";
+import { irStatus, endpoints as defaultEndpoints, paths } from "../config";
 import { CSVLink } from "react-csv";
 import s from "./irDashboard.module.scss";
 import { useFetch } from "../hooks";
@@ -357,7 +356,15 @@ export const MyDashboard = () => {
         {
           icon: <FaExternalLinkAlt />,
           label: "Acknowledge IR",
-          callBack: () => {},
+          callBack: () => {
+            navigate(paths.irPreview, {
+              state: {
+                ir: inc,
+                focus: inc.id,
+                from: location?.pathname,
+              },
+            });
+          },
         },
       ]) ||
       []),
@@ -822,7 +829,7 @@ const TatDetails = ({
       </Table>
       <section className={s.btns}>
         <button
-          className={`btn secondary w-100`}
+          className={`btn secondary wd-100`}
           onClick={() => setShowTatDetails(false)}
         >
           Close
@@ -1147,7 +1154,15 @@ export const QualityDashboard = () => {
           {
             icon: <FaExternalLinkAlt />,
             label: "Acknowledge IR",
-            callBack: () => {},
+            callBack: () => {
+              navigate(paths.irPreview, {
+                state: {
+                  ir: inc,
+                  focus: inc.id,
+                  from: location?.pathname,
+                },
+              });
+            },
           },
         ]
       : []),
@@ -1553,13 +1568,13 @@ const AssignForm = ({ assign, users, setAssign, onSuccess }) => {
         />
         <section className={s.btns}>
           <button
-            className="btn secondary ghost w-100"
+            className="btn secondary ghost wd-100"
             type="button"
             onClick={() => setAssign(null)}
           >
             Close
           </button>
-          <button className="btn w-100" disabled={loading}>
+          <button className="btn wd-100" disabled={loading}>
             {timeline.length > 0 ? "Re-Assign" : "Assign"}
           </button>
         </section>

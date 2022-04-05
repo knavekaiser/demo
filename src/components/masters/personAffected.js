@@ -197,7 +197,7 @@ const InjuryAnnotation = () => {
           </span>
         ))}
       </div>
-      <button className={`btn w-100 ${s.save}`}>Save</button>
+      <button className={`btn wd-100 ${s.save}`}>Save</button>
     </div>
   );
 };

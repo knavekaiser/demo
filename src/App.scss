@@ -67,8 +67,11 @@ button {
     font-size: 1rem;
     text-align: center;
     justify-content: center;
-    &.w-100 {
-      width: clamp(10px, 100%, 100px) !important;
+    // max-width: max-content;
+    &.wd-100 {
+      min-width: 100px;
+      padding-left: 1rem !important;
+      padding-right: 1rem !important;
     }
     &:hover {
       background: #3e8e0d;

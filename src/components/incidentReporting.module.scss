@@ -1,3 +1,5 @@
+@import "variables";
+
 main {
   max-height: 100vh;
   overflow: auto;
@@ -130,6 +132,79 @@ main {
       display: flex;
       grid-gap: 0.5rem;
       justify-content: center;
+    }
+  }
+  &.preview {
+    header {
+      h3 {
+        margin: 0;
+      }
+      button {
+        text-decoration: underline;
+      }
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .content {
+      font-size: 0.95rem;
+      .summary {
+        background: rgb(246, 244, 244);
+      }
+      .highlight {
+        background: rgb(237, 251, 249);
+        padding: 5px 10px;
+        border: 1px solid rgb(205, 241, 241);
+      }
+      .summary,
+      .incidentDetail {
+        grid-gap: 6px;
+        padding: 10px;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      }
+      .drugs,
+      .category,
+      .administration {
+        grid-gap: 6px;
+        padding: 10px;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      }
+      .category {
+        padding: 0;
+      }
+      .tables {
+        .actionTaken {
+          tr {
+            grid-template-columns: 1fr 13rem 13rem;
+          }
+        }
+        .witnesses {
+          tr {
+            grid-template-columns: 0.5fr 0.5fr;
+          }
+        }
+        .notified {
+          tr {
+            grid-template-columns: 1fr 1fr 1fr;
+          }
+        }
+      }
+    }
+    .data {
+      .value {
+        font-weight: bold;
+      }
+      &.richData {
+        & > .label {
+          display: block;
+          font-size: 13px;
+          color: $primary-color;
+          font-weight: 500;
+          margin-bottom: 4px;
+        }
+      }
     }
   }
 }
@@ -289,6 +364,29 @@ main {
       align-items: center;
       grid-gap: 10px;
       justify-content: center;
+    }
+  }
+}
+
+.acknowledgeForm {
+  width: 100% !important;
+  max-width: 35rem;
+  form {
+    padding: 20px;
+    padding-top: 10px;
+    display: grid;
+    grid-gap: 5px 10px;
+    grid-template-columns: 1fr 1fr 1fr;
+    .remark,
+    .btns {
+      grid-column: 1 / -1;
+    }
+    .btns {
+      margin-top: 1rem;
+      display: flex;
+      grid-gap: 10px;
+      justify-content: center;
+      align-items: center;
     }
   }
 }

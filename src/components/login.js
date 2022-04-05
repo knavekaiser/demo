@@ -13,10 +13,9 @@ import { Prompt } from "./modal";
 import bcrypt from "bcryptjs";
 import s from "./login.module.scss";
 import { useFetch } from "../hooks";
-import { appConfig, endpoints as defaultEndpoints } from "../config";
+import { appConfig, endpoints as defaultEndpoints, paths } from "../config";
 // import hisEndpoints from "../config/hisEndpoints.js";
 import jwt_decode from "jwt-decode";
-import paths from "./path";
 
 export default function Login() {
   const { user, setUser, setEndpoints, his, setHis } = useContext(SiteContext);
@@ -347,7 +346,7 @@ export default function Login() {
             })}
             error={errors.password}
           />
-          <button className="btn w-100">Sign in</button>
+          <button className="btn wd-100">Sign in</button>
         </form>
       </div>
     </div>

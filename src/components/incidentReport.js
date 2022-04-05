@@ -866,7 +866,7 @@ export default function IncidentReporting() {
             data-testid="irFormActions"
           >
             <button
-              className="btn secondary w-100"
+              className="btn secondary wd-100"
               type="button"
               onClick={() => {
                 setEdit(null);
@@ -882,7 +882,7 @@ export default function IncidentReporting() {
                 methods.setValue("status", 1);
                 methods.clearErrors();
               }}
-              className="btn secondary w-100"
+              className="btn secondary wd-100"
               disabled={loading || uploadingFiles || readOnly || anonymous}
             >
               Save
@@ -891,7 +891,7 @@ export default function IncidentReporting() {
               onClick={() => {
                 methods.setValue("status", 2);
               }}
-              className="btn w-100"
+              className="btn wd-100"
               disabled={loading || uploadingFiles || readOnly}
             >
               Submit
@@ -1104,7 +1104,7 @@ export const IncidentCategory = ({ templateData, setTemplateData }) => {
                         subCat: getValues("inciSubCat"),
                       });
                     }}
-                    className="btn ghost w-100"
+                    className="btn ghost wd-100"
                   >
                     Close
                   </button>
@@ -1117,7 +1117,7 @@ export const IncidentCategory = ({ templateData, setTemplateData }) => {
                       }
                       setShowCategoryTable(false);
                     }}
-                    className="btn secondary w-100"
+                    className="btn secondary wd-100"
                     disabled={!tableValues.category || !tableValues.subCat}
                   >
                     Select

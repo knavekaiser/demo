@@ -2,6 +2,7 @@ import { moment } from "../components/elements";
 
 export default {
   incidentReport: "/incidentReport",
+  irPreview: "/irPreview",
   incidentDashboard: {
     basePath: "/incidentDashboard",
     myDashboard: "myDashboard",

@@ -28,8 +28,7 @@ import {
 } from "../elements";
 import { Modal, Prompt } from "../modal";
 import { useForm } from "react-hook-form";
-import paths from "../path";
-import { endpoints as defaultEndpoints } from "../../config";
+import { endpoints as defaultEndpoints, paths } from "../../config";
 import { useFetch } from "../../hooks";
 import s from "./config.module.scss";
 
@@ -141,7 +140,7 @@ const IrScreen = () => {
       </Table>
       <div className={s.btns}>
         <button
-          className="btn w-100"
+          className="btn wd-100"
           disabled={!update.length}
           onClick={() => {
             Promise.all(
@@ -268,7 +267,7 @@ const TypesOfIncident = () => {
         </section>
       </div>
       <div className={s.btns}>
-        <button className="btn w-100">Save</button>
+        <button className="btn wd-100">Save</button>
       </div>
     </Box>
   );
@@ -598,7 +597,7 @@ const SentinelEventNotification = () => {
       </div>
       <div className={s.btns}>
         <button
-          className="btn w-100"
+          className="btn wd-100"
           disabled={!settingsChanged}
           onClick={() => {
             updateSettings({
@@ -827,7 +826,7 @@ const HodApprovalProcess = () => {
       </Table>
       <div className={s.btns}>
         <button
-          className="btn w-100"
+          className="btn wd-100"
           disabled={!update.length}
           onClick={() => {
             Promise.all(
@@ -1092,7 +1091,7 @@ const DashboardDataElements = () => {
                 console.log(err);
               });
           }}
-          className="btn w-100"
+          className="btn wd-100"
         >
           Save
         </button>
@@ -1201,7 +1200,7 @@ const IncidentClosure = () => {
       </div>
       <div className={s.btns}>
         <button
-          className="btn w-100"
+          className="btn wd-100"
           disabled={!update.length}
           onClick={() => {
             Promise.all(
@@ -1381,7 +1380,7 @@ const AcceptableTat = () => {
           </div>
         </div>
         <div className={s.btns}>
-          <button className="btn w-100">Save</button>
+          <button className="btn wd-100">Save</button>
         </div>
       </form>
     </Box>
@@ -1598,7 +1597,7 @@ const IrInvestigationDetails = () => {
       </div>
       <div className={s.btns}>
         <button
-          className="btn w-100"
+          className="btn wd-100"
           disabled={!update.length}
           onClick={() => {
             Promise.all(
