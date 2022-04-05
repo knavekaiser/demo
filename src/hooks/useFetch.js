@@ -5,7 +5,7 @@ import { endpoints as defaultEndpoints } from "../config";
 
 export const useFetch = (
   url,
-  { his, headers: hookHeaders, defaultHeaders } = {}
+  { his, headers: hookHeaders, defaultHeaders, noDbSchema } = {}
 ) => {
   const { user, logout } = useContext(SiteContext);
   const [error, setError] = useState(false);
@@ -35,6 +35,7 @@ export const useFetch = (
         ).toString()}`;
       }
       if (
+        noDbSchema !== true &&
         !his &&
         sessionStorage.getItem("db-schema") &&
         !_url.startsWith(defaultEndpoints.apiUrl)
@@ -67,7 +68,10 @@ export const useFetch = (
             ...headers,
           },
           ...(["POST", "PUT", "PATCH", "DELETE"].includes(method) && {
-            body: JSON.stringify(payload),
+            body:
+              typeof payload?.append === "function"
+                ? payload
+                : JSON.stringify(payload),
           }),
           signal: controller.current.signal,
         })
@@ -79,7 +83,7 @@ export const useFetch = (
             return {
               ...data,
               res,
-              ...(data && Object.keys({ ...data }).length === 0 && data),
+              data,
             };
           })
           .catch((err) => {

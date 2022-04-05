@@ -114,7 +114,7 @@ export default function IncidentReporting() {
           });
         });
       }
-      return console.log(templateData);
+      // return console.log(templateData);
       const postData = async () => {
         if (data.upload?.length) {
           const formData = new FormData();
@@ -134,7 +134,7 @@ export default function IncidentReporting() {
 
           if (newFiles.length) {
             links = await uploadFiles(formData)
-              .then((data) => (links = data?.map((item) => item.uri) || []))
+              .then(({ data }) => (links = data?.map((item) => item.uri) || []))
               .catch((err) => {
                 Prompt({
                   type: "error",
@@ -993,6 +993,7 @@ export const IncidentCategory = ({ templateData, setTemplateData }) => {
                 }))}
                 onChange={({ value }) => {
                   setValue("inciSubCat", "");
+                  setFormTemplate(null);
                   setTableValues({ category: value });
                 }}
               />
@@ -1131,15 +1132,16 @@ export const IncidentCategory = ({ templateData, setTemplateData }) => {
                 key="category"
                 renderData={formTemplate}
                 sendFormData={(data) => {
-                  if (
-                    JSON.stringify(data) !==
-                    JSON.stringify(templateData.category)
-                  ) {
-                    setTemplateData((prev) => ({
-                      ...prev,
-                      category: data,
-                    }));
-                  }
+                  console.log(data);
+                  // if (
+                  //   JSON.stringify(data) !==
+                  //   JSON.stringify(templateData.category)
+                  // ) {
+                  //   setTemplateData((prev) => ({
+                  //     ...prev,
+                  //     category: data,
+                  //   }));
+                  // }
                 }}
               />
             ) : (
