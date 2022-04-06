@@ -139,7 +139,7 @@ export default function UserMaster() {
                         employeeId: user.employeeID,
                         role: "incidentReporter",
                         department: +user.departmentMaster?.code || undefined,
-                        password: "123",
+                        pword: "123",
                       })
                     )
                   ).then((result) => {
@@ -325,7 +325,7 @@ const UserForm = ({
       ...(edit?.dob && {
         dob: moment({ time: edit.dob, format: "YYYY-MM-DD" }),
       }),
-      password: "",
+      pword: "",
     });
   }, [edit]);
   return (
@@ -356,8 +356,8 @@ const UserForm = ({
         (edit ? updateUser : postUser)({
           ...data,
           ...(edit &&
-            !data.password && {
-              password: undefined,
+            !data.pword && {
+              pword: undefined,
             }),
           role: data.role.join(","),
         })
@@ -608,13 +608,13 @@ const UserForm = ({
         error={errors.email}
       />
       <Input
-        {...register("password", {
+        {...register("pword", {
           // ...(!addFromHis && { required: "Please enter a Password" }),
         })}
-        error={errors.password}
+        error={errors.pword}
         autoComplete="new-password"
         type="password"
-        name="password"
+        name="pword"
         placeholder="Enter"
       />
       <Combobox
