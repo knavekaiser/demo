@@ -13,9 +13,9 @@ import { Prompt } from "./modal";
 import bcrypt from "bcryptjs";
 import s from "./login.module.scss";
 import { useFetch } from "../hooks";
-import { appConfig, endpoints as defaultEndpoints } from "../config";
-import hisEndpoints from "../config/hisEndpoints.js";
-import paths from "./path";
+import { appConfig, endpoints as defaultEndpoints, paths } from "../config";
+// import hisEndpoints from "../config/hisEndpoints.js";
+import jwt_decode from "jwt-decode";
 
 export default function Login() {
   const { user, setUser, setEndpoints, his, setHis } = useContext(SiteContext);
@@ -28,6 +28,25 @@ export default function Login() {
   );
   const { get: getEndpoints } = useFetch(defaultEndpoints.apiUrl);
 
+  const handleUser = useCallback(
+    (user) => {
+      setUser(user);
+      if (
+        location.state?.lastLocation &&
+        location.state.lastLocation.pathname !== "/login"
+      ) {
+        navigate({
+          pathname: location.state.lastLocation.pathname,
+          search: location.state.lastLocation.search,
+          replace: true,
+        });
+      } else {
+        navigate(paths.incidentReport, { replace: true });
+      }
+    },
+    [location.state]
+  );
+
   const {
     handleSubmit,
     register,
@@ -35,9 +54,51 @@ export default function Login() {
     formState: { errors },
   } = useForm();
   useEffect(() => {
+    const accessToken = sessionStorage.getItem("access-token");
+    const hisAccessToken = sessionStorage.getItem("HIS-access-token");
+    if (accessToken) {
+      var decoded = jwt_decode(accessToken);
+      if (decoded && new Date() > new Date(decoded.exp)) {
+        getUserDetail(null, {
+          query: { username: decoded.user_name },
+        }).then(async (user) => {
+          if (user) {
+            if (hisAccessToken) {
+              setHis(true);
+              const endpoints = await getEndpoints()
+                .then((data) => {
+                  const _urls = {};
+                  if (data._embedded.apiurls) {
+                    data._embedded.apiurls.forEach((url) => {
+                      _urls[url.action] = url;
+                    });
+                    return _urls;
+                  }
+                  return null;
+                })
+                .catch((err) =>
+                  Prompt({ type: "error", message: err.message })
+                );
+
+              setEndpoints(endpoints);
+            }
+            handleUser({
+              ...user,
+              role: user.role.split(",").filter((role) => role),
+            });
+          }
+        });
+      }
+    }
     if (user) {
       navigate("/");
       return;
+    }
+    if (new URLSearchParams(location.search).get("tenantId")) {
+      sessionStorage.setItem(
+        "db-schema",
+        new URLSearchParams(location.search).get("tenantId")
+      );
     }
   }, []);
   return (
@@ -47,24 +108,36 @@ export default function Login() {
         <img src="/asset/logo.jpg" />
         <form
           onSubmit={handleSubmit(async (data) => {
+            if (!new URLSearchParams(location.search).get("tenantId")) {
+              return Prompt({
+                type: "error",
+                message: "No Tenant ID found",
+              });
+            }
+
             setLoading(true);
             let token = sessionStorage.getItem("access-token");
 
             if (!token) {
-              await fetch(`${defaultEndpoints.token}`, {
-                method: "POST",
-                headers: {
-                  Authorization:
-                    "Basic " +
-                    Buffer.from(`napier:my-secret-key`).toString("base64"),
-                  "Content-Type": "application/x-www-form-urlencoded",
-                },
-                body: new URLSearchParams({
-                  grant_type: "password",
-                  username: data.username,
-                  password: data.password,
-                }).toString(),
-              })
+              await fetch(
+                `${defaultEndpoints.token}?tenantId=${sessionStorage.getItem(
+                  "db-schema"
+                )}`,
+                {
+                  method: "POST",
+                  headers: {
+                    Authorization:
+                      "Basic " +
+                      Buffer.from(`napier:my-secret-key`).toString("base64"),
+                    "Content-Type": "application/x-www-form-urlencoded",
+                  },
+                  body: new URLSearchParams({
+                    grant_type: "password",
+                    username: data.username,
+                    password: data.password,
+                  }).toString(),
+                }
+              )
                 .then((res) => res.json())
                 .then((data) => {
                   if (data.access_token) {
@@ -79,26 +152,21 @@ export default function Login() {
             if (his) {
               let hisToken = sessionStorage.getItem("HIS-access-token");
 
-              // const endpoints = await getEndpoints()
-              //   .then((data) => {
-              //     const _urls = {};
-              //     if (data._embedded.apiurls) {
-              //       data._embedded.apiurls.forEach((url) => {
-              //         _urls[url.action] = url;
-              //       });
-              //       return _urls;
-              //     }
-              //     return null;
-              //   })
-              //   .catch((err) => {
-              //     setLoading(false);
-              //   });
-
-              // const endpoints = await fetch(
-              //   `${defaultEndpoints.baseApiUrl}/uploads/endpoints.json`
-              // ).then((res) => res.json());
-
-              const endpoints = hisEndpoints;
+              const endpoints = await getEndpoints()
+                .then((data) => {
+                  const _urls = {};
+                  if (data._embedded.apiurls) {
+                    data._embedded.apiurls.forEach((url) => {
+                      _urls[url.action] = url;
+                    });
+                    return _urls;
+                  }
+                  return null;
+                })
+                .catch((err) => {
+                  setLoading(false);
+                  Prompt({ type: "error", message: err.message });
+                });
 
               if (!endpoints || !Object.keys(endpoints).length) {
                 setLoading(false);
@@ -203,92 +271,23 @@ export default function Login() {
                 });
               }
 
-              // const user = await fetch(
-              //   `${endpoints.users.url}?userName=${data.username}&status=1`,
-              //   {
-              //     method: "GET",
-              //     headers: {
-              //       DNT: null,
-              //       "x-auth-token": sessionStorage.getItem("HIS-access-token"),
-              //       "x-tenantid": sessionStorage.getItem("tenant-id"),
-              //       "x-timezone": sessionStorage.getItem("tenant-timezone"),
-              //       "Content-Type": "application/json",
-              //     },
-              //   }
-              // )
-              //   .then((res) => res.json())
-              //   .then((data) =>
-              //     data?.userViewList ? data.userViewList[0] : null
-              //   )
-              //   .catch((err) => {
-              //     setLoading(false);
-              //     return Prompt({
-              //       type: "error",
-              //       message: "Could not get user data. Please try again.",
-              //     });
-              //   });
-
-              const user = await fetch(
-                `${endpoints.users.url}?userName=${data.username}&status=1`,
-                {
-                  method: "GET",
-                  headers: {
-                    DNT: null,
-                    "x-auth-token": sessionStorage.getItem("HIS-access-token"),
-                    "x-tenantid": sessionStorage.getItem("tenant-id"),
-                    "x-timezone": sessionStorage.getItem("tenant-timezone"),
-                    "Content-Type": "application/json",
-                  },
-                }
-              )
-                .then((res) => res.json())
-                .then((data) => data?.[endpoints.users.key1]?.[0] || null)
+              const user = await getUserDetail(null, {
+                query: { username: data.username },
+              })
+                .then((user) =>
+                  user
+                    ? {
+                        ...user,
+                        role: user.role.split(",").filter((role) => role),
+                      }
+                    : null
+                )
                 .catch((err) => {
                   setLoading(false);
-                  return Prompt({
-                    type: "error",
-                    message: "Could not get user data. Please try again.",
-                  });
+                  Prompt({ type: "error", message: err.message });
                 });
-
-              // console.log({ endpoints });
 
               if (!user) {
-                // sessionStorage.removeItem("HIS-access-token");
-                setLoading(false);
-                return Prompt({
-                  type: "error",
-                  message: "Could not log in. Please try again.",
-                });
-              }
-
-              const userDetail = await getUserDetail(null, {
-                query: { username: data.username },
-              }).then((user) =>
-                user
-                  ? {
-                      ...user,
-                      role: user.role.split(",").filter((role) => role),
-                    }
-                  : null
-              );
-
-              // const users = await fetch(defaultEndpoints.users + "?size=10000")
-              //   .then((res) => res.json())
-              //   .then((users) =>
-              //     (users?._embedded?.user || []).map((user) => ({
-              //       ...user,
-              //       role: user.role.split(","),
-              //     }))
-              //   )
-              //   .catch((err) => console.log(err));
-              //
-              // const userDetail = await users.find(
-              //   (user) => user.name === data.username
-              // );
-              // console.log({ users, userDetail });
-
-              if (!userDetail) {
                 setLoading(false);
                 return Prompt({
                   type: "error",
@@ -298,16 +297,12 @@ export default function Login() {
               }
 
               setEndpoints(endpoints);
-              setUser({
-                ...userDetail,
-                ...user,
-              });
-              navigate(paths.incidentReport);
+
+              handleUser(user);
             } else {
               const _user = await getUserDetail(null, {
                 query: { username: data.username },
               }).then((user) => {
-                console.log(user);
                 return user
                   ? {
                       ...user,
@@ -316,23 +311,8 @@ export default function Login() {
                   : null;
               });
 
-              // const users = await fetch(defaultEndpoints.users + "?size=10000")
-              //   .then((res) => res.json())
-              //   .then((users) =>
-              //     (users?._embedded?.user || []).map((user) => ({
-              //       ...user,
-              //       role: user.role.split(","),
-              //     }))
-              //   )
-              //   .catch((err) => console.log(err));
-              //
-              // const _user = await users.find(
-              //   (user) => user.name === data.username
-              // );
-
               if (_user) {
-                setUser(_user);
-                navigate(paths.incidentReport);
+                handleUser(_user);
               } else {
                 setLoading(false);
                 Prompt({
@@ -366,7 +346,7 @@ export default function Login() {
             })}
             error={errors.password}
           />
-          <button className="btn w-100">Sign in</button>
+          <button className="btn wd-100">Sign in</button>
         </form>
       </div>
     </div>

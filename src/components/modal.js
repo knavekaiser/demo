@@ -116,20 +116,20 @@ export const Prompt = ({ className, type, message, btns, callback }) => {
                 {type === "confirmation" ? (
                   <>
                     <button
-                      className="no btn secondary w-100"
+                      className="no btn secondary wd-100"
                       onClick={decline}
                     >
                       No
                     </button>
                     <button
-                      className="yes btn secondary w-100"
+                      className="yes btn secondary wd-100"
                       onClick={confirm}
                     >
                       Yes
                     </button>
                   </>
                 ) : (
-                  <button className="yes btn secondary w-100" onClick={decline}>
+                  <button className="yes btn secondary wd-100" onClick={decline}>
                     Ok
                   </button>
                 )}

@@ -52,7 +52,6 @@ const endpoints = {
     key2: "",
     key3: "",
   },
-  db: "star",
 };
 
 export default endpoints;

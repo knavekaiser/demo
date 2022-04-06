@@ -9,6 +9,7 @@ import React, {
 import { useNavigate } from "react-router-dom";
 import { irStatus } from "./config";
 import { useFetch } from "./hooks";
+import { Prompt } from "./components/modal";
 import defaultEndpoints from "./config/endpoints";
 
 export const SiteContext = createContext();
@@ -17,6 +18,7 @@ export const Provider = ({ children }) => {
   const [roles, setRoles] = useState(null);
   const [endpoints, setEndpoints] = useState(null);
   const [his, setHis] = useState(false);
+  const [irTypes, setIrTypes] = useState([]);
   const navigate = useNavigate();
 
   const checkPermission = useCallback(
@@ -42,18 +44,18 @@ export const Provider = ({ children }) => {
 
   const logout = useCallback(() => {
     if (his) {
-      (async () => {
-        await fetch(endpoints.logout.url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userName: user.name,
-            clientRefId: "Napier123",
-            appContext: "",
-            securityToken: sessionStorage.getItem("HIS-access-token"),
-          }),
-        });
-      })();
+      // (async () => {
+      //   await fetch(endpoints.logout.url, {
+      //     method: "POST",
+      //     headers: { "Content-Type": "application/json" },
+      //     body: JSON.stringify({
+      //       userName: user.name,
+      //       clientRefId: "Napier123",
+      //       appContext: "",
+      //       securityToken: sessionStorage.getItem("HIS-access-token"),
+      //     }),
+      //   });
+      // })();
     }
 
     setUser(null);
@@ -64,7 +66,14 @@ export const Provider = ({ children }) => {
     sessionStorage.removeItem("access-token");
     sessionStorage.removeItem("tenant-id");
     sessionStorage.removeItem("tenant-timezone");
-    navigate("/login");
+    // sessionStorage.removeItem("db-schema");
+    navigate(
+      `/login${
+        sessionStorage.getItem("db-schema")
+          ? `?tenantId=${sessionStorage.getItem("db-schema")}`
+          : ""
+      }`
+    );
   }, [user, endpoints]);
 
   useEffect(() => {
@@ -89,7 +98,7 @@ export const Provider = ({ children }) => {
             alert("Could not fetch permissions");
           }
         })
-        .catch((err) => {});
+        .catch((err) => Prompt({ type: "error", message: err.message }));
     }
   }, [user]);
   return (
@@ -105,6 +114,8 @@ export const Provider = ({ children }) => {
         his,
         setHis,
         logout,
+        irTypes,
+        setIrTypes,
       }}
     >
       {children}
@@ -116,11 +127,13 @@ export const IrDashboardContext = createContext();
 export const IrDashboardContextProvider = ({ children }) => {
   const parametersFetched = useRef(false);
 
-  const { user } = useContext(SiteContext);
+  const { user, setIrTypes } = useContext(SiteContext);
   const [parameters, setParameters] = useState({});
   const [dashboard, setDashboard] = useState("myDashboard");
   const [count, setCount] = useState({});
   const [tatConfig, setTatConfig] = useState(null);
+  const [dataElements, setDataElements] = useState([]);
+  const [irConfig, setIrConfig] = useState({});
 
   const { get: getUsers } = useFetch(`${defaultEndpoints.users}?size=10000`);
   const { get: getCountStatusDetailByState } = useFetch(
@@ -166,6 +179,62 @@ export const IrDashboardContextProvider = ({ children }) => {
     });
   });
 
+  const { get: getIrTypes } = useFetch(defaultEndpoints.typesOfIncident);
+  const updateIrTypes = useCallback(() => {
+    getIrTypes().then((data) => {
+      if (data?._embedded?.configTypeOfIncident) {
+        setIrTypes(
+          data._embedded.configTypeOfIncident.map((type) => ({
+            label: type.type_descrip,
+            value: type.type,
+          }))
+        );
+      }
+    });
+  });
+
+  const { get: getDataElements } = useFetch(defaultEndpoints.dashboardElements);
+  const updateDataElements = useCallback(() => {
+    getDataElements().then((data) => {
+      if (data?._embedded?.dashboardElements) {
+        setDataElements(data._embedded.dashboardElements);
+        // setDataElements(
+        //   data._embedded.dashboardElements.reduce((p, a) => {
+        //     p[a.statusOption] = [];
+        //     if (a.irMgr) p[a.statusOption].push("incidentManager");
+        //     if (a.irInvestigator) p[a.statusOption].push("irInvestigator");
+        //     return p;
+        //   }, {})
+        // );
+      }
+    });
+  });
+  const checkDataElements = useCallback(
+    (element) => {
+      const dataEl = dataElements.find(
+        (dataEl) => dataEl.statusOption === element
+      );
+      if (!dataEl) return false;
+      return (
+        (dataEl.irMgr && user.role.includes("incidentManager")) ||
+        (dataEl.irInvestigator && user.role.includes("irInvestigator"))
+      );
+    },
+    [dataElements, user]
+  );
+
+  const { get: getHodApproval } = useFetch(defaultEndpoints.hodApproval);
+  const updateHodApproval = useCallback(() => {
+    getHodApproval().then((data) => {
+      if (data?._embedded?.configHodapproval?.length) {
+        setIrConfig((prev) => ({
+          ...prev,
+          hodAcknowledgement: data._embedded.configHodapproval[0].options,
+        }));
+      }
+    });
+  }, []);
+
   const updateUsers = useCallback(async () => {
     const users = await getUsers().then((data) =>
       (data?._embedded?.user || []).map((user) => ({
@@ -174,8 +243,7 @@ export const IrDashboardContextProvider = ({ children }) => {
       }))
     );
 
-    const counts = [];
-    await getCountStatusDetailByState().then((data) =>
+    const counts = await getCountStatusDetailByState().then((data) =>
       (data?._embedded?.IrStatusDetailsCount || []).map((detail) => ({
         userid: detail.userid,
         count: detail.count,
@@ -218,6 +286,9 @@ export const IrDashboardContextProvider = ({ children }) => {
           console.log(err);
         });
       updateTatConfig();
+      updateIrTypes();
+      updateDataElements();
+      updateHodApproval();
       parametersFetched.current = true;
     }
   }, [user]);
@@ -253,7 +324,7 @@ export const IrDashboardContextProvider = ({ children }) => {
             return p;
           }, {});
         })
-        .catch((err) => {});
+        .catch((err) => Prompt({ type: "error", message: err.message }));
       const otherCounts = await Promise.all([
         getIrCountCurrentMonth(),
         getSentinelIrCount(),
@@ -263,14 +334,14 @@ export const IrDashboardContextProvider = ({ children }) => {
       ])
         .then(
           ([currentMonth, sentinel, patientComplaint, myIr, departmentIr]) => ({
-            currentMonth: currentMonth.data || 0,
-            sentinel: sentinel.data || 0,
-            patientComplaint: patientComplaint.data || 0,
-            myIr: myIr.data || 0,
-            departmentIr: departmentIr.data || 0,
+            currentMonth: currentMonth?.data || 0,
+            sentinel: sentinel?.data || 0,
+            patientComplaint: patientComplaint?.data || 0,
+            myIr: myIr?.data || 0,
+            departmentIr: departmentIr?.data || 0,
           })
         )
-        .catch((err) => {});
+        .catch((err) => Prompt({ type: "error", message: err.message }));
 
       setCount((prev) => ({ ...countByStatus, ...otherCounts }));
     })();
@@ -287,7 +358,13 @@ export const IrDashboardContextProvider = ({ children }) => {
         setDashboard,
         updateUsers,
         updateTatConfig,
+        updateIrTypes,
+        updateDataElements,
+        checkDataElements,
         tatConfig,
+        dataElements,
+        updateHodApproval,
+        irConfig,
       }}
     >
       {children}

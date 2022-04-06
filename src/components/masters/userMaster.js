@@ -22,7 +22,6 @@ import s from "./masters.module.scss";
 
 export default function UserMaster() {
   const { endpoints } = useContext(SiteContext);
-  const [loading, setLoading] = useState(true);
   const [parameters, setParameters] = useState({
     genders: [
       { label: "Male", value: "male" },
@@ -43,18 +42,17 @@ export default function UserMaster() {
     endpoints?.users?.url || defaultEndpoints.users + `?size=10000`,
     { his: endpoints?.users?.url }
   );
-  const { get: getUsers } = useFetch(defaultEndpoints.users, {
-    headers: { "Content-Type": "application/json", tenantId: undefined },
+  const { get: getUsers, loading } = useFetch(defaultEndpoints.users, {
+    headers: { "Content-Type": "application/json" },
   });
   const { post: postUser } = useFetch(defaultEndpoints.users, {
-    headers: { "Content-Type": "application/json", tenantId: undefined },
+    headers: { "Content-Type": "application/json" },
   });
   const { remove: deleteUser } = useFetch(defaultEndpoints.users + "/{ID}", {
-    headers: { "Content-Type": "application/json", tenantId: undefined },
+    headers: { "Content-Type": "application/json" },
   });
 
   useEffect(() => {
-    setLoading(true);
     Promise.all([
       getAllDepartments(null, {
         ...(endpoints?.departments?.url && {
@@ -106,7 +104,6 @@ export default function UserMaster() {
         return getUsers(null, { query: { size: 10000 } });
       })
       .then((data) => {
-        setLoading(false);
         if (data._embedded?.user) {
           setUsers(
             data._embedded.user.map((user) => ({
@@ -116,9 +113,7 @@ export default function UserMaster() {
           );
         }
       })
-      .catch((err) => {
-        setLoading(false);
-      });
+      .catch((err) => Prompt({ type: "error", message: err.message }));
   }, []);
   return (
     <div className={s.container} data-testid="users">
@@ -144,7 +139,7 @@ export default function UserMaster() {
                         employeeId: user.employeeID,
                         role: "incidentReporter",
                         department: +user.departmentMaster?.code || undefined,
-                        password: "123",
+                        pword: "123",
                       })
                     )
                   ).then((result) => {
@@ -315,12 +310,11 @@ const UserForm = ({
     formState: { errors },
     clearErrors,
   } = useForm();
-  const [loading, setLoading] = useState(false);
 
-  const { post: postUser, patch: updateUser } = useFetch(
+  const { post: postUser, patch: updateUser, loading } = useFetch(
     defaultEndpoints.users + `/${edit?.id || ""}`,
     {
-      headers: { "Content-Type": "application/json", tenantId: undefined },
+      headers: { "Content-Type": "application/json" },
     }
   );
 
@@ -331,45 +325,43 @@ const UserForm = ({
       ...(edit?.dob && {
         dob: moment({ time: edit.dob, format: "YYYY-MM-DD" }),
       }),
-      password: "",
+      pword: "",
     });
   }, [edit]);
   return (
     <form
       autoComplete="off"
       onSubmit={handleSubmit((data) => {
-        if (
-          users?.some(
-            (item) =>
-              ((data.email &&
-                item.email?.trim().toLowerCase() ===
-                  data.email.trim().toLowerCase()) ||
-                (data.contact &&
-                  item.contact?.trim().toLowerCase() ===
-                    data.contact.trim().toLowerCase()) ||
-                (!edit &&
-                  item.employeeId?.trim().toLowerCase() ===
-                    data.employeeId.trim().toLowerCase())) &&
-              item.id !== data.id
-          )
-        ) {
-          Prompt({
-            type: "information",
-            message: `User already exists. Please use different name, employeeId, contact email.`,
-          });
-          return;
-        }
-        setLoading(true);
+        // if (
+        //   users?.some(
+        //     (item) =>
+        //       ((data.email &&
+        //         item.email?.trim().toLowerCase() ===
+        //           data.email.trim().toLowerCase()) ||
+        //         (data.contact &&
+        //           item.contact?.trim().toLowerCase() ===
+        //             data.contact.trim().toLowerCase()) ||
+        //         (!edit &&
+        //           item.employeeId?.trim().toLowerCase() ===
+        //             data.employeeId.trim().toLowerCase())) &&
+        //       item.id !== data.id
+        //   )
+        // ) {
+        //   Prompt({
+        //     type: "information",
+        //     message: `User already exists. Please use different name, employeeId, contact email.`,
+        //   });
+        //   return;
+        // }
         (edit ? updateUser : postUser)({
           ...data,
           ...(edit &&
-            !data.password && {
-              password: undefined,
+            !data.pword && {
+              pword: undefined,
             }),
           role: data.role.join(","),
         })
           .then((data) => {
-            setLoading(false);
             if (data.name) {
               onSuccess({
                 ...data,
@@ -378,10 +370,7 @@ const UserForm = ({
               reset();
             }
           })
-          .catch((err) => {
-            setLoading(false);
-            Prompt({ type: "error", message: err.message });
-          });
+          .catch((err) => Prompt({ type: "error", message: err.message }));
       })}
     >
       <SearchField
@@ -390,30 +379,6 @@ const UserForm = ({
           value: user.id,
           data: user,
         }))}
-        // url={defaultEndpoints.users + `?size=10000`}
-        // processData={(data, value) => {
-        //   if (data?._embedded?.user) {
-        //     return data._embedded.user
-        //       .filter((user) => new RegExp(value, "i").test(user.name))
-        //       .map((user) => ({
-        //         value: user.id,
-        //         label: user.name,
-        //         data: {
-        //           ...user,
-        //           role: user.role?.split(",") || [],
-        //         },
-        //       }));
-        //   } else if (data.userViewList) {
-        //     return data.userViewList
-        //       .filter((user) => new RegExp(value, "i").test(user.userId))
-        //       .map((user) => ({
-        //         value: user.userId,
-        //         label: user.userId,
-        //         data: user,
-        //       }));
-        //   }
-        //   return [];
-        // }}
         register={register}
         name="name"
         formOptions={{
@@ -643,13 +608,13 @@ const UserForm = ({
         error={errors.email}
       />
       <Input
-        {...register("password", {
+        {...register("pword", {
           // ...(!addFromHis && { required: "Please enter a Password" }),
         })}
-        error={errors.password}
+        error={errors.pword}
         autoComplete="new-password"
         type="password"
-        name="password"
+        name="pword"
         placeholder="Enter"
       />
       <Combobox

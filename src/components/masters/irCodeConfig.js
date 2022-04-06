@@ -33,10 +33,12 @@ export default function IrCodeConfig() {
   const reseed = watch("reseed");
   const period = watch("period");
 
-  const { get: getSequence } = useFetch(defaultEndpoints.sequence);
-  const { put: updateSequence } = useFetch(
+  const { get: getSequence, loading } = useFetch(defaultEndpoints.sequence);
+  const { put: updateSequence, loading: updating } = useFetch(
     defaultEndpoints.sequence + "/{ID}",
-    { headers: { "Content-Type": "application/json" } }
+    {
+      headers: { "Content-Type": "application/json" },
+    }
   );
 
   useEffect(() => {
@@ -93,7 +95,7 @@ export default function IrCodeConfig() {
           });
         }
       })
-      .catch((err) => {});
+      .catch((err) => Prompt({ type: "error", message: err.message }));
   }, []);
   return (
     <div className={s.container} data-testid="irCodeConfig">
@@ -130,7 +132,7 @@ export default function IrCodeConfig() {
                   });
                 }
               })
-              .catch((err) => {});
+              .catch((err) => Prompt({ type: "error", message: err.message }));
           })}
         >
           <Table
@@ -158,6 +160,7 @@ export default function IrCodeConfig() {
                 }
               },
             }}
+            loading={loading}
           >
             {codeConfig.map((c) => {
               if (c.field === "reseed") {
@@ -222,7 +225,9 @@ export default function IrCodeConfig() {
             })}
           </Table>
           <section className={s.btns}>
-            <button className="btn primary w-100">Save</button>
+            <button className="btn primary wd-100" disabled={updating}>
+              Save
+            </button>
           </section>
         </form>
       </div>

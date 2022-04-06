@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   FaInfoCircle,
   FaPlus,
@@ -16,6 +16,8 @@ import { TiTick } from "react-icons/ti";
 import { IoIosClose } from "react-icons/io";
 import { IoClose } from "react-icons/io5";
 import {
+  Checkbox,
+  Select,
   Input,
   MobileNumberInput,
   CustomRadio,
@@ -26,30 +28,38 @@ import {
 } from "../elements";
 import { Modal, Prompt } from "../modal";
 import { useForm } from "react-hook-form";
-import paths from "../path";
-import { endpoints as defaultEndpoints } from "../../config";
+import { endpoints as defaultEndpoints, paths } from "../../config";
 import { useFetch } from "../../hooks";
 import s from "./config.module.scss";
 
 const IrScreen = () => {
-  const [screens, setScreens] = useState([
+  const { handleSubmit, register, setValue, watch } = useForm();
+  const screenRef = useRef([]);
+  const [screens, setScreens] = useState([]);
+  const [update, setUpdate] = useState([]);
+  const { get: getIrScreens } = useFetch(defaultEndpoints.configirscreen);
+  const { put: updateScreen } = useFetch(
+    defaultEndpoints.configirscreen + "/{ID}",
     {
-      option: "Location one",
-      status: true,
-      rules: "2021-12-21T15:56:09.153Z",
-    },
-    {
-      option: "Location two",
-      status: true,
-      rules: null,
-    },
-    {
-      option: "Location two",
-      status: false,
-      rules: "2021-12-21T15:56:09.153Z",
-    },
-    { option: "Location two", status: true, rules: "2021-12-21T15:56:09.153Z" },
-  ]);
+      headers: { "Content-Type": "application/json" },
+    }
+  );
+  useEffect(() => {
+    getIrScreens().then((data) => {
+      if (data?._embedded?.configirscreen) {
+        screenRef.current = data._embedded.configirscreen;
+        setScreens(data._embedded.configirscreen);
+      }
+    });
+  }, []);
+  useEffect(() => {
+    setUpdate(
+      screens.filter((newItem) => {
+        const oldItem = screenRef.current.find((old) => old.id === newItem.id);
+        return JSON.stringify(oldItem) !== JSON.stringify(newItem);
+      })
+    );
+  }, [screens]);
   return (
     <Box label="INCIDENT REPORTING SCREEN" collapsable={true}>
       <Table
@@ -60,18 +70,106 @@ const IrScreen = () => {
           { label: "Rules" },
         ]}
       >
-        {screens.map((scr, i) => (
-          <tr key={i}>
-            <td>{scr.option}</td>
-            <td>
-              <Toggle readOnly={true} defaultValues={scr.status} />
-            </td>
-            <td>{scr.rules}</td>
-          </tr>
-        ))}
+        {screens.map((scr, i) => {
+          return (
+            <tr key={i}>
+              <td>{scr.optionDescrp}</td>
+              <td>
+                <Toggle
+                  checked={scr.enableDisable || false}
+                  onChange={(v) =>
+                    setScreens((prev) =>
+                      prev.map((item) =>
+                        item.id === scr.id
+                          ? { ...item, enableDisable: !item.enableDisable }
+                          : item
+                      )
+                    )
+                  }
+                />
+              </td>
+              <td>
+                {scr.rulesPeriod ? (
+                  <span
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gridGap: "6px",
+                    }}
+                  >
+                    No. of anonymous reporting permitted:{" "}
+                    <Input
+                      value={scr.rulesCount || ""}
+                      onChange={(e) =>
+                        setScreens((prev) =>
+                          prev.map((s) =>
+                            s.id === scr.id
+                              ? { ...s, rulesCount: +e.target.value || 0 }
+                              : s
+                          )
+                        )
+                      }
+                      style={{ width: "2.5rem" }}
+                    />{" "}
+                    per{" "}
+                    <Combobox
+                      name="rulesPeriod"
+                      options={[
+                        { label: "Day", value: "day" },
+                        { label: "Week", value: "week" },
+                        { label: "Month", value: "month" },
+                        { label: "Year", value: "year" },
+                      ]}
+                      value={scr.rulesPeriod}
+                      setValue={(n, value) =>
+                        setScreens((prev) =>
+                          prev.map((s) =>
+                            s.id === scr.id ? { ...s, rulesPeriod: value } : s
+                          )
+                        )
+                      }
+                    />
+                  </span>
+                ) : (
+                  "-"
+                )}
+              </td>
+            </tr>
+          );
+        })}
       </Table>
       <div className={s.btns}>
-        <button className="btn w-100">Save</button>
+        <button
+          className="btn wd-100"
+          disabled={!update.length}
+          onClick={() => {
+            Promise.all(
+              update.map((item) =>
+                updateScreen(item, { params: { "{ID}": item.id } })
+              )
+            )
+              .then((resp) => {
+                if (resp?.length) {
+                  screenRef.current = [
+                    ...screens.filter(
+                      (item) => !resp.some((op) => op.id === item.id)
+                    ),
+                    ...resp,
+                  ];
+                  setScreens((prev) =>
+                    prev.map(
+                      (item) => resp.find((op) => op.id === item.id) || item
+                    )
+                  );
+                }
+              })
+              .catch((err) => {
+                console.log(err);
+              });
+          }}
+        >
+          Save
+        </button>
       </div>
     </Box>
   );
@@ -98,6 +196,7 @@ const TypesOfIncident = () => {
         className={s.typeOfIncident}
         columns={[
           { label: "Option" },
+          { label: "Type Label" },
           { label: "Definition" },
           { label: "Reporting Screen Template" },
           { label: "Enable RCA" },
@@ -134,6 +233,7 @@ const TypesOfIncident = () => {
               }{" "}
               {inc.type}
             </td>
+            <td>{inc.type_descrip}</td>
             <td className={s.definition}>{inc.definition}</td>
             <td>{inc.reportingTemplate}</td>
             <td>
@@ -167,7 +267,7 @@ const TypesOfIncident = () => {
         </section>
       </div>
       <div className={s.btns}>
-        <button className="btn w-100">Save</button>
+        <button className="btn wd-100">Save</button>
       </div>
     </Box>
   );
@@ -186,9 +286,8 @@ const IncidentReportForm = ({
     setValue,
     formState: { errors },
   } = useForm({ ...edit });
-  const [loading, setLoading] = useState(false);
 
-  const { post: postType, put: updateType } = useFetch(
+  const { post: postType, put: updateType, loading } = useFetch(
     defaultEndpoints.typesOfIncident + `/${edit?.id || ""}`,
     {
       headers: { "Content-Type": "application/json" },
@@ -204,28 +303,27 @@ const IncidentReportForm = ({
       onSubmit={handleSubmit((data) => {
         if (
           typesOfIncident?.some(
-            (item) => +item.type === +data.type && item.id !== data.id
+            (item) =>
+              (+item.type === +data.type ||
+                item.type_descrip?.trim().toLowerCase() ===
+                  data.type_descrip?.trim().toLowerCase()) &&
+              item.id !== data.id
           )
         ) {
           Prompt({
             type: "information",
-            message: `${data.type} already exists.`,
+            message: `Type already exists.`,
           });
           return;
         }
-        setLoading(true);
         (edit ? updateType : postType)(data)
           .then((data) => {
-            setLoading(false);
             if (data.id) {
               onSuccess(data);
               reset();
             }
           })
-          .catch((err) => {
-            setLoading(false);
-            Prompt({ type: "error", message: err.message });
-          });
+          .catch((err) => Prompt({ type: "error", message: err.message }));
       })}
     >
       <Input
@@ -233,6 +331,12 @@ const IncidentReportForm = ({
           required: "Please enter a Option",
         })}
         error={errors.type}
+      />
+      <Input
+        {...register("type_descrip", {
+          required: "Please enter a Type Label",
+        })}
+        error={errors.type_descrip}
       />
       <Input
         {...register("definition", {
@@ -286,43 +390,95 @@ const IncidentReportForm = ({
 };
 
 const SentinelEventNotification = () => {
-  const [sentinelNotification, setSentinelNotification] = useState([
-    {
-      id: "user123",
-      department: "Department name one",
-      designation: "designation",
-      phone: "+902415151515",
-      email: "some@email.com",
-    },
-    {
-      id: "user123",
-      department: "Department name one",
-      designation: "designation",
-      phone: "+902415151515",
-      email: "some@email.com",
-    },
-    {
-      id: "user123",
-      department: "Department name one",
-      designation: "designation",
-      phone: "+902415151515",
-      email: "some@email.com",
-    },
-  ]);
+  const settingsRef = useRef(null);
+  const [settings, setSettings] = useState(null);
+  const [settingsChanged, setSettingsChanged] = useState(false);
+  const {
+    put: updateSettings,
+  } = useFetch(
+    defaultEndpoints.sentinelNotifications + `/${settings?.id || ""}`,
+    { headers: { "Content-Type": "application/json" } }
+  );
+  const [sentinelNotifications, setSentinelNotifications] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [depts, setDepts] = useState([]);
+  const { get: getDepts } = useFetch(defaultEndpoints.departments);
+  const { get: getUsers } = useFetch(defaultEndpoints.users + `?size=10000`);
+  const { get: getSentinelNotifications } = useFetch(
+    defaultEndpoints.sentinelNotifications
+  );
+  const { remove: deleteNoti } = useFetch(
+    defaultEndpoints.sentinelNotifications + "/{ID}"
+  );
+  const [edit, setEdit] = useState(null);
+  useEffect(() => {
+    getUsers().then((data) => {
+      if (data?._embedded?.user) {
+        setUsers(
+          data._embedded?.user.map((user) => {
+            user.role = user.role.split(",");
+            user.value = user.id;
+            user.label = user.username || user.name;
+            return user;
+          })
+        );
+      }
+    });
+    getDepts().then((data) => {
+      if (data?._embedded?.department) {
+        setDepts(
+          data._embedded.department.map((dept) => ({
+            value: dept.id,
+            label: dept.name,
+          }))
+        );
+      }
+    });
+    getSentinelNotifications().then((data) => {
+      if (data?._embedded?.configSentineLEventNotification) {
+        setSentinelNotifications(
+          data._embedded.configSentineLEventNotification.filter(
+            (item) => item.userId !== 0
+          )
+        );
+        const _settings = data._embedded.configSentineLEventNotification.find(
+          (item) => item.userId === 0
+        );
+        if (_settings) {
+          _settings.mobile = _settings.mobile === "true";
+          _settings.email = _settings.email === "true";
+          _settings.emailContent = _settings.emailContent.split(",");
+          settingsRef.current = _settings;
+          setSettings(_settings);
+        }
+      }
+    });
+  }, []);
+  useEffect(() => {
+    setSettingsChanged(
+      JSON.stringify(settingsRef.current) !== JSON.stringify(settings)
+    );
+  }, [settings]);
   return (
     <Box label="SENTINEL EVENT NOTIFICATION" collapsable={true}>
       <div className={s.sentinelNotificationHead}>
         <p>Notify to:</p>
         <section className={s.notificationOptions}>
           <p>Notify Through:</p>
-          <section>
-            <input type="checkbox" id="notifyThrough-email" />
-            <label htmlFor="notifyThrough-email">Email</label>
-          </section>
-          <section>
-            <input type="checkbox" id="notifyThrough-phone" />
-            <label htmlFor="notifyThrough-phone">Phone</label>
-          </section>
+          <Checkbox
+            checked={settings?.email || false}
+            label="Email"
+            onChange={() =>
+              setSettings((prev) => ({ ...prev, email: !prev.email }))
+            }
+          />
+          <Checkbox
+            checked={settings?.mobile || false}
+            label="Phone"
+            onChange={() =>
+              setSettings((prev) => ({ ...prev, mobile: !prev.mobile }))
+            }
+          />
         </section>
       </div>
       <Table
@@ -338,27 +494,66 @@ const SentinelEventNotification = () => {
       >
         <tr>
           <td className={s.inlineForm}>
-            <NotifyForm />
+            <NotifyForm
+              {...(edit && { edit })}
+              setEdit={setEdit}
+              key={edit ? "edit" : "add"}
+              users={users}
+              depts={depts}
+              sentinelNotifications={sentinelNotifications}
+              onSuccess={(notification) => {
+                setSentinelNotifications((prev) => {
+                  return prev.find((c) => c.id === notification.id)
+                    ? prev.map((c) =>
+                        c.id === notification.id ? notification : c
+                      )
+                    : [...prev, notification];
+                });
+                setEdit(null);
+              }}
+              clearForm={setEdit}
+            />
           </td>
         </tr>
-        {sentinelNotification.map((user, i) => (
+        {sentinelNotifications.map((noti, i) => (
           <tr key={i}>
-            <td>{user.id}</td>
-            <td>{user.department}</td>
-            <td>{user.designation}</td>
-            <td>{user.phone}</td>
-            <td>{user.email}</td>
+            <td>
+              {users?.find((u) => u.value === noti.userId)?.username ||
+                noti.userId}
+            </td>
+            <td>
+              {depts?.find((u) => u.value.toString() === noti.dept.toString())
+                ?.label || noti.dept}
+            </td>
+            <td>{noti.design}</td>
+            <td>{noti.mobile}</td>
+            <td>{noti.email}</td>
             <TableActions
               actions={[
                 {
                   icon: <BsPencilFill />,
                   label: "Edit",
-                  callBack: () => {},
+                  callBack: () => setEdit(noti),
                 },
                 {
                   icon: <FaRegTrashAlt />,
                   label: "Delete",
-                  callBack: () => {},
+                  callBack: () =>
+                    Prompt({
+                      type: "confirmation",
+                      message: `Are you sure you want to remove this?`,
+                      callback: () => {
+                        deleteNoti(null, {
+                          params: { "{ID}": noti.id },
+                        }).then(({ res }) => {
+                          if (res.status === 204) {
+                            setSentinelNotifications((prev) =>
+                              prev.filter((c) => c.id !== noti.id)
+                            );
+                          }
+                        });
+                      },
+                    }),
                 },
               ]}
             />
@@ -373,102 +568,229 @@ const SentinelEventNotification = () => {
           Please find below details for the sentinel event reported.
         </p>
         <section className={s.checkboxes}>
-          <section>
-            <input type="checkbox" id="notiContent-irCode" />
-            <label htmlFor="notiContent-irCode">IR code</label>
-          </section>
-          <section>
-            <input type="checkbox" id="notiContent-category" />
-            <label htmlFor="notiContent-category">Category</label>
-          </section>
-          <section>
-            <input type="checkbox" id="notiContent-subCategory" />
-            <label htmlFor="notiContent-subCategory">Subcategory</label>
-          </section>
-          <section>
-            <input type="checkbox" id="notiContent-incidentLocation" />
-            <label htmlFor="notiContent-incidentLocation">
-              Incident Location
-            </label>
-          </section>
-          <section>
-            <input type="checkbox" id="notiContent-name" />
-            <label htmlFor="notiContent-name">Reported by name</label>
-          </section>
-          <section>
-            <input type="checkbox" id="notiContent-department" />
-            <label htmlFor="notiContent-department">
-              Reported by department
-            </label>
-          </section>
-          <section>
-            <input type="checkbox" id="notiContent-IncidentDatetime" />
-            <label htmlFor="notiContent-IncidentDatetime">
-              Date & time of incident
-            </label>
-          </section>
-          <section>
-            <input type="checkbox" id="notiContent-reportDatetime" />
-            <label htmlFor="notiContent-reportDatetime">
-              Reporting date & time
-            </label>
-          </section>
+          {[
+            "IR code",
+            "Category",
+            "Subcategory",
+            "Incident Location",
+            "Reported by name",
+            "Reported by department",
+            "Date & time of the incident",
+            "Reporting date & time",
+          ].map((item) => (
+            <Checkbox
+              key={item}
+              label={item}
+              checked={settings?.emailContent?.includes(item) || false}
+              onChange={(e) => {
+                setSettings((prev) => ({
+                  ...prev,
+                  emailContent: !e.target.checked
+                    ? prev.emailContent.filter((i) => i !== item)
+                    : [...prev.emailContent, item],
+                }));
+              }}
+            />
+          ))}
         </section>
         <p>Please contact IR manager for further information.</p>
       </div>
       <div className={s.btns}>
-        <button className="btn w-100">Save</button>
+        <button
+          className="btn wd-100"
+          disabled={!settingsChanged}
+          onClick={() => {
+            updateSettings({
+              ...settings,
+              emailContent: settings.emailContent
+                .filter((item) => item)
+                .join(","),
+            }).then((data) => {
+              if (data?.mobile) {
+                data.mobile = data.mobile === "true";
+                data.email = data.email === "true";
+                data.emailContent = data.emailContent.split(",");
+                settingsRef.current = data;
+                setSettings(data);
+              }
+            });
+          }}
+        >
+          Save
+        </button>
       </div>
     </Box>
   );
 };
-const NotifyForm = ({ edit, onChange }) => {
-  const { register, watch } = useForm();
+const NotifyForm = ({
+  edit,
+  onChange,
+  users,
+  depts,
+  sentinelNotifications,
+  onSuccess,
+  clearForm,
+}) => {
+  const { handleSubmit, register, watch, control, setValue, reset } = useForm();
+  const { post: addNotification, put: updateNotification, loading } = useFetch(
+    defaultEndpoints.sentinelNotifications,
+    {
+      headers: { "Content-Type": "application/json" },
+    }
+  );
+  useEffect(() => reset({ ...edit }), [edit]);
   return (
-    <form>
-      <Input required={true} name="name" placeholder="Enter" />
-      <Input required={true} name="dob" placeholder="Enter" />
-      <Input required={true} name="employeeId" placeholder="Enter" />
+    <form
+      onSubmit={handleSubmit((data) => {
+        if (
+          !edit &&
+          sentinelNotifications?.some((noti) => noti.userId === data.userId)
+        ) {
+          Prompt({
+            type: "information",
+            message: `Person already selected.`,
+          });
+          return;
+        }
+        (edit ? updateNotification : addNotification)(data).then((data) => {
+          if (data) {
+            onSuccess(data);
+          }
+        });
+        reset();
+      })}
+    >
+      <Select
+        options={users}
+        name="userId"
+        control={control}
+        formOptions={{
+          required: "Select a Person",
+        }}
+        onChange={({ department, email, contact }) => {
+          setValue("dept", department);
+          setValue("email", email);
+          setValue("mobile", contact);
+        }}
+      />
+      <Select
+        options={depts}
+        name="dept"
+        control={control}
+        formOptions={{
+          required: "Select a Person",
+        }}
+      />
+      <Input {...register("design")} placeholder="Enter" />
       <MobileNumberInput
         register={register}
-        required={true}
-        name="contact"
+        setValue={setValue}
+        name="mobile"
         placeholder="Enter"
         watch={watch}
       />
-      <Input required={true} email="email" placeholder="Enter" />
-      <button className="btn secondary">
-        <FaPlus /> Add
-      </button>
+      <Input {...register("email")} placeholder="Enter" />
+      <div className={s.btns}>
+        <button className="btn secondary" type="submit" disabled={loading}>
+          {edit ? (
+            <FaCheck />
+          ) : (
+            <>
+              <FaPlus /> Add
+            </>
+          )}
+        </button>
+        {edit && (
+          <button
+            type="button"
+            onClick={() => {
+              clearForm();
+            }}
+            className="btn secondary"
+          >
+            <IoClose />
+          </button>
+        )}
+      </div>
     </form>
   );
 };
 
 const HodApprovalProcess = () => {
+  const hodApprovalRef = useRef([]);
+  const [hodApproval, setHodApproval] = useState([]);
+  const [update, setUpdate] = useState([]);
+  const { get: getHodApproval } = useFetch(defaultEndpoints.hodApproval);
+  const { put: updateHodApproval } = useFetch(
+    defaultEndpoints.hodApproval + "/{ID}",
+    { headers: { "Content-Type": "application/json" } }
+  );
+  useEffect(() => {
+    getHodApproval().then((data) => {
+      if (data?._embedded?.configHodapproval) {
+        const _data = data._embedded.configHodapproval.map((item) => ({
+          id: item.id,
+          options: item.options,
+        }));
+        hodApprovalRef.current = _data;
+        setHodApproval(_data);
+      }
+    });
+  }, []);
+  useEffect(() => {
+    setUpdate(
+      hodApproval.filter((newItem) => {
+        const oldItem = hodApprovalRef.current.find(
+          (old) => old.id === newItem.id
+        );
+        return JSON.stringify(oldItem) !== JSON.stringify(newItem);
+      })
+    );
+  }, [hodApproval]);
   return (
     <Box label="HOD APPROVAL PROCESS" collapsable={true}>
-      <Table className={s.hodApproval} columns={[{ label: "Select" }]}>
-        <tr>
-          <td>
-            <input
-              type="checkbox"
-              id="hodApproval-required"
-              onChange={() => {}}
-            />
-            <label htmlFor="hodApproval-required">
-              <strong>
-                HOD approval required - IR team can start investigation only
-                after IS is approved
-              </strong>
-            </label>
-          </td>
-        </tr>
+      <Table className={s.hodApproval}>
+        {
+          //   <tr>
+          //   <td>
+          //     <input
+          //       type="checkbox"
+          //       id="hodApproval-required"
+          //       checked={
+          //         hodApproval.find((item) => item.id === 1)?.options || false
+          //       }
+          //       onChange={() => {
+          //         setHodApproval((prev) =>
+          //           prev.map((item) =>
+          //             item.id === 1 ? { ...item, options: !item.options } : item
+          //           )
+          //         );
+          //       }}
+          //     />
+          //     <label htmlFor="hodApproval-required">
+          //       <strong>
+          //         HOD approval required - IR team can start investigation only
+          //         after IS is approved
+          //       </strong>
+          //     </label>
+          //   </td>
+          // </tr>
+        }
         <tr>
           <td>
             <input
               type="checkbox"
               id="hodApproval-acknowledgement"
-              onChange={() => {}}
+              checked={
+                hodApproval.find((item) => item.id === 1)?.options || false
+              }
+              onChange={() => {
+                setHodApproval((prev) =>
+                  prev.map((item) =>
+                    item.id === 1 ? { ...item, options: !item.options } : item
+                  )
+                );
+              }}
             />
             <label htmlFor="hodApproval-acknowledgement">
               <strong>HOD acknowledgement</strong> - IR is sent to HOD for
@@ -477,18 +799,63 @@ const HodApprovalProcess = () => {
             </label>
           </td>
         </tr>
-        <tr>
-          <td>
-            <input type="checkbox" id="hodApproval-none" onChange={() => {}} />
-            <label htmlFor="hodApproval-none">
-              <strong>None</strong> - HOD is not notified of the reported IR.
-              HOD dashboard will be disabled.
-            </label>
-          </td>
-        </tr>
+        {
+          //   <tr>
+          //   <td>
+          //     <input
+          //       type="checkbox"
+          //       id="hodApproval-none"
+          //       checked={
+          //         hodApproval.find((item) => item.id === 3)?.options || false
+          //       }
+          //       onChange={() => {
+          //         setHodApproval((prev) =>
+          //           prev.map((item) =>
+          //             item.id === 3 ? { ...item, options: !item.options } : item
+          //           )
+          //         );
+          //       }}
+          //     />
+          //     <label htmlFor="hodApproval-none">
+          //       <strong>None</strong> - HOD is not notified of the reported IR.
+          //       HOD dashboard will be disabled.
+          //     </label>
+          //   </td>
+          // </tr>
+        }
       </Table>
       <div className={s.btns}>
-        <button className="btn w-100">Save</button>
+        <button
+          className="btn wd-100"
+          disabled={!update.length}
+          onClick={() => {
+            Promise.all(
+              update.map((item) =>
+                updateHodApproval(item, { params: { "{ID}": item.id } })
+              )
+            )
+              .then((resp) => {
+                if (resp?.length) {
+                  hodApprovalRef.current = [
+                    ...hodApproval.filter(
+                      (item) => !resp.some((op) => op.id === item.id)
+                    ),
+                    ...resp,
+                  ];
+                  setHodApproval((prev) =>
+                    prev.map(
+                      (item) => resp.find((op) => op.id === item.id) || item
+                    )
+                  );
+                }
+              })
+              .catch((err) => {
+                console.log(err);
+              });
+          }}
+        >
+          Save
+        </button>
       </div>
     </Box>
   );
@@ -512,8 +879,8 @@ const DashboardDataElements = () => {
           delete item._links;
           return item;
         });
-        setDashboardDataElements(_data);
         dataElementRef.current = _data;
+        setDashboardDataElements(_data);
       }
     });
   }, []);
@@ -542,11 +909,8 @@ const DashboardDataElements = () => {
               { label: "IR Investigator" },
             ]}
           >
-            {[...dashboardDataElements]
-              .splice(0, 10)
-              .filter(
-                (item) => item.statusOption !== "Enable cancel IR function"
-              )
+            {dashboardDataElements
+              .filter((item) => item.type === 1)
               .map((item, i) => (
                 <tr key={i}>
                   <td>{item.statusOption}</td>
@@ -611,11 +975,8 @@ const DashboardDataElements = () => {
               { label: "IR Investigator" },
             ]}
           >
-            {[...dashboardDataElements]
-              .splice(10)
-              .filter(
-                (item) => item.statusOption !== "Enable cancel IR function"
-              )
+            {dashboardDataElements
+              .filter((item) => item.type === 2)
               .map((item, i) => (
                 <tr key={i}>
                   <td>{item.statusOption}</td>
@@ -730,7 +1091,7 @@ const DashboardDataElements = () => {
                 console.log(err);
               });
           }}
-          className="btn w-100"
+          className="btn wd-100"
         >
           Save
         </button>
@@ -740,71 +1101,135 @@ const DashboardDataElements = () => {
 };
 
 const IncidentClosure = () => {
+  const elementRef = useRef([]);
+  const [elements, setElements] = useState([]);
+  const [update, setUpdate] = useState([]);
+  const { get: getElements } = useFetch(defaultEndpoints.incidentClosureFields);
+  const { put: updateElement } = useFetch(
+    defaultEndpoints.incidentClosureFields + "/{ID}",
+    {
+      headers: { "Content-Type": "application/json" },
+    }
+  );
+  useEffect(() => {
+    getElements().then((data) => {
+      if (data?._embedded?.incidentClosureFields) {
+        elementRef.current = data?._embedded?.incidentClosureFields;
+        setElements(data._embedded.incidentClosureFields);
+      }
+    });
+  }, []);
+  useEffect(() => {
+    setUpdate(
+      elements.filter((newItem) => {
+        const oldItem = elementRef.current.find((old) => old.id === newItem.id);
+        return JSON.stringify(oldItem) !== JSON.stringify(newItem);
+      })
+    );
+  }, [elements]);
   return (
     <Box label="INCIDENT CLOSURE" collapsable={true}>
       <div className={s.incidentClosure}>
         <p>IR closure format to include</p>
         <section className={s.checkboxes}>
-          <section>
-            <input type="checkbox" id="notiContent-irCode" />
-            <label htmlFor="notiContent-irCode">IR code</label>
-          </section>
-          <section>
-            <input type="checkbox" id="notiContent-category" />
-            <label htmlFor="notiContent-category">Category</label>
-          </section>
-          <section>
-            <input type="checkbox" id="notiContent-subCategory" />
-            <label htmlFor="notiContent-subCategory">Subcategory</label>
-          </section>
-          <section>
-            <input type="checkbox" id="notiContent-incidentLocation" />
-            <label htmlFor="notiContent-incidentLocation">
-              Incident Location
-            </label>
-          </section>
-          <section>
-            <input type="checkbox" id="notiContent-name" />
-            <label htmlFor="notiContent-name">Reported by name</label>
-          </section>
-          <section>
-            <input type="checkbox" id="notiContent-department" />
-            <label htmlFor="notiContent-department">
-              Reported by department
-            </label>
-          </section>
-          <section>
-            <input type="checkbox" id="notiContent-IncidentDatetime" />
-            <label htmlFor="notiContent-IncidentDatetime">
-              Date & time of incident
-            </label>
-          </section>
-          <section>
-            <input type="checkbox" id="notiContent-reportDatetime" />
-            <label htmlFor="notiContent-reportDatetime">
-              Reporting date & time
-            </label>
-          </section>
+          {elements
+            .filter((item) => item.elements !== 2)
+            .filter(
+              (item) =>
+                item.elementsDescrip !==
+                "Send thank you notification to RCA team members"
+            )
+            .map((item) => {
+              const Element = item.elements === 1 ? Checkbox : Toggle;
+              return (
+                <Element
+                  key={item.id}
+                  label={item.elementsDescrip}
+                  checked={item.enable || false}
+                  onChange={(v) => {
+                    setElements((prev) =>
+                      prev.map((el) =>
+                        el.id === item.id ? { ...el, enable: !el.enable } : el
+                      )
+                    );
+                  }}
+                />
+              );
+            })}
         </section>
         <div className={s.capaClosure}>
-          <section>
-            <label>Enable CAPA effectiveness monitoring</label>
-            <Toggle readOnly={true} defaultValue={true} />
-          </section>
-          <section>
-            <label>Send CAPA closure report</label>
-            <Toggle readOnly={true} defaultValue={true} />
-          </section>
-          <section>
-            <input type="checkbox" id="sendThank-2" />
-            <label htmlFor="sendThank-2">
-              Send thank you notification to RCA team members
-            </label>
-          </section>
+          {elements
+            .filter(
+              (item) =>
+                item.elements === 2 ||
+                item.elementsDescrip ===
+                  "Send thank you notification to RCA team members"
+            )
+            .map((item) => {
+              const Element = item.elements === 1 ? Checkbox : Toggle;
+              return item.elements === 2 ? (
+                <section key={item.id}>
+                  <label>{item.elementsDescrip}</label>
+                  <Element
+                    checked={item.enable || false}
+                    onChange={(v) => {
+                      setElements((prev) =>
+                        prev.map((el) =>
+                          el.id === item.id ? { ...el, enable: !el.enable } : el
+                        )
+                      );
+                    }}
+                  />
+                </section>
+              ) : (
+                <Element
+                  key={item.id}
+                  label={item.elementsDescrip}
+                  checked={item.enable || false}
+                  onChange={(v) => {
+                    setElements((prev) =>
+                      prev.map((el) =>
+                        el.id === item.id ? { ...el, enable: !el.enable } : el
+                      )
+                    );
+                  }}
+                />
+              );
+            })}
         </div>
       </div>
       <div className={s.btns}>
-        <button className="btn w-100">Save</button>
+        <button
+          className="btn wd-100"
+          disabled={!update.length}
+          onClick={() => {
+            Promise.all(
+              update.map((item) =>
+                updateElement(item, { params: { "{ID}": item.id } })
+              )
+            )
+              .then((resp) => {
+                if (resp?.length) {
+                  elementRef.current = [
+                    ...elements.filter(
+                      (item) => !resp.some((op) => op.id === item.id)
+                    ),
+                    ...resp,
+                  ];
+                  setElements((prev) =>
+                    prev.map(
+                      (item) => resp.find((op) => op.id === item.id) || item
+                    )
+                  );
+                }
+              })
+              .catch((err) => {
+                console.log(err);
+              });
+          }}
+        >
+          Save
+        </button>
       </div>
     </Box>
   );
@@ -812,6 +1237,7 @@ const IncidentClosure = () => {
 
 const AcceptableTat = () => {
   const { handleSubmit, register, reset, watch, setValue } = useForm();
+  const tatRef = useRef();
   const [tat, setTat] = useState(null);
   const { get: getTat } = useFetch(defaultEndpoints.configTat);
   const { put: updateTat } = useFetch(
@@ -822,6 +1248,11 @@ const AcceptableTat = () => {
     getTat().then((data) => {
       if (data?._embedded?.configAcceptableTAT[0]) {
         const _tat = data?._embedded?.configAcceptableTAT[0];
+        tatRef.current = {
+          ..._tat,
+          excludeWeek: _tat.excludeWeek.split(","),
+          sentinelExcludeWeek: _tat.sentinelExcludeWeek.split(","),
+        };
         setTat({
           ..._tat,
           excludeWeek: _tat.excludeWeek.split(","),
@@ -949,7 +1380,7 @@ const AcceptableTat = () => {
           </div>
         </div>
         <div className={s.btns}>
-          <button className="btn w-100">Save</button>
+          <button className="btn wd-100">Save</button>
         </div>
       </form>
     </Box>
@@ -957,71 +1388,245 @@ const AcceptableTat = () => {
 };
 
 const IrInvestigationDetails = () => {
+  const elementRef = useRef([]);
+  const [elements, setElements] = useState([]);
+  const [update, setUpdate] = useState([]);
+  const { get: getElements } = useFetch(
+    defaultEndpoints.irInvestigationDetails
+  );
+  const { put: updateElement } = useFetch(
+    defaultEndpoints.irInvestigationDetails + "/{ID}",
+    {
+      headers: { "Content-Type": "application/json" },
+    }
+  );
+  useEffect(() => {
+    getElements().then((data) => {
+      if (data?._embedded?.irInvestigationDetails) {
+        elementRef.current = data._embedded.irInvestigationDetails;
+        setElements(data._embedded.irInvestigationDetails);
+      }
+    });
+  }, []);
+  useEffect(() => {
+    setUpdate(
+      elements.filter((newItem) => {
+        const oldItem = elementRef.current.find((old) => old.id === newItem.id);
+        return JSON.stringify(oldItem) !== JSON.stringify(newItem);
+      })
+    );
+  }, [elements]);
   return (
     <Box label="IR INVESTIGATION-DETAILS" collapsable={true}>
       <div className={s.irInvestigationDetail}>
         <section className={s.section_1}>
           <section>
             <label>View related incidents</label>
-            <Toggle readOnly={true} defaultValue={true} />
+            <Toggle
+              checked={
+                elements.find((el) => el.elements === 1)?.enable || false
+              }
+              onChange={() =>
+                setElements((prev) =>
+                  prev.map((item) =>
+                    item.elements === 1
+                      ? { ...item, enable: !item.enable }
+                      : item
+                  )
+                )
+              }
+            />
           </section>
         </section>
         <section className={s.section_2}>
           <label>Criteria for automated similar incident alert</label>
           <div className={s.checkboxes}>
             <span>Show IR's of:</span>
-            <section>
-              <input type="checkbox" id="ir-alert-sameCategory" />
-              <label htmlFor="ir-alert-sameCategory">Same category</label>
-            </section>
-            <section>
-              <input type="checkbox" id="ir-alert-sameSubcategory" />
-              <label htmlFor="ir-alert-sameSubcategory">
-                Same Sub-category
-              </label>
-            </section>
-            <section>
-              <input type="checkbox" id="ir-alert-typeOfIncident" />
-              <label htmlFor="ir-alert-typeOfIncident">Type of incident</label>
-            </section>
-            <section>
-              <input type="checkbox" id="ir-alert-sameLocation" />
-              <label htmlFor="ir-alert-sameLocation">Same Location type</label>
-            </section>
+            <Checkbox
+              label={elements.find((el) => el.elements === 2)?.element_descrip}
+              checked={
+                elements.find((el) => el.elements === 2)?.enable || false
+              }
+              onChange={() =>
+                setElements((prev) =>
+                  prev.map((item) =>
+                    item.elements === 2
+                      ? { ...item, enable: !item.enable }
+                      : item
+                  )
+                )
+              }
+            />
+            <Checkbox
+              label={elements.find((el) => el.elements === 3)?.element_descrip}
+              checked={
+                elements.find((el) => el.elements === 3)?.enable || false
+              }
+              onChange={() =>
+                setElements((prev) =>
+                  prev.map((item) =>
+                    item.elements === 3
+                      ? { ...item, enable: !item.enable }
+                      : item
+                  )
+                )
+              }
+            />
+            <Checkbox
+              label={elements.find((el) => el.elements === 4)?.element_descrip}
+              checked={
+                elements.find((el) => el.elements === 4)?.enable || false
+              }
+              onChange={() =>
+                setElements((prev) =>
+                  prev.map((item) =>
+                    item.elements === 4
+                      ? { ...item, enable: !item.enable }
+                      : item
+                  )
+                )
+              }
+            />
+            <Checkbox
+              label={elements.find((el) => el.elements === 5)?.element_descrip}
+              checked={
+                elements.find((el) => el.elements === 5)?.enable || false
+              }
+              onChange={() =>
+                setElements((prev) =>
+                  prev.map((item) =>
+                    item.elements === 5
+                      ? { ...item, enable: !item.enable }
+                      : item
+                  )
+                )
+              }
+            />
             <Combobox
               className={s.duration}
               label="Duration"
+              value={elements.find((el) => el.elements === 6)?.value || ""}
               options={[
-                { value: 1, label: "Last one year" },
-                { value: 2, label: "Last two years" },
-                { value: 3, label: "Last three years" },
+                { value: "oneYear", label: "Last one year" },
+                { value: "twoYears", label: "Last two years" },
+                { value: "threeYears", label: "Last three years" },
               ]}
+              setValue={(n, value) =>
+                setElements((prev) =>
+                  prev.map((item) =>
+                    item.elements === 6 ? { ...item, value } : item
+                  )
+                )
+              }
             />
           </div>
         </section>
         <section className={s.section_3}>
           <section>
-            <label>View related incidents</label>
-            <Toggle readOnly={true} defaultValue={true} />
-          </section>
-          <section>
-            <label>Mark self reporting IRs</label>
-            <Toggle readOnly={true} defaultValue={true} />
-          </section>
-          <section>
-            <label>Mark IPSG Type</label>
-            <Toggle readOnly={true} defaultValue={true} />
-          </section>
-          <section>
-            <input type="checkbox" id="irInvestigationDetail-sendThank" />
-            <label htmlFor="irInvestigationDetail-sendThank">
-              Send thank you notification for self-Reorting IR
+            <label>
+              {elements.find((el) => el.elements === 7)?.element_descrip}
             </label>
+            <Toggle
+              checked={
+                elements.find((el) => el.elements === 7)?.enable || false
+              }
+              onChange={() =>
+                setElements((prev) =>
+                  prev.map((item) =>
+                    item.elements === 7
+                      ? { ...item, enable: !item.enable }
+                      : item
+                  )
+                )
+              }
+            />
           </section>
+          <section>
+            <label>
+              {elements.find((el) => el.elements === 8)?.element_descrip}
+            </label>
+            <Toggle
+              checked={
+                elements.find((el) => el.elements === 8)?.enable || false
+              }
+              onChange={() =>
+                setElements((prev) =>
+                  prev.map((item) =>
+                    item.elements === 8
+                      ? { ...item, enable: !item.enable }
+                      : item
+                  )
+                )
+              }
+            />
+          </section>
+          <section>
+            <label>
+              {elements.find((el) => el.elements === 9)?.element_descrip}
+            </label>
+            <Toggle
+              checked={
+                elements.find((el) => el.elements === 9)?.enable || false
+              }
+              onChange={() =>
+                setElements((prev) =>
+                  prev.map((item) =>
+                    item.elements === 9
+                      ? { ...item, enable: !item.enable }
+                      : item
+                  )
+                )
+              }
+            />
+          </section>
+
+          <Checkbox
+            label={elements.find((el) => el.elements === 10)?.element_descrip}
+            checked={elements.find((el) => el.elements === 10)?.enable || false}
+            onChange={() =>
+              setElements((prev) =>
+                prev.map((item) =>
+                  item.elements === 10
+                    ? { ...item, enable: !item.enable }
+                    : item
+                )
+              )
+            }
+          />
         </section>
       </div>
       <div className={s.btns}>
-        <button className="btn w-100">Save</button>
+        <button
+          className="btn wd-100"
+          disabled={!update.length}
+          onClick={() => {
+            Promise.all(
+              update.map((item) =>
+                updateElement(item, { params: { "{ID}": item.id } })
+              )
+            )
+              .then((resp) => {
+                if (resp?.length) {
+                  elementRef.current = [
+                    ...elements.filter(
+                      (item) => !resp.some((op) => op.id === item.id)
+                    ),
+                    ...resp,
+                  ];
+                  setElements((prev) =>
+                    prev.map(
+                      (item) => resp.find((op) => op.id === item.id) || item
+                    )
+                  );
+                }
+              })
+              .catch((err) => {
+                console.log(err);
+              });
+          }}
+        >
+          Save
+        </button>
       </div>
     </Box>
   );

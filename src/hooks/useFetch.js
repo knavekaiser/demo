@@ -1,20 +1,23 @@
 import { useState, useEffect, useCallback, useRef, useContext } from "react";
 import { SiteContext } from "../SiteContext";
 import { Prompt } from "../components/modal";
+import { endpoints as defaultEndpoints } from "../config";
 
-export const useFetch = (url, { his, headers: hookHeaders } = {}) => {
+export const useFetch = (
+  url,
+  { his, headers: hookHeaders, defaultHeaders, noDbSchema } = {}
+) => {
   const { user, logout } = useContext(SiteContext);
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
   const controller = useRef();
-
   useEffect(() => {
     controller.current = new AbortController();
 
     return () => {
       controller.current.abort();
       setError(false);
-      // setLoading(false);
+      setLoading(false);
     };
   }, [url]);
 
@@ -31,30 +34,44 @@ export const useFetch = (url, { his, headers: hookHeaders } = {}) => {
           query
         ).toString()}`;
       }
+      if (
+        noDbSchema !== true &&
+        !his &&
+        sessionStorage.getItem("db-schema") &&
+        !_url.startsWith(defaultEndpoints.apiUrl)
+      ) {
+        _url += `${
+          _url.includes("?") ? "" : "?"
+        }&tenantId=${sessionStorage.getItem("db-schema")}`;
+      }
       try {
         setLoading(true);
         const response = await fetch(_url, {
           method: method,
           headers: {
-            ...(!his
-              ? {
-                  Authorization:
-                    "Bearer " + sessionStorage.getItem("access-token"),
-                  tenantId: "star",
-                }
-              : {
-                  SECURITY_TOKEN: sessionStorage.getItem("HIS-access-token"),
-                  FACILITY_ID: 1,
-                  CLIENT_REF_ID: "Napier123",
-                  "x-auth-token": sessionStorage.getItem("HIS-access-token"),
-                  "x-tenantid": sessionStorage.getItem("tenant-id"),
-                  "x-timezone": sessionStorage.getItem("tenant-timezone"),
-                }),
+            ...(defaultHeaders !== false &&
+              (!his
+                ? {
+                    Authorization:
+                      "Bearer " + sessionStorage.getItem("access-token"),
+                    // tenantId: sessionStorage.getItem("db-schema") || null,
+                  }
+                : {
+                    SECURITY_TOKEN: sessionStorage.getItem("HIS-access-token"),
+                    FACILITY_ID: 1,
+                    CLIENT_REF_ID: "Napier123",
+                    "x-auth-token": sessionStorage.getItem("HIS-access-token"),
+                    "x-tenantid": sessionStorage.getItem("tenant-id"),
+                    "x-timezone": sessionStorage.getItem("tenant-timezone"),
+                  })),
             ...hookHeaders,
             ...headers,
           },
           ...(["POST", "PUT", "PATCH", "DELETE"].includes(method) && {
-            body: JSON.stringify(payload),
+            body:
+              typeof payload?.append === "function"
+                ? payload
+                : JSON.stringify(payload),
           }),
           signal: controller.current.signal,
         })
@@ -66,7 +83,7 @@ export const useFetch = (url, { his, headers: hookHeaders } = {}) => {
             return {
               ...data,
               res,
-              ...(data && Object.keys({ ...data }).length === 0 && data),
+              data,
             };
           })
           .catch((err) => {
@@ -93,9 +110,9 @@ export const useFetch = (url, { his, headers: hookHeaders } = {}) => {
           return response;
         }
       } catch (err) {
-        // setError(err);
+        setError(err);
       } finally {
-        // setLoading(false);
+        setLoading(false);
       }
     },
     [url]
