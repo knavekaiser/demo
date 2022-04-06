@@ -346,9 +346,9 @@ export const Radio = ({
       className={`${s.radio} ${error ? s.err : ""}`}
       data-testid="radioInput"
     >
-      {options.map(({ label, value: v, hint, disabled }, i) => (
+      {options.map(({ label, value: v, hint, disabled }) => (
         <label
-          key={i}
+          key={v}
           htmlFor={name + v}
           className={disabled ? s.disabled : ""}
         >
@@ -388,10 +388,10 @@ export const CustomRadio = ({
         </label>
       )}
       <div className={s.options}>
-        {options.map(({ label, value: v, disabled }, i) => (
+        {options.map(({ label, value: v, disabled }) => (
           <label
             htmlFor={name + v}
-            key={i}
+            key={v}
             className={`${s.option} ${
               selected?.includes?.(v) ? s.selected : ""
             } ${disabled ? s.disabled : ""}`}
@@ -767,15 +767,13 @@ export const Table = ({
       cellPadding={0}
       cellSpacing={0}
     >
-      {columns && (
-        <thead>
-          <tr>
-            {columns.map((column, i) => (
-              <th key={i}>{column.label}</th>
-            ))}
-          </tr>
-        </thead>
-      )}
+      <thead>
+        <tr>
+          {columns.map((column, i) => (
+            <th key={i}>{column.label}</th>
+          ))}
+        </tr>
+      </thead>
       <tbody ref={tbody}>
         {loading ? (
           <tr className={s.loading}>

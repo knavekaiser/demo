@@ -21,6 +21,7 @@ import { useFetch } from "../../hooks";
 import s from "./masters.module.scss";
 
 export default function PersonAffected() {
+  const [loading, setLoading] = useState(true);
   const immutable = useRef([
     "patient",
     "staff",
@@ -33,7 +34,7 @@ export default function PersonAffected() {
   const [filter, setFilter] = useState(null);
   const [edit, setEdit] = useState(null);
 
-  const { get: getPersonAffecteds, loading } = useFetch(
+  const { get: getPersonAffecteds } = useFetch(
     defaultEndpoints.personAffecteds
   );
   const { remove: deletePersonAffected } = useFetch(
@@ -41,14 +42,18 @@ export default function PersonAffected() {
   );
 
   useEffect(() => {
+    setLoading(true);
     getPersonAffecteds()
       .then((data) => {
+        setLoading(false);
         if (data._embedded?.personAffected) {
           setPersonAffecteds(data._embedded.personAffected);
           setSelected(data._embedded.personAffected[0]?.pa_id);
         }
       })
-      .catch((err) => Prompt({ type: "error", message: err.message }));
+      .catch((err) => {
+        setLoading(false);
+      });
   }, []);
   return (
     <div className={s.container} data-testid="personAffected">
@@ -197,7 +202,7 @@ const InjuryAnnotation = () => {
           </span>
         ))}
       </div>
-      <button className={`btn wd-100 ${s.save}`}>Save</button>
+      <button className={`btn w-100 ${s.save}`}>Save</button>
     </div>
   );
 };
@@ -214,14 +219,14 @@ const PersonAffectedForm = ({
     watch,
     formState: { errors },
   } = useForm({ ...edit });
+  const [loading, setLoading] = useState(false);
 
-  const {
-    post: postPersonAffected,
-    put: updatePersonAffected,
-    loading,
-  } = useFetch(defaultEndpoints.personAffecteds + `/${edit?.id || ""}`, {
-    headers: { "Content-Type": "application/json" },
-  });
+  const { post: postPersonAffected, put: updatePersonAffected } = useFetch(
+    defaultEndpoints.personAffecteds + `/${edit?.id || ""}`,
+    {
+      headers: { "Content-Type": "application/json" },
+    }
+  );
 
   useEffect(() => {
     reset({ show: true, ...edit });
@@ -245,14 +250,19 @@ const PersonAffectedForm = ({
           });
           return;
         }
+        setLoading(true);
         (edit ? updatePersonAffected : postPersonAffected)(data)
           .then((data) => {
+            setLoading(false);
             if (data.name) {
               onSuccess(data);
               reset();
             }
           })
-          .catch((err) => Prompt({ type: "error", message: err.message }));
+          .catch((err) => {
+            setLoading(false);
+            Prompt({ type: "error", message: err.message });
+          });
       })}
     >
       <Input
@@ -377,14 +387,14 @@ const SinglePersonEffectedDetail = ({
   pa_id,
   setEdit,
 }) => {
+  const [loading, setLoading] = useState(false);
   const immutable = useRef(["name", "age", "gender"]);
 
-  const { put: updatePersonAffectedDetail, loading } = useFetch(
-    defaultEndpoints.personAffectedDetails + "/{ID}",
-    {
-      headers: { "Content-Type": "application/json" },
-    }
-  );
+  const {
+    put: updatePersonAffectedDetail,
+  } = useFetch(defaultEndpoints.personAffectedDetails + "/{ID}", {
+    headers: { "Content-Type": "application/json" },
+  });
   const { remove: deletePersonAffectedDetail } = useFetch(
     defaultEndpoints.personAffectedDetails + "/{ID}"
   );
@@ -396,6 +406,7 @@ const SinglePersonEffectedDetail = ({
           type="checkbox"
           checked={personAffected.show}
           onChange={(e) => {
+            setLoading(true);
             updatePersonAffectedDetail(
               {
                 ...personAffected,
@@ -405,6 +416,7 @@ const SinglePersonEffectedDetail = ({
               { params: { "{ID}": personAffected.id } }
             )
               .then((personAffectedDetail) => {
+                setLoading(false);
                 setPersonAffecteds((prev) =>
                   prev.map((pa) => {
                     if (pa.pa_id !== pa_id) return pa;
@@ -427,7 +439,9 @@ const SinglePersonEffectedDetail = ({
                   })
                 );
               })
-              .catch((err) => Prompt({ type: "error", message: err.message }));
+              .catch((err) => {
+                setLoading(false);
+              });
           }}
         />{" "}
         {personAffected.name}
@@ -490,11 +504,11 @@ const PersonAffectedDetailForm = ({
     reset,
     formState: { errors },
   } = useForm({ ...edit });
+  const [loading, setLoading] = useState(false);
 
   const {
     post: postPersonAffectedDetail,
     put: updatePersonAffectedDetail,
-    loading,
   } = useFetch(defaultEndpoints.personAffectedDetails + `/${edit?.id || ""}`, {
     headers: { "Content-Type": "application/json" },
   });
@@ -518,17 +532,22 @@ const PersonAffectedDetailForm = ({
           });
           return;
         }
+        setLoading(true);
         (edit ? updatePersonAffectedDetail : postPersonAffectedDetail)({
           ...data,
           personAffected: { pa_id: personAffectedId },
         })
           .then((data) => {
+            setLoading(false);
             if (data.name) {
               onSuccess(data);
               reset();
             }
           })
-          .catch((err) => Prompt({ type: "error", message: err.message }));
+          .catch((err) => {
+            setLoading(false);
+            Prompt({ type: "error", message: err.message });
+          });
       })}
     >
       <Input

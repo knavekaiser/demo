@@ -8,7 +8,7 @@ import RiskAssessments from "./ram";
 import TwoFieldMaster from "./twoFieldMaster";
 import ContributingFactor from "./contributingFactor";
 import IrCodeConfig from "./irCodeConfig";
-import { paths } from "../../config";
+import paths from "../path";
 import Rca from "./rca";
 
 export default function Masters() {

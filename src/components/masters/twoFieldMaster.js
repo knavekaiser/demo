@@ -20,12 +20,13 @@ import { useFetch } from "../../hooks";
 import s from "./masters.module.scss";
 
 export default function TwoFieldMasters() {
+  const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
   const [twoFieldMasters, setTwoFieldMasters] = useState([]);
   const [edit, setEdit] = useState(null);
   const [filter, setFilter] = useState(null);
 
-  const { get: getTwoFieldMasters, loading } = useFetch(
+  const { get: getTwoFieldMasters } = useFetch(
     defaultEndpoints.twoFieldMasters
   );
   const { remove: deleteTwoFieldMaster } = useFetch(
@@ -33,14 +34,18 @@ export default function TwoFieldMasters() {
   );
 
   useEffect(() => {
+    setLoading(true);
     getTwoFieldMasters()
       .then((data) => {
+        setLoading(false);
         if (data._embedded?.twoFieldMaster) {
           setTwoFieldMasters(data._embedded.twoFieldMaster);
           setSelected(data._embedded.twoFieldMaster[0]?.id);
         }
       })
-      .catch((err) => Prompt({ type: "error", message: err.message }));
+      .catch((err) => {
+        setLoading(false);
+      });
   }, []);
   return (
     <div className={s.container} data-testid="twoFieldMasters">
@@ -164,14 +169,14 @@ const TwoFieldMasterForm = ({
     reset,
     formState: { errors },
   } = useForm({ ...edit });
+  const [loading, setLoading] = useState(false);
 
-  const {
-    post: postTwoFieldMaster,
-    put: updateTwoFieldMaster,
-    loading,
-  } = useFetch(defaultEndpoints.twoFieldMasters + `/${edit?.id || ""}`, {
-    headers: { "Content-Type": "application/json" },
-  });
+  const { post: postTwoFieldMaster, put: updateTwoFieldMaster } = useFetch(
+    defaultEndpoints.twoFieldMasters + `/${edit?.id || ""}`,
+    {
+      headers: { "Content-Type": "application/json" },
+    }
+  );
 
   useEffect(() => {
     reset({ ...edit });
@@ -195,17 +200,22 @@ const TwoFieldMasterForm = ({
           });
           return;
         }
+        setLoading(true);
         (edit ? updateTwoFieldMaster : postTwoFieldMaster)({
           ...data,
           name: data.name.trim(),
         })
           .then((data) => {
+            setLoading(false);
             if (data.name) {
               onSuccess(data);
               reset();
             }
           })
-          .catch((err) => Prompt({ type: "error", message: err.message }));
+          .catch((err) => {
+            setLoading(false);
+            Prompt({ type: "error", message: err.message });
+          });
       })}
     >
       <Input
@@ -387,11 +397,11 @@ const TwoFieldMasterDetailForm = ({
     setValue,
     formState: { errors },
   } = useForm({ ...edit });
+  const [loading, setLoading] = useState(false);
 
   const {
     post: postTwoFieldMasterDetail,
     put: updateTwoFieldMasterDetail,
-    loading,
   } = useFetch(defaultEndpoints.twoFieldMasterDetails + `/${edit?.id || ""}`, {
     headers: { "Content-Type": "application/json" },
   });
@@ -415,17 +425,22 @@ const TwoFieldMasterDetailForm = ({
           });
           return;
         }
+        setLoading(true);
         (edit ? updateTwoFieldMasterDetail : postTwoFieldMasterDetail)({
           ...data,
           twoFieldMaster: { id: twoFieldMasterId },
         })
           .then((data) => {
+            setLoading(false);
             if (data.name) {
               onSuccess(data);
               reset();
             }
           })
-          .catch((err) => Prompt({ type: "error", message: err.message }));
+          .catch((err) => {
+            setLoading(false);
+            Prompt({ type: "error", message: err.message });
+          });
       })}
     >
       <Input

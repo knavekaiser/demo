@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { FaInfoCircle, FaPlus, FaCheck, FaRegTrashAlt } from "react-icons/fa";
 import { IoClose } from "react-icons/io5";
 import { BsPencilFill } from "react-icons/bs";
@@ -21,33 +21,27 @@ import { useFetch } from "../../hooks";
 import s from "./masters.module.scss";
 
 export default function Department() {
+  const [loading, setLoading] = useState(true);
   const [departments, setDepartments] = useState([]);
   const [edit, setEdit] = useState(null);
 
-  const onSuccess = useCallback((newCat) => {
-    setDepartments((prev) => {
-      return prev.find((c) => c.id === newCat.id)
-        ? prev.map((c) => (c.id === newCat.id ? newCat : c))
-        : [...prev, newCat];
-    });
-    setEdit(null);
-  }, []);
-
-  const { get: getDepartments, loading } = useFetch(
-    defaultEndpoints.departments
-  );
+  const { get: getDepartments } = useFetch(defaultEndpoints.departments);
   const { remove: deleteDepartment } = useFetch(
     defaultEndpoints.departments + "/{ID}"
   );
 
   useEffect(() => {
+    setLoading(true);
     getDepartments()
       .then((data) => {
+        setLoading(false);
         if (data._embedded?.department) {
           setDepartments(data._embedded.department);
         }
       })
-      .catch((err) => Prompt({ type: "error", message: err.message }));
+      .catch((err) => {
+        setLoading(false);
+      });
   }, []);
   return (
     <div className={s.container} data-testid="departments">
@@ -57,15 +51,30 @@ export default function Department() {
       <div className={s.departments}>
         <Table
           loading={loading}
-          columns={[{ label: "Department Name" }, { label: "Action" }]}
+          columns={[
+            // { label: "Code" },
+            { label: "Department Name" },
+            // { label: "Location Type" },
+            // { label: "Status" },
+            { label: "Action" },
+          ]}
         >
           <tr>
             <td className={s.inlineForm}>
               <DepartmentForm
                 {...(edit && { edit })}
                 key={edit ? "edit" : "add"}
-                onSuccess={onSuccess}
-                clearForm={setEdit}
+                onSuccess={(newCat) => {
+                  setDepartments((prev) => {
+                    return prev.find((c) => c.id === newCat.id)
+                      ? prev.map((c) => (c.id === newCat.id ? newCat : c))
+                      : [...prev, newCat];
+                  });
+                  setEdit(null);
+                }}
+                clearForm={() => {
+                  setEdit(null);
+                }}
                 departments={departments}
               />
             </td>
@@ -116,13 +125,14 @@ const DepartmentForm = ({ edit, onSuccess, clearForm, departments }) => {
     reset,
     formState: { errors },
   } = useForm({ ...edit });
+  const [loading, setLoading] = useState(false);
 
-  const { post: postDepartment, put: updateDepartment, loading } = useFetch(
-    defaultEndpoints.departments + `/${edit?.id || ""}`,
-    {
-      headers: { "Content-Type": "application/json" },
-    }
-  );
+  const {
+    post: postDepartment,
+    put: updateDepartment,
+  } = useFetch(defaultEndpoints.departments + `/${edit?.id || ""}`, {
+    headers: { "Content-Type": "application/json" },
+  });
 
   useEffect(() => {
     reset({ ...edit });
@@ -143,14 +153,17 @@ const DepartmentForm = ({ edit, onSuccess, clearForm, departments }) => {
           });
           return;
         }
+        setLoading(true);
         (edit ? updateDepartment : postDepartment)(data)
           .then((data) => {
+            setLoading(false);
             if (data.name) {
               onSuccess(data);
               reset();
             }
           })
           .catch((err) => {
+            setLoading(false);
             Prompt({ type: "error", message: err.message });
           });
       })}
@@ -174,7 +187,9 @@ const DepartmentForm = ({ edit, onSuccess, clearForm, departments }) => {
         {edit && (
           <button
             type="button"
-            onClick={() => clearForm(null)}
+            onClick={() => {
+              clearForm();
+            }}
             className="btn secondary"
           >
             <IoClose />

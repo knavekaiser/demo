@@ -10,22 +10,27 @@ import { useFetch } from "../../hooks";
 import s from "./masters.module.scss";
 
 export default function Rcas() {
+  const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
   const [rcas, setRcas] = useState([]);
   const [edit, setEdit] = useState(null);
 
-  const { get: getRca, loading } = useFetch(defaultEndpoints.rcas);
+  const { get: getRca } = useFetch(defaultEndpoints.rcas);
   const { remove: deleteRca } = useFetch(defaultEndpoints.rcas + "/{ID}");
 
   useEffect(() => {
+    setLoading(true);
     getRca()
       .then((data) => {
+        setLoading(false);
         if (data._embedded?.rca) {
           setRcas(data._embedded.rca);
           setSelected(data._embedded.rca[0]?.id);
         }
       })
-      .catch((err) => Prompt({ type: "error", message: err.message }));
+      .catch((err) => {
+        setLoading(false);
+      });
   }, []);
   return (
     <div className={s.container} data-testid="rca">
@@ -142,12 +147,11 @@ const RcaForm = ({ edit, onSuccess, clearForm, rcas }) => {
     setValue,
     formState: { errors },
   } = useForm({ ...edit });
+  const [loading, setLoading] = useState(false);
 
-  const { post: postRca, put: updateRca, loading } = useFetch(
+  const { post: postRca, put: updateRca } = useFetch(
     defaultEndpoints.rcas + `/${edit?.id || ""}`,
-    {
-      headers: { "Content-Type": "application/json" },
-    }
+    { headers: { "Content-Type": "application/json" } }
   );
 
   useEffect(() => {
@@ -169,14 +173,19 @@ const RcaForm = ({ edit, onSuccess, clearForm, rcas }) => {
           });
           return;
         }
+        setLoading(true);
         (edit ? updateRca : postRca)(data)
           .then((data) => {
+            setLoading(false);
             if (data.name) {
               onSuccess(data);
               reset();
             }
           })
-          .catch((err) => Prompt({ type: "error", message: err.message }));
+          .catch((err) => {
+            setLoading(false);
+            Prompt({ type: "error", message: err.message });
+          });
       })}
     >
       <Input
@@ -336,13 +345,14 @@ const RcaCauseForm = ({ edit, rcaId, onSuccess, clearForm, rcaCauses }) => {
     reset,
     formState: { errors },
   } = useForm({ ...edit });
+  const [loading, setLoading] = useState(false);
 
-  const { post: postRcaCause, put: updateRcaCause, loading } = useFetch(
-    defaultEndpoints.rcaCauses + `/${edit?.id || ""}`,
-    {
-      headers: { "Content-Type": "application/json" },
-    }
-  );
+  const {
+    post: postRcaCause,
+    put: updateRcaCause,
+  } = useFetch(defaultEndpoints.rcaCauses + `/${edit?.id || ""}`, {
+    headers: { "Content-Type": "application/json" },
+  });
 
   useEffect(() => {
     reset({ ...edit });
@@ -363,14 +373,19 @@ const RcaCauseForm = ({ edit, rcaId, onSuccess, clearForm, rcaCauses }) => {
           });
           return;
         }
+        setLoading(true);
         (edit ? updateRcaCause : postRcaCause)({ ...data, rca: { id: rcaId } })
           .then((data) => {
+            setLoading(false);
             if (data.name) {
               onSuccess(data);
               reset();
             }
           })
-          .catch((err) => Prompt({ type: "error", message: err.message }));
+          .catch((err) => {
+            setLoading(false);
+            Prompt({ type: "error", message: err.message });
+          });
       })}
     >
       <Input

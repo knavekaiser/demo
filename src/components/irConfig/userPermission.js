@@ -176,7 +176,7 @@ export default function UserPermission() {
       </div>
       <div className={s.btns}>
         <button
-          className="btn wd-100"
+          className="btn w-100"
           onClick={() => {
             const updatePending = userPermission.filter(
               (item) =>

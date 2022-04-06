@@ -24,6 +24,7 @@ import { useFetch } from "../../hooks";
 import s from "./masters.module.scss";
 
 export default function Location() {
+  const [loading, setLoading] = useState(true);
   const [locations, setLocations] = useState([]);
   const [locationTypes, setLocationTypes] = useState([]);
   const [edit, setEdit] = useState(null);
@@ -31,12 +32,13 @@ export default function Location() {
   const { get: getLocationTypes } = useFetch(
     defaultEndpoints.twoFieldMasters + "/6"
   );
-  const { get: getLocations, loading } = useFetch(defaultEndpoints.locations);
+  const { get: getLocations } = useFetch(defaultEndpoints.locations);
   const { remove: deleteLocation } = useFetch(
     defaultEndpoints.locations + "/{ID}"
   );
 
   useEffect(() => {
+    setLoading(true);
     getLocationTypes()
       .then((data) => {
         if (data.twoFieldMasterDetails) {
@@ -52,11 +54,14 @@ export default function Location() {
         }
       })
       .then((data) => {
+        setLoading(false);
         if (data._embedded?.location) {
           setLocations(data._embedded.location);
         }
       })
-      .catch((err) => Prompt({ type: "error", message: err.message }));
+      .catch((err) => {
+        setLoading(false);
+      });
   }, []);
   return (
     <div className={s.container} data-testid="locations">
@@ -161,8 +166,9 @@ const LocationForm = ({
     clearErrors,
     control,
   } = useForm();
+  const [loading, setLoading] = useState(false);
 
-  const { post: postLocation, put: updateLocation, loading } = useFetch(
+  const { post: postLocation, put: updateLocation } = useFetch(
     defaultEndpoints.locations + `/${edit?.id || ""}`,
     {
       headers: { "Content-Type": "application/json" },
@@ -191,15 +197,18 @@ const LocationForm = ({
           });
           return;
         }
+        setLoading(true);
 
         (edit ? updateLocation : postLocation)(data)
           .then((data) => {
+            setLoading(false);
             if (data.name) {
               onSuccess(data);
               reset();
             }
           })
           .catch((err) => {
+            setLoading(false);
             Prompt({ type: "error", message: err.message });
           });
       })}

@@ -22,14 +22,19 @@
       }
     }
   }
-
   .typeOfIncident {
     .inlineForm form,
     tr {
       grid-gap: 20px;
-      grid-template-columns: 10rem 15rem 1fr 15rem 5rem 15rem 4rem;
+      grid-template-columns: 10rem 1fr 15rem 5rem 15rem 4rem;
     }
-
+    .inlineForm {
+      .btns {
+        margin: 0;
+        // grid-column: 1/-1;
+        // grid-row: -1/-2;
+      }
+    }
     tr {
       .definition {
         overflow: hidden;
@@ -65,9 +70,6 @@
       grid-gap: 1rem;
       section {
         flex: 1;
-      }
-      .btns {
-        margin: 0 !important;
       }
     }
   }
@@ -188,10 +190,6 @@
         grid-gap: 0.5rem;
         display: inline-flex;
         align-items: center;
-        flex-shrink: 0;
-        svg {
-          flex-shrink: 0;
-        }
       }
       .start label svg {
         color: $green;

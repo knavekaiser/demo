@@ -43,12 +43,4 @@ export default {
   typesOfIncident: `${baseApiUrl}/configTypeOfIncident`,
   configTat: `${baseApiUrl}/configAcceptableTAT`,
   dashboardElements: `${baseApiUrl}/dashboardElements`,
-  hodApproval: `${baseApiUrl}/configHodapproval`,
-  sentinelNotifications: `${baseApiUrl}/configSentineLEventNotification`,
-  incidentClosureFields: `${baseApiUrl}/incidentClosureFields`,
-  configirscreen: `${baseApiUrl}/configirscreen`,
-  irInvestigationDetails: `${baseApiUrl}/irInvestigationDetails`,
-
-  formTemplates: `https://his19-3-1sit.napierhealthcare.com/napier-componentbuilder/componentbuilder/formData/search`,
-  templateData: `${baseApiUrl}/templateData`,
 };

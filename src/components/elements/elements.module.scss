@@ -25,15 +25,12 @@
   }
   input,
   textarea {
-    min-height: 30px;
-    line-height: normal !important;
     width: 100%;
     border: 1px solid #b7b7b7;
-    padding: 5px 6px;
+    padding: 6.5px;
     outline: none;
     border-radius: 4px;
     min-width: 4rem;
-    font-size: 0.88em;
     &:focus {
       border-color: #3450a3;
     }
@@ -344,9 +341,9 @@
   }
 }
 
-// .searchFieldModal {
-//   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.45);
-// }
+.searchFieldModal {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.45);
+}
 .combobox {
   cursor: pointer;
   & > label {
@@ -387,8 +384,6 @@
       text-overflow: ellipsis;
       -webkit-line-clamp: 1;
       height: 30px;
-      display: flex;
-      align-items: center;
       border-radius: 4px;
       font-size: 13px;
       color: black;
@@ -458,7 +453,6 @@
 .searchFieldModal,
 .comboboxModal {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.45);
-  height: min-content !important;
   .options {
     cursor: pointer;
     z-index: 9999999999999;
@@ -496,7 +490,6 @@
       }
     }
     overflow-x: hidden;
-    margin: 0 !important;
   }
 }
 .searchFieldModalBackdrop,
@@ -526,9 +519,6 @@
   display: flex;
   align-items: center;
   grid-gap: 6px;
-  input {
-    flex-shrink: 0;
-  }
 }
 
 .chip {
@@ -662,17 +652,13 @@
     padding: 1px 2px;
     padding-right: 1px;
     color: rgb(55, 55, 55);
-    border: 1px solid rgb(55, 55, 55);
-    border-radius: 3px;
     .sort {
       margin-top: -3px;
     }
   }
 }
 .actionModal {
-  width: max-content !important;
-  height: min-content !important;
-  display: absolute !important;
+  display: block;
   border-radius: 4px !important;
   border: 1px solid rgb(205, 205, 205);
   filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.25));
@@ -707,9 +693,6 @@
     color: white;
     padding: 6px 15px;
     font-size: 14px;
-    &:hover {
-      color: white;
-    }
     &.active {
       background: #01b6eb;
     }

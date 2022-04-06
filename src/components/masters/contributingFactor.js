@@ -13,12 +13,13 @@ import { endpoints as defaultEndpoints } from "../../config";
 import s from "./masters.module.scss";
 
 export default function ContributingFactor() {
+  const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
   const [contributingFactors, setContributingFactors] = useState([]);
   const [filter, setFilter] = useState(null);
   const [edit, setEdit] = useState(null);
 
-  const { get: getContributingFactors, loading } = useFetch(
+  const { get: getContributingFactors } = useFetch(
     defaultEndpoints.contributingFactors
   );
   const { remove: deleteContributingFactor } = useFetch(
@@ -26,14 +27,18 @@ export default function ContributingFactor() {
   );
 
   useEffect(() => {
+    setLoading(true);
     getContributingFactors()
       .then((data) => {
+        setLoading(false);
         if (data._embedded?.contributingFactors) {
           setContributingFactors(data._embedded.contributingFactors);
           setSelected(data._embedded.contributingFactors[0]?.cf_id);
         }
       })
-      .catch((err) => Prompt({ type: "error", message: err.message }));
+      .catch((err) => {
+        setLoading(false);
+      });
   }, []);
   return (
     <div className={s.container} data-testid="contributingFactor">
@@ -177,11 +182,11 @@ const ContributingFactorForm = ({
     watch,
     formState: { errors },
   } = useForm({ ...edit });
+  const [loading, setLoading] = useState(false);
 
   const {
     post: postContributingFactor,
     put: updateContributingFactor,
-    loading,
   } = useFetch(defaultEndpoints.contributingFactors + `/${edit?.cf_id || ""}`, {
     headers: { "Content-Type": "application/json" },
   });
@@ -205,14 +210,17 @@ const ContributingFactorForm = ({
           });
           return;
         }
+        setLoading(true);
         (edit ? updateContributingFactor : postContributingFactor)(data)
           .then((data) => {
+            setLoading(false);
             if (data.name) {
               onSuccess(data);
               reset();
             }
           })
           .catch((err) => {
+            setLoading(false);
             Prompt({ type: "error", message: err.message });
           });
       })}
@@ -375,11 +383,11 @@ const ContributingFactorDetailForm = ({
     reset,
     formState: { errors },
   } = useForm({ ...edit });
+  const [loading, setLoading] = useState(false);
 
   const {
     post: postContributingFactorDetail,
     put: updateContributingFactorDetail,
-    loading,
   } = useFetch(
     defaultEndpoints.contributingFactorDetails + `/${edit?.id || ""}`,
     {
@@ -406,17 +414,20 @@ const ContributingFactorDetailForm = ({
           });
           return;
         }
+        setLoading(true);
         (edit ? updateContributingFactorDetail : postContributingFactorDetail)({
           ...data,
           contributingFactors: { cf_id: contributingFactorId },
         })
           .then((data) => {
+            setLoading(false);
             if (data.name) {
               onSuccess(data);
               reset();
             }
           })
           .catch((err) => {
+            setLoading(false);
             Prompt({ type: "error", message: err.message });
           });
       })}

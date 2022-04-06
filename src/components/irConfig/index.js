@@ -2,7 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import MainConfig from "./mainConfiguration";
 import UserPermission from "./userPermission";
 import IrDataAnalytics from "./irDataAnalytics";
-import { paths } from "../../config";
+import paths from "../path";
 
 export default function IrConfig() {
   return (
