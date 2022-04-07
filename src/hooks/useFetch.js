@@ -49,6 +49,7 @@ export const useFetch = (
         const response = await fetch(_url, {
           method: method,
           headers: {
+            "Content-Type": "application/json",
             ...(defaultHeaders !== false &&
               (!his
                 ? {

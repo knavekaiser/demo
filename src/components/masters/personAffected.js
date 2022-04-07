@@ -219,9 +219,7 @@ const PersonAffectedForm = ({
     post: postPersonAffected,
     put: updatePersonAffected,
     loading,
-  } = useFetch(defaultEndpoints.personAffecteds + `/${edit?.id || ""}`, {
-    headers: { "Content-Type": "application/json" },
-  });
+  } = useFetch(defaultEndpoints.personAffecteds + `/${edit?.id || ""}`);
 
   useEffect(() => {
     reset({ show: true, ...edit });
@@ -380,10 +378,7 @@ const SinglePersonEffectedDetail = ({
   const immutable = useRef(["name", "age", "gender"]);
 
   const { put: updatePersonAffectedDetail, loading } = useFetch(
-    defaultEndpoints.personAffectedDetails + "/{ID}",
-    {
-      headers: { "Content-Type": "application/json" },
-    }
+    defaultEndpoints.personAffectedDetails + "/{ID}"
   );
   const { remove: deletePersonAffectedDetail } = useFetch(
     defaultEndpoints.personAffectedDetails + "/{ID}"
@@ -495,9 +490,7 @@ const PersonAffectedDetailForm = ({
     post: postPersonAffectedDetail,
     put: updatePersonAffectedDetail,
     loading,
-  } = useFetch(defaultEndpoints.personAffectedDetails + `/${edit?.id || ""}`, {
-    headers: { "Content-Type": "application/json" },
-  });
+  } = useFetch(defaultEndpoints.personAffectedDetails + `/${edit?.id || ""}`);
 
   useEffect(() => {
     reset({ ...edit });

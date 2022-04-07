@@ -23,7 +23,7 @@ import { Prompt, Modal } from "./modal";
 import { useForm, FormProvider, useFormContext } from "react-hook-form";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useHisFetch, useFetch } from "../hooks";
-import { endpoints as defaultEndpoints } from "../config";
+import { endpoints as defaultEndpoints, preventability } from "../config";
 import s from "./incidentReporting.module.scss";
 
 import { ComponentRender } from "component-builder-renderer";
@@ -85,12 +85,9 @@ export default function IncidentReporting() {
     defaultEndpoints.uploadFiles
   );
   const { post: postIr, put: updateIr, loading } = useFetch(
-    `${defaultEndpoints.incidentReport}${edit ? `/${edit.id}` : ""}`,
-    { headers: { "Content-Type": "application/json" } }
+    `${defaultEndpoints.incidentReport}${edit ? `/${edit.id}` : ""}`
   );
-  const { post: saveTemplateData } = useFetch(defaultEndpoints.templateData, {
-    headers: { "Content-Type": "application/json" },
-  });
+  const { post: saveTemplateData } = useFetch(defaultEndpoints.templateData);
 
   const submitForm = useCallback(
     (data) => {
@@ -770,11 +767,7 @@ export default function IncidentReporting() {
               className={s.preventability}
               columns={[{ label: "Preventability of incident" }]}
             >
-              {[
-                { value: 1, label: "Likely could have been prevented" },
-                { value: 2, label: "Likely could not have been prevented" },
-                { value: 3, label: "Not assessed" },
-              ].map((item) => (
+              {preventability.map((item) => (
                 <tr key={item.label}>
                   <td>
                     <input
@@ -914,7 +907,6 @@ export const IncidentCategory = ({ templateData, setTemplateData }) => {
     {
       his: true,
       defaultHeaders: false,
-      headers: { "Content-Type": "application/json" },
     }
   );
   const { get: getCategories } = useFetch(defaultEndpoints.categories);

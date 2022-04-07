@@ -208,10 +208,7 @@ const RiskAssessmentForm = ({ edit, onSuccess, parameters, clearForm }) => {
   });
 
   const { post: postRam, put: updateRam, loading } = useFetch(
-    defaultEndpoints.riskAssessments + `/${edit?.id || ""}`,
-    {
-      headers: { "Content-Type": "application/json" },
-    }
+    defaultEndpoints.riskAssessments + `/${edit?.id || ""}`
   );
 
   useEffect(() => {

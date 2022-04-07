@@ -134,6 +134,7 @@ export const IrDashboardContextProvider = ({ children }) => {
   const [tatConfig, setTatConfig] = useState(null);
   const [dataElements, setDataElements] = useState([]);
   const [irConfig, setIrConfig] = useState({});
+  const [hodApprovalConfig, setHodApprovalConfig] = useState(false);
 
   const { get: getUsers } = useFetch(`${defaultEndpoints.users}?size=10000`);
   const { get: getCountStatusDetailByState } = useFetch(

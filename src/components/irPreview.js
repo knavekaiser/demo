@@ -9,7 +9,7 @@ import { Prompt, Modal } from "./modal";
 import { useForm, FormProvider, useFormContext } from "react-hook-form";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useHisFetch, useFetch } from "../hooks";
-import { endpoints as defaultEndpoints } from "../config";
+import { endpoints as defaultEndpoints, preventability } from "../config";
 import s from "./incidentReporting.module.scss";
 
 import { ComponentRender } from "component-builder-renderer";
@@ -54,6 +54,10 @@ export default function IncidentReporting() {
     his: true,
   });
   const { get: getCategories } = useFetch(defaultEndpoints.categories);
+
+  const { put: updateStatus } = useFetch(
+    defaultEndpoints.incidentReport + `/${ir?.id || ""}`
+  );
 
   useEffect(() => {
     let active = true;
@@ -227,9 +231,6 @@ export default function IncidentReporting() {
           active && setParameters((prev) => ({ ...prev, ..._parameters }));
         }
       )
-      // .then(() => {
-      //   getIr(null, {params: {"{ID}":ir. }});
-      // })
       .catch((err) => {
         console.log(err);
       });
@@ -418,7 +419,14 @@ export default function IncidentReporting() {
         <Box label="CONTRIBUTING FACTORS" collapsable={true}>
           <div className={s.contributingFactor}>
             <Data label="Preventability of Incident">
-              <div className={s.highlight}>{ir?.preventability}</div>
+              <div className={s.highlight}>
+                {
+                  preventability.find(
+                    (pr) =>
+                      pr.value?.toString() === ir?.preventability?.toString()
+                  )?.label
+                }
+              </div>
             </Data>
           </div>
         </Box>
@@ -465,25 +473,27 @@ export default function IncidentReporting() {
             )?.label || ir?.headofDepart}
           </Data>
         </div>
-        <div className={s.btns}>
-          <button
-            onClick={() => {
-              setShowAcknowledgeForm(true);
-            }}
-            className="btn secondary wd-100"
-          >
-            Acknowledge
-          </button>
-          <button
-            className="btn secondary wd-100"
-            type="button"
-            onClick={() => {
-              console.log("close");
-            }}
-          >
-            Close
-          </button>
-        </div>
+        {ir?.status.toString() !== "11" && (
+          <div className={s.btns}>
+            <button
+              onClick={() => {
+                setShowAcknowledgeForm(true);
+              }}
+              className="btn secondary wd-100"
+            >
+              Acknowledge
+            </button>
+            <button
+              className="btn secondary wd-100"
+              type="button"
+              onClick={() => {
+                console.log("close");
+              }}
+            >
+              Close
+            </button>
+          </div>
+        )}
       </div>
       <Modal
         open={showAcknowledgeForm}
@@ -492,32 +502,90 @@ export default function IncidentReporting() {
         label="Acknowledge"
         className={s.acknowledgeForm}
       >
-        <AcknowledgeForm ir={ir} onSuccess={() => {}} />
+        <AcknowledgeForm
+          ir={ir}
+          closeForm={() => setShowAcknowledgeForm(false)}
+          onSuccess={() => {
+            updateStatus({
+              ...ir,
+              status: "11",
+            }).then(({ data }) => {
+              console.log(data);
+              if (data?.id) {
+                setIr(data);
+                setShowAcknowledgeForm(false);
+                Prompt({ type: "information", message: "IR Achknowledged" });
+              } else {
+                Prompt({
+                  type: "error",
+                  message: "Could not update IR status",
+                });
+              }
+            });
+          }}
+        />
       </Modal>
     </div>
   );
 }
 
-const AcknowledgeForm = ({ ir, onSuccess }) => {
-  const { handleSubmit, register, reset } = useForm();
+const AcknowledgeForm = ({ ir, onSuccess, closeForm }) => {
+  const { user } = useContext(SiteContext);
+  const { handleSubmit, register, reset, setValue } = useForm();
+
+  const { post: acknowledge, loading } = useFetch(defaultEndpoints.irHodAck);
+
+  useEffect(() => {
+    setValue(
+      "responseTime",
+      moment({ time: new Date(), format: "YYYY-MM-DDThh:mm:ss" })
+    );
+    setValue("responseBy", user.name);
+  }, []);
+
   return (
-    <form onSubmit={handleSubmit((data) => {})}>
+    <form
+      onSubmit={handleSubmit((values) => {
+        acknowledge({
+          remarks: values.remark,
+          responseBy: user.id,
+          userId: user.id,
+          responseOn: values.responseTime,
+          irId: ir.id,
+        })
+          .then((res) => {
+            if (res.data?.id) {
+              return onSuccess();
+            } else {
+              Prompt({
+                type: "error",
+                message: "Could not save acknowledgement.",
+              });
+            }
+          })
+          .catch((err) => Prompt({ type: "error", message: err.message }));
+      })}
+    >
       <Textarea
         label="Remarks"
         className={s.remark}
         {...register("remark", { required: "Enter a comment" })}
       />
-      <Input label="Response by" {...register("responseBy")} />
+      <Input label="Response by" {...register("responseBy")} readOnly />
       <Input
         label="Response On"
         type="datetime-local"
+        readOnly
         {...register("responseTime")}
       />
       <section className={s.btns}>
         <button
           type="button"
           className="btn secondary wd-100"
-          onClick={() => reset()}
+          onClick={() => {
+            reset();
+            closeForm();
+          }}
         >
           Clear
         </button>

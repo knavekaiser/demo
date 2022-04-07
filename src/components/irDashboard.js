@@ -1153,7 +1153,14 @@ export const QualityDashboard = () => {
       ? [
           {
             icon: <FaExternalLinkAlt />,
-            label: "Acknowledge IR",
+            label: (
+              <>
+                Acknowledge IR{" "}
+                {inc.status.toString() === "11" && (
+                  <FaFlag style={{ color: "rgb(21, 164, 40)" }} />
+                )}
+              </>
+            ),
             callBack: () => {
               navigate(paths.irPreview, {
                 state: {
@@ -1210,7 +1217,7 @@ export const QualityDashboard = () => {
         query: {
           ...filters,
           ..._filters,
-          status: _filters.status ? _filters.status : "2,3,4,5,6,7,8,9",
+          status: _filters.status ? _filters.status : "2,3,4,5,6,7,8,9,11",
         },
       })
         .then((data) => {
@@ -1283,7 +1290,7 @@ export const QualityDashboard = () => {
         })
         .catch((err) => Prompt({ type: "error", message: err.message }));
     } else {
-      searchIrs(null, { query: { status: "2,3,4,5,6,7,8,9" } })
+      searchIrs(null, { query: { status: "2,3,4,5,6,7,8,9,11" } })
         .then((data) => {
           if (data._embedded?.IncidentReport) {
             setIncidents(data._embedded.IncidentReport);
@@ -1461,8 +1468,7 @@ const AssignForm = ({ assign, users, setAssign, onSuccess }) => {
   const [timeline, setTimeline] = useState([]);
 
   const { put: assignIr, loading } = useFetch(
-    defaultEndpoints.incidentReport + "/" + (assign.id || ""),
-    { headers: { "Content-Type": "application/json" } }
+    defaultEndpoints.incidentReport + "/" + (assign.id || "")
   );
 
   const {

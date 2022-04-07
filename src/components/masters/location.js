@@ -163,10 +163,7 @@ const LocationForm = ({
   } = useForm();
 
   const { post: postLocation, put: updateLocation, loading } = useFetch(
-    defaultEndpoints.locations + `/${edit?.id || ""}`,
-    {
-      headers: { "Content-Type": "application/json" },
-    }
+    defaultEndpoints.locations + `/${edit?.id || ""}`
   );
 
   useEffect(() => {

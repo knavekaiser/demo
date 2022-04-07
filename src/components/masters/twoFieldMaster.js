@@ -169,9 +169,7 @@ const TwoFieldMasterForm = ({
     post: postTwoFieldMaster,
     put: updateTwoFieldMaster,
     loading,
-  } = useFetch(defaultEndpoints.twoFieldMasters + `/${edit?.id || ""}`, {
-    headers: { "Content-Type": "application/json" },
-  });
+  } = useFetch(defaultEndpoints.twoFieldMasters + `/${edit?.id || ""}`);
 
   useEffect(() => {
     reset({ ...edit });
@@ -392,9 +390,7 @@ const TwoFieldMasterDetailForm = ({
     post: postTwoFieldMasterDetail,
     put: updateTwoFieldMasterDetail,
     loading,
-  } = useFetch(defaultEndpoints.twoFieldMasterDetails + `/${edit?.id || ""}`, {
-    headers: { "Content-Type": "application/json" },
-  });
+  } = useFetch(defaultEndpoints.twoFieldMasterDetails + `/${edit?.id || ""}`);
 
   useEffect(() => {
     reset({ showToggle: true, ...edit });

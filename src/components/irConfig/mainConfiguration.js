@@ -39,10 +39,7 @@ const IrScreen = () => {
   const [update, setUpdate] = useState([]);
   const { get: getIrScreens } = useFetch(defaultEndpoints.configirscreen);
   const { put: updateScreen } = useFetch(
-    defaultEndpoints.configirscreen + "/{ID}",
-    {
-      headers: { "Content-Type": "application/json" },
-    }
+    defaultEndpoints.configirscreen + "/{ID}"
   );
   useEffect(() => {
     getIrScreens().then((data) => {
@@ -288,10 +285,7 @@ const IncidentReportForm = ({
   } = useForm({ ...edit });
 
   const { post: postType, put: updateType, loading } = useFetch(
-    defaultEndpoints.typesOfIncident + `/${edit?.id || ""}`,
-    {
-      headers: { "Content-Type": "application/json" },
-    }
+    defaultEndpoints.typesOfIncident + `/${edit?.id || ""}`
   );
 
   useEffect(() => {
@@ -393,11 +387,8 @@ const SentinelEventNotification = () => {
   const settingsRef = useRef(null);
   const [settings, setSettings] = useState(null);
   const [settingsChanged, setSettingsChanged] = useState(false);
-  const {
-    put: updateSettings,
-  } = useFetch(
-    defaultEndpoints.sentinelNotifications + `/${settings?.id || ""}`,
-    { headers: { "Content-Type": "application/json" } }
+  const { put: updateSettings } = useFetch(
+    defaultEndpoints.sentinelNotifications + `/${settings?.id || ""}`
   );
   const [sentinelNotifications, setSentinelNotifications] = useState([]);
   const [users, setUsers] = useState([]);
@@ -633,10 +624,7 @@ const NotifyForm = ({
 }) => {
   const { handleSubmit, register, watch, control, setValue, reset } = useForm();
   const { post: addNotification, put: updateNotification, loading } = useFetch(
-    defaultEndpoints.sentinelNotifications,
-    {
-      headers: { "Content-Type": "application/json" },
-    }
+    defaultEndpoints.sentinelNotifications
   );
   useEffect(() => reset({ ...edit }), [edit]);
   return (
@@ -722,8 +710,7 @@ const HodApprovalProcess = () => {
   const [update, setUpdate] = useState([]);
   const { get: getHodApproval } = useFetch(defaultEndpoints.hodApproval);
   const { put: updateHodApproval } = useFetch(
-    defaultEndpoints.hodApproval + "/{ID}",
-    { headers: { "Content-Type": "application/json" } }
+    defaultEndpoints.hodApproval + "/{ID}"
   );
   useEffect(() => {
     getHodApproval().then((data) => {
@@ -750,32 +737,6 @@ const HodApprovalProcess = () => {
   return (
     <Box label="HOD APPROVAL PROCESS" collapsable={true}>
       <Table className={s.hodApproval}>
-        {
-          //   <tr>
-          //   <td>
-          //     <input
-          //       type="checkbox"
-          //       id="hodApproval-required"
-          //       checked={
-          //         hodApproval.find((item) => item.id === 1)?.options || false
-          //       }
-          //       onChange={() => {
-          //         setHodApproval((prev) =>
-          //           prev.map((item) =>
-          //             item.id === 1 ? { ...item, options: !item.options } : item
-          //           )
-          //         );
-          //       }}
-          //     />
-          //     <label htmlFor="hodApproval-required">
-          //       <strong>
-          //         HOD approval required - IR team can start investigation only
-          //         after IS is approved
-          //       </strong>
-          //     </label>
-          //   </td>
-          // </tr>
-        }
         <tr>
           <td>
             <input
@@ -799,30 +760,6 @@ const HodApprovalProcess = () => {
             </label>
           </td>
         </tr>
-        {
-          //   <tr>
-          //   <td>
-          //     <input
-          //       type="checkbox"
-          //       id="hodApproval-none"
-          //       checked={
-          //         hodApproval.find((item) => item.id === 3)?.options || false
-          //       }
-          //       onChange={() => {
-          //         setHodApproval((prev) =>
-          //           prev.map((item) =>
-          //             item.id === 3 ? { ...item, options: !item.options } : item
-          //           )
-          //         );
-          //       }}
-          //     />
-          //     <label htmlFor="hodApproval-none">
-          //       <strong>None</strong> - HOD is not notified of the reported IR.
-          //       HOD dashboard will be disabled.
-          //     </label>
-          //   </td>
-          // </tr>
-        }
       </Table>
       <div className={s.btns}>
         <button
@@ -869,8 +806,7 @@ const DashboardDataElements = () => {
     defaultEndpoints.dashboardElements
   );
   const { patch: updateOption } = useFetch(
-    defaultEndpoints.dashboardElements + `/{ID}`,
-    { headers: { "Content-Type": "application/json" } }
+    defaultEndpoints.dashboardElements + `/{ID}`
   );
   useEffect(() => {
     getDashboardElements().then((data) => {
@@ -1106,10 +1042,7 @@ const IncidentClosure = () => {
   const [update, setUpdate] = useState([]);
   const { get: getElements } = useFetch(defaultEndpoints.incidentClosureFields);
   const { put: updateElement } = useFetch(
-    defaultEndpoints.incidentClosureFields + "/{ID}",
-    {
-      headers: { "Content-Type": "application/json" },
-    }
+    defaultEndpoints.incidentClosureFields + "/{ID}"
   );
   useEffect(() => {
     getElements().then((data) => {
@@ -1241,8 +1174,7 @@ const AcceptableTat = () => {
   const [tat, setTat] = useState(null);
   const { get: getTat } = useFetch(defaultEndpoints.configTat);
   const { put: updateTat } = useFetch(
-    defaultEndpoints.configTat + `/${tat?.id}`,
-    { headers: { "Content-Type": "application/json" } }
+    defaultEndpoints.configTat + `/${tat?.id}`
   );
   useEffect(() => {
     getTat().then((data) => {
@@ -1395,10 +1327,7 @@ const IrInvestigationDetails = () => {
     defaultEndpoints.irInvestigationDetails
   );
   const { put: updateElement } = useFetch(
-    defaultEndpoints.irInvestigationDetails + "/{ID}",
-    {
-      headers: { "Content-Type": "application/json" },
-    }
+    defaultEndpoints.irInvestigationDetails + "/{ID}"
   );
   useEffect(() => {
     getElements().then((data) => {

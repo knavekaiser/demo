@@ -144,10 +144,7 @@ const RcaForm = ({ edit, onSuccess, clearForm, rcas }) => {
   } = useForm({ ...edit });
 
   const { post: postRca, put: updateRca, loading } = useFetch(
-    defaultEndpoints.rcas + `/${edit?.id || ""}`,
-    {
-      headers: { "Content-Type": "application/json" },
-    }
+    defaultEndpoints.rcas + `/${edit?.id || ""}`
   );
 
   useEffect(() => {
@@ -338,10 +335,7 @@ const RcaCauseForm = ({ edit, rcaId, onSuccess, clearForm, rcaCauses }) => {
   } = useForm({ ...edit });
 
   const { post: postRcaCause, put: updateRcaCause, loading } = useFetch(
-    defaultEndpoints.rcaCauses + `/${edit?.id || ""}`,
-    {
-      headers: { "Content-Type": "application/json" },
-    }
+    defaultEndpoints.rcaCauses + `/${edit?.id || ""}`
   );
 
   useEffect(() => {

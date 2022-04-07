@@ -118,10 +118,7 @@ const DepartmentForm = ({ edit, onSuccess, clearForm, departments }) => {
   } = useForm({ ...edit });
 
   const { post: postDepartment, put: updateDepartment, loading } = useFetch(
-    defaultEndpoints.departments + `/${edit?.id || ""}`,
-    {
-      headers: { "Content-Type": "application/json" },
-    }
+    defaultEndpoints.departments + `/${edit?.id || ""}`
   );
 
   useEffect(() => {

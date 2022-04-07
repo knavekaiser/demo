@@ -182,9 +182,7 @@ const ContributingFactorForm = ({
     post: postContributingFactor,
     put: updateContributingFactor,
     loading,
-  } = useFetch(defaultEndpoints.contributingFactors + `/${edit?.cf_id || ""}`, {
-    headers: { "Content-Type": "application/json" },
-  });
+  } = useFetch(defaultEndpoints.contributingFactors + `/${edit?.cf_id || ""}`);
 
   useEffect(() => {
     reset({ show: true, ...edit });
@@ -381,10 +379,7 @@ const ContributingFactorDetailForm = ({
     put: updateContributingFactorDetail,
     loading,
   } = useFetch(
-    defaultEndpoints.contributingFactorDetails + `/${edit?.id || ""}`,
-    {
-      headers: { "Content-Type": "application/json" },
-    }
+    defaultEndpoints.contributingFactorDetails + `/${edit?.id || ""}`
   );
 
   useEffect(() => {

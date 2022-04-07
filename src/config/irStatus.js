@@ -9,6 +9,7 @@ const irStatus = [
   { id: 9, name: "Cancelled" },
   { id: 10, name: "Unassigned" },
   { id: 8, name: "IR closed" },
+  { id: 11, name: "Acknowledged" },
 ];
 
 export default irStatus;

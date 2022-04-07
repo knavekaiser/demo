@@ -35,10 +35,7 @@ export default function IrCodeConfig() {
 
   const { get: getSequence, loading } = useFetch(defaultEndpoints.sequence);
   const { put: updateSequence, loading: updating } = useFetch(
-    defaultEndpoints.sequence + "/{ID}",
-    {
-      headers: { "Content-Type": "application/json" },
-    }
+    defaultEndpoints.sequence + "/{ID}"
   );
 
   useEffect(() => {

@@ -49,6 +49,8 @@ export default {
   configirscreen: `${baseApiUrl}/configirscreen`,
   irInvestigationDetails: `${baseApiUrl}/irInvestigationDetails`,
 
+  irHodAck: `${baseApiUrl}/irHodAck`,
+
   formTemplates: `https://his19-3-1sit.napierhealthcare.com/napier-componentbuilder/componentbuilder/formData/search`,
   templateData: `${baseApiUrl}/templateData`,
 };

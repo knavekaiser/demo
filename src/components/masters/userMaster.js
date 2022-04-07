@@ -42,15 +42,9 @@ export default function UserMaster() {
     endpoints?.users?.url || defaultEndpoints.users + `?size=10000`,
     { his: endpoints?.users?.url }
   );
-  const { get: getUsers, loading } = useFetch(defaultEndpoints.users, {
-    headers: { "Content-Type": "application/json" },
-  });
-  const { post: postUser } = useFetch(defaultEndpoints.users, {
-    headers: { "Content-Type": "application/json" },
-  });
-  const { remove: deleteUser } = useFetch(defaultEndpoints.users + "/{ID}", {
-    headers: { "Content-Type": "application/json" },
-  });
+  const { get: getUsers, loading } = useFetch(defaultEndpoints.users);
+  const { post: postUser } = useFetch(defaultEndpoints.users);
+  const { remove: deleteUser } = useFetch(defaultEndpoints.users + "/{ID}");
 
   useEffect(() => {
     Promise.all([
@@ -312,10 +306,7 @@ const UserForm = ({
   } = useForm();
 
   const { post: postUser, patch: updateUser, loading } = useFetch(
-    defaultEndpoints.users + `/${edit?.id || ""}`,
-    {
-      headers: { "Content-Type": "application/json" },
-    }
+    defaultEndpoints.users + `/${edit?.id || ""}`
   );
 
   useEffect(() => {

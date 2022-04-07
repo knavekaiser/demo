@@ -37,7 +37,6 @@ export default function Categories() {
   const { post: getFormTemplates } = useFetch(defaultEndpoints.formTemplates, {
     his: true,
     defaultHeaders: false,
-    headers: { "Content-Type": "application/json" },
   });
 
   useEffect(() => {
@@ -183,10 +182,7 @@ const CategoryForm = ({ edit, onSuccess, clearForm, categories }) => {
   } = useForm();
 
   const { post: postCategory, put: updateCategory, loading } = useFetch(
-    defaultEndpoints.categories + `/${edit?.id || ""}`,
-    {
-      headers: { "Content-Type": "application/json" },
-    }
+    defaultEndpoints.categories + `/${edit?.id || ""}`
   );
 
   useEffect(() => {
@@ -490,10 +486,7 @@ const SubCategoryForm = ({
   const reportable = watch("reportable");
 
   const { post: postSubCategory, put: updateSubCategory, loading } = useFetch(
-    defaultEndpoints.subCategories + `/${edit?.id || ""}`,
-    {
-      headers: { "Content-Type": "application/json" },
-    }
+    defaultEndpoints.subCategories + `/${edit?.id || ""}`
   );
 
   useEffect(() => {
@@ -727,9 +720,7 @@ const ReportableInlineForm = ({
     defaultEndpoints.twoFieldMaster + "/10"
   );
 
-  const { post: addReportable } = useFetch(defaultEndpoints.reportables, {
-    headers: { "Content-Type": "application/json" },
-  });
+  const { post: addReportable } = useFetch(defaultEndpoints.reportables);
 
   useEffect(() => {
     getReportTo()
