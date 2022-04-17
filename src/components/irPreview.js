@@ -12,9 +12,6 @@ import { useHisFetch, useFetch } from "../hooks";
 import { endpoints as defaultEndpoints, preventability } from "../config";
 import s from "./incidentReporting.module.scss";
 
-import { ComponentRender } from "component-builder-renderer";
-// import tempFormTemplate from "./data.json";
-
 const Data = ({ label, value, children }) => (
   <section className={`${s.data} ${children ? s.richData : ""}`}>
     <span className={s.label}>{label}:</span>

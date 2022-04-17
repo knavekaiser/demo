@@ -26,9 +26,6 @@ import { useHisFetch, useFetch } from "../hooks";
 import { endpoints as defaultEndpoints, preventability } from "../config";
 import s from "./incidentReporting.module.scss";
 
-import { ComponentRender } from "component-builder-renderer";
-// import tempFormTemplate from "./data.json";
-
 const defaultFormValues = {
   id: "",
   action: "",
@@ -686,23 +683,6 @@ export default function IncidentReporting() {
                 />
               </div>
               <div className={s.placeholder}>Placeholder</div>
-              {
-                // <ComponentRender
-                //   key="typeOfInci"
-                //   renderData={tempFormTemplate}
-                //   sendFormData={(data) => {
-                //     if (
-                //       JSON.stringify(data) !==
-                //       JSON.stringify(templateData.typeOfIncident)
-                //     ) {
-                //       setTemplateData((prev) => ({
-                //         ...prev,
-                //         typeOfIncident: data,
-                //       }));
-                //     }
-                //   }}
-                // />
-              }
             </div>
           </Box>
           <Box label="INCIDENT CATEGORY" collapsable={true}>
@@ -1117,28 +1097,7 @@ export const IncidentCategory = ({ templateData, setTemplateData }) => {
                 </section>
               </div>
             </Modal>
-            {loadingFormTemplate ? (
-              <div className={s.placeholder}>Loading Form Template...</div>
-            ) : formTemplate ? (
-              <ComponentRender
-                key="category"
-                renderData={formTemplate}
-                sendFormData={(data) => {
-                  console.log(data);
-                  // if (
-                  //   JSON.stringify(data) !==
-                  //   JSON.stringify(templateData.category)
-                  // ) {
-                  //   setTemplateData((prev) => ({
-                  //     ...prev,
-                  //     category: data,
-                  //   }));
-                  // }
-                }}
-              />
-            ) : (
-              <div className={s.placeholder}>No Form Template was found.</div>
-            )}
+            <div className={s.placeholder}>Placeholder</div>
           </div>
         );
       }}
