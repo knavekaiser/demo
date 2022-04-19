@@ -365,14 +365,14 @@ export default function IncidentReporting() {
               })
               .filter((user) => user);
 
-            if (_users.length < hisUser.length) {
-              Prompt({
-                type: "information",
-                message: `${
-                  hisUser.length - _users.length
-                } users does not have id. Please sync in the User Master.`,
-              });
-            }
+            // if (_users.length < hisUser.length) {
+            //   Prompt({
+            //     type: "information",
+            //     message: `${
+            //       hisUser.length - _users.length
+            //     } users does not have id. Please sync in the User Master.`,
+            //   });
+            // }
 
             _parameters.users = _users.map((item) => ({
               label: item[nameField],

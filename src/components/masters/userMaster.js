@@ -117,12 +117,13 @@ export default function UserMaster() {
         <button
           onClick={() => {
             const newUsers = hisUsers.filter(
-              (hisUser) => !users.some((user) => user.name === hisUser.userId)
+              (hisUser) =>
+                !users.some((user) => user.username === hisUser.userId)
             );
             if (newUsers.length > 0) {
               Prompt({
                 type: "confirmation",
-                message: `${newUsers.length} new User found. Do you want to continue?`,
+                message: `${newUsers.length} new Users found. Do you want to continue?`,
                 callback: () => {
                   Promise.all(
                     newUsers.map((user) =>
@@ -214,7 +215,7 @@ export default function UserMaster() {
               <td>•••••••</td>
               <td>
                 {parameters.departments?.find(
-                  (u) => u.value.toString() === user.department.toString()
+                  (u) => u.value.toString() === user.department?.toString()
                 )?.label || user.department}
               </td>
               <td>
