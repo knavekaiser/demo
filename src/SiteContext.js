@@ -78,11 +78,15 @@ export const Provider = ({ children }) => {
 
   useEffect(() => {
     if (!roles && user) {
-      fetch(defaultEndpoints.userPermissions, {
-        headers: {
-          Authorization: "Bearer " + sessionStorage.getItem("access-token"),
-        },
-      })
+      fetch(
+        defaultEndpoints.userPermissions +
+          `?tenantId=${sessionStorage.getItem("db-schema")}`,
+        {
+          headers: {
+            Authorization: "Bearer " + sessionStorage.getItem("access-token"),
+          },
+        }
+      )
         .then((res) => res.json())
         .then((data) => {
           if (data._embedded.userPermission) {
@@ -308,8 +312,11 @@ export const IrDashboardContextProvider = ({ children }) => {
                   ...(dashboard === "myDashboard" && {
                     userId: user.id,
                   }),
+                  tenantId: sessionStorage.getItem("db-schema"),
                 }).toString()}`
-              : `${defaultEndpoints.countIrByStatus}?status=${status.id}`,
+              : `${defaultEndpoints.countIrByStatus}?status=${
+                  status.id
+                }&tenantId=${sessionStorage.getItem("db-schema")}`,
             {
               headers: {
                 Authorization:

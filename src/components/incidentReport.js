@@ -322,14 +322,14 @@ export default function IncidentReporting() {
           }
         );
 
-        if (Array.isArray(location)) {
-          _parameters.locations = location
+        if (Array.isArray(location.data)) {
+          _parameters.locations = location.data
             .filter((item) => +item.status)
             .map((item) => ({
               label: item.locationName,
               value: item.locationID,
             }));
-        } else if (location?._embedded?.location) {
+        } else if (location?.data._embedded?.location) {
           _parameters.locations = location._embedded.location
             .filter((item) => item.status)
             .map((item) => ({
@@ -338,20 +338,20 @@ export default function IncidentReporting() {
             }));
         }
 
-        if (Array.isArray(departments?.[endpoints?.departments.key1])) {
+        if (Array.isArray(departments?.data[endpoints?.departments.key1])) {
           _parameters.departments = departments[
             endpoints?.departments.key1
           ].map(({ departmentId, departmentName }) => ({
             value: departmentId.toString(),
             label: departmentName,
           }));
-        } else if (Array.isArray(departments)) {
-          _parameters.departments = departments.map((dept) => ({
+        } else if (Array.isArray(departments.data)) {
+          _parameters.departments = departments.data.map((dept) => ({
             label: dept.description,
             value: dept.code,
           }));
-        } else if (departments?._embedded?.department) {
-          _parameters.departments = departments._embedded.department.map(
+        } else if (departments?.data._embedded?.department) {
+          _parameters.departments = departments.data._embedded.department.map(
             (item) => ({
               label: item.name,
               value: item.id,
@@ -359,7 +359,9 @@ export default function IncidentReporting() {
           );
         }
 
-        if (Array.isArray(users?.[endpoints?.users.key1])) {
+        console.log(_parameters, user);
+
+        if (Array.isArray(users?.data[endpoints?.users.key1])) {
           const _users = users[endpoints?.users.key1].map((user) => {
             const userDetail = userDetails.find((u) =>
               new RegExp(u.name, "i").test(user.userName)
@@ -390,7 +392,7 @@ export default function IncidentReporting() {
                 ?.departmentId.toString() || "",
           }));
         } else if (users?.[endpoints.users.key1]) {
-          const _users = users?.[endpoints.users.key1].map((user) => {
+          const _users = users.data[endpoints.users.key1].map((user) => {
             const userDetail = userDetails.find((u) =>
               new RegExp(u.name, "i").test(user.userId)
             );
