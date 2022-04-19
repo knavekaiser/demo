@@ -26,7 +26,9 @@ export default function Login() {
   const { get: getUserDetail } = useFetch(
     defaultEndpoints.searchUserByUsername
   );
-  const { get: getEndpoints } = useFetch(defaultEndpoints.apiUrl);
+  const { get: getEndpoints } = useFetch(
+    defaultEndpoints.apiUrl + `?tenantId=${sessionStorage.getItem("db-schema")}`
+  );
 
   const handleUser = useCallback(
     (user) => {
