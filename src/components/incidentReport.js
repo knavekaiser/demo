@@ -76,7 +76,6 @@ export default function IncidentReporting() {
   const [anonymous, setAnonymous] = useState(false);
   const patientComplaint = methods.watch("patientYesOrNo");
   const uploads = methods.watch("upload");
-  const [templateData, setTemplateData] = useState({});
 
   const { post: uploadFiles, laoding: uploadingFiles } = useFetch(
     defaultEndpoints.uploadFiles
@@ -84,31 +83,9 @@ export default function IncidentReporting() {
   const { post: postIr, put: updateIr, loading } = useFetch(
     `${defaultEndpoints.incidentReport}${edit ? `/${edit.id}` : ""}`
   );
-  const { post: saveTemplateData } = useFetch(defaultEndpoints.templateData);
 
   const submitForm = useCallback(
     (data) => {
-      if (Object.entries(templateData).length) {
-        const templateValues = {};
-        // get the data from templates
-        // save the in the server
-
-        Object.entries(templateValues).forEach(async ([section, value], i) => {
-          await saveTemplateData({
-            section,
-            template: value.template,
-            field: value.field,
-            dataType: value.dataType,
-            value: value.value,
-            incidentReport: {
-              id: 3,
-            },
-          }).then((res) => {
-            console.log(res);
-          });
-        });
-      }
-      // return console.log(templateData);
       const postData = async () => {
         if (data.upload?.length) {
           const formData = new FormData();
@@ -220,7 +197,7 @@ export default function IncidentReporting() {
         postData();
       }
     },
-    [edit, user, anonymous, templateData]
+    [edit, user, anonymous]
   );
   const resetForm = useCallback(() => {
     methods.reset({
@@ -306,146 +283,146 @@ export default function IncidentReporting() {
               status: 1,
             },
           })) ||
-          null,
+          {},
       ],
       getUsersWithRoles(),
-      ...[(endpoints?.patients?.url && getAllPatients()) || null],
+      ...[(endpoints?.patients?.url && getAllPatients()) || {}],
     ])
-      .then(([location, departments, users, usersWithRoles, patients]) => {
-        const _parameters = {};
-        const userDetails = (usersWithRoles?._embedded?.user || []).map(
-          (user) => {
-            user.role = Array.isArray(user.role)
-              ? user.role
-              : user.role?.split(",") || [];
-            return user;
-          }
-        );
-
-        if (Array.isArray(location.data)) {
-          _parameters.locations = location.data
-            .filter((item) => +item.status)
-            .map((item) => ({
-              label: item.locationName,
-              value: item.locationID,
-            }));
-        } else if (location?.data._embedded?.location) {
-          _parameters.locations = location._embedded.location
-            .filter((item) => item.status)
-            .map((item) => ({
-              label: item.name,
-              value: item.id,
-            }));
-        }
-
-        if (Array.isArray(departments?.data[endpoints?.departments.key1])) {
-          _parameters.departments = departments[
-            endpoints?.departments.key1
-          ].map(({ departmentId, departmentName }) => ({
-            value: departmentId.toString(),
-            label: departmentName,
-          }));
-        } else if (Array.isArray(departments.data)) {
-          _parameters.departments = departments.data.map((dept) => ({
-            label: dept.description,
-            value: dept.code,
-          }));
-        } else if (departments?.data._embedded?.department) {
-          _parameters.departments = departments.data._embedded.department.map(
-            (item) => ({
-              label: item.name,
-              value: item.id,
-            })
+      .then(
+        ([
+          location,
+          departments,
+          { data: users },
+          usersWithRoles,
+          patients,
+        ]) => {
+          const _parameters = {};
+          const userDetails = (usersWithRoles?._embedded?.user || []).map(
+            (user) => {
+              user.role = Array.isArray(user.role)
+                ? user.role
+                : user.role?.split(",") || [];
+              return user;
+            }
           );
-        }
 
-        console.log(_parameters, user);
+          if (Array.isArray(location.data)) {
+            _parameters.locations = location.data
+              .filter((item) => +item.status)
+              .map((item) => ({
+                label: item.locationName,
+                value: item.locationID,
+              }));
+          } else if (location?.data._embedded?.location) {
+            _parameters.locations = location._embedded.location
+              .filter((item) => item.status)
+              .map((item) => ({
+                label: item.name,
+                value: item.id,
+              }));
+          }
 
-        if (Array.isArray(users?.data[endpoints?.users.key1])) {
-          const _users = users[endpoints?.users.key1].map((user) => {
-            const userDetail = userDetails.find((u) =>
-              new RegExp(u.name, "i").test(user.userName)
-            );
-            if (userDetail) {
-              user.id = userDetail.id;
-              user.role = userDetail.role;
-              user.department = userDetail.department.toString();
-            }
-            return user;
-          });
-          _parameters.hods = _users
-            .filter(
-              (u) =>
-                u.role?.includes("hod") &&
-                u.department.toString() === user.department.toString()
-            )
-            .map((item) => ({
-              label: item.userName,
-              value: item.userId,
+          if (Array.isArray(departments?.data[endpoints?.departments.key1])) {
+            _parameters.departments = departments[
+              endpoints?.departments.key1
+            ].map(({ departmentId, departmentName }) => ({
+              value: departmentId.toString(),
+              label: departmentName,
             }));
-          _parameters.users = _users.map((item) => ({
-            label: item.userName,
-            value: item.userId,
-            department:
-              departments?.[endpoints?.departments.key1]
-                .find((dept) => dept.departmentCode === item.departmentCode)
-                ?.departmentId.toString() || "",
-          }));
-        } else if (users?.[endpoints.users.key1]) {
-          const _users = users.data[endpoints.users.key1].map((user) => {
-            const userDetail = userDetails.find((u) =>
-              new RegExp(u.name, "i").test(user.userId)
+          } else if (Array.isArray(departments.data)) {
+            _parameters.departments = departments.data.map((dept) => ({
+              label: dept.description,
+              value: dept.code,
+            }));
+          } else if (departments?.data._embedded?.department) {
+            _parameters.departments = departments.data._embedded.department.map(
+              (item) => ({
+                label: item.name,
+                value: item.id,
+              })
             );
-            if (userDetail) {
-              user.id = userDetail.id;
-              user.role = userDetail.role;
-              user.department = userDetail.department.toString();
+          }
+
+          if (users?.[endpoints?.users.key1]?.join || users?.join) {
+            const dataField = endpoints.users.key1;
+            const nameField = endpoints.users.key2;
+            const hisUser = users[dataField] || users;
+
+            const _users = hisUser
+              .map((user) => {
+                const userDetail = userDetails.find(
+                  (u) =>
+                    // need looup when integrating ILTS
+                    u.username === user.userId
+                );
+                if (userDetail) {
+                  user.id = userDetail.id;
+                  user.role = userDetail.role;
+                  user.department = userDetail.department.toString();
+                  return user;
+                }
+                return null;
+              })
+              .filter((user) => user);
+
+            if (_users.length < hisUser.length) {
+              Prompt({
+                type: "information",
+                message: `${
+                  hisUser.length - _users.length
+                } users does not have id. Please sync in the User Master.`,
+              });
             }
-            return user;
-          });
-          _parameters.hods = _users
-            .filter(
-              (u) =>
-                u.role?.includes("hod") &&
-                u.department.toString() === user.department.toString()
-            )
-            .map((item) => ({
-              label: item.userId,
+
+            _parameters.users = _users.map((item) => ({
+              label: item[nameField],
               value: item.id,
+              department:
+                _parameters.departments
+                  .find((dept) => dept.value === item.department)
+                  ?.value.toString() || "",
             }));
-          _parameters.users = _users.map((item) => ({
-            label: item.fullName,
-            value: item.id,
-            department: item.departmentMaster?.code,
-          }));
-        } else {
-          _parameters.hods = userDetails
-            .filter(
-              (u) => u.role.includes("hod") && u.department === user.department
-            )
-            .map((item) => ({
+
+            _parameters.hods = _users
+              .filter(
+                (u) =>
+                  u.role?.includes("hod") &&
+                  u.department.toString() === user.department.toString()
+              )
+              .map((item) => ({
+                label: item[nameField],
+                value: item.id,
+              }));
+          } else {
+            _parameters.hods = userDetails
+              .filter(
+                (u) =>
+                  u.role.includes("hod") && u.department === user.department
+              )
+              .map((item) => ({
+                label: item.name,
+                value: item.id,
+              }));
+            _parameters.users = userDetails.map((item) => ({
               label: item.name,
               value: item.id,
+              department: item.department,
             }));
-          _parameters.users = userDetails.map((item) => ({
-            label: item.name,
-            value: item.id,
-            department: item.department,
-          }));
-          if (!edit && _parameters.hods?.length === 1) {
-            methods.setValue("headofDepart", _parameters.hods[0].value);
+            if (!edit && _parameters.hods?.length === 1) {
+              methods.setValue("headofDepart", _parameters.hods[0].value);
+            }
           }
-        }
 
-        if (Array.isArray(patients)) {
-          _parameters.patients = patients.map((patient) => ({
-            value: patient.uhid,
-            label: patient.name,
-          }));
-        }
+          if (Array.isArray(patients)) {
+            _parameters.patients = patients.map((patient) => ({
+              value: patient.uhid,
+              label: patient.name,
+            }));
+          }
 
-        active && setParameters((prev) => ({ ...prev, ..._parameters }));
-      })
+          active && setParameters((prev) => ({ ...prev, ..._parameters }));
+        }
+      )
       .catch((err) => {
         console.log(err);
       });
@@ -688,10 +665,7 @@ export default function IncidentReporting() {
             </div>
           </Box>
           <Box label="INCIDENT CATEGORY" collapsable={true}>
-            <IncidentCategory
-              templateData={templateData}
-              setTemplateData={setTemplateData}
-            />
+            <IncidentCategory />
           </Box>
           <Box label="PERSON AFFECTED" collapsable={true}>
             <div className={s.placeholder}>Placeholder</div>
@@ -878,19 +852,11 @@ export default function IncidentReporting() {
   );
 }
 
-export const IncidentCategory = ({ templateData, setTemplateData }) => {
+export const IncidentCategory = ({}) => {
   const [categories, setCategories] = useState([]);
   const [showCategoryTable, setShowCategoryTable] = useState(false);
   const [rows, setRows] = useState([]);
   const [tableValues, setTableValues] = useState({});
-  const [formTemplate, setFormTemplate] = useState(null);
-  const { post: getFormTemplate, loading: loadingFormTemplate } = useFetch(
-    defaultEndpoints.formTemplates,
-    {
-      his: true,
-      defaultHeaders: false,
-    }
-  );
   const { get: getCategories } = useFetch(defaultEndpoints.categories);
 
   useEffect(() => {
@@ -913,21 +879,6 @@ export const IncidentCategory = ({ templateData, setTemplateData }) => {
         }
       })
       .catch((err) => Prompt({ type: "error", message: err.message }));
-  }, []);
-  const updateFormTemplate = useCallback((id) => {
-    getFormTemplate({ formMapId: id })
-      .then((data) => {
-        if (data?.success && data.dataBean[0]) {
-          setFormTemplate(JSON.parse(data.dataBean[0].buildedFormData));
-        } else {
-          setFormTemplate(null);
-          Prompt({ type: "error", message: "No Form template was found" });
-        }
-      })
-      .catch((err) => {
-        setFormTemplate(null);
-        Prompt({ type: "error", message: err.message });
-      });
   }, []);
   return (
     <ConnectForm>
@@ -967,7 +918,6 @@ export const IncidentCategory = ({ templateData, setTemplateData }) => {
                 }))}
                 onChange={({ value }) => {
                   setValue("inciSubCat", "");
-                  setFormTemplate(null);
                   setTableValues({ category: value });
                 }}
               />
@@ -997,9 +947,6 @@ export const IncidentCategory = ({ templateData, setTemplateData }) => {
                 }}
                 onChange={({ value, template }) => {
                   setTableValues((prev) => ({ ...prev, subCat: value }));
-                  if (template) {
-                    updateFormTemplate(template);
-                  }
                 }}
               />
               <button
@@ -1053,9 +1000,6 @@ export const IncidentCategory = ({ templateData, setTemplateData }) => {
                                     category: categories[j]?.id,
                                     subCat: subCat[i].id,
                                   });
-                                  if (subCat.template) {
-                                    updateFormTemplate(subCat.template);
-                                  }
                                 }}
                               />
                               {subCat[i]?.name}
@@ -1311,8 +1255,9 @@ export const Witnesses = ({ users, departments, witnesses, setValue }) => {
               witness.witnessName}
           </td>
           <td>
-            {departments?.find((dept) => dept.value === witness.witnessDept)
-              ?.label || witness.witnessDept}
+            {departments?.find(
+              (dept) => dept.value.toString() === witness.witnessDept.toString()
+            )?.label || witness.witnessDept}
           </td>
           <TableActions
             actions={[
@@ -1432,8 +1377,9 @@ export const Notifications = ({
             {users?.find((u) => u.value === noti.name)?.label || noti.name}
           </td>
           <td>
-            {departments?.find((dept) => dept.value === noti.dept)?.label ||
-              noti.dept}
+            {departments?.find(
+              (dept) => dept.value.toString() === noti.dept.toString()
+            )?.label || noti.dept}
           </td>
           <td>
             <Moment format="DD/MM/YYYY hh:mm">

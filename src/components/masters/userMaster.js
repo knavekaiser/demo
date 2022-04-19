@@ -65,7 +65,7 @@ export default function UserMaster() {
         },
       }),
     ])
-      .then(([departments, hisUsers]) => {
+      .then(([{ data: departments }, { data: hisUsers }]) => {
         const _parameters = {};
         if (Array.isArray(departments?.[endpoints?.departments.key1])) {
           _parameters.departments = departments[
@@ -126,9 +126,10 @@ export default function UserMaster() {
                 callback: () => {
                   Promise.all(
                     newUsers.map((user) =>
+                      // need lookup when doing ilts
                       postUser({
-                        name: user.userId,
-                        username: user.userName,
+                        name: user.fullName,
+                        username: user.userId,
                         gender: user.gender?.toLowerCase() || "",
                         employeeId: user.employeeID,
                         role: "incidentReporter",
@@ -220,7 +221,7 @@ export default function UserMaster() {
                 {parameters.role?.find(
                   (r) =>
                     r.value ===
-                    user.role.sort((a, b) =>
+                    user.role?.sort((a, b) =>
                       permissions.findIndex((item) => item.role === a) >
                       permissions.findIndex((item) => item.role === b)
                         ? 1
