@@ -241,17 +241,29 @@ export default function Login() {
                     "x-timezone": sessionStorage.getItem("tenant-timezone"),
                     "Content-Type": "application/json",
                   },
-                  body: JSON.stringify({
-                    username: data.username,
-                    password: hash || data.password,
-                    overrideSession: true,
-                  }),
+                  body: JSON.stringify(
+                    salt
+                      ? {
+                          userName: data.username,
+                          passWord: hash,
+                          authenticationType: 1,
+                          authPassword: "",
+                          isLDAPEnable: "Y",
+                        }
+                      : {
+                          username: data.username,
+                          password: data.password,
+                          overrideSession: true,
+                        }
+                  ),
                 })
                   .then((res) => res.json())
                   .then((data) => {
                     // console.log(data);
                     if (data.success) {
                       return data?.dataBean.token;
+                    } else if (data.authenticate) {
+                      return data.tokenID;
                     }
                     Prompt({
                       type: "error",
