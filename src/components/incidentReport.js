@@ -76,9 +76,13 @@ export default function IncidentReporting() {
   const [anonymous, setAnonymous] = useState(false);
   const patientComplaint = methods.watch("patientYesOrNo");
   const uploads = methods.watch("upload");
+  const [detailValues, setDetailValues] = useState({});
 
   const { post: uploadFiles, laoding: uploadingFiles } = useFetch(
-    defaultEndpoints.uploadFiles
+    defaultEndpoints.uploadFiles,
+    {
+      headers: { "Content-Type": "multipart/form-data" },
+    }
   );
   const { post: postIr, put: updateIr, loading } = useFetch(
     `${defaultEndpoints.incidentReport}${edit ? `/${edit.id}` : ""}`
@@ -200,6 +204,7 @@ export default function IncidentReporting() {
     [edit, user, anonymous]
   );
   const resetForm = useCallback(() => {
+    setDetailValues({ value: Math.random() });
     methods.reset({
       ...defaultFormValues,
       incident_Date_Time: "",
@@ -752,6 +757,7 @@ export default function IncidentReporting() {
                 users={parameters?.users}
                 setValue={methods.setValue}
                 actions={actions || []}
+                detailValues={detailValues}
               />
             </div>
             <div>
@@ -761,6 +767,7 @@ export default function IncidentReporting() {
                 witnesses={witnesses || []}
                 departments={parameters?.departments}
                 setValue={methods.setValue}
+                detailValues={detailValues}
               />
             </div>
             <div>
@@ -770,6 +777,7 @@ export default function IncidentReporting() {
                 departments={parameters?.departments}
                 notifications={notifications || []}
                 setValue={methods.setValue}
+                detailValues={detailValues}
               />
             </div>
           </div>
@@ -1051,7 +1059,7 @@ export const IncidentCategory = ({}) => {
   );
 };
 
-export const ActionTaken = ({ actions, users, setValue }) => {
+export const ActionTaken = ({ actions, users, setValue, detailValues }) => {
   const [edit, setEdit] = useState(null);
   return (
     <Table
@@ -1088,6 +1096,7 @@ export const ActionTaken = ({ actions, users, setValue }) => {
             actions={actions}
             users={users}
             setValue={setValue}
+            detailValues={detailValues}
           />
         </td>
       </tr>
@@ -1132,7 +1141,14 @@ export const ActionTaken = ({ actions, users, setValue }) => {
     </Table>
   );
 };
-const ActionTakenForm = ({ edit, onSuccess, actions, users, clearForm }) => {
+const ActionTakenForm = ({
+  edit,
+  onSuccess,
+  actions,
+  users,
+  clearForm,
+  detailValues,
+}) => {
   const {
     handleSubmit,
     register,
@@ -1143,7 +1159,9 @@ const ActionTakenForm = ({ edit, onSuccess, actions, users, clearForm }) => {
     clearErrors,
     control,
   } = useForm();
-  useEffect(() => reset({ ...edit }), [edit]);
+  useEffect(() => {
+    reset({ immedActionTaken: "", accessDateTime: "", ...edit });
+  }, [edit, detailValues]);
   return (
     <form
       onSubmit={handleSubmit((data) => {
@@ -1219,7 +1237,13 @@ const ActionTakenForm = ({ edit, onSuccess, actions, users, clearForm }) => {
   );
 };
 
-export const Witnesses = ({ users, departments, witnesses, setValue }) => {
+export const Witnesses = ({
+  users,
+  departments,
+  witnesses,
+  setValue,
+  detailValues,
+}) => {
   return (
     <Table
       columns={[
@@ -1245,6 +1269,7 @@ export const Witnesses = ({ users, departments, witnesses, setValue }) => {
             witnesses={witnesses}
             users={users}
             departments={departments}
+            detailValues={detailValues}
           />
         </td>
       </tr>
@@ -1283,7 +1308,13 @@ export const Witnesses = ({ users, departments, witnesses, setValue }) => {
     </Table>
   );
 };
-const WitnessesForm = ({ onSuccess, witnesses, users, departments }) => {
+const WitnessesForm = ({
+  onSuccess,
+  witnesses,
+  users,
+  departments,
+  detailValues,
+}) => {
   const {
     handleSubmit,
     control,
@@ -1294,6 +1325,7 @@ const WitnessesForm = ({ onSuccess, witnesses, users, departments }) => {
     formState: { errors },
     clearErrors,
   } = useForm();
+  useEffect(() => reset(), [detailValues]);
   const dept = watch("witnessDept");
   return (
     <form
@@ -1335,6 +1367,7 @@ export const Notifications = ({
   users,
   departments,
   setValue,
+  detailValues,
 }) => {
   const [edit, setEdit] = useState(null);
   return (
@@ -1368,6 +1401,7 @@ export const Notifications = ({
             users={users}
             departments={departments}
             setValue={setValue}
+            detailValues={detailValues}
           />
         </td>
       </tr>
@@ -1422,6 +1456,7 @@ const NotificationForm = ({
   users,
   departments,
   clearForm,
+  detailValues,
 }) => {
   const {
     handleSubmit,
@@ -1434,7 +1469,10 @@ const NotificationForm = ({
     clearErrors,
   } = useForm();
   const dept = watch("dept");
-  useEffect(() => reset({ ...edit }), [edit]);
+  useEffect(() => reset({ notificationDateTime: "", ...edit }), [
+    edit,
+    detailValues,
+  ]);
   return (
     <form
       onSubmit={handleSubmit((data) => {
