@@ -299,7 +299,7 @@ export default function IncidentReporting() {
           departments,
           { data: users },
           usersWithRoles,
-          patients,
+          { data: patients },
         ]) => {
           const _parameters = {};
           const userDetails = (usersWithRoles?._embedded?.user || []).map(
