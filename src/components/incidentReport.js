@@ -423,6 +423,13 @@ export default function IncidentReporting() {
               value: patient.uhid,
               label: patient.name,
             }));
+          } else if (Array.isArray(patients[endpoints?.patients.key1])) {
+            _parameters.patients = patients[endpoints?.patients.key1].map(
+              (patient) => ({
+                value: patient.uhid,
+                label: patient.name,
+              })
+            );
           }
 
           active && setParameters((prev) => ({ ...prev, ..._parameters }));
