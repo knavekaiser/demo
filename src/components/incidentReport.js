@@ -79,10 +79,7 @@ export default function IncidentReporting() {
   const [detailValues, setDetailValues] = useState({});
 
   const { post: uploadFiles, laoding: uploadingFiles } = useFetch(
-    defaultEndpoints.uploadFiles,
-    {
-      headers: { "Content-Type": "multipart/form-data" },
-    }
+    defaultEndpoints.uploadFiles
   );
   const { post: postIr, put: updateIr, loading } = useFetch(
     `${defaultEndpoints.incidentReport}${edit ? `/${edit.id}` : ""}`
@@ -423,7 +420,7 @@ export default function IncidentReporting() {
               value: patient.uhid,
               label: patient.name,
             }));
-          } else if (Array.isArray(patients[endpoints?.patients.key1])) {
+          } else if (Array.isArray(patients?.[endpoints?.patients.key1])) {
             _parameters.patients = patients[endpoints?.patients.key1].map(
               (patient) => ({
                 value: patient.uhid,
@@ -649,29 +646,38 @@ export default function IncidentReporting() {
                     },
                   }}
                   name="typeofInci"
-                  options={irTypes.map((type) => {
-                    if (type.value === 8) {
-                      return {
-                        ...type,
-                        label: (
-                          <>
-                            {type.label}{" "}
-                            <button
-                              className={`clear ${s.info}`}
-                              onClick={(e) =>
-                                console.log("Show table or something")
-                              }
-                            >
-                              <FaInfoCircle />
-                            </button>
-                          </>
-                        ),
-                      };
-                    }
-                    return type;
-                  })}
+                  options={
+                    irTypes
+                    //   .map((type) => {
+                    //   if (type.value === 8) {
+                    //     return {
+                    //       ...type,
+                    //       label: (
+                    //         <>
+                    //           {type.label}{" "}
+                    //           <button
+                    //             className={`clear ${s.info}`}
+                    //             onClick={(e) =>
+                    //               console.log("Show table or something")
+                    //             }
+                    //           >
+                    //             <FaInfoCircle />
+                    //           </button>
+                    //         </>
+                    //       ),
+                    //     };
+                    //   }
+                    //   return type;
+                    // })
+                  }
                   error={methods.formState.errors.typeofInci}
                 />
+                <button
+                  className={`clear ${s.info}`}
+                  onClick={(e) => console.log("Show table or something")}
+                >
+                  <FaInfoCircle />
+                </button>
               </div>
               <div className={s.placeholder}>Placeholder</div>
             </div>
