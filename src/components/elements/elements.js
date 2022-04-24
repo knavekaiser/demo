@@ -278,7 +278,11 @@ export const FileInput = ({ label, required, multiple, onChange, prefill }) => {
           <Table columns={[{ label: "File" }, { label: "Action" }]}>
             {files.map((file, i) => (
               <tr key={i}>
-                <td>{file.name}</td>
+                <td>
+                  <a target="_blank" href={file.name}>
+                    {file.name}
+                  </a>
+                </td>
                 <TableActions
                   actions={[
                     {
@@ -717,24 +721,50 @@ export const Checkbox = forwardRef(({ label, readOnly, ...rest }, ref) => {
   );
 });
 
-export const Tabs = ({ tabs, className }) => {
+export const Tabs = ({
+  tabs,
+  activeTab,
+  onChange,
+  className,
+  secondary,
+  tertiary,
+}) => {
   const location = useLocation();
+
   return (
-    <div className={`${s.tabs} ${s[className]}`} data-testid="tabs">
-      {tabs.map(({ path, label, search }) => (
-        <Link
-          key={path}
-          to={{
-            pathname: path,
-            ...(search && {
-              search: `?${createSearchParams(search)}`,
-            }),
-          }}
-          className={location?.pathname.endsWith(path) ? s.active : ""}
-        >
-          {label}
-        </Link>
-      ))}
+    <div
+      className={`${s.tabs} ${s[className]} ${secondary ? s.secondary : ""} ${
+        tertiary ? s.tertiary : ""
+      }`}
+      data-testid="tabs"
+    >
+      {tabs.map((tab) =>
+        onChange ? (
+          <a
+            key={tab.value}
+            className={tab.value === activeTab ? s.active : ""}
+            onClick={() => onChange(tab)}
+          >
+            {tab.label}
+          </a>
+        ) : (
+          <Link
+            key={tab.path}
+            to={{
+              pathname: tab.path,
+              ...(tab.search && {
+                search: `?${createSearchParams(tab.search)}`,
+              }),
+            }}
+            className={
+              // location?.pathname.endsWith(path) ? s.active : ""
+              location?.pathname.includes(tab.path) ? s.active : ""
+            }
+          >
+            {tab.label}
+          </Link>
+        )
+      )}
       <span className={s.fill} />
     </div>
   );
@@ -824,9 +854,9 @@ export const TableActions = ({ actions }) => {
   }, [open]);
   return actions.length < 4 ? (
     <td className={s.tableActions} data-testid="tableActions">
-      {actions.map((action) => (
+      {actions.map((action, i) => (
         <button
-          key={action.label}
+          key={i}
           title={action.label}
           className="clear"
           onClick={action.callBack}
@@ -853,9 +883,9 @@ export const TableActions = ({ actions }) => {
         backdropClass={s.actionBackdrop}
       >
         <div ref={popupContainerRef}>
-          {actions.map((action) => (
+          {actions.map((action, i) => (
             <button
-              key={action.label}
+              key={i}
               title={action.label}
               className="clear"
               onClick={() => {

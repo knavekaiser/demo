@@ -287,7 +287,7 @@ export default function IncidentReporting() {
             label="Reporting Department"
             value={
               parameters?.departments?.find(
-                (dept) => dept.value.toString() === ir?.department.toString()
+                (dept) => dept.value.toString() === ir?.department?.toString()
               )?.label || ir?.department
             }
           />
@@ -345,7 +345,7 @@ export default function IncidentReporting() {
             />
           </div>
         </Box>
-        <Box label="TYPE OF INCIDENT *" collapsable={true}>
+        <Box label="TYPE OF INCIDENT" collapsable={true}>
           <Data label="Type">
             <div className={s.highlight}>
               <Data
@@ -356,44 +356,48 @@ export default function IncidentReporting() {
           </Data>
         </Box>
         <Box label="INCIDENT CATEGORY" collapsable={true}>
-          <div className={s.category}>
-            <Data
-              label="Incident Category"
-              value={
-                parameters?.categories?.find(
-                  (item) => item.id?.toString() === ir?.inciCateg?.toString()
-                )?.name || ir?.inciCateg
-              }
-            />
-            <Data
-              label="Incident Sub-category"
-              value={
-                parameters?.categories
-                  ?.find(
+          <div className={s.categoryWrapper}>
+            <div className={s.category}>
+              <Data
+                label="Incident Category"
+                value={
+                  parameters?.categories?.find(
                     (item) => item.id?.toString() === ir?.inciCateg?.toString()
-                  )
-                  ?.subCategorys?.find(
-                    (item) => item.id?.toString() === ir?.inciSubCat?.toString()
-                  )?.name || ir?.inciSubCat
-              }
-            />
+                  )?.name || ir?.inciCateg
+                }
+              />
+              <Data
+                label="Incident Sub-category"
+                value={
+                  parameters?.categories
+                    ?.find(
+                      (item) =>
+                        item.id?.toString() === ir?.inciCateg?.toString()
+                    )
+                    ?.subCategorys?.find(
+                      (item) =>
+                        item.id?.toString() === ir?.inciSubCat?.toString()
+                    )?.name || ir?.inciSubCat
+                }
+              />
+            </div>
+            <Data label="Prescribed">
+              <div className={`${s.highlight} ${s.drugs}`}>
+                <Data label="Name of Drug" value="Ranitidine" />
+                <Data label="Route" value="Oral" />
+                <Data label="Dose" value="300mg" />
+              </div>
+            </Data>
+            <Data label="Administered">
+              <div className={`${s.highlight} ${s.administration}`}>
+                <Data label="Name of Drug" value="Ranitidine" />
+                <Data label="Route" value="Oral" />
+                <Data label="Dose" value="600mg" />
+                <Data label="Administration Date" value="12/12/2020 9:30" />
+                <Data label="Administered By" value="Sophia" />
+              </div>
+            </Data>
           </div>
-          <Data label="Prescribed">
-            <div className={`${s.highlight} ${s.drugs}`}>
-              <Data label="Name of Drug" value="Ranitidine" />
-              <Data label="Route" value="Oral" />
-              <Data label="Dose" value="300mg" />
-            </div>
-          </Data>
-          <Data label="Administered">
-            <div className={`${s.highlight} ${s.administration}`}>
-              <Data label="Name of Drug" value="Ranitidine" />
-              <Data label="Route" value="Oral" />
-              <Data label="Dose" value="600mg" />
-              <Data label="Administration Date" value="12/12/2020 9:30" />
-              <Data label="Administered By" value="Sophia" />
-            </div>
-          </Data>
         </Box>
         <Box label="PERSON AFFECTED" collapsable={true}>
           <div className={s.placeholder}>Placeholder</div>
@@ -407,7 +411,7 @@ export default function IncidentReporting() {
               .map(
                 (item) =>
                   parameters?.departments?.find(
-                    (dept) => dept.value?.toString() === item.toString()
+                    (dept) => dept.value?.toString() === item?.toString()
                   )?.label || item
               )
               .join(", ")}

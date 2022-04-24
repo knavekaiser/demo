@@ -139,8 +139,6 @@ export default function IrCodeConfig() {
               { label: "Value" },
             ]}
             sortable={{
-              animation: 250,
-              easing: "ease-in-out",
               handle: ".handle",
               removeCloneOnHide: true,
               onEnd: (e) => {

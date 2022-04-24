@@ -14,7 +14,6 @@ import {
   IrDashboardContext,
   IrDashboardContextProvider,
 } from "../SiteContext";
-import { Routes, Route } from "react-router-dom";
 import {
   FaInfoCircle,
   FaRegTrashAlt,
@@ -33,6 +32,7 @@ import {
   FaFlag,
   FaUpload,
   FaPrint,
+  FaRegCheckCircle,
   FaCircle,
 } from "react-icons/fa";
 import { BiSearch } from "react-icons/bi";
@@ -51,7 +51,13 @@ import {
   Moment,
   moment,
 } from "./elements";
-import { useNavigate, useLocation, createSearchParams } from "react-router-dom";
+import {
+  useNavigate,
+  useLocation,
+  createSearchParams,
+  Routes,
+  Route,
+} from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { Modal, Prompt } from "./modal";
 import { irStatus, endpoints as defaultEndpoints, paths } from "../config";
@@ -60,6 +66,8 @@ import s from "./irDashboard.module.scss";
 import { useFetch } from "../hooks";
 import { useReactToPrint } from "react-to-print";
 import { countDays } from "../helpers";
+
+import IrInvestigation from "./irInvestigation";
 
 const calculateDays = (ir, exclude = []) => {
   let status = {};
@@ -201,40 +209,70 @@ const PrintMemo = memo(Print);
 
 function IrDashboard() {
   const { user, checkPermission } = useContext(SiteContext);
+  const location = useLocation();
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (
+      new RegExp(`${paths.incidentDashboard.basePath}/?$`).test(
+        location.pathname
+      )
+    ) {
+      navigate(paths.incidentDashboard.myDashboard);
+    }
+  }, []);
   return (
     <div className={s.container}>
-      <header>
-        <h3>INCIDENT REPORTING DASHBOARD</h3>
-      </header>
-      <Tabs
-        tabs={[
-          {
-            label: "My Dashboard",
-            path: paths.incidentDashboard.myDashboard,
-            search: {
-              userId: user.id,
-            },
-          },
-          ...(checkPermission({ roleId: ["irInvestigator", "incidentManager"] })
-            ? [
-                {
-                  label: "Quality Dashboard",
-                  path: paths.incidentDashboard.qualityDashboard,
-                  search: {
-                    view: user.role.includes("incidentManager")
-                      ? "all"
-                      : "assigned",
-                    ...(user.role.includes("incidentManager")
-                      ? {}
-                      : {
-                          irInvestigator: user.id,
-                        }),
-                  },
-                },
-              ]
-            : []),
-        ]}
-      />
+      <Routes>
+        {[
+          paths.incidentDashboard.myDashboard + "/*",
+          paths.incidentDashboard.qualityDashboard + "/*",
+        ].map((path, i) => (
+          <Route
+            key={i}
+            path={path}
+            element={
+              <>
+                <header>
+                  <h3>INCIDENT REPORTING DASHBOARD</h3>
+                </header>
+                <Tabs
+                  tabs={[
+                    {
+                      label: "My Dashboard",
+                      path:
+                        paths.incidentDashboard.basePath +
+                        "/" +
+                        paths.incidentDashboard.myDashboard,
+                      search: { userId: user.id },
+                    },
+                    ...(checkPermission({
+                      roleId: ["irInvestigator", "incidentManager"],
+                    })
+                      ? [
+                          {
+                            label: "Quality Dashboard",
+                            path:
+                              paths.incidentDashboard.basePath +
+                              "/" +
+                              paths.incidentDashboard.qualityDashboard,
+                            search: {
+                              view: user.role.includes("incidentManager")
+                                ? "all"
+                                : "assigned",
+                              ...(user.role.includes("incidentManager")
+                                ? {}
+                                : { irInvestigator: user.id }),
+                            },
+                          },
+                        ]
+                      : []),
+                  ]}
+                />
+              </>
+            }
+          />
+        ))}
+      </Routes>
       <Routes>
         <Route
           path={paths.incidentDashboard.myDashboard + "/*"}
@@ -244,6 +282,12 @@ function IrDashboard() {
           <Route
             path={paths.incidentDashboard.qualityDashboard + "/*"}
             element={<QualityDashboard />}
+          />
+        )}
+        {checkPermission({ roleId: ["irInvestigator"] }) && (
+          <Route
+            path={paths.incidentDashboard.irInvestigation.basePath + "/*"}
+            element={<IrInvestigation />}
           />
         )}
         <Route path={"/*"} element={<h1>Fallback</h1>} />
@@ -1181,7 +1225,16 @@ export const QualityDashboard = () => {
     {
       icon: <FaCrosshairs />,
       label: "IR Investigation",
-      callBack: () => {},
+      callBack: () =>
+        navigate({
+          pathname: `${
+            paths.incidentDashboard.basePath
+          }/${paths.incidentDashboard.irInvestigation.basePath.replace(
+            ":irId",
+            inc.id
+          )}/${paths.incidentDashboard.irInvestigation.investigation.basePath}`,
+          // search: "?" + createSearchParams({ irId: inc.id }),
+        }),
     },
     {
       icon: <FaRegStar />,
@@ -1398,6 +1451,24 @@ export const QualityDashboard = () => {
             <FaUser />
           </span>{" "}
           Patient Complaint
+        </span>
+        <span>
+          <span className={s.icon} style={{ color: "rgb(46, 74, 121)" }}>
+            <FiCheckSquare />
+          </span>{" "}
+          IR Rectified
+        </span>
+        <span>
+          <span className={s.icon} style={{ color: "rgb(46, 74, 121)" }}>
+            <FaRegCheckCircle />
+          </span>{" "}
+          CAPA Accepted
+        </span>
+        <span>
+          <span className={s.icon} style={{ color: "rgb(21, 164, 40)" }}>
+            <FaFlag />
+          </span>{" "}
+          IR Acknowledge
         </span>
       </div>
       <PrintMemo

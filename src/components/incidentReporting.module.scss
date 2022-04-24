@@ -191,6 +191,10 @@ main {
           }
         }
       }
+      .categoryWrapper {
+        display: grid;
+        grid-gap: 14px;
+      }
     }
     .data {
       .value {

@@ -406,6 +406,7 @@ export const Select = ({
                 }),
                 control: () => ({}),
                 singleValue: (provided, state) => {},
+                menuPortal: (base) => ({ ...base, zIndex: 99999999999 }),
               }}
             />
             {renderMultipleValue &&

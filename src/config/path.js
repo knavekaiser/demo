@@ -7,6 +7,21 @@ export default {
     basePath: "/incidentDashboard",
     myDashboard: "myDashboard",
     qualityDashboard: "qualityDashboard",
+    irInvestigation: {
+      basePath: ":irId/irInvestigation",
+      reportedIr: {
+        basePath: "reportedIr",
+      },
+      irApproval: {
+        basePath: "irApproval",
+      },
+      investigation: {
+        basePath: "investigation",
+        irInput: "irInput",
+        irDetails: "irDetails",
+        irRca: "irRca",
+      },
+    },
   },
   capaReport: "/capaReport",
   reports: "/reports",

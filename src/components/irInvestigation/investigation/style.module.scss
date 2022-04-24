@@ -1,0 +1,260 @@
+@import "../../variables";
+
+.mainContainer {
+  display: grid;
+  grid-gap: 10px;
+  .inlineForm {
+    form {
+      grid-gap: 20px;
+      display: grid;
+      align-items: center;
+    }
+    grid-column: 1 / -1;
+  }
+  .irInput {
+    display: grid;
+    grid-gap: 10px;
+    .btns {
+      display: flex;
+      grid-gap: 10px;
+    }
+    .evidences {
+      tr,
+      .inlineForm form {
+        grid-template-columns: 10rem 10rem 15rem 12rem 12rem 4rem;
+        textarea {
+          min-height: 30px;
+          height: min-content !important;
+        }
+      }
+    }
+  }
+  .irDetails {
+    display: grid;
+    grid-gap: 10px;
+    .similarIncidents {
+      display: flex;
+      grid-gap: 10px;
+      .similarInput {
+        display: flex;
+        grid-gap: 10px;
+      }
+      a {
+        color: $primary-color;
+        text-decoration: underline;
+        font-weight: 500;
+        cursor: pointer;
+      }
+    }
+    .tableOfEvents {
+      tr,
+      .inlineForm form {
+        display: grid;
+        grid-template-columns: 2rem 1fr 10rem 4rem;
+      }
+      .dscr {
+        display: flex;
+        grid-gap: 6px;
+        .flag {
+          flex-shrink: 0;
+          color: rgb(152, 152, 152);
+          &.problem {
+            color: $red;
+          }
+        }
+      }
+    }
+    .legend {
+      align-items: center;
+      display: flex;
+      grid-gap: 6px;
+      .problem {
+        color: $red;
+      }
+    }
+    .riskAssessment {
+      grid-gap: 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    }
+    .notesWrapper {
+      display: grid;
+      grid-gap: 20px;
+      grid-template-columns: 1fr max-content;
+      .selfReporting {
+        display: grid;
+        grid-gap: 10px 20px;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        .radio {
+          grid-column: 1/-1;
+        }
+      }
+      .selfReporting,
+      .ipsg {
+        padding: 10px;
+        border: 1px solid $primary-grey;
+        .radio {
+          & > label {
+            font-size: 10pt;
+            font-weight: 600;
+          }
+          display: flex;
+          grid-gap: 10px;
+        }
+      }
+      .notes {
+        grid-column: 1/-1;
+        tr,
+        .inlineForm form {
+          grid-template-columns: 1fr 10rem 4rem;
+        }
+      }
+    }
+    & > .btns {
+      display: flex;
+      justify-content: center;
+      grid-gap: 10px;
+    }
+  }
+}
+
+.requestInput {
+  max-width: 60rem;
+  form {
+    margin: 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    grid-gap: 15px;
+    .descriptions,
+    .query,
+    .btns {
+      grid-column: 1/-1;
+    }
+    .descriptions {
+      border: 1px solid rgb(199, 199, 199);
+      padding: 10px;
+      label {
+        font-size: 10pt;
+        color: $blue;
+      }
+    }
+  }
+}
+.recordInputModal {
+  form {
+    margin: 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-gap: 15px;
+    .response,
+    .btns {
+      grid-column: 1/-1;
+    }
+  }
+}
+
+.requestInput,
+.recordInputModal {
+  .btns {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    grid-gap: 10px;
+  }
+}
+
+.similarIncidentsModal {
+  width: 100% !important;
+  max-width: 60rem;
+  .similarIncidents {
+    padding: 10px;
+    max-height: 100%;
+    .incidents {
+      margin-top: 10px;
+      display: grid;
+      border: 1px solid $primary-grey;
+      &.details {
+        grid-template-columns: 15rem 1fr;
+      }
+      &.summary {
+        padding: 10px;
+        h4 {
+          color: $primary-color;
+        }
+        display: grid;
+        grid-gap: 10px;
+        .location {
+          h4 {
+            grid-column: 1/-1;
+          }
+          display: grid;
+          grid-gap: 0 20px;
+          grid-template-columns: 1fr 1fr;
+          section {
+            span {
+              font-size: 10pt;
+              font-weight: 600;
+            }
+          }
+        }
+        .policy {
+          tr {
+            grid-template-columns: 5rem 10rem 10rem 1fr;
+          }
+        }
+        .actionPlan {
+          tr {
+            grid-template-columns: 4rem 10rem 7rem 7rem 7rem 7rem 6rem;
+          }
+        }
+      }
+      .sidebar {
+        border-left: 1px solid $primary-grey;
+        padding: 6px 10px;
+        background: $comp-grey;
+        overflow-y: scroll;
+        max-height: calc(100vh - (2rem + 120px));
+        ul {
+          margin-top: 10px;
+          display: grid;
+          grid-gap: 8px;
+          li {
+            display: flex;
+            .detail {
+              flex: 1;
+              .sequence {
+                font-size: 12pt;
+                color: $primary-color;
+                font-weight: 500;
+                text-decoration: underline;
+                cursor: pointer;
+              }
+              p {
+                font-size: 10pt;
+              }
+            }
+            button {
+              color: $primary-color-dark1;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+.collapsableSection {
+  .header {
+    color: black;
+    padding: 0;
+    &:hover {
+      color: black;
+    }
+    svg {
+      color: $primary-color;
+    }
+  }
+  .content {
+    margin-left: 15px;
+  }
+}

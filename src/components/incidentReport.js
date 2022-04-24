@@ -1554,7 +1554,7 @@ const NotificationForm = ({
 export const Box = ({ label, children, className, collapsable }) => {
   const [open, setOpen] = useState(true);
   return (
-    <div className={s.box} data-testid="box">
+    <div className={`${s.box} ${className || ""}`} data-testid="box">
       <div className={s.head}>
         <h4>{label}</h4>
         {collapsable && (
