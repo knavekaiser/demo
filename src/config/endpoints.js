@@ -55,7 +55,9 @@ export default {
   templateData: `${baseApiUrl}/templateData`,
 
   investigationEvents: `${baseApiUrl}/events`,
-  evidences: `${baseApiUrl}/evidences`,
+  investigationNotes: `${baseApiUrl}/notes`,
+  evidences: `${baseApiUrl}/inputEvidences`,
   recordInputs: `${baseApiUrl}/recordInput`,
   requestInputs: `${baseApiUrl}/reqInput`,
+  irInvestigation: `${baseApiUrl}/irInvestigation`,
 };

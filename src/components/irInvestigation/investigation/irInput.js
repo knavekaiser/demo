@@ -11,6 +11,7 @@ import {
   FileInput,
   moment,
   Moment,
+  uploadFiles,
 } from "../../elements";
 import { SiteContext } from "../../../SiteContext";
 import { InvestigationContext } from "../InvestigationContext";
@@ -48,45 +49,58 @@ const IrInput = () => {
   const { get: getSources } = useFetch(
     defaultEndpoints.twoFieldMasters + "/12"
   );
+  const { get: getEvidenceTypes } = useFetch(
+    defaultEndpoints.twoFieldMasters + "/13"
+  );
 
   useEffect(() => {
-    getDepartments().then(({ data }) => {
-      console.log(data);
-      if (data?._embedded?.department) {
-        setParameters((prev) => ({
-          ...prev,
-          departments: data?._embedded?.department.map((item) => ({
-            label: item.name,
-            value: item.id,
-          })),
-        }));
-      }
-    });
-    getUsers().then(({ data }) => {
-      console.log(data);
-      if (data?._embedded?.user) {
-        setParameters((prev) => ({
-          ...prev,
-          users: data?._embedded?.user.map((item) => ({
-            label: item.name,
-            value: item.id,
-          })),
-        }));
-      }
-    });
-    getSources().then(({ data }) => {
-      if (data?.twoFieldMasterDetails) {
-        setParameters((prev) => ({
-          ...prev,
-          evidenceSources: data.twoFieldMasterDetails
-            .filter((item) => item.showToggle)
-            .map((item) => ({ label: item.name, value: item.id })),
-        }));
-      }
-    });
+    Promise.all([
+      getDepartments(),
+      getUsers(),
+      getSources(),
+      getEvidenceTypes(),
+    ])
+      .then(
+        ([
+          { data: departments },
+          { data: users },
+          { data: sources },
+          { data: evidenceTypes },
+        ]) => {
+          const _parameters = { ...parameters };
+          if (departments?._embedded.department) {
+            _parameters.departments = departments?._embedded?.department.map(
+              (item) => ({
+                label: item.name,
+                value: item.id,
+              })
+            );
+          }
+          if (users?._embedded.user) {
+            _parameters.users = users?._embedded?.user.map((item) => ({
+              label: item.name,
+              value: item.id,
+            }));
+          }
+          if (sources?.twoFieldMasterDetails) {
+            _parameters.evidenceSources = sources.twoFieldMasterDetails
+              .filter((item) => item.showToggle)
+              .map((item) => ({ label: item.name, value: item.id }));
+          }
+          if (evidenceTypes?.twoFieldMasterDetails) {
+            _parameters.evidenceTypes = evidenceTypes.twoFieldMasterDetails
+              .filter((item) => item.showToggle)
+              .map((item) => ({ label: item.name, value: item.id }));
+          }
+          setParameters((prev) => ({ ...prev, ..._parameters }));
+        }
+      )
+      .catch((err) => {
+        console.log(err);
+      });
   }, []);
 
-  console.log(ir, [...(ir.recordInput || []), ...(ir.reqInput || [])]);
+  // console.log(ir, [...(ir.recordInput || []), ...(ir.reqInput || [])]);
   return (
     <div className={s.irInput}>
       <div className={s.btns}>
@@ -182,7 +196,7 @@ const IrInput = () => {
         )}
       </Table>
       <Box collapsable label="Evidence">
-        <Evidence />
+        <Evidence parameters={parameters} />
       </Box>
       <Modal
         head
@@ -390,7 +404,7 @@ const RecordInputForm = ({ parameters, onSuccess }) => {
   const uploads = watch("files");
 
   const { post: saveInput, loading } = useFetch(defaultEndpoints.recordInputs);
-  const { post: uploadFiles, laoding: uploadingFiles } = useFetch(
+  const { post: upload, laoding: uploadingFiles } = useFetch(
     defaultEndpoints.uploadFiles
   );
 
@@ -398,35 +412,13 @@ const RecordInputForm = ({ parameters, onSuccess }) => {
     <form
       onSubmit={handleSubmit(async (values) => {
         if (values.upload?.length) {
-          const formData = new FormData();
-          const uploaded = [];
-          const newFiles = [];
-
-          for (var _file of values.upload) {
-            if (typeof _file === "string" || _file.uri) {
-              uploaded.push(_file.uri || _file);
-            } else {
-              newFiles.push(_file);
-              formData.append("files", _file);
-            }
-          }
-
-          let links = "";
-
-          if (newFiles.length) {
-            links = await uploadFiles(formData)
-              .then(({ data }) => (links = data?.map((item) => item.uri) || []))
-              .catch((err) => {
-                Prompt({
-                  type: "error",
-                  message: "Invalid file, Please check",
-                });
-                return [];
-              });
-          }
-
-          if (newFiles.length !== links.length) {
-            return;
+          console.log({ upload: values.upload });
+          const { links, error: uploadError } = await uploadFiles({
+            files: values.upload,
+            uploadFiles: upload,
+          });
+          if (uploadError) {
+            return Prompt({ type: "error", message: uploadError.message });
           }
 
           values.upload = links[0];
@@ -507,45 +499,16 @@ const RecordInputForm = ({ parameters, onSuccess }) => {
   );
 };
 
-const Evidence = () => {
-  const [evidences, setEvidences] = useState([
-    {
-      type: "picture",
-      source: "nurse",
-      description: "Picture of the person",
-      evidence_date_time: "2022-05-12T08:05",
-      files: "url.jpg",
-    },
-  ]);
+const Evidence = ({ parameters }) => {
+  const { ir } = useContext(InvestigationContext);
+  const [evidences, setEvidences] = useState([]);
   const [edit, setEdit] = useState(null);
-  const [parameters, setParameters] = useState({
-    evidenceTypes: [
-      {
-        label: "Picture",
-        value: "picture",
-      },
-      {
-        label: "Document",
-        value: "document",
-      },
-    ],
-    evidenceSources: [
-      {
-        label: "Nurse",
-        value: "nurse",
-      },
-      {
-        label: "Doctor",
-        value: "doctor",
-      },
-    ],
-  });
 
-  const onSuccess = useCallback((newCat) => {
+  const onSuccess = useCallback((newEvidence) => {
     setEvidences((prev) => {
-      return prev.find((c) => c.id === newCat.id)
-        ? prev.map((c) => (c.id === newCat.id ? newCat : c))
-        : [...prev, newCat];
+      return prev.find((c) => c.id === newEvidence.id)
+        ? prev.map((c) => (c.id === newEvidence.id ? newEvidence : c))
+        : [...prev, newEvidence];
     });
     setEdit(null);
   }, []);
@@ -557,9 +520,9 @@ const Evidence = () => {
 
   useEffect(() => {
     getEvidences()
-      .then((data) => {
-        if (data?._embedded?.evidence) {
-          setEvidences(data._embedded.evidence);
+      .then(({ data }) => {
+        if (data?._embedded?.inputEvidences) {
+          setEvidences(data._embedded.inputEvidences);
         }
       })
       .catch((err) => Prompt({ type: "error", message: err.message }));
@@ -584,6 +547,7 @@ const Evidence = () => {
             key={edit ? "edit" : "add"}
             onSuccess={onSuccess}
             clearForm={setEdit}
+            evidences={evidences}
             parameters={parameters}
           />
         </td>
@@ -591,17 +555,24 @@ const Evidence = () => {
       {evidences.map((evid, i) => (
         <tr key={i}>
           <td>
-            {parameters.evidenceTypes.find((type) => type.value === evid.type)
-              ?.label || evid.type}
+            {parameters.evidenceTypes.find(
+              (type) => type.value === evid.eviType
+            )?.label || evid.eviType}
           </td>
           <td>
             {parameters.evidenceSources.find(
-              (source) => source.value === evid.source
-            )?.label || evid.source}
+              (source) => source.value === evid.eviSource
+            )?.label || evid.evidenceSource}
           </td>
-          <td>{evid.description}</td>
-          <td>{evid.evidence_date_time}</td>
-          <td>{evid.files}</td>
+          <td>{evid.eviDesc}</td>
+          <td>
+            <Moment format="DD/MM/YYYY hh:mm">{evid.dateTime}</Moment>
+          </td>
+          <td className="textEllips">
+            <a target="_blank" href={evid.upload}>
+              {evid.upload}
+            </a>
+          </td>
           <TableActions
             actions={[
               {
@@ -640,7 +611,7 @@ const EvidenceForm = ({
   edit,
   onSuccess,
   clearForm,
-  departments,
+  evidences,
   parameters,
 }) => {
   const {
@@ -649,13 +620,17 @@ const EvidenceForm = ({
     reset,
     watch,
     setValue,
+    clearErrors,
     formState: { errors },
   } = useForm({ ...edit });
 
   const uploads = watch("files");
 
-  const { post: postDepartment, put: updateDepartment, loading } = useFetch(
-    defaultEndpoints.departments + `/${edit?.id || ""}`
+  const { post: postEvidence, put: updateEvidence, loading } = useFetch(
+    defaultEndpoints.evidences + `/${edit?.id || ""}`
+  );
+  const { post: upload, laoding: uploadingFiles } = useFetch(
+    defaultEndpoints.uploadFiles
   );
 
   useEffect(() => {
@@ -663,23 +638,26 @@ const EvidenceForm = ({
   }, [edit]);
   return (
     <form
-      onSubmit={handleSubmit((data) => {
-        if (
-          departments?.some(
-            (item) =>
-              item.name.trim().toLowerCase() ===
-                data.name.trim().toLowerCase() && item.id !== data.id
-          )
-        ) {
-          Prompt({
-            type: "information",
-            message: `${data.name} already exists.`,
+      onSubmit={handleSubmit(async (values) => {
+        if (values.upload?.length) {
+          const { links, error: uploadError } = await uploadFiles({
+            files: values.upload,
+            uploadFiles: upload,
           });
-          return;
+          console.log(links, uploadError);
+          if (uploadError) {
+            return Prompt({ type: "error", message: uploadError.message });
+          }
+
+          values.upload = links[0];
         }
-        (edit ? updateDepartment : postDepartment)(data)
+
+        (edit ? updateEvidence : postEvidence)({
+          ...values,
+          // reqInput: { id: "ds" },
+        })
           .then((data) => {
-            if (data.name) {
+            if (data.id) {
               onSuccess(data);
               reset();
             }
@@ -690,47 +668,52 @@ const EvidenceForm = ({
       })}
     >
       <Combobox
-        name="evidenceType"
+        name="eviType"
         watch={watch}
         register={register}
         formOptions={{ required: "Select Evidence Type" }}
         setValue={setValue}
         placeholder="Select"
         options={parameters?.evidenceTypes}
-        errors={errors.evidenceTypes}
+        error={errors.eviType}
+        clearErrors={clearErrors}
       />
       <Combobox
-        name="evidenceSource"
+        name="eviSource"
         watch={watch}
         register={register}
         formOptions={{ required: "Select Evidence Source" }}
         setValue={setValue}
         placeholder="Select"
         options={parameters?.evidenceSources}
-        errors={errors.evidenceSource}
+        error={errors.eviSource}
+        clearErrors={clearErrors}
       />
       <Textarea
-        {...register("evidenceDescription", {
+        {...register("eviDesc", {
           required: "Enter Evidence Description",
         })}
-        errors={errors.evidenceDescription}
+        error={errors.eviDesc}
       />
       <Input
         type="datetime-local"
-        {...register("evidence_date_time", {
+        {...register("dateTime", {
           required: "Select Evidence Date & Time",
         })}
-        errors={errors.evidence_date_time}
+        error={errors.dateTime}
       />
       <FileInput
-        multiple={true}
         prefill={uploads}
         onChange={(files) => {
-          setValue("files", files);
+          setValue("upload", files);
         }}
       />
       <div className={s.btns}>
-        <button className="btn secondary" type="submit" disabled={loading}>
+        <button
+          className="btn secondary"
+          type="submit"
+          disabled={uploadingFiles || loading}
+        >
           {edit ? (
             <FaCheck />
           ) : (

@@ -339,3 +339,19 @@ button {
   }
   color: $primary-color;
 }
+
+.textEllips {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  &.c-2 {
+    -webkit-line-clamp: 2;
+  }
+  &.c-3 {
+    -webkit-line-clamp: 3;
+  }
+  &.c-4 {
+    -webkit-line-clamp: 4;
+  }
+}

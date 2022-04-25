@@ -8,6 +8,10 @@
       grid-gap: 20px;
       display: grid;
       align-items: center;
+      .btns {
+        display: flex;
+        grid-gap: 6px;
+      }
     }
     grid-column: 1 / -1;
   }
@@ -21,7 +25,7 @@
     .evidences {
       tr,
       .inlineForm form {
-        grid-template-columns: 10rem 10rem 15rem 12rem 12rem 4rem;
+        grid-template-columns: 10rem 10rem 1fr 12rem 12rem 4rem;
         textarea {
           min-height: 30px;
           height: min-content !important;
@@ -50,7 +54,7 @@
       tr,
       .inlineForm form {
         display: grid;
-        grid-template-columns: 2rem 1fr 10rem 4rem;
+        grid-template-columns: 2rem 1fr 12rem 4rem;
       }
       .dscr {
         display: flex;
@@ -106,7 +110,7 @@
         grid-column: 1/-1;
         tr,
         .inlineForm form {
-          grid-template-columns: 1fr 10rem 4rem;
+          grid-template-columns: 1fr 12rem 4rem;
         }
       }
     }

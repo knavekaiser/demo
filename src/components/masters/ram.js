@@ -16,19 +16,13 @@ import {
 } from "../elements";
 import { Modal, Prompt } from "../modal";
 import { useForm } from "react-hook-form";
-import { endpoints as defaultEndpoints } from "../../config";
+import { endpoints as defaultEndpoints, riskColors } from "../../config";
 import { useFetch } from "../../hooks";
 import s from "./masters.module.scss";
 
 export default function RiskAssessments() {
   const [parameters, setParameters] = useState({
-    colors: [
-      { label: "Green", value: "1", hex: "#68ad03" },
-      { label: "Yellow", value: "2", hex: "#f6d304" },
-      { label: "Orange", value: "3", hex: "#fb8433" },
-      { label: "Red", value: "4", hex: "#c00208" },
-      { label: "Light Green", value: "5", hex: "#c1cd23" },
-    ],
+    colors: riskColors,
   });
   const [risks, setRisks] = useState([]);
   const [edit, setEdit] = useState(null);

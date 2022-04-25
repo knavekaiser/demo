@@ -5,6 +5,7 @@ import appConfig from "./appConfig";
 import endpoints from "./endpoints";
 import paths from "./path";
 import preventability from "./preventability";
+import riskColors from "./riskColors";
 
 export {
   permissions,
@@ -14,4 +15,5 @@ export {
   endpoints,
   paths,
   preventability,
+  riskColors,
 };

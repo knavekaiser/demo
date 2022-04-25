@@ -208,6 +208,7 @@ export const SearchField = ({
     </section>
   );
 };
+
 export const FileInput = ({ label, required, multiple, onChange, prefill }) => {
   const id = useRef(Math.random().toString(36).substr(4));
   const prefillLoaded = useRef(false);
@@ -308,6 +309,35 @@ export const FileInput = ({ label, required, multiple, onChange, prefill }) => {
     </section>
   );
 };
+export const uploadFiles = async ({ files, uploadFiles }) => {
+  let links = [];
+  let error = null;
+  console.log({ files });
+  if (files?.length) {
+    const formData = new FormData();
+    const uploaded = [];
+    const newFiles = [];
+
+    for (var _file of files) {
+      if (typeof _file === "string" || _file.uri) {
+        uploaded.push(_file.uri || _file);
+      } else {
+        newFiles.push(_file);
+        formData.append("files", _file);
+      }
+    }
+
+    if (newFiles.length) {
+      links = await uploadFiles(formData)
+        .then(({ data }) => (links = data?.map((item) => item.uri) || []))
+        .catch((err) => {
+          error = err;
+        });
+    }
+  }
+  return { links, error };
+};
+
 export const Textarea = forwardRef(
   ({ className, label, error, ...rest }, ref) => {
     return (

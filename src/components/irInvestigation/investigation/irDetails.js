@@ -1,6 +1,7 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useContext } from "react";
 import s from "./style.module.scss";
 import { Box } from "../../incidentReport";
+import { InvestigationContext } from "../InvestigationContext";
 import {
   Select,
   Table,
@@ -12,6 +13,7 @@ import {
   Radio,
   Tabs,
   Moment,
+  moment,
 } from "../../elements";
 import { ImEye } from "react-icons/im";
 import {
@@ -26,11 +28,21 @@ import {
 import { IoClose } from "react-icons/io5";
 import { BsPencilFill } from "react-icons/bs";
 import { useFetch } from "../../../hooks";
-import { endpoints as defaultEndpoints } from "../../../config";
+import {
+  endpoints as defaultEndpoints,
+  permissions,
+  riskColors,
+} from "../../../config";
 import { Prompt, Modal } from "../../modal";
-import { useForm } from "react-hook-form";
+import { useForm, FormProvider, useFormContext } from "react-hook-form";
+
+export const ConnectForm = ({ children }) => {
+  const methods = useFormContext();
+  return children({ ...methods });
+};
 
 const IrDetails = () => {
+  const { ir, setIr } = useContext(InvestigationContext);
   const [inputs, setInputs] = useState([
     {
       id: 12,
@@ -47,6 +59,15 @@ const IrDetails = () => {
       response_date_time: "2022-01-07T20:23",
     },
   ]);
+  const [parameters, setParameters] = useState({
+    severity: [],
+    likelihood: [],
+    users: [],
+    departments: [],
+    roles: permissions.map((p) => ({ value: p.role, label: p.label })),
+    risks: [],
+    riskStatus: [],
+  });
   const [requestInput, setRequestInput] = useState(false);
   const [similarIncidents, setSimilarIncidents] = useState([
     {
@@ -111,202 +132,424 @@ const IrDetails = () => {
     },
   ]);
   const [showSimilarIncidents, setShowSimilarIncidents] = useState(false);
-  const [prevSimilarIncidents, setPrevSimilarIncidents] = useState("true");
-  const [severity, setSeverity] = useState([
-    { vlaue: "severe", label: "Severe" },
-    { vlaue: "mild", label: "Mild" },
-    { vlaue: "noHarm", label: "No Harm" },
-  ]);
-  const [likelihood, setLikelihood] = useState([
-    { vlaue: "unlikely", label: "Unlikely" },
-    { vlaue: "likely", label: "Likely" },
-    { vlaue: "veryLikely", label: "Very Likely" },
-  ]);
-  const [notes, setNotes] = useState([
-    {
-      id: 2,
-      note: "Incidnet occured on 5th march, but was reported on 10th march.",
-      date: "2022-03-10T12:45",
+  const methods = useForm();
+
+  const { post: saveIrDetail, put: updateIrDetail, savingIrDetail } = useFetch(
+    defaultEndpoints.irInvestigation +
+      (ir.irInvestigation?.length ? `/${ir.irInvestigation[0].id}` : "")
+  );
+
+  const submitMainForm = useCallback(
+    (values) => {
+      console.log(ir.irInvestigation);
+      (ir.irInvestigation?.length ? updateIrDetail : saveIrDetail)({
+        ...(ir.irInvestigation.length ?? ir.irInvestigation[0]),
+        ...values,
+        incidentReport: { id: ir.id },
+      }).then(({ data }) => {
+        if (data.id) {
+          setIr((prev) => ({ ...prev, irInvestigation: [data] }));
+        }
+      });
+      console.log(values);
     },
-  ]);
-  const { control } = useForm();
+    [ir]
+  );
+
+  const { get: getSeverity } = useFetch(
+    defaultEndpoints.twoFieldMasters + "/2"
+  );
+  const { get: getLikelihood } = useFetch(
+    defaultEndpoints.twoFieldMasters + "/9"
+  );
+  const { get: getRiskStatus } = useFetch(
+    defaultEndpoints.twoFieldMasters + "/4"
+  );
+  const { get: getUsers } = useFetch(defaultEndpoints.users + `?size=10000`);
+  const { get: getDepartments } = useFetch(
+    defaultEndpoints.departments + `?size=10000`
+  );
+  const { get: getRisks } = useFetch(defaultEndpoints.riskAssessments);
+
+  useEffect(() => {
+    Promise.all([
+      getSeverity(),
+      getLikelihood(),
+      getRiskStatus(),
+      getUsers(),
+      getDepartments(),
+      getRisks(),
+    ]).then(
+      ([
+        { data: severity },
+        { data: likelihood },
+        { data: riskStatus },
+        { data: users },
+        { data: departments },
+        { data: risks },
+      ]) => {
+        const _parameters = {};
+
+        if (severity?.twoFieldMasterDetails) {
+          _parameters.severity = severity.twoFieldMasterDetails.map((item) => ({
+            value: item.id,
+            label: item.name,
+          }));
+        }
+
+        if (likelihood?.twoFieldMasterDetails) {
+          _parameters.likelihood = likelihood.twoFieldMasterDetails.map(
+            (item) => ({ label: item.name, value: item.id })
+          );
+        }
+
+        if (riskStatus?.twoFieldMasterDetails) {
+          _parameters.riskStatus = riskStatus.twoFieldMasterDetails.map(
+            (item) => ({ label: item.name, value: item.id })
+          );
+        }
+
+        if (users?._embedded.user) {
+          _parameters.users = users._embedded.user.map((user) => ({
+            label: user.name,
+            value: user.id,
+            department: user.department,
+            role: user.role.split(",").filter((item) => item),
+          }));
+        }
+
+        if (departments?._embedded?.department) {
+          _parameters.departments = departments._embedded.department.map(
+            (dept) => ({ label: dept.name, value: dept.id })
+          );
+        }
+
+        if (risks?._embedded?.riskAssement) {
+          _parameters.risks = risks._embedded.riskAssement;
+        }
+
+        setParameters((prev) => ({ ...prev, ..._parameters }));
+      }
+    );
+  }, []);
+
+  useEffect(() => {
+    if (ir.irInvestigation?.length) {
+      methods.reset({
+        ...ir.irInvestigation[0],
+        prevSimilar: ir.irInvestigation[0].prevSimilar.toString(),
+        riskIncluded: ir.irInvestigation[0].riskIncluded.toString(),
+        selfRep: ir.irInvestigation[0].selfRep.toString(),
+        ipsgBreach: ir.irInvestigation[0].ipsgBreach.toString(),
+      });
+    }
+  }, [ir.irInvestigation]);
+
   return (
-    <div className={s.irDetails}>
-      <div className={s.similarIncidents}>
-        <section className={s.similarInput}>
-          <label>Previous Similar Incidents:</label>
-          <Radio
-            name="prevSimilarIncidents"
-            options={[
-              { label: "Yes", value: "true" },
-              { label: "No", value: "false" },
-            ]}
-            value={prevSimilarIncidents}
-            onChange={(e) => {
-              console.log(e);
-              // setPrevSimilarIncidents()
-            }}
-          />
-        </section>
-        <a onClick={() => setShowSimilarIncidents(true)}>
-          {similarIncidents.length} Incidents
-        </a>
-      </div>
-      <Box collapsable label="TABLE OF EVENTS">
-        <Events />
-        <div className={s.legend}>
-          <FaFlag className={s.problem} /> Potential problem areas
-        </div>
-      </Box>
-      <Box collapsable label="RISK ASSESSMENT">
-        <div className={s.riskAssessment}>
-          <Combobox label="Severity" options={severity} />
-          <Combobox label="Likelihood" options={likelihood} />
-          <Input label="Risk Category" value={"MEDIUM"} readOnly />
-          <section className={s.riskIncluded}>
-            <label>Risk inlcuded in Risk Register</label>
+    <FormProvider {...methods}>
+      <div className={s.irDetails}>
+        <form
+          onSubmit={methods.handleSubmit(submitMainForm)}
+          className={s.similarIncidents}
+        >
+          <section className={s.similarInput}>
+            <label>Previous Similar Incidents:</label>
             <Radio
+              register={methods.register}
+              name="prevSimilar"
               options={[
-                { label: "Yes", value: "yes" },
-                { label: "No", value: "no" },
+                { label: "Yes", value: true },
+                { label: "No", value: false },
               ]}
             />
           </section>
-          <Input label="Risk ID" value={"Phar/1/2021"} readOnly />
-        </div>
-      </Box>
-      <Box label="NOTES">
-        <div className={s.notesWrapper}>
-          <div className={s.selfReporting}>
-            <section className={s.radio}>
-              <label>Self reporting</label>
-              <Radio
-                options={[
-                  { label: "Yes", value: "yes" },
-                  { label: "No", value: "no" },
-                ]}
-              />
-            </section>
-            <Select
-              control={control}
-              name="name"
-              label="Name"
-              options={[
-                { label: "Mark Robber", value: "mark robber" },
-                { label: "John Sina", value: "John Sina" },
-              ]}
-            />
-            <Input label="Name" value={"Nursury"} readOnly />
-            <Input
-              label="Designation"
-              value={"Head of the Department"}
-              readOnly
-            />
+          <a onClick={() => setShowSimilarIncidents(true)}>
+            {similarIncidents.length} Incidents
+          </a>
+        </form>
+        <Box collapsable label="TABLE OF EVENTS">
+          <Events
+            events={(ir.irInvestigation && ir.irInvestigation[0]?.events) || []}
+          />
+          <div className={s.legend}>
+            <FaFlag className={s.problem} /> Potential problem areas
           </div>
-          <div className={s.ipsg}>
-            <section className={s.radio}>
-              <label>IPSG Breach</label>
-              <Radio
-                options={[
-                  { label: "Yes", value: "yes" },
-                  { label: "No", value: "no" },
-                ]}
-              />
-            </section>
-            <Combobox
-              label="Select"
-              options={[
-                { label: "IPSG 1 patient identification error", value: "1" },
-              ]}
-            />
-          </div>
-          <Table
-            columns={[
-              { label: "Notes" },
-              { label: "Date & Time" },
-              { label: "Actions" },
-            ]}
-            className={s.notes}
-          >
-            <tr>
-              <td className={s.inlineForm}>
-                <NoteForm />
-              </td>
-            </tr>
-            {notes.map((note) => (
-              <tr key={note.id}>
-                <td>{note.note}</td>
-                <td>
-                  <Moment format="DD/MM/YYYY hh:mm">{note.date}</Moment>
-                </td>
-                <TableActions
-                  actions={[
-                    {
-                      icon: <BsPencilFill />,
-                      label: "Edit",
-                      callBack: () => setNotes(note),
-                    },
-                    {
-                      icon: <FaRegTrashAlt />,
-                      label: "Delete",
-                      callBack: () =>
-                        Prompt({
-                          type: "confirmation",
-                          message: `Are you sure you want to remove this note?`,
-                          callback: () => {
-                            // deleteCategory(null, {
-                            //   params: { "{ID}": category.id },
-                            // }).then(({ res }) => {
-                            //   if (res.status === 204) {
-                            //     setCategories((prev) =>
-                            //       prev.filter((c) => c.id !== category.id)
-                            //     );
-                            //   } else if (res.status === 409) {
-                            //     Prompt({
-                            //       type: "error",
-                            //       message:
-                            //         "Remove children to delete this master.",
-                            //     });
-                            //   }
-                            // });
-                          },
-                        }),
-                    },
-                  ]}
-                />
-              </tr>
-            ))}
-          </Table>
-        </div>
-      </Box>
-      <Modal
-        head
-        label="RECORD INPUTS"
-        open={showSimilarIncidents}
-        setOpen={setShowSimilarIncidents}
-        className={s.similarIncidentsModal}
-      >
-        <SimilarIncidents similarIncidents={similarIncidents} />
-      </Modal>
-      <section className={s.btns}>
-        <button
-          className="btn secondary wd-100"
-          type="button"
-          onClick={() => {}}
+        </Box>
+        <Box collapsable label="RISK ASSESSMENT">
+          <RiskAssessment
+            methods={methods}
+            investigationDetails={ir.irInvestigation && ir.irInvestigation[0]}
+            parameters={parameters}
+            submitMainForm={submitMainForm}
+          />
+        </Box>
+        <Box label="NOTES" collapsable>
+          <Notes
+            parameters={parameters}
+            methods={methods}
+            notes={(ir.irInvestigation && ir.irInvestigation[0]?.notes) || []}
+          />
+        </Box>
+        <Modal
+          head
+          label="RECORD INPUTS"
+          open={showSimilarIncidents}
+          setOpen={setShowSimilarIncidents}
+          className={s.similarIncidentsModal}
         >
-          Close
-        </button>
-        <button onClick={() => {}} className="btn secondary wd-100">
-          Save
-        </button>
-        <button onClick={() => {}} className="btn wd-100">
-          Submit
-        </button>
-      </section>
-    </div>
+          <SimilarIncidents similarIncidents={similarIncidents} />
+        </Modal>
+        <form
+          className={s.btns}
+          onSubmit={methods.handleSubmit(submitMainForm)}
+        >
+          <button
+            className="btn secondary wd-100"
+            type="button"
+            onClick={() => {}}
+          >
+            Close
+          </button>
+          <button onClick={() => {}} className="btn secondary wd-100">
+            Save
+          </button>
+          <button onClick={() => {}} className="btn wd-100">
+            Submit
+          </button>
+        </form>
+      </div>
+    </FormProvider>
   );
 };
-const NoteForm = ({ edit, onSuccess, clearForm }) => {
+const RiskAssessment = ({
+  methods,
+  invitationDetails,
+  parameters,
+  submitMainForm,
+}) => {
+  const [risk, setRisk] = useState({});
+  const severity = methods.watch("riskSeverity");
+  const likelihood = methods.watch("riskLikeliHood");
+  useEffect(() => {
+    const selectedRisk = parameters.risks.find(
+      (r) => r.likelihood === likelihood && r.serverity === severity
+    );
+
+    console.log("change", { severity, likelihood, selectedRisk });
+    if (selectedRisk) {
+      setRisk((prev) => ({ ...prev, riskDetail: selectedRisk }));
+      methods.setValue(
+        "riskCateg",
+        parameters.riskStatus.find(
+          (item) => item.value.toString() === selectedRisk.riskstatus.toString()
+        )?.label || ""
+      );
+    } else {
+      setRisk((prev) => ({ ...prev, riskDetail: null }));
+    }
+  }, [likelihood, severity]);
+  return (
+    <ConnectForm>
+      {({
+        register,
+        setValue,
+        watch,
+        getValues,
+        formState: { errors },
+        clearErrors,
+        control,
+      }) => {
+        return (
+          <div className={s.riskAssessment}>
+            <Combobox
+              label="Severity"
+              name="riskSeverity"
+              watch={watch}
+              register={register}
+              setValue={setValue}
+              options={parameters.severity}
+            />
+            <Combobox
+              label="Likelihood"
+              name="riskLikeliHood"
+              watch={watch}
+              register={register}
+              setValue={setValue}
+              options={parameters.likelihood}
+            />
+            <Input
+              label="Risk Category"
+              {...register("riskCateg")}
+              value={
+                parameters.riskStatus.find(
+                  (item) =>
+                    item.value.toString() ===
+                    risk.riskDetail?.riskstatus.toString()
+                )?.label || ""
+              }
+              style={
+                risk.riskDetail
+                  ? {
+                      background: riskColors.find(
+                        (item) =>
+                          item.value.toString() ===
+                          risk.riskDetail.color.toString()
+                      )?.hex,
+                    }
+                  : {}
+              }
+              readOnly
+            />
+            <section className={s.riskIncluded}>
+              <label>Risk inlcuded in Risk Register</label>
+              <Radio
+                register={register}
+                name="riskIncluded"
+                options={[
+                  { label: "Yes", value: true },
+                  { label: "No", value: false },
+                ]}
+              />
+            </section>
+            <Input label="Risk ID" {...register("riskId")} />
+          </div>
+        );
+      }}
+    </ConnectForm>
+  );
+};
+
+const Events = ({ events }) => {
+  const { setIr } = useContext(InvestigationContext);
+  const [edit, setEdit] = useState(null);
+
+  const onSuccess = useCallback((newEv) => {
+    // setEvents((prev) => {
+    //   return prev.find((c) => c.id === newEv.id)
+    //     ? prev.map((c) => (c.id === newEv.id ? newEv : c))
+    //     : [...prev, newEv];
+    // });
+    setEdit(null);
+  }, []);
+
+  const { remove: deleteEvent } = useFetch(
+    defaultEndpoints.investigationEvents + "/{ID}"
+  );
+
+  return (
+    <Table
+      className={s.tableOfEvents}
+      sortable={{
+        handle: ".handle",
+        removeCloneOnHide: true,
+        onEnd: (e) => {
+          // const itemEl = e.item;
+          // const { oldIndex, newIndex } = e;
+          // if (oldIndex !== newIndex) {
+          //   setCodeConfig((prev) => {
+          //     const videos = [
+          //       ...prev.filter((item, i) => i !== oldIndex),
+          //     ];
+          //     videos.splice(newIndex, 0, prev[oldIndex]);
+          //     return videos;
+          //   });
+          // }
+        },
+      }}
+      columns={[
+        { label: "S.No." },
+        { label: "Details" },
+        { label: "Date & Time" },
+        { label: "Actions" },
+      ]}
+    >
+      <tr>
+        <td className={s.inlineForm}>
+          <EventForm
+            key={edit ? "edit" : "add"}
+            edit={edit}
+            onSuccess={(newEvent) => {
+              setIr((prev) => ({
+                ...prev,
+                irInvestigation: [
+                  {
+                    ...prev.irInvestigation[0],
+                    events: [
+                      ...(prev.irInvestigation[0].events || []).filter(
+                        (item) => item.id !== newEvent.id
+                      ),
+                      newEvent,
+                    ],
+                  },
+                ],
+              }));
+              setEdit(null);
+            }}
+            clearForm={() => setEdit(null)}
+          />
+        </td>
+      </tr>
+      {events.map((ev, i) => (
+        <tr key={i}>
+          <td className="handle">
+            {" "}
+            <FaEllipsisV /> {ev.no}
+          </td>
+          <td className={s.dscr}>
+            <span className={`${s.flag} ${ev.problem ? s.problem : ""}`}>
+              <FaFlag />
+            </span>
+            {ev.details}
+          </td>
+          <td>
+            <Moment format="DD/MM/YYYY hh:mm">{ev.dateTime}</Moment>
+          </td>
+          <TableActions
+            actions={[
+              {
+                icon: <BsPencilFill />,
+                label: "Edit",
+                callBack: () => setEdit(ev),
+              },
+              {
+                icon: <FaRegTrashAlt />,
+                label: "Delete",
+                callBack: () =>
+                  Prompt({
+                    type: "confirmation",
+                    message: `Are you sure you want to remove this event?`,
+                    callback: () => {
+                      deleteEvent(null, {
+                        params: { "{ID}": ev.id },
+                      }).then(({ res }) => {
+                        if (res.status === 204) {
+                          setIr((prev) => ({
+                            ...prev,
+                            irInvestigation: [
+                              {
+                                ...prev.irInvestigation[0],
+                                events: [
+                                  ...prev.irInvestigation[0].events.filter(
+                                    (item) => item.id !== ev.id
+                                  ),
+                                ],
+                              },
+                            ],
+                          }));
+                        }
+                      });
+                    },
+                  }),
+              },
+            ]}
+          />
+        </tr>
+      ))}
+    </Table>
+  );
+};
+const EventForm = ({ edit, onSuccess, clearForm }) => {
+  const { ir, setIr } = useContext(InvestigationContext);
   const {
     handleSubmit,
     register,
@@ -317,21 +560,65 @@ const NoteForm = ({ edit, onSuccess, clearForm }) => {
   const { post: saveEvent, put: updateEvent, loading } = useFetch(
     defaultEndpoints.investigationEvents + `/${edit?.id || ""}`
   );
+  const { post: saveIrDetail, savingIrDetail } = useFetch(
+    defaultEndpoints.irInvestigation
+  );
 
   useEffect(() => {
-    reset({ ...edit });
+    reset({
+      ...edit,
+      dateTime: edit
+        ? moment({ time: edit.dateTime, format: "YYYY-MM-DDThh:mm" })
+        : "",
+    });
   }, [edit]);
 
   return (
-    <form>
+    <form
+      onSubmit={handleSubmit(async (values) => {
+        let irDetail = ir.irInvestigation[0];
+        if (!irDetail) {
+          irDetail = await saveIrDetail({ incidentReport: { id: ir.id } }).then(
+            ({ data }) => {
+              setIr((prev) => ({ ...prev, irInvestigation: [data] }));
+              return data;
+            }
+          );
+        }
+
+        if (!irDetail) {
+          return Prompt({
+            type: "error",
+            message: "Please save IR Investigation before saving notes.",
+          });
+        }
+
+        (edit ? updateEvent : saveEvent)({
+          ...values,
+          // notes: "notes",
+          // problem: true,
+          // sequence: 1,
+          irId: ir.id,
+          irInvestigation: { id: irDetail.id },
+        })
+          .then(({ data }) => {
+            if (data.id) {
+              onSuccess(data);
+              reset();
+            }
+          })
+          .catch((err) => Prompt({ type: "error", message: err.message }));
+      })}
+    >
+      <span />
       <Input
-        {...register("detail", { required: "Please enter Detail" })}
-        error={errors.detail}
+        {...register("details", { required: "Please enter Detail" })}
+        error={errors.details}
       />
       <Input
         type="datetime-local"
-        {...register("date", { required: "Please enter Date & Time" })}
-        error={errors.date}
+        {...register("dateTime", { required: "Please enter Date & Time" })}
+        error={errors.dateTime}
       />
       <div className={s.btns}>
         <button className="btn secondary" type="submit" disabled={loading}>
@@ -356,6 +643,295 @@ const NoteForm = ({ edit, onSuccess, clearForm }) => {
     </form>
   );
 };
+
+const Notes = ({ notes, parameters }) => {
+  const { ir, setIr } = useContext(InvestigationContext);
+  const [edit, setEdit] = useState(null);
+  const { remove: deleteNote } = useFetch(
+    defaultEndpoints.investigationNotes + "/{ID}"
+  );
+  return (
+    <div className={s.notesWrapper}>
+      <ConnectForm>
+        {({
+          register,
+          setValue,
+          watch,
+          getValues,
+          formState: { errors },
+          clearErrors,
+          control,
+        }) => {
+          const dept = watch("dept");
+
+          return (
+            <>
+              <div className={s.selfReporting}>
+                <section className={s.radio}>
+                  <label>Self reporting</label>
+                  <Radio
+                    register={register}
+                    name="selfRep"
+                    options={[
+                      { label: "Yes", value: true },
+                      { label: "No", value: false },
+                    ]}
+                  />
+                </section>
+                <Select
+                  control={control}
+                  name="name"
+                  label="Name"
+                  options={parameters.users}
+                  onChange={(option) => {
+                    setValue("dept", option.department);
+                    setValue(
+                      "designaion",
+                      option.role
+                        .map(
+                          (role) =>
+                            parameters.roles.find((r) => r.value === role)
+                              ?.label || role
+                        )
+                        .join(", ")
+                    );
+                  }}
+                />
+                <Input
+                  label="Department"
+                  {...register("dept")}
+                  value={
+                    parameters.departments.find(
+                      (dpt) => dpt.value.toString() === dept?.toString()
+                    )?.label || ""
+                  }
+                  readOnly
+                />
+                {
+                  //   <Select
+                  //   control={control}
+                  //   name="dept"
+                  //   label="Department"
+                  //   options={parameters.departments}
+                  // />
+                }
+                <Input
+                  label="Designation"
+                  {...register("designaion")}
+                  readOnly
+                />
+              </div>
+              <div className={s.ipsg}>
+                <section className={s.radio}>
+                  <label>IPSG Breach</label>
+                  <Radio
+                    register={register}
+                    name="ipsgBreach"
+                    options={[
+                      { label: "Yes", value: true },
+                      { label: "No", value: false },
+                    ]}
+                  />
+                </section>
+                <Combobox
+                  label="Select"
+                  name="ipsg"
+                  watch={watch}
+                  register={register}
+                  setValue={setValue}
+                  options={[
+                    {
+                      label: "IPSG 1 patient identification error",
+                      value: "1",
+                    },
+                  ]}
+                />
+              </div>
+            </>
+          );
+        }}
+      </ConnectForm>
+
+      <Table
+        columns={[
+          { label: "Notes" },
+          { label: "Date & Time" },
+          { label: "Actions" },
+        ]}
+        className={s.notes}
+      >
+        <tr>
+          <td className={s.inlineForm}>
+            <NoteForm
+              key={edit ? "edit" : "add"}
+              edit={edit}
+              onSuccess={(newNote) => {
+                setIr((prev) => ({
+                  ...prev,
+                  irInvestigation: [
+                    {
+                      ...prev.irInvestigation[0],
+                      notes: [
+                        ...(prev.irInvestigation[0].notes || []).filter(
+                          (item) => item.id !== newNote.id
+                        ),
+                        newNote,
+                      ],
+                    },
+                  ],
+                }));
+                setEdit(null);
+              }}
+              clearForm={() => setEdit(null)}
+            />
+          </td>
+        </tr>
+        {notes.map((note) => (
+          <tr key={note.id}>
+            <td>{note.notes}</td>
+            <td>
+              <Moment format="DD/MM/YYYY hh:mm">{note.dateTime}</Moment>
+            </td>
+            <TableActions
+              actions={[
+                {
+                  icon: <BsPencilFill />,
+                  label: "Edit",
+                  callBack: () => {
+                    setEdit(note);
+                  },
+                },
+                {
+                  icon: <FaRegTrashAlt />,
+                  label: "Delete",
+                  callBack: () =>
+                    Prompt({
+                      type: "confirmation",
+                      message: `Are you sure you want to remove this note?`,
+                      callback: () => {
+                        deleteNote(null, {
+                          params: { "{ID}": note.id },
+                        }).then(({ res }) => {
+                          if (res.status === 204) {
+                            setIr((prev) => ({
+                              ...prev,
+                              irInvestigation: [
+                                {
+                                  ...prev.irInvestigation[0],
+                                  notes: [
+                                    ...prev.irInvestigation[0].notes.filter(
+                                      (item) => item.id !== note.id
+                                    ),
+                                  ],
+                                },
+                              ],
+                            }));
+                          }
+                        });
+                      },
+                    }),
+                },
+              ]}
+            />
+          </tr>
+        ))}
+      </Table>
+    </div>
+  );
+};
+const NoteForm = ({ edit, onSuccess, clearForm }) => {
+  const { ir, setIr } = useContext(InvestigationContext);
+  const {
+    handleSubmit,
+    register,
+    reset,
+    formState: { errors },
+  } = useForm();
+
+  const { post: saveNote, put: updateNote, loading } = useFetch(
+    defaultEndpoints.investigationNotes + `/${edit?.id || ""}`
+  );
+  const { post: saveIrDetail, savingIrDetail } = useFetch(
+    defaultEndpoints.irInvestigation
+  );
+
+  useEffect(() => {
+    reset({
+      ...edit,
+      dateTime: edit
+        ? moment({ time: edit.dateTime, format: "YYYY-MM-DDThh:mm" })
+        : "",
+    });
+  }, [edit]);
+
+  return (
+    <form
+      onSubmit={handleSubmit(async (values) => {
+        let irDetail = ir.irInvestigation[0];
+        if (!irDetail) {
+          irDetail = await saveIrDetail({ incidentReport: { id: ir.id } }).then(
+            ({ data }) => {
+              setIr((prev) => ({ ...prev, irInvestigation: [data] }));
+              return data;
+            }
+          );
+        }
+
+        if (!irDetail) {
+          return Prompt({
+            type: "error",
+            message: "Please save IR Investigation before saving notes.",
+          });
+        }
+
+        (edit ? updateNote : saveNote)({
+          ...edit,
+          ...values,
+          irId: ir.id,
+          irInvestigation: { id: irDetail.id },
+        })
+          .then(({ data }) => {
+            if (data.id) {
+              onSuccess(data);
+              reset();
+            }
+          })
+          .catch((err) => Prompt({ type: "error", message: err.message }));
+      })}
+    >
+      <Input
+        {...register("notes", { required: "Please enter Detail" })}
+        error={errors.notes}
+      />
+      <Input
+        type="datetime-local"
+        {...register("dateTime", { required: "Please enter Date & Time" })}
+        error={errors.dateTime}
+      />
+      <div className={s.btns}>
+        <button className="btn secondary" type="submit">
+          {edit ? (
+            <FaCheck />
+          ) : (
+            <>
+              <FaPlus /> Add
+            </>
+          )}
+        </button>
+        {edit && (
+          <button
+            type="button"
+            onClick={() => clearForm(null)}
+            className="btn secondary"
+          >
+            <IoClose />
+          </button>
+        )}
+      </div>
+    </form>
+  );
+};
+
 const SimilarIncidents = ({ similarIncidents }) => {
   const [activeTab, setActiveTab] = useState("details");
   const [ir, setIr] = useState(similarIncidents[0]);
@@ -505,182 +1081,6 @@ const SimilarIncidents = ({ similarIncidents }) => {
         )}
       </div>
     </div>
-  );
-};
-
-const Events = () => {
-  const [events, setEvents] = useState([
-    {
-      no: 1,
-      detail:
-        "The outsourced company had come to fix the false ceilling the microbiology room.",
-      date: "2022-05-07T17:30",
-      problem: true,
-    },
-    {
-      no: 2,
-      detail:
-        "While working the staffm while removing the false ceiling there was short circuit in electrical wire above the falce ceiling.",
-      date: "2022-05-10T03:17",
-      problem: false,
-    },
-  ]);
-  const [edit, setEdit] = useState(null);
-
-  const onSuccess = useCallback((newEv) => {
-    setEvents((prev) => {
-      return prev.find((c) => c.id === newEv.id)
-        ? prev.map((c) => (c.id === newEv.id ? newEv : c))
-        : [...prev, newEv];
-    });
-    setEdit(null);
-  }, []);
-
-  const { get: getEvents, loading } = useFetch(
-    defaultEndpoints.investigationEvents
-  );
-  const { remove: deleteEvent } = useFetch(
-    defaultEndpoints.investigationEvents + "/{ID}"
-  );
-
-  useEffect(() => {
-    // getEvents()
-    //   .then((data) => {
-    //     if (data._embedded?.event) {
-    //       setEvents(data._embedded.event);
-    //     }
-    //   })
-    //   .catch((err) => Prompt({ type: "error", message: err.message }));
-  }, []);
-
-  return (
-    <Table
-      className={s.tableOfEvents}
-      sortable={{
-        handle: ".handle",
-        removeCloneOnHide: true,
-        onEnd: (e) => {
-          // const itemEl = e.item;
-          // const { oldIndex, newIndex } = e;
-          // if (oldIndex !== newIndex) {
-          //   setCodeConfig((prev) => {
-          //     const videos = [
-          //       ...prev.filter((item, i) => i !== oldIndex),
-          //     ];
-          //     videos.splice(newIndex, 0, prev[oldIndex]);
-          //     return videos;
-          //   });
-          // }
-        },
-      }}
-      columns={[
-        { label: "S.No." },
-        { label: "Details" },
-        { label: "Date & Time" },
-        { label: "Actions" },
-      ]}
-    >
-      <tr>
-        <td className={s.inlineForm}>
-          <EventForm onSuccess={() => {}} />
-        </td>
-      </tr>
-      {events.map((ev, i) => (
-        <tr key={i}>
-          <td className="handle">
-            {" "}
-            <FaEllipsisV /> {ev.no}
-          </td>
-          <td className={s.dscr}>
-            <span className={`${s.flag} ${ev.problem ? s.problem : ""}`}>
-              <FaFlag />
-            </span>
-            {ev.detail}
-          </td>
-          <td>{ev.date}</td>
-          <TableActions
-            actions={[
-              {
-                icon: <BsPencilFill />,
-                label: "Edit",
-                callBack: () => setEdit(ev),
-              },
-              {
-                icon: <FaRegTrashAlt />,
-                label: "Delete",
-                callBack: () =>
-                  Prompt({
-                    type: "confirmation",
-                    message: `Are you sure you want to remove this event?`,
-                    callback: () => {
-                      deleteEvent(null, {
-                        params: { "{ID}": ev.id },
-                      }).then(({ res }) => {
-                        if (res.status === 204) {
-                          setEvents((prev) =>
-                            prev.filter((c) => c.id !== ev.id)
-                          );
-                        }
-                      });
-                    },
-                  }),
-              },
-            ]}
-          />
-        </tr>
-      ))}
-    </Table>
-  );
-};
-const EventForm = ({ edit, onSuccess, clearForm }) => {
-  const {
-    handleSubmit,
-    register,
-    reset,
-    formState: { errors },
-  } = useForm();
-
-  const { post: saveEvent, put: updateEvent, loading } = useFetch(
-    defaultEndpoints.investigationEvents + `/${edit?.id || ""}`
-  );
-
-  useEffect(() => {
-    reset({ ...edit });
-  }, [edit]);
-
-  return (
-    <form>
-      <span />
-      <Input
-        {...register("detail", { required: "Please enter Detail" })}
-        error={errors.detail}
-      />
-      <Input
-        type="datetime-local"
-        {...register("date", { required: "Please enter Date & Time" })}
-        error={errors.date}
-      />
-      <div className={s.btns}>
-        <button className="btn secondary" type="submit" disabled={loading}>
-          {edit ? (
-            <FaCheck />
-          ) : (
-            <>
-              <FaPlus /> Add
-            </>
-          )}
-        </button>
-        {edit && (
-          <button
-            type="button"
-            onClick={() => clearForm(null)}
-            className="btn secondary"
-          >
-            <IoClose />
-          </button>
-        )}
-      </div>
-    </form>
   );
 };
 
