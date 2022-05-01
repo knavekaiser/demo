@@ -167,6 +167,7 @@ export const IrDashboardContextProvider = ({ children }) => {
         status: "2,3,4,5,6,7,8",
       }).toString()
   );
+  const { get: getTatIrCount } = useFetch(defaultEndpoints.countIrByTat);
 
   const { get: getTatConfig } = useFetch(defaultEndpoints.configTat);
   const updateTatConfig = useCallback(() => {
@@ -300,6 +301,7 @@ export const IrDashboardContextProvider = ({ children }) => {
 
   useEffect(() => {
     if (!user) return;
+    console.log(tatConfig);
     (async () => {
       const countByStatus = await Promise.all([
         ...irStatus.map((status) =>
@@ -339,21 +341,30 @@ export const IrDashboardContextProvider = ({ children }) => {
         getPatientComplaintIrCount(),
         getCurrentUserIrCount(),
         getDepartmentsIrCount(),
+        getTatIrCount(null, { query: { days: tatConfig?.acceptableTAT || 5 } }),
       ])
         .then(
-          ([currentMonth, sentinel, patientComplaint, myIr, departmentIr]) => ({
-            currentMonth: currentMonth?.data || 0,
-            sentinel: sentinel?.data || 0,
-            patientComplaint: patientComplaint?.data || 0,
-            myIr: myIr?.data || 0,
-            departmentIr: departmentIr?.data || 0,
+          ([
+            { data: currentMonth },
+            { data: sentinel },
+            { data: patientComplaint },
+            { data: myIr },
+            { data: departmentIr },
+            { data: irBeyondTat },
+          ]) => ({
+            currentMonth: currentMonth || 0,
+            sentinel: sentinel || 0,
+            patientComplaint: patientComplaint || 0,
+            myIr: myIr || 0,
+            departmentIr: departmentIr || 0,
+            irBeyondTat: irBeyondTat || 0,
           })
         )
         .catch((err) => Prompt({ type: "error", message: err.message }));
 
       setCount((prev) => ({ ...countByStatus, ...otherCounts }));
     })();
-  }, [dashboard, setCount, user]);
+  }, [dashboard, setCount, user, tatConfig]);
 
   return (
     <IrDashboardContext.Provider

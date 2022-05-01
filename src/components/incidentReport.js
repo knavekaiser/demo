@@ -259,6 +259,7 @@ export default function IncidentReporting() {
             .filter((item) => item)
             .map((item) => +item) || [],
       };
+      console.log(_edit);
       methods.reset(_edit);
     }
   }, [edit]);

@@ -29,6 +29,7 @@ import IrPreview from "./irPreview";
 import IrDashboard from "./irDashboard";
 import Masters from "./masters/index";
 import IrConfig from "./irConfig/index";
+import IrQueryDashboard from "./irQueryDashboard";
 import { paths } from "../config";
 import s from "./dashboard.module.scss";
 
@@ -178,6 +179,20 @@ function Dashboard() {
           {checkPermission({
             roleId: ["incidentManager", "irInvestigator", "incidentReporter"],
           }) && <SidebarItem_IrDashboard />}
+          <li
+            className={`${s.sidebarItem} ${
+              location.pathname.startsWith(paths.irQueryDashboard)
+                ? s.active
+                : ""
+            }`}
+          >
+            <Link to={paths.irQueryDashboard}>
+              <span className={s.label}>
+                <IncidentReportIcon className={s.icon} />{" "}
+                <span className={s.text}>IR Query Dashboard</span>
+              </span>
+            </Link>
+          </li>
           {checkPermission({
             roleId: ["incidentManager", "irInvestigator", "incidentReporter"],
           }) && (
@@ -294,6 +309,7 @@ function Dashboard() {
         <Routes>
           <Route path={paths.incidentReport} element={<IncidentReport />} />
           <Route path={paths.irPreview} element={<IrPreview />} />
+          <Route path={paths.irQueryDashboard} element={<IrQueryDashboard />} />
           <Route
             path={paths.incidentDashboard.basePath + "/*"}
             element={<IrDashboard />}
@@ -523,7 +539,14 @@ const SidebarItem_IrDashboard = () => {
         },
       },
       "IR beyond acceptable TAT": {
-        label: <>Open IR beyond Acceptable TAT</>,
+        label: (
+          <>
+            Open IR beyond Acceptable TAT{" "}
+            {count.irBeyondTat ? (
+              <span className={s.count}>{count.irBeyondTat}</span>
+            ) : null}
+          </>
+        ),
         path: {
           pathname,
           search: `tat=beyond`,

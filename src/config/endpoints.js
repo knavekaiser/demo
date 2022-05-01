@@ -39,6 +39,7 @@ export default {
   countIrByPatientComplaint: `${baseApiUrl}/IncidentReport/search/countByPatientYesOrNo`,
   countIrByUserId: `${baseApiUrl}/IncidentReport/search/countByUserId`,
   countIrByDepartment: `${baseApiUrl}/IncidentReport/search/countByDepartment`,
+  countIrByTat: `${baseApiUrl}/irStatusDetails/search/countByDays`,
 
   typesOfIncident: `${baseApiUrl}/configTypeOfIncident`,
   configTat: `${baseApiUrl}/configAcceptableTAT`,
@@ -57,7 +58,9 @@ export default {
   investigationEvents: `${baseApiUrl}/events`,
   investigationNotes: `${baseApiUrl}/notes`,
   evidences: `${baseApiUrl}/inputEvidences`,
+  evidenceSearch: `${baseApiUrl}/inputEvidences/search/findByIrId`,
   recordInputs: `${baseApiUrl}/recordInput`,
   requestInputs: `${baseApiUrl}/reqInput`,
+  responseInputs: `${baseApiUrl}/responseIrInput`,
   irInvestigation: `${baseApiUrl}/irInvestigation`,
 };

@@ -23,6 +23,7 @@ export default {
       },
     },
   },
+  irQueryDashboard: "/irQueryDashboard",
   capaReport: "/capaReport",
   reports: "/reports",
   irConfig: {

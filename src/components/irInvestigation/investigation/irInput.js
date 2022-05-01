@@ -28,6 +28,7 @@ const IrInput = () => {
   const { ir, setIr } = useContext(InvestigationContext);
   const [recordInput, setRecordInput] = useState(false);
   const [requestInput, setRequestInput] = useState(false);
+  const [inputs, setInputs] = useState([]);
 
   const { remove: deleteRecord } = useFetch(
     defaultEndpoints.recordInputs + "/{ID}"
@@ -100,6 +101,34 @@ const IrInput = () => {
       });
   }, []);
 
+  useEffect(() => {
+    if (ir) {
+      const _inputs = [];
+      ir.reqInput?.forEach((input) => {
+        const response = ir.responseIrInput?.find(
+          (resInput) => resInput.reqId.toString() === input.id.toString()
+        );
+        _inputs.push({
+          queryBy: input.userId,
+          queryDateTime: input.queryDateTime,
+          ...(response && {
+            userId: response.responseBy,
+            dateTime: response.responseOn,
+            deptId: response.deptId,
+          }),
+        });
+      });
+      ir.recordInput?.forEach((rec) =>
+        _inputs.push({
+          userId: rec.responseFrom,
+          deptId: rec.deptId,
+          dateTime: rec.recdOn,
+        })
+      );
+      setInputs(_inputs);
+    }
+  }, [ir]);
+
   // console.log(ir, [...(ir.recordInput || []), ...(ir.reqInput || [])]);
   return (
     <div className={s.irInput}>
@@ -121,79 +150,77 @@ const IrInput = () => {
           { label: "Actions" },
         ]}
       >
-        {([...(ir.recordInput || []), ...(ir.reqInput || [])] || []).map(
-          (item, i) => (
-            <tr key={i}>
-              <td>
-                {parameters.users.find(
-                  (dept) =>
-                    dept.value.toString() === item.userId?.toString() ||
-                    dept.value.toString() === item.responseBy?.toString()
-                )?.label ||
-                  item.userId ||
-                  item.responseBy}
-              </td>
-              <td>
-                {parameters.departments.find(
-                  (dept) => dept.value.toString() === item.deptId?.toString()
-                )?.label || item.department}
-              </td>
-              <td>
-                <Moment format="DD/MM/YYYY hh:mm">{item.recdOn}</Moment>
-              </td>
-              <td>{item.responseFrom}</td>
-              <td>
-                <Moment format="DD/MM/YYYY hh:mm">{item.responseOn}</Moment>
-              </td>
-              <TableActions
-                actions={[
-                  { label: "View", icon: <ImEye />, callback: () => {} },
-                  {
-                    label: "Delete",
-                    icon: <FaRegTrashAlt />,
-                    callBack: () => {
-                      Prompt({
-                        type: "confirmation",
-                        message: "Are you sure you want to delete this record?",
-                        callback: () => {
-                          if (item.personAff === undefined) {
-                            deleteRecord(null, {
-                              params: { "{ID}": item.id },
-                            }).then(({ res }) => {
-                              console.log(res.status);
-                              if (res.status === 204) {
-                                setIr((prev) => ({
-                                  ...prev,
-                                  recordInput: prev.recordInput.filter(
-                                    (rec) => rec.id !== item.id
-                                  ),
-                                }));
-                              }
-                            });
-                          } else {
-                            deleteRequest(null, {
-                              params: { "{ID}": item.id },
-                            }).then(({ res }) => {
-                              console.log(res.status);
-                              if (res.status === 204) {
-                                setIr((prev) => ({
-                                  ...prev,
-                                  reqInput: prev.reqInput.filter(
-                                    (rec) => rec.id !== item.id
-                                  ),
-                                }));
-                              }
-                            });
-                          }
-                        },
-                      });
-                    },
+        {inputs.map((item, i) => (
+          <tr key={i}>
+            <td>
+              {parameters.users.find(
+                (user) => user.value.toString() === item.userId?.toString()
+              )?.label || item.userId}
+            </td>
+            <td>
+              {parameters.departments.find(
+                (dept) => dept.value.toString() === item.deptId?.toString()
+              )?.label || item.department}
+            </td>
+            <td>
+              <Moment format="DD/MM/YYYY hh:mm">{item.queryDateTime}</Moment>
+            </td>
+            <td>
+              {parameters.users.find(
+                (user) => user.value.toString() === item.queryBy?.toString()
+              )?.label || item.queryBy}
+            </td>
+            <td>
+              <Moment format="DD/MM/YYYY hh:mm">{item.dateTime}</Moment>
+            </td>
+            <TableActions
+              actions={[
+                { label: "View", icon: <ImEye />, callback: () => {} },
+                {
+                  label: "Delete",
+                  icon: <FaRegTrashAlt />,
+                  callBack: () => {
+                    Prompt({
+                      type: "confirmation",
+                      message: "Are you sure you want to delete this record?",
+                      callback: () => {
+                        if (item.personAff === undefined) {
+                          deleteRecord(null, {
+                            params: { "{ID}": item.id },
+                          }).then(({ res }) => {
+                            console.log(res.status);
+                            if (res.status === 204) {
+                              setIr((prev) => ({
+                                ...prev,
+                                recordInput: prev.recordInput.filter(
+                                  (rec) => rec.id !== item.id
+                                ),
+                              }));
+                            }
+                          });
+                        } else {
+                          deleteRequest(null, {
+                            params: { "{ID}": item.id },
+                          }).then(({ res }) => {
+                            console.log(res.status);
+                            if (res.status === 204) {
+                              setIr((prev) => ({
+                                ...prev,
+                                reqInput: prev.reqInput.filter(
+                                  (rec) => rec.id !== item.id
+                                ),
+                              }));
+                            }
+                          });
+                        }
+                      },
+                    });
                   },
-                ]}
-              />
-            </tr>
-          )
-        )}
+                },
+              ]}
+            />
+          </tr>
+        ))}
       </Table>
       <Box collapsable label="Evidence">
         <Evidence parameters={parameters} />
@@ -260,7 +287,6 @@ const RequestInputForm = ({ onSuccess, parameters }) => {
     },
   });
 
-  const uploads = watch("files");
   const irInfo = watch("irInformation"); // ["Description", "Copy From Previous"];
 
   const { post: saveRequest, loading: savingRequest } = useFetch(
@@ -273,6 +299,8 @@ const RequestInputForm = ({ onSuccess, parameters }) => {
         saveRequest({
           deptId: values.department,
           userId: values.user,
+          query: values.query,
+          queryDateTime: new Date(),
           // irInfo: "irInfo",
           // copyPrev: "copyPrev",
           description: values.description,
@@ -401,7 +429,7 @@ const RecordInputForm = ({ parameters, onSuccess }) => {
     formState: { errors },
   } = useForm();
 
-  const uploads = watch("files");
+  const uploads = watch("upload");
 
   const { post: saveInput, loading } = useFetch(defaultEndpoints.recordInputs);
   const { post: upload, laoding: uploadingFiles } = useFetch(
@@ -412,7 +440,6 @@ const RecordInputForm = ({ parameters, onSuccess }) => {
     <form
       onSubmit={handleSubmit(async (values) => {
         if (values.upload?.length) {
-          console.log({ upload: values.upload });
           const { links, error: uploadError } = await uploadFiles({
             files: values.upload,
             uploadFiles: upload,
@@ -422,11 +449,14 @@ const RecordInputForm = ({ parameters, onSuccess }) => {
           }
 
           values.upload = links[0];
+        } else {
+          values.upload = "";
         }
 
         saveInput({
           source: values.source,
-          responseFrom: values.responseFrom,
+          responseFrom: user.id,
+          // responseFrom: values.responseFrom,
           upload: values.upload,
           response: values.response,
           recdOn: values.recievedOn,
@@ -446,8 +476,10 @@ const RecordInputForm = ({ parameters, onSuccess }) => {
     >
       <Input
         label="Response From"
-        {...register("responseFrom", { required: "Enter From" })}
-        error={errors.from}
+        // {...register("responseFrom", { required: "Enter From" })}
+        // error={errors.from}
+        value={user.name}
+        readOnly
       />
       <Combobox
         label="Source"
@@ -513,20 +545,24 @@ const Evidence = ({ parameters }) => {
     setEdit(null);
   }, []);
 
-  const { get: getEvidences, loading } = useFetch(defaultEndpoints.evidences);
+  const { get: getEvidences, loading } = useFetch(
+    defaultEndpoints.evidenceSearch
+  );
   const { remove: deleteEvidence } = useFetch(
     defaultEndpoints.evidences + "/{ID}"
   );
 
   useEffect(() => {
-    getEvidences()
-      .then(({ data }) => {
-        if (data?._embedded?.inputEvidences) {
-          setEvidences(data._embedded.inputEvidences);
-        }
-      })
-      .catch((err) => Prompt({ type: "error", message: err.message }));
-  }, []);
+    if (ir?.id) {
+      getEvidences(null, { query: { irId: ir.id } })
+        .then(({ data }) => {
+          if (data?._embedded?.inputEvidences) {
+            setEvidences(data._embedded.inputEvidences);
+          }
+        })
+        .catch((err) => Prompt({ type: "error", message: err.message }));
+    }
+  }, [ir?.id]);
   return (
     <Table
       loading={loading}
@@ -614,6 +650,7 @@ const EvidenceForm = ({
   evidences,
   parameters,
 }) => {
+  const { ir } = useContext(InvestigationContext);
   const {
     handleSubmit,
     register,
@@ -624,8 +661,7 @@ const EvidenceForm = ({
     formState: { errors },
   } = useForm({ ...edit });
 
-  const uploads = watch("files");
-
+  const uploads = watch("upload");
   const { post: postEvidence, put: updateEvidence, loading } = useFetch(
     defaultEndpoints.evidences + `/${edit?.id || ""}`
   );
@@ -634,7 +670,13 @@ const EvidenceForm = ({
   );
 
   useEffect(() => {
-    reset({ ...edit });
+    reset({
+      ...edit,
+      dateTime: edit
+        ? moment({ time: edit.dateTime, format: "YYYY-MM-DDThh:mm" })
+        : "",
+      upload: edit?.upload ? [edit.upload] : [],
+    });
   }, [edit]);
   return (
     <form
@@ -650,16 +692,24 @@ const EvidenceForm = ({
           }
 
           values.upload = links[0];
+        } else {
+          values.upload = "";
         }
 
         (edit ? updateEvidence : postEvidence)({
           ...values,
-          // reqInput: { id: "ds" },
+          irId: ir.id,
         })
           .then((data) => {
             if (data.id) {
               onSuccess(data);
-              reset();
+              reset({
+                upload: [],
+                eviType: "",
+                eviSource: "",
+                eviDesc: "",
+                dateTime: "",
+              });
             }
           })
           .catch((err) => {

@@ -222,12 +222,12 @@ export const FileInput = ({ label, required, multiple, onChange, prefill }) => {
         ) || []
       );
     }
-  }, [prefill]);
+  }, [prefill?.length]);
   useEffect(() => {
     if (prefill?.length !== files.length) {
       onChange?.(files);
     }
-  }, [files]);
+  }, [files?.length]);
   return (
     <section data-testid="fileInput" className={s.fileInput}>
       <div className={s.label}>
@@ -312,7 +312,6 @@ export const FileInput = ({ label, required, multiple, onChange, prefill }) => {
 export const uploadFiles = async ({ files, uploadFiles }) => {
   let links = [];
   let error = null;
-  console.log({ files });
   if (files?.length) {
     const formData = new FormData();
     const uploaded = [];

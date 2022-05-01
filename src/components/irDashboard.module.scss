@@ -218,6 +218,18 @@ main {
         }
       }
     }
+    .irQueries {
+      tr {
+        grid-template-columns: 12rem 9rem 9rem 9rem 1fr 1fr 10rem 9rem 4.5rem;
+      }
+    }
+  }
+  .queryDashboard {
+    table {
+      tbody {
+        max-height: calc(100vh - 440px);
+      }
+    }
   }
   .qualityDashboard {
     grid-template-rows: min-content 1fr min-content;
@@ -229,7 +241,8 @@ main {
   }
 }
 .assignModal,
-.tatDetails {
+.tatDetails,
+.responseForm {
   .content {
     padding: 10px 20px;
     padding-bottom: 20px;
@@ -300,6 +313,32 @@ main {
         display: flex;
         justify-content: center;
         grid-gap: 10px;
+      }
+    }
+  }
+}
+.responseForm {
+  max-width: 60rem;
+  .content {
+    form {
+      .innerWrapper {
+        margin: 10px 0;
+        padding: 10px;
+        border: 1px solid $primary-color-dark3;
+        display: grid;
+        grid-template-columns: 1fr 1.5fr 1fr;
+        grid-gap: 10px;
+        .response,
+        p {
+          grid-column: 1/-1;
+        }
+        p {
+          font-size: 10pt;
+        }
+        .pair {
+          display: flex;
+          grid-gap: 6px;
+        }
       }
     }
   }
