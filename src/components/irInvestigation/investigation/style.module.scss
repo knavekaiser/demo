@@ -31,6 +31,9 @@
           height: min-content !important;
         }
       }
+      .inlineForm form {
+        align-items: flex-start;
+      }
     }
   }
   .irDetails {
@@ -61,9 +64,13 @@
         grid-gap: 6px;
         .flag {
           flex-shrink: 0;
-          color: rgb(152, 152, 152);
+          button {
+            color: rgb(152, 152, 152);
+          }
           &.problem {
-            color: $red;
+            button {
+              color: $red;
+            }
           }
         }
       }

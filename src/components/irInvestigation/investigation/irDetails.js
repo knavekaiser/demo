@@ -43,22 +43,6 @@ export const ConnectForm = ({ children }) => {
 
 const IrDetails = () => {
   const { ir, setIr } = useContext(InvestigationContext);
-  const [inputs, setInputs] = useState([
-    {
-      id: 12,
-      inputBy: "Mohan",
-      department: "Nursing",
-      query_date_time: "2022-01-05T12:34",
-      query_by: "Robert",
-      response_date_time: "2022-01-07T20:23",
-    },
-    {
-      id: 13,
-      inputBy: "Raghavendra",
-      department: "Nursing",
-      response_date_time: "2022-01-07T20:23",
-    },
-  ]);
   const [parameters, setParameters] = useState({
     severity: [],
     likelihood: [],
@@ -237,6 +221,11 @@ const IrDetails = () => {
     if (ir.irInvestigation?.length) {
       methods.reset({
         ...ir.irInvestigation[0],
+        riskSeverity: ir.irInvestigation[0].riskSeverity || "",
+        riskLikeliHood: ir.irInvestigation[0].riskLikeliHood || "",
+        ipsg: ir.irInvestigation[0].ipsg || "",
+        name: ir.irInvestigation[0].name || "",
+        dept: ir.irInvestigation[0].dept || "",
         prevSimilar: ir.irInvestigation[0].prevSimilar.toString(),
         riskIncluded: ir.irInvestigation[0].riskIncluded.toString(),
         selfRep: ir.irInvestigation[0].selfRep.toString(),
@@ -335,7 +324,6 @@ const RiskAssessment = ({
       (r) => r.likelihood === likelihood && r.serverity === severity
     );
 
-    console.log("change", { severity, likelihood, selectedRisk });
     if (selectedRisk) {
       setRisk((prev) => ({ ...prev, riskDetail: selectedRisk }));
       methods.setValue(
@@ -347,7 +335,7 @@ const RiskAssessment = ({
     } else {
       setRisk((prev) => ({ ...prev, riskDetail: null }));
     }
-  }, [likelihood, severity]);
+  }, [likelihood, severity, parameters.risks]);
   return (
     <ConnectForm>
       {({
@@ -432,7 +420,7 @@ const Events = ({ events }) => {
     setEdit(null);
   }, []);
 
-  const { remove: deleteEvent } = useFetch(
+  const { remove: deleteEvent, put: updateEvent, loading } = useFetch(
     defaultEndpoints.investigationEvents + "/{ID}"
   );
 
@@ -497,7 +485,37 @@ const Events = ({ events }) => {
           </td>
           <td className={s.dscr}>
             <span className={`${s.flag} ${ev.problem ? s.problem : ""}`}>
-              <FaFlag />
+              <button
+                className="btn clear"
+                style={{ padding: 0, margin: 0 }}
+                disabled={loading}
+                onClick={() =>
+                  updateEvent(
+                    { ...ev, problem: !ev.problem },
+                    { params: { "{ID}": ev.id } }
+                  ).then(({ data }) => {
+                    if (!data?.id) {
+                      return Prompt({
+                        type: "error",
+                        message: "Something went wrong",
+                      });
+                    }
+                    setIr((prev) => ({
+                      ...prev,
+                      irInvestigation: [
+                        {
+                          ...prev.irInvestigation[0],
+                          events: (
+                            prev.irInvestigation[0].events || []
+                          ).map((item) => (item.id === data.id ? data : item)),
+                        },
+                      ],
+                    }));
+                  })
+                }
+              >
+                <FaFlag />
+              </button>
             </span>
             {ev.details}
           </td>

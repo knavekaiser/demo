@@ -301,7 +301,6 @@ export const IrDashboardContextProvider = ({ children }) => {
 
   useEffect(() => {
     if (!user) return;
-    console.log(tatConfig);
     (async () => {
       const countByStatus = await Promise.all([
         ...irStatus.map((status) =>
