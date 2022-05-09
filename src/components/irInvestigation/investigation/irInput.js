@@ -178,7 +178,7 @@ const IrInput = () => {
             setRecordInput(false);
             setIr((prev) => ({
               ...prev,
-              recordInput: [...prev.recordInput, newRecordInput],
+              recordInput: [newRecordInput, ...prev.recordInput],
             }));
           }}
         />
@@ -196,7 +196,7 @@ const IrInput = () => {
             setRequestInput(false);
             setIr((prev) => ({
               ...prev,
-              reqInput: [...prev.reqInput, newReqInput],
+              reqInput: [newReqInput, ...prev.reqInput],
             }));
           }}
         />

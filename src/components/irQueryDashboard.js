@@ -210,7 +210,10 @@ export const MyDashboard = () => {
           if (data._embedded?.IncidentReport) {
             const _ir = [];
             data._embedded.IncidentReport.forEach((ir) => {
-              ir.reqInput.forEach((req) =>
+              ir.reqInput.forEach((req) => {
+                const response = ir.responseIrInput.find(
+                  (resp) => resp.reqId === req.id
+                );
                 _ir.push({
                   sequence: ir.sequence,
                   reportingDate: ir.reportingDate,
@@ -223,8 +226,9 @@ export const MyDashboard = () => {
                   irId: ir.id,
                   reqId: req.id,
                   query: req.query,
-                })
-              );
+                  ...(response && { response }),
+                });
+              });
             });
             setIncidents(_ir);
           }
@@ -306,7 +310,7 @@ export const MyDashboard = () => {
       >
         {incidents
           .sort((a, b) =>
-            new Date(a.reportingDate) > new Date(b.reportingDate) ? -1 : 1
+            new Date(a.queryDateTime) > new Date(b.queryDateTime) ? -1 : 1
           )
           .map((inc, i) => (
             <SingleIr
@@ -429,6 +433,7 @@ const ResponseForm = ({ ir, parameters, setShowResForm, onSuccess }) => {
       responseBy: user.id,
       responseOn: new Date(),
       deptId: user.department,
+      response: ir.response?.response || "",
     },
   });
   const uploads = watch("upload");
@@ -517,6 +522,7 @@ const ResponseForm = ({ ir, parameters, setShowResForm, onSuccess }) => {
             {...register("response", { required: "Please provide a response" })}
             label="Response"
             error={errors.response}
+            readOnly={ir?.response}
           />
           <FileInput
             label="Upload"
@@ -542,7 +548,9 @@ const ResponseForm = ({ ir, parameters, setShowResForm, onSuccess }) => {
           >
             Close
           </button>
-          <button className={`btn primary wd-100`}>Submit</button>
+          {!ir.response && (
+            <button className={`btn primary wd-100`}>Submit</button>
+          )}
         </section>
       </form>
     </div>
