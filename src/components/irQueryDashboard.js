@@ -168,11 +168,11 @@ export const MyDashboard = () => {
       _filters.toreportingDate = _filters.toreportingDate + " 23:59:59";
     }
 
-    if (_filters.byIr !== "department") {
-      _filters.userId = user.id;
-    } else {
-      delete _filters.userId;
-    }
+    // if (_filters.byIr !== "department") {
+    //   _filters.userId = user.id;
+    // } else {
+    //   delete _filters.userId;
+    // }
     // if (_filters.irBy === "self") {
     // } else {
     //   delete _filters.userId;
@@ -192,10 +192,11 @@ export const MyDashboard = () => {
                   location: ir.location,
                   inciCateg: ir.inciCateg,
                   inciSubCat: ir.inciSubCat,
-                  queryRaisedBy: req.userId,
-                  queryDateTime: req.dateTime,
+                  queryRaisedBy: req.queryRaisedBy,
+                  queryDateTime: req.queryDateTime,
                   irId: ir.id,
                   reqId: req.id,
+                  query: req.query,
                 })
               );
             });
@@ -204,7 +205,7 @@ export const MyDashboard = () => {
         })
         .catch((err) => Prompt({ type: "error", message: err.message }));
     } else {
-      searchIrs(null, { query: { userId: user.id } })
+      searchIrs(null)
         .then((data) => {
           if (data._embedded?.IncidentReport) {
             const _ir = [];
@@ -217,10 +218,11 @@ export const MyDashboard = () => {
                   location: ir.location,
                   inciCateg: ir.inciCateg,
                   inciSubCat: ir.inciSubCat,
-                  queryRaisedBy: req.userId,
-                  queryDateTime: req.dateTime,
+                  queryRaisedBy: req.queryRaisedBy,
+                  queryDateTime: req.queryDateTime,
                   irId: ir.id,
                   reqId: req.id,
+                  query: req.query,
                 })
               );
             });
@@ -344,9 +346,9 @@ const SingleIr = memo(
           className={`${ir.typeofInci === 8 ? s.sentinel : ""} ${
             focus === ir.id ? s.focus : ""
           } ${className || ""}`}
-          onClick={() => {
-            setFocus && setFocus(ir.id);
-          }}
+          // onClick={() => {
+          //   setFocus && setFocus(ir.id);
+          // }}
         >
           <td className={s.irCode}>{ir.sequence}</td>
           <td>
@@ -356,8 +358,9 @@ const SingleIr = memo(
             <Moment format="DD/MM/YYYY hh:mm">{ir.incident_Date_Time}</Moment>
           </td>
           <td>
-            {parameters?.locations?.find((item) => item.id === ir.location)
-              ?.name || ir.location}
+            {parameters?.locations?.find(
+              (item) => item.id.toString() === ir.location.toString()
+            )?.name || ir.location}
           </td>
           <td>
             {parameters?.categories?.find((item) => item.id === ir.inciCateg)
@@ -425,6 +428,7 @@ const ResponseForm = ({ ir, parameters, setShowResForm, onSuccess }) => {
     defaultValues: {
       responseBy: user.id,
       responseOn: new Date(),
+      deptId: user.department,
     },
   });
   const uploads = watch("upload");
@@ -505,14 +509,8 @@ const ResponseForm = ({ ir, parameters, setShowResForm, onSuccess }) => {
             .catch((err) => Prompt({ type: "error", message: err.message }));
         })}
       >
-        {
-          // <p>{ir.query}</p>
-        }
         <div className={s.innerWrapper}>
-          <p>
-            Pressure ulcer was noticed on 15th day of admission. air mettress
-            was reqeusted but was not made available by medical department..?
-          </p>
+          <p>{ir.query}</p>
           <p>Please provide inputs on this incident.</p>
           <Textarea
             className={s.response}

@@ -269,3 +269,59 @@
     margin-left: 15px;
   }
 }
+
+.inputView {
+  width: 100% !important;
+  max-width: 55rem;
+  .content {
+    padding: 10px;
+    display: grid;
+    grid-gap: 10px;
+    .innerWrapper {
+      border: 1px solid rgb(0, 0, 0);
+      padding: 10px;
+      .responses {
+        li {
+          margin-top: 10px;
+          border-radius: 4px;
+          padding: 6px 10px;
+          position: relative;
+          display: block;
+          border: 1px solid $green;
+          background: white;
+          .no {
+            color: $green;
+            font-weight: 500;
+          }
+          .label {
+            font-weight: 500;
+          }
+          &::before,
+          &::after {
+            content: "";
+            display: block;
+            position: absolute;
+            height: 0;
+            width: 0;
+            border: 7px solid transparent;
+            border-top: 0;
+            border-bottom: 10px solid white;
+            top: -6px;
+            left: 5px;
+          }
+          &::after {
+            z-index: -1;
+            top: -17px;
+            left: 3px;
+            border: 9px solid transparent;
+            border-bottom: 12px solid $green;
+          }
+        }
+      }
+    }
+    .btns {
+      display: flex;
+      justify-content: center;
+    }
+  }
+}

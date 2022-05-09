@@ -73,6 +73,9 @@ export const Prompt = ({ className, type, message, btns, callback }) => {
       callback &&
       callback();
   };
+  if (type === "error") {
+    console.trace(message);
+  }
   ReactDOM.render(
     <>
       <div className={`promptBackdrop`} />
@@ -129,7 +132,10 @@ export const Prompt = ({ className, type, message, btns, callback }) => {
                     </button>
                   </>
                 ) : (
-                  <button className="yes btn secondary wd-100" onClick={decline}>
+                  <button
+                    className="yes btn secondary wd-100"
+                    onClick={decline}
+                  >
                     Ok
                   </button>
                 )}

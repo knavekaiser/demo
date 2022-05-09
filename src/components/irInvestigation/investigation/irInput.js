@@ -30,13 +30,6 @@ const IrInput = () => {
   const [requestInput, setRequestInput] = useState(false);
   const [inputs, setInputs] = useState([]);
 
-  const { remove: deleteRecord } = useFetch(
-    defaultEndpoints.recordInputs + "/{ID}"
-  );
-  const { remove: deleteRequest } = useFetch(
-    defaultEndpoints.requestInputs + "/{ID}"
-  );
-
   const [parameters, setParameters] = useState({
     evidenceTypes: [],
     evidenceSources: [],
@@ -109,27 +102,37 @@ const IrInput = () => {
           (resInput) => resInput.reqId.toString() === input.id.toString()
         );
         _inputs.push({
+          __type: "reqInput",
+          id: input.id,
           queryBy: input.userId,
           queryDateTime: input.queryDateTime,
           ...(response && {
             userId: response.responseBy,
             dateTime: response.responseOn,
             deptId: response.deptId,
+            response: response.response,
+            upload: response.upload,
           }),
         });
       });
       ir.recordInput?.forEach((rec) =>
         _inputs.push({
+          __type: "recordInput",
+          id: rec.id,
           userId: rec.responseFrom,
           deptId: rec.deptId,
           dateTime: rec.recdOn,
         })
       );
-      setInputs(_inputs);
+
+      setInputs(
+        _inputs.sort((a, b) =>
+          new Date(a.queryDateTime) < new Date(b.queryDateTime) ? 1 : -1
+        )
+      );
     }
   }, [ir]);
 
-  // console.log(ir, [...(ir.recordInput || []), ...(ir.reqInput || [])]);
   return (
     <div className={s.irInput}>
       <div className={s.btns}>
@@ -142,84 +145,21 @@ const IrInput = () => {
       </div>
       <Table
         columns={[
-          { label: "Inputs by / Response by" },
-          { label: "Department" },
           { label: "Query Date & Time" },
           { label: "Query by" },
+          { label: "Inputs by / Response by" },
+          { label: "Department" },
           { label: "Response Date & Time" },
           { label: "Actions" },
         ]}
       >
         {inputs.map((item, i) => (
-          <tr key={i}>
-            <td>
-              {parameters.users.find(
-                (user) => user.value.toString() === item.userId?.toString()
-              )?.label || item.userId}
-            </td>
-            <td>
-              {parameters.departments.find(
-                (dept) => dept.value.toString() === item.deptId?.toString()
-              )?.label || item.department}
-            </td>
-            <td>
-              <Moment format="DD/MM/YYYY hh:mm">{item.queryDateTime}</Moment>
-            </td>
-            <td>
-              {parameters.users.find(
-                (user) => user.value.toString() === item.queryBy?.toString()
-              )?.label || item.queryBy}
-            </td>
-            <td>
-              <Moment format="DD/MM/YYYY hh:mm">{item.dateTime}</Moment>
-            </td>
-            <TableActions
-              actions={[
-                { label: "View", icon: <ImEye />, callback: () => {} },
-                {
-                  label: "Delete",
-                  icon: <FaRegTrashAlt />,
-                  callBack: () => {
-                    Prompt({
-                      type: "confirmation",
-                      message: "Are you sure you want to delete this record?",
-                      callback: () => {
-                        if (item.personAff === undefined) {
-                          deleteRecord(null, {
-                            params: { "{ID}": item.id },
-                          }).then(({ res }) => {
-                            console.log(res.status);
-                            if (res.status === 204) {
-                              setIr((prev) => ({
-                                ...prev,
-                                recordInput: prev.recordInput.filter(
-                                  (rec) => rec.id !== item.id
-                                ),
-                              }));
-                            }
-                          });
-                        } else {
-                          deleteRequest(null, {
-                            params: { "{ID}": item.id },
-                          }).then(({ res }) => {
-                            console.log(res.status);
-                            if (res.status === 204) {
-                              setIr((prev) => ({
-                                ...prev,
-                                reqInput: prev.reqInput.filter(
-                                  (rec) => rec.id !== item.id
-                                ),
-                              }));
-                            }
-                          });
-                        }
-                      },
-                    });
-                  },
-                },
-              ]}
-            />
-          </tr>
+          <SingleInput
+            input={item}
+            key={i}
+            parameters={parameters}
+            setIr={setIr}
+          />
         ))}
       </Table>
       <Box collapsable label="Evidence">
@@ -264,6 +204,138 @@ const IrInput = () => {
     </div>
   );
 };
+const SingleInput = ({ input, parameters, setIr }) => {
+  const [view, setView] = useState(false);
+  const { remove: deleteRecord } = useFetch(
+    defaultEndpoints.recordInputs + "/{ID}"
+  );
+  const { remove: deleteRequest } = useFetch(
+    defaultEndpoints.requestInputs + "/{ID}"
+  );
+
+  return (
+    <>
+      <tr>
+        <td>
+          <Moment format="DD/MM/YYYY hh:mm">{input.queryDateTime}</Moment>
+        </td>
+        <td>
+          {parameters.users.find(
+            (user) => user.value.toString() === input.queryBy?.toString()
+          )?.label || input.queryBy}
+        </td>
+        <td>
+          {parameters.users.find(
+            (user) => user.value.toString() === input.userId?.toString()
+          )?.label || input.userId}
+        </td>
+        <td>
+          {parameters.departments.find(
+            (dept) => dept.value.toString() === input.deptId?.toString()
+          )?.label || input.department}
+        </td>
+        <td>
+          <Moment format="DD/MM/YYYY hh:mm">{input.dateTime}</Moment>
+        </td>
+        <TableActions
+          actions={[
+            { label: "View", icon: <ImEye />, callBack: () => setView(true) },
+            {
+              label: "Delete",
+              icon: <FaRegTrashAlt />,
+              callBack: () => {
+                Prompt({
+                  type: "confirmation",
+                  message: "Are you sure you want to delete this record?",
+                  callback: () => {
+                    if (input.__type === "recordInput") {
+                      deleteRecord(null, {
+                        params: { "{ID}": input.id },
+                      }).then(({ res }) => {
+                        if (res.status === 204) {
+                          setIr((prev) => ({
+                            ...prev,
+                            recordInput: prev.recordInput.filter(
+                              (rec) => rec.id !== input.id
+                            ),
+                          }));
+                        }
+                      });
+                    } else {
+                      deleteRequest(null, {
+                        params: { "{ID}": input.id },
+                      }).then(({ res }) => {
+                        if (res.status === 204) {
+                          setIr((prev) => ({
+                            ...prev,
+                            reqInput: prev.reqInput.filter(
+                              (rec) => rec.id !== input.id
+                            ),
+                          }));
+                        }
+                      });
+                    }
+                  },
+                });
+              },
+            },
+          ]}
+        />
+      </tr>
+      <Modal
+        open={view}
+        setOpen={setView}
+        head
+        label="SUBMIT IR INPUTS"
+        className={s.inputView}
+      >
+        <div className={s.content}>
+          <p className={""}>
+            <strong>Query Raised by</strong> -{" "}
+            {parameters?.users?.find(({ value }) => value === input.queryBy)
+              ?.label || input.queryBy}{" "}
+            on <Moment format="DD/MM/YYYY">{input.queryDateTime}</Moment> at{" "}
+            <Moment format="hh:mm">{input.queryDateTime}</Moment>
+          </p>
+          <div className={s.innerWrapper}>
+            <p>{input.query}</p>
+            <p>Please provide inputs on this incident.</p>
+            <ul className={s.responses}>
+              <li>
+                <p className={s.responseFrom}>
+                  <span className={s.no}>#1 Response</span> - by{" "}
+                  {parameters?.users?.find(
+                    ({ value }) => value === input.userId
+                  )?.label || input.userId}{" "}
+                  on <Moment format="DD/MM/YYYY">{input.dateTime}</Moment> at{" "}
+                  <Moment format="hh:mm">{input.dateTime}</Moment>
+                </p>
+                <p>{input.response}</p>
+              </li>
+            </ul>
+            {document.upload && (
+              <p>
+                <span className={s.label}>Document Uploaded:</span>{" "}
+                <a _target="_blank" href={input.upload}>
+                  {input.upload}
+                </a>
+              </p>
+            )}
+          </div>
+          <section className={s.btns}>
+            <button
+              type="button"
+              className={`btn secondary wd-100`}
+              onClick={() => setView(false)}
+            >
+              Close
+            </button>
+          </section>
+        </div>
+      </Modal>
+    </>
+  );
+};
 
 const RequestInputForm = ({ onSuccess, parameters }) => {
   const { ir } = useContext(InvestigationContext);
@@ -300,13 +372,14 @@ const RequestInputForm = ({ onSuccess, parameters }) => {
           deptId: values.department,
           userId: values.user,
           query: values.query,
-          queryDateTime: new Date(),
           // irInfo: "irInfo",
           // copyPrev: "copyPrev",
           description: values.description,
           deptInv: values.departments,
           personAff: values.personAffected,
           incidentReport: { id: ir.id },
+          queryRaisedBy: user.id,
+          queryDateTime: new Date(),
         })
           .then(({ data }) => {
             if (data.id) {
@@ -390,8 +463,8 @@ const RequestInputForm = ({ onSuccess, parameters }) => {
             <span style={{ color: "red" }}>*</span> Query
           </>
         }
-        {...register("response", { required: "Enter Response" })}
-        error={errors.response}
+        {...register("query", { required: "Enter Query" })}
+        error={errors.query}
       />
       <Input label="Raised by" value={user.name} readOnly />
       <Input
