@@ -407,7 +407,12 @@ const SingleIr = memo(
             onSuccess={(newRes) => {
               setIncidents((prev) =>
                 prev.map((ir) =>
-                  ir.reqId === newRes.reqId ? { ...ir, ...newRes } : ir
+                  ir.reqId === newRes.reqId
+                    ? {
+                        ...ir,
+                        response: newRes,
+                      }
+                    : ir
                 )
               );
               setShowResForm(false);
