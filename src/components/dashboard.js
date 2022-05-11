@@ -179,20 +179,24 @@ function Dashboard() {
           {checkPermission({
             roleId: ["incidentManager", "irInvestigator", "incidentReporter"],
           }) && <SidebarItem_IrDashboard />}
-          <li
-            className={`${s.sidebarItem} ${
-              location.pathname.startsWith(paths.irQueryDashboard)
-                ? s.active
-                : ""
-            }`}
-          >
-            <Link to={paths.irQueryDashboard}>
-              <span className={s.label}>
-                <IncidentReportIcon className={s.icon} />{" "}
-                <span className={s.text}>IR Query Dashboard</span>
-              </span>
-            </Link>
-          </li>
+          {checkPermission({
+            roleId: ["incidentManager", "irInvestigator"],
+          }) && (
+            <li
+              className={`${s.sidebarItem} ${
+                location.pathname.startsWith(paths.irQueryDashboard)
+                  ? s.active
+                  : ""
+              }`}
+            >
+              <Link to={paths.irQueryDashboard}>
+                <span className={s.label}>
+                  <IncidentReportIcon className={s.icon} />{" "}
+                  <span className={s.text}>IR Query Dashboard</span>
+                </span>
+              </Link>
+            </li>
+          )}
           {checkPermission({
             roleId: ["incidentManager", "irInvestigator", "incidentReporter"],
           }) && (

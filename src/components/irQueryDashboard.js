@@ -134,7 +134,9 @@ export const MyDashboard = () => {
       _filters.toQueryDateTime = _filters.toQueryDateTime + " 23:59:59";
     }
 
-    _filters.userId = user.id;
+    if (!_filters.queryRaisedBy) {
+      _filters.userId = user.id;
+    }
 
     searchIrs(null, { query: _filters })
       .then((data) => {
