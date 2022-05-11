@@ -151,6 +151,8 @@
   &.textarea {
     .field {
       position: relative;
+      height: min-content;
+      display: grid;
     }
     .errIcon {
       top: 6px;

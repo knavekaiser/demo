@@ -171,7 +171,7 @@ export const IrDashboardContextProvider = ({ children }) => {
 
   const { get: getTatConfig } = useFetch(defaultEndpoints.configTat);
   const updateTatConfig = useCallback(() => {
-    getTatConfig().then((data) => {
+    getTatConfig().then(({ data }) => {
       if (data?._embedded?.configAcceptableTAT[0]) {
         const _tatConfig = data._embedded.configAcceptableTAT[0];
         setTatConfig({
@@ -187,7 +187,7 @@ export const IrDashboardContextProvider = ({ children }) => {
 
   const { get: getIrTypes } = useFetch(defaultEndpoints.typesOfIncident);
   const updateIrTypes = useCallback(() => {
-    getIrTypes().then((data) => {
+    getIrTypes().then(({ data }) => {
       if (data?._embedded?.configTypeOfIncident) {
         setIrTypes(
           data._embedded.configTypeOfIncident.map((type) => ({
@@ -201,7 +201,7 @@ export const IrDashboardContextProvider = ({ children }) => {
 
   const { get: getDataElements } = useFetch(defaultEndpoints.dashboardElements);
   const updateDataElements = useCallback(() => {
-    getDataElements().then((data) => {
+    getDataElements().then(({ data }) => {
       if (data?._embedded?.dashboardElements) {
         setDataElements(data._embedded.dashboardElements);
         // setDataElements(
@@ -231,7 +231,7 @@ export const IrDashboardContextProvider = ({ children }) => {
 
   const { get: getHodApproval } = useFetch(defaultEndpoints.hodApproval);
   const updateHodApproval = useCallback(() => {
-    getHodApproval().then((data) => {
+    getHodApproval().then(({ data }) => {
       if (data?._embedded?.configHodapproval?.length) {
         setIrConfig((prev) => ({
           ...prev,
@@ -242,14 +242,14 @@ export const IrDashboardContextProvider = ({ children }) => {
   }, []);
 
   const updateUsers = useCallback(async () => {
-    const users = await getUsers().then((data) =>
+    const users = await getUsers().then(({ data }) =>
       (data?._embedded?.user || []).map((user) => ({
         ...user,
         role: user.role?.split(",").filter((r) => r) || [],
       }))
     );
 
-    const counts = await getCountStatusDetailByState().then((data) =>
+    const counts = await getCountStatusDetailByState().then(({ data }) =>
       (data?._embedded?.IrStatusDetailsCount || []).map((detail) => ({
         userid: detail.userid,
         count: detail.count,
@@ -277,7 +277,7 @@ export const IrDashboardContextProvider = ({ children }) => {
   useEffect(async () => {
     if (user && !parametersFetched.current) {
       Promise.all([getLocations(), getCategories()])
-        .then(async ([location, category]) => {
+        .then(async ([{ data: location }, { data: category }]) => {
           const _parameters = { ...parameters };
           if (location?._embedded.location) {
             _parameters.locations = location._embedded.location;

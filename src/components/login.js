@@ -63,12 +63,12 @@ export default function Login() {
       if (decoded && new Date() > new Date(decoded.exp)) {
         getUserDetail(null, {
           query: { username: decoded.user_name },
-        }).then(async (user) => {
+        }).then(async ({ data: user }) => {
           if (user) {
             if (hisAccessToken) {
               setHis(true);
               const endpoints = await getEndpoints()
-                .then((data) => {
+                .then(({ data }) => {
                   const _urls = {};
                   if (data._embedded.apiurls) {
                     data._embedded.apiurls.forEach((url) => {
@@ -155,7 +155,7 @@ export default function Login() {
                 let hisToken = sessionStorage.getItem("HIS-access-token");
 
                 const endpoints = await getEndpoints()
-                  .then((data) => {
+                  .then(({ data }) => {
                     const _urls = {};
                     if (data._embedded.apiurls) {
                       data._embedded.apiurls.forEach((url) => {
@@ -259,7 +259,6 @@ export default function Login() {
                   })
                     .then((res) => res.json())
                     .then((data) => {
-                      // console.log(data);
                       if (data.success) {
                         return data?.dataBean.token;
                       } else if (data.authenticate) {
@@ -279,6 +278,7 @@ export default function Login() {
                 }
                 if (!hisToken) {
                   setLoading(false);
+                  sessionStorage.removeItem("access-token");
                   return Prompt({
                     type: "error",
                     message: "Could not load Token. Please try again.",
@@ -288,7 +288,7 @@ export default function Login() {
                 const user = await getUserDetail(null, {
                   query: { username: data.username },
                 })
-                  .then((user) =>
+                  .then(({ data: user }) =>
                     user
                       ? {
                           ...user,
@@ -316,7 +316,7 @@ export default function Login() {
               } else {
                 const _user = await getUserDetail(null, {
                   query: { username: data.username },
-                }).then((user) => {
+                }).then(({ data: user }) => {
                   return user
                     ? {
                         ...user,

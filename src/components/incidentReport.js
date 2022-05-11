@@ -292,10 +292,10 @@ export default function IncidentReporting() {
     ])
       .then(
         ([
-          location,
-          departments,
+          { data: location },
+          { data: departments },
           { data: users },
-          usersWithRoles,
+          { data: usersWithRoles },
           { data: patients },
         ]) => {
           const _parameters = {};
@@ -315,7 +315,7 @@ export default function IncidentReporting() {
                 label: item.locationName,
                 value: item.locationID,
               }));
-          } else if (location?.data._embedded?.location) {
+          } else if (location?._embedded?.location) {
             _parameters.locations = location._embedded.location
               .filter((item) => item.status)
               .map((item) => ({
@@ -324,20 +324,20 @@ export default function IncidentReporting() {
               }));
           }
 
-          if (Array.isArray(departments?.data[endpoints?.departments.key1])) {
+          if (Array.isArray(departments?.[endpoints?.departments.key1])) {
             _parameters.departments = departments[
               endpoints?.departments.key1
             ].map(({ departmentId, departmentName }) => ({
               value: departmentId.toString(),
               label: departmentName,
             }));
-          } else if (Array.isArray(departments.data)) {
-            _parameters.departments = departments.data.map((dept) => ({
+          } else if (Array.isArray(departments)) {
+            _parameters.departments = departments.map((dept) => ({
               label: dept.description,
               value: dept.code,
             }));
-          } else if (departments?.data._embedded?.department) {
-            _parameters.departments = departments.data._embedded.department.map(
+          } else if (departments?._embedded?.department) {
+            _parameters.departments = departments._embedded.department.map(
               (item) => ({
                 label: item.name,
                 value: item.id,
@@ -882,8 +882,8 @@ export const IncidentCategory = ({}) => {
 
   useEffect(() => {
     getCategories()
-      .then((data) => {
-        if (data._embedded.category) {
+      .then(({ data }) => {
+        if (data?._embedded.category) {
           setCategories(data._embedded.category);
           const maxSubCategory = [...data._embedded.category].sort((a, b) =>
             a.subCategorys.length > b.subCategorys.length ? -1 : 1

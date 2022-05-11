@@ -72,37 +72,6 @@ import { countDays } from "../helpers";
 
 import IrInvestigation from "./irInvestigation";
 
-const calculateDays = (ir, exclude = []) => {
-  let status = {};
-  ir.irStatusDetails.forEach((detail) => {
-    if (detail.status === 10) {
-      return;
-    }
-    if (Array.isArray(status[detail.status])) {
-      status[detail.status].push(detail);
-    } else {
-      status[detail.status] = [detail];
-    }
-  });
-  if (ir.irStatusDetails.length === 0) {
-    return 0;
-  }
-  Object.entries(status).forEach(([sts, detail]) => {
-    status[sts] = detail.sort((a, b) =>
-      new Date(a.dateTime) < new Date(b.dateTime) ? 1 : -1
-    );
-  });
-
-  const startDate = new Date(Object.values(status)[0][0].dateTime);
-  const endDate = new Date(
-    Object.values(status)[Object.values(status).length - 1][
-      Object.values(status)[Object.values(status).length - 1].length - 1
-    ].dateTime
-  );
-
-  return countDays(startDate, endDate, exclude);
-};
-
 function paramsToObject(entries) {
   const result = {};
   for (const [key, value] of entries) {
@@ -141,10 +110,7 @@ export const MyDashboard = () => {
   const [filters, setFilters] = useState({});
   const [focus, setFocus] = useState(null);
 
-  const { get: searchIrs, loading } = useFetch(defaultEndpoints.searchIrs);
-  const { remove: deleteIr } = useFetch(
-    defaultEndpoints.incidentReport + "/" + "{ID}"
-  );
+  const { get: searchIrs, loading } = useFetch(defaultEndpoints.irQuerySearch);
 
   useEffect(() => {
     setDashboard("myDashboard");
@@ -161,80 +127,42 @@ export const MyDashboard = () => {
     if (_filters.toIncidentDateTime) {
       _filters.toIncidentDateTime = _filters.toIncidentDateTime + " 23:59:59";
     }
-    if (_filters.fromreportingDate) {
-      _filters.fromreportingDate = _filters.fromreportingDate + " 00:00:00";
+    if (_filters.fromQueryDateTime) {
+      _filters.fromQueryDateTime = _filters.fromQueryDateTime + " 00:00:00";
     }
-    if (_filters.toreportingDate) {
-      _filters.toreportingDate = _filters.toreportingDate + " 23:59:59";
+    if (_filters.toQueryDateTime) {
+      _filters.toQueryDateTime = _filters.toQueryDateTime + " 23:59:59";
     }
 
-    // if (_filters.byIr !== "department") {
-    //   _filters.userId = user.id;
-    // } else {
-    //   delete _filters.userId;
-    // }
-    // if (_filters.irBy === "self") {
-    // } else {
-    //   delete _filters.userId;
-    // }
+    _filters.userId = user.id;
 
-    if (Object.entries(_filters).length) {
-      searchIrs(null, { query: _filters })
-        .then((data) => {
-          if (data._embedded?.IncidentReport) {
-            const _ir = [];
-            data._embedded.IncidentReport.forEach((ir) => {
-              ir.reqInput.forEach((req) =>
-                _ir.push({
-                  sequence: ir.sequence,
-                  reportingDate: ir.reportingDate,
-                  incident_Date_Time: ir.incident_Date_Time,
-                  location: ir.location,
-                  inciCateg: ir.inciCateg,
-                  inciSubCat: ir.inciSubCat,
-                  queryRaisedBy: req.queryRaisedBy,
-                  queryDateTime: req.queryDateTime,
-                  irId: ir.id,
-                  reqId: req.id,
-                  query: req.query,
-                })
-              );
+    searchIrs(null, { query: _filters })
+      .then((data) => {
+        const _ir = [];
+        data?._embedded?.IncidentReport?.forEach((ir) => {
+          ir.reqInput.forEach((req) => {
+            const response = ir.responseIrInput.find(
+              (res) => res.reqId === req.id
+            );
+            _ir.push({
+              irCode: ir.sequence,
+              reportingDate: ir.reportingDate,
+              incident_Date_Time: ir.incident_Date_Time,
+              location: ir.location,
+              inciCateg: ir.inciCateg,
+              inciSubCat: ir.inciSubCat,
+              queryRaisedBy: req.queryRaisedBy,
+              queryDateTime: req.queryDateTime,
+              irId: ir.id,
+              reqId: req.id,
+              query: req.query,
+              ...(response && { response }),
             });
-            setIncidents(_ir);
-          }
-        })
-        .catch((err) => Prompt({ type: "error", message: err.message }));
-    } else {
-      searchIrs(null)
-        .then((data) => {
-          if (data._embedded?.IncidentReport) {
-            const _ir = [];
-            data._embedded.IncidentReport.forEach((ir) => {
-              ir.reqInput.forEach((req) => {
-                const response = ir.responseIrInput.find(
-                  (resp) => resp.reqId === req.id
-                );
-                _ir.push({
-                  sequence: ir.sequence,
-                  reportingDate: ir.reportingDate,
-                  incident_Date_Time: ir.incident_Date_Time,
-                  location: ir.location,
-                  inciCateg: ir.inciCateg,
-                  inciSubCat: ir.inciSubCat,
-                  queryRaisedBy: req.queryRaisedBy,
-                  queryDateTime: req.queryDateTime,
-                  irId: ir.id,
-                  reqId: req.id,
-                  query: req.query,
-                  ...(response && { response }),
-                });
-              });
-            });
-            setIncidents(_ir);
-          }
-        })
-        .catch((err) => Prompt({ type: "error", message: err.message }));
-    }
+          });
+        });
+        setIncidents(_ir);
+      })
+      .catch((err) => Prompt({ type: "error", message: err.message }));
   }, [location.search]);
   return (
     <div key="myDashboard" className={`${s.myDashboard} ${s.queryDashboard}`}>
@@ -354,7 +282,7 @@ const SingleIr = memo(
           //   setFocus && setFocus(ir.id);
           // }}
         >
-          <td className={s.irCode}>{ir.sequence}</td>
+          <td className={s.sequence}>{ir.irCode}</td>
           <td>
             <Moment format="DD/MM/YYYY hh:mm">{ir.reportingDate}</Moment>
           </td>
@@ -451,7 +379,7 @@ const ResponseForm = ({ ir, parameters, setShowResForm, onSuccess }) => {
   return (
     <div className={s.content}>
       <ul className={s.irDetail}>
-        <li>IR Code: {ir?.sequence}</li>
+        <li>IR Code: {ir?.irCode}</li>
         <li>
           Incident Date & Time:{" "}
           <Moment format="DD/MM/YYYY hh:mm">{ir?.incident_Date_Time}</Moment>
@@ -479,7 +407,7 @@ const ResponseForm = ({ ir, parameters, setShowResForm, onSuccess }) => {
             ir?.inciSubCat}
         </li>
       </ul>
-      <p className={""}>
+      <p className={s.queryBy}>
         <strong>Query Raised by</strong> -{" "}
         {parameters?.users?.find(({ value }) => value === ir.queryRaisedBy)
           ?.label || ir.queryRaisedBy}{" "}
@@ -569,18 +497,22 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
   const defaultView = user?.role?.includes?.("incidentManager")
     ? "all"
     : "assigned";
-  const { handleSubmit, register, watch, reset, setValue, getValues } = useForm(
-    {
-      defaultValues: {
-        irBy: "self",
-        status: "",
-        view: user?.role?.includes?.("incidentManager") ? "all" : "assigned",
-      },
-    }
-  );
+  const {
+    handleSubmit,
+    register,
+    watch,
+    reset,
+    setValue,
+    getValues,
+    control,
+  } = useForm({
+    defaultValues: {
+      status: "",
+    },
+  });
   const [categories, setCategories] = useState([]);
   const fromIncidentDateTime = watch("fromIncidentDateTime");
-  const fromreportingDate = watch("fromreportingDate");
+  const fromQueryDateTime = watch("fromQueryDateTime");
   useEffect(() => {
     if (parameters.categories) {
       setCategories(
@@ -594,13 +526,13 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
   useEffect(() => {
     const _filters = paramsToObject(new URLSearchParams(location.search));
     reset({
-      sequence: "",
-      fromreportingDate: "",
-      toreportingDate: "",
+      irCode: "",
+      fromQueryDateTime: "",
+      toQueryDateTime: "",
       fromIncidentDateTime: "",
       toIncidentDateTime: "",
       ..._filters,
-      typeofInci: _filters.typeofInci?.split(",").map((c) => +c) || "",
+      queryRaisedBy: _filters.queryRaisedBy?.split(",").map((c) => +c) || "",
       irInvestigator: _filters.irInvestigator?.split(",").map((c) => +c) || "",
       status: _filters.status?.split(",").map((c) => +c) || "",
       InciCateg: _filters.InciCateg?.split(",").map((c) => +c) || "",
@@ -618,22 +550,22 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
   }, [view]);
   return (
     <form className={s.filters} onSubmit={handleSubmit(onSubmit)}>
-      <Input label="IR Code" {...register("sequence")} />
+      <Input label="IR Code" {...register("irCode")} />
       <section className={s.pair}>
         <label>Qurey Date Range</label>
         <Input
           type="date"
           placeholder="From"
-          {...register("fromreportingDate")}
+          {...register("fromQueryDateTime")}
           max={moment({ format: "YYYY-MM-DD", time: new Date() })}
         />
         <Input
           type="date"
           placeholder="To"
-          {...register("toreportingDate")}
+          {...register("toQueryDateTime")}
           min={moment({
             format: "YYYY-MM-DD",
-            time: new Date(fromreportingDate),
+            time: new Date(fromQueryDateTime),
           })}
           max={moment({ format: "YYYY-MM-DD", time: new Date() })}
         />
@@ -657,15 +589,11 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
           max={moment({ format: "YYYY-MM-DD", time: new Date() })}
         />
       </section>
-      <Combobox
-        placeholder="All"
-        label="Query by"
-        name="typeofInci"
-        setValue={setValue}
-        watch={watch}
-        multiple={true}
-        register={register}
+      <Select
+        label="Query Raised by"
         options={parameters.users}
+        name="queryRaisedBy"
+        control={control}
       />
       <section className={s.btns}>
         <button className="btn secondary">
@@ -675,21 +603,11 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
           type="button"
           className={`btn clear ${s.clear}`}
           onClick={() => {
-            reset({
-              irBy: "self",
-              view: defaultView,
-            });
+            reset();
             navigate({
               pathname: location?.pathname,
-              search: `?${createSearchParams({
-                irBy: "self",
-                view: defaultView,
-              })}`,
             });
-            onSubmit({
-              irBy: "self",
-              view: defaultView,
-            });
+            onSubmit({});
           }}
         >
           Clear

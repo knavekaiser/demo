@@ -90,9 +90,13 @@ export const useFetch = (
             };
           })
           .catch((err) => {
-            throw err;
+            setError(err);
+            return { error: true };
+          })
+          .finally(() => {
+            return { test: true };
           });
-
+        // console.log(response);
         if (response?.errorMessage || response?.error) {
           if (
             ["Invalid Token", "Token validation failed"].includes(

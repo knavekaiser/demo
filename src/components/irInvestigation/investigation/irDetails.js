@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useContext } from "react";
+import { useEffect, useState, useCallback, useContext, useRef } from "react";
 import s from "./style.module.scss";
 import { Box } from "../../incidentReport";
 import { InvestigationContext } from "../InvestigationContext";
@@ -407,8 +407,16 @@ const RiskAssessment = ({
   );
 };
 
+Array.prototype.swap = function (oldIndex, newIndex) {
+  const a = this[oldIndex],
+    b = this[newIndex];
+  this[newIndex] = a;
+  this[oldIndex] = b;
+  return this;
+};
+
 const Events = ({ events }) => {
-  const { setIr } = useContext(InvestigationContext);
+  const { ir, setIr } = useContext(InvestigationContext);
   const [edit, setEdit] = useState(null);
 
   const onSuccess = useCallback((newEv) => {
@@ -423,25 +431,86 @@ const Events = ({ events }) => {
   const { remove: deleteEvent, put: updateEvent, loading } = useFetch(
     defaultEndpoints.investigationEvents + "/{ID}"
   );
+  const { patch: updateSequence, loading: updatingSequence } = useFetch(
+    defaultEndpoints.investigationEvents + `/{ID}`
+  );
 
   return (
     <Table
       className={s.tableOfEvents}
+      key={Math.random()}
       sortable={{
         handle: ".handle",
         removeCloneOnHide: true,
+        disabled: updatingSequence,
         onEnd: (e) => {
-          // const itemEl = e.item;
-          // const { oldIndex, newIndex } = e;
-          // if (oldIndex !== newIndex) {
-          //   setCodeConfig((prev) => {
-          //     const videos = [
-          //       ...prev.filter((item, i) => i !== oldIndex),
-          //     ];
-          //     videos.splice(newIndex, 0, prev[oldIndex]);
-          //     return videos;
-          //   });
-          // }
+          const itemEl = e.item;
+          const { oldIndex, newIndex } = e;
+          if (oldIndex !== newIndex) {
+            setIr((ir) => {
+              let events = [...ir.irInvestigation[0].events];
+              let newEvents = [...events];
+
+              const targetItem = events.find((evt, i) => i === oldIndex - 1);
+
+              let targetIndex = events.findIndex(
+                (evt) => evt.id === targetItem.id
+              );
+
+              if (newIndex > oldIndex) {
+                // swap with next as long as targetIndex is smaller than newIndex
+                while (targetIndex < newIndex - 1) {
+                  newEvents = newEvents.swap(targetIndex, targetIndex + 1);
+                  targetIndex = newEvents.findIndex(
+                    (evt) => evt.id === targetItem.id
+                  );
+                }
+              } else if (newIndex < oldIndex) {
+                // swap with previous as long as targetIndex is greater than newIndex
+                while (targetIndex > newIndex - 1) {
+                  newEvents = newEvents.swap(targetIndex, targetIndex - 1);
+                  targetIndex = newEvents.findIndex(
+                    (evt) => evt.id === targetItem.id
+                  );
+                }
+              }
+
+              newEvents = newEvents.map((item, i) => ({
+                ...item,
+                sequence: i + 1,
+              }));
+
+              // console.log(
+              //   events.map((evt) => evt),
+              //   newEvents.map((evt) => evt)
+              // );
+
+              Promise.all(
+                newEvents
+                  .filter(
+                    (evt, i) =>
+                      events.find((ev) => ev.id === evt.id).sequence !==
+                      evt.sequence
+                  )
+                  .map((evt) =>
+                    updateSequence(
+                      { sequence: evt.sequence },
+                      { params: { "{ID}": evt.id } }
+                    )
+                  )
+              );
+
+              return {
+                ...ir,
+                irInvestigation: [
+                  {
+                    ...ir.irInvestigation[0],
+                    events: newEvents,
+                  },
+                ],
+              };
+            });
+          }
         },
       }}
       columns={[
@@ -457,21 +526,37 @@ const Events = ({ events }) => {
             key={edit ? "edit" : "add"}
             edit={edit}
             onSuccess={(newEvent) => {
-              setIr((prev) => ({
-                ...prev,
-                irInvestigation: [
-                  {
-                    ...prev.irInvestigation[0],
-                    events: [
-                      ...(prev.irInvestigation[0].events || []).filter(
-                        (item) => item.id !== newEvent.id
+              if (edit) {
+                setIr((prev) => ({
+                  ...prev,
+                  irInvestigation: [
+                    {
+                      ...prev.irInvestigation[0],
+                      events: (
+                        prev.irInvestigation[0].events || []
+                      ).map((item) =>
+                        item.id === newEvent.id ? newEvent : item
                       ),
-                      newEvent,
-                    ],
-                  },
-                ],
-              }));
-              setEdit(null);
+                    },
+                  ],
+                }));
+                setEdit(null);
+              } else {
+                setIr((prev) => ({
+                  ...prev,
+                  irInvestigation: [
+                    {
+                      ...prev.irInvestigation[0],
+                      events: [
+                        ...(prev.irInvestigation[0].events || []).filter(
+                          (item) => item.id !== newEvent.id
+                        ),
+                        newEvent,
+                      ],
+                    },
+                  ],
+                }));
+              }
             }}
             clearForm={() => setEdit(null)}
           />
@@ -479,8 +564,7 @@ const Events = ({ events }) => {
       </tr>
       {events.map((ev, i) => (
         <tr key={i}>
-          <td className="handle">
-            {" "}
+          <td className={`handle ${s.handle}`}>
             <FaEllipsisV /> {ev.no}
           </td>
           <td className={s.dscr}>
@@ -541,19 +625,19 @@ const Events = ({ events }) => {
                         params: { "{ID}": ev.id },
                       }).then(({ res }) => {
                         if (res.status === 204) {
-                          setIr((prev) => ({
-                            ...prev,
-                            irInvestigation: [
-                              {
-                                ...prev.irInvestigation[0],
-                                events: [
-                                  ...prev.irInvestigation[0].events.filter(
+                          setIr((prev) => {
+                            return {
+                              ...prev,
+                              irInvestigation: [
+                                {
+                                  ...prev.irInvestigation[0],
+                                  events: prev.irInvestigation[0].events.filter(
                                     (item) => item.id !== ev.id
                                   ),
-                                ],
-                              },
-                            ],
-                          }));
+                                },
+                              ],
+                            };
+                          });
                         }
                       });
                     },
@@ -575,7 +659,7 @@ const EventForm = ({ edit, onSuccess, clearForm }) => {
     formState: { errors },
   } = useForm();
 
-  const { post: saveEvent, put: updateEvent, loading } = useFetch(
+  const { post: saveEvent, patch: updateEvent, loading } = useFetch(
     defaultEndpoints.investigationEvents + `/${edit?.id || ""}`
   );
   const { post: saveIrDetail, savingIrDetail } = useFetch(
@@ -607,17 +691,22 @@ const EventForm = ({ edit, onSuccess, clearForm }) => {
         if (!irDetail) {
           return Prompt({
             type: "error",
-            message: "Please save IR Investigation before saving notes.",
+            message: "Please save IR Investigation before saving Events.",
           });
         }
 
+        const newSequence =
+          irDetail.events.sort((a, b) => (a.sequence > b.sequence ? 1 : -1))[
+            irDetail.events.length - 1
+          ]?.sequence + 1 || 1;
+
         (edit ? updateEvent : saveEvent)({
           ...values,
-          // notes: "notes",
-          // problem: true,
-          // sequence: 1,
+          ...(!edit && {
+            sequence: newSequence,
+            irInvestigation: { id: irDetail.id },
+          }),
           irId: ir.id,
-          irInvestigation: { id: irDetail.id },
         })
           .then(({ data }) => {
             if (data.id) {

@@ -24,7 +24,19 @@ export const InvestigationProvider = ({ children }) => {
   useEffect(() => {
     getIr().then(({ data }) => {
       if (data) {
-        setIr(data);
+        setIr({
+          ...data,
+          ...(data.irInvestigation.length && {
+            irInvestigation: [
+              {
+                ...data.irInvestigation[0],
+                events: data.irInvestigation[0].events.sort((a, b) =>
+                  a.sequence > b.sequence ? 1 : -1
+                ),
+              },
+            ],
+          }),
+        });
       }
     });
   }, []);
