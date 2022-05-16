@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import IrInputs from "./irInput";
 import IrDetails from "./irDetails";
+import Rca from "./rca";
 import { Tabs } from "../../elements";
 import {
   Routes,
@@ -52,6 +53,10 @@ const Investigation = ({ ir, setIr }) => {
         <Route
           path={paths.incidentDashboard.irInvestigation.investigation.irDetails}
           element={<IrDetails />}
+        />
+        <Route
+          path={paths.incidentDashboard.irInvestigation.investigation.irRca}
+          element={<Rca />}
         />
       </Routes>
     </div>

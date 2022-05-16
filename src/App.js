@@ -6,6 +6,14 @@ import Login from "./components/login";
 import Dashboard from "./components/dashboard.js";
 import "./App.scss";
 
+Array.prototype.swap = function (oldIndex, newIndex) {
+  const a = this[oldIndex],
+    b = this[newIndex];
+  this[newIndex] = a;
+  this[oldIndex] = b;
+  return this;
+};
+
 function App() {
   const { user } = useContext(SiteContext);
   const navigate = useNavigate();

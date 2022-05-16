@@ -141,7 +141,7 @@ export const MyDashboard = () => {
     searchIrs(null, { query: _filters })
       .then((data) => {
         const _ir = [];
-        data?._embedded?.IncidentReport?.forEach((ir) => {
+        data?.data?.forEach((ir) => {
           ir.reqInput.forEach((req) => {
             const response = ir.responseIrInput.find(
               (res) => res.reqId === req.id

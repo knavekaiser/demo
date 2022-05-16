@@ -132,6 +132,186 @@
       grid-gap: 10px;
     }
   }
+  .rca {
+    display: grid;
+    grid-gap: 18px;
+    .rcaDate {
+      display: flex;
+      align-items: center;
+      grid-gap: 10px;
+    }
+    .problemAreas {
+      tr {
+        grid-template-columns: 2rem 1fr;
+      }
+    }
+    .rootCause {
+      display: grid;
+      grid-gap: 10px;
+      .problemStatement {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        .btn {
+          color: $primary-color;
+          text-decoration: underline;
+        }
+      }
+      .customRadio {
+        label {
+          border-radius: 0;
+          padding: 4px 18px;
+        }
+        .selected {
+          background: $primary-color;
+        }
+      }
+      .addCause {
+        border: 1px solid $comp-grey;
+        padding: 10px;
+        display: flex;
+        flex-wrap: wrap;
+        grid-gap: 10px;
+        align-items: flex-end;
+        .addWhy {
+          color: rgb(152, 152, 152);
+        }
+      }
+      .causeBreakdown {
+        display: grid;
+        .btn {
+          color: $primary-color;
+          text-decoration: underline;
+          margin: auto;
+          margin-right: 0;
+        }
+        .wrapper {
+          overflow-y: auto;
+          display: flex;
+          grid-gap: 3rem;
+          background: rgb(245, 250, 255);
+          padding: 10px 15px;
+          .type {
+            color: $primary-color;
+            font-weight: 600;
+            margin-bottom: 6px;
+          }
+          .causes {
+            min-width: 15rem;
+            white-space: nowrap;
+            border-left: 1px solid $primary-grey;
+            position: relative;
+            padding: 0 18px;
+            font-size: 10pt;
+            .cause {
+              .causeLabel {
+                margin-bottom: 4px;
+                position: relative;
+                display: flex;
+                align-items: center;
+                grid-gap: 6px;
+                cursor: pointer;
+                &::after,
+                &::before {
+                  content: "";
+                  display: block;
+                  position: absolute;
+                  background: $primary-grey;
+                  top: 50%;
+                  transform: translateY(-50%);
+                }
+                &::before {
+                  height: 1px;
+                  width: 10px;
+                  left: -19px;
+                }
+                &::after {
+                  left: -10px;
+                  height: 5px;
+                  width: 5px;
+                  border-radius: 50%;
+                }
+                .btn {
+                  font-size: 0.9em;
+                  height: min-content;
+                  min-height: min-content;
+                  padding: 0;
+                  opacity: 0;
+                  pointer-events: none;
+                }
+                &:hover {
+                  text-decoration: underline;
+                  color: $primary-color;
+                  font-weight: 600;
+                  .btn {
+                    opacity: 100;
+                    pointer-events: all;
+                  }
+                }
+              }
+              &:last-child {
+                position: relative;
+                &::before {
+                  content: "";
+                  position: absolute;
+                  bottom: 0;
+                  left: -20px;
+                  display: block;
+                  height: calc(100% - 0.7em);
+                  width: 4px;
+                  background: rgb(245, 250, 255);
+                }
+              }
+              .whys {
+                border-left: 1px solid $primary-grey;
+                padding: 0 12px;
+                padding-top: 4px;
+                margin-bottom: 6px;
+                .why {
+                  position: relative;
+                  &::before {
+                    content: "";
+                    display: block;
+                    position: absolute;
+                    background: $primary-grey;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    height: 1px;
+                    width: 8px;
+                    left: -12px;
+                  }
+                  &:last-child {
+                    position: relative;
+                    &::after {
+                      content: "";
+                      position: absolute;
+                      bottom: 0;
+                      left: -14px;
+                      display: block;
+                      height: calc(100% - 0.7em);
+                      width: 4px;
+                      background: rgb(245, 250, 255);
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    .rcaTeamMembers {
+      tr,
+      .inlineForm form {
+        grid-template-columns: 1fr 1fr 1fr 4rem;
+      }
+    }
+    & > .btns {
+      display: flex;
+      justify-content: center;
+      grid-gap: 10px;
+    }
+  }
 }
 
 .requestInput {

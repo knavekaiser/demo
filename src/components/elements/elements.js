@@ -411,10 +411,15 @@ export const CustomRadio = ({
   multiple,
   onChange,
   formOptions,
+  className,
+  selectedClassName,
 }) => {
   const selected = watch?.(name);
   return (
-    <section className={s.customRadio} data-testid="customRadioInput">
+    <section
+      className={`${s.customRadio} ${className || ""}`}
+      data-testid="customRadioInput"
+    >
       {label && (
         <label>
           {label} {formOptions?.required && "*"}
@@ -426,7 +431,9 @@ export const CustomRadio = ({
             htmlFor={name + v}
             key={i}
             className={`${s.option} ${
-              selected?.includes?.(v) ? s.selected : ""
+              selected?.includes?.(v)
+                ? s.selected + " " + (selectedClassName || "")
+                : ""
             } ${disabled ? s.disabled : ""}`}
           >
             <input
