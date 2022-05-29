@@ -1,6 +1,12 @@
 import React, { useState, useEffect, useContext, useCallback } from "react";
 import { SiteContext } from "../SiteContext";
-import { FaInfoCircle, FaRegTrashAlt, FaPlus, FaCheck } from "react-icons/fa";
+import {
+  FaInfoCircle,
+  FaRegTrashAlt,
+  FaPlus,
+  FaCheck,
+  FaCheckCircle,
+} from "react-icons/fa";
 import { IoClose } from "react-icons/io5";
 import { BiChevronsDown } from "react-icons/bi";
 import { BsPencilFill } from "react-icons/bs";
@@ -239,8 +245,13 @@ export default function IncidentReporting() {
 
   useEffect(() => {
     if (location.state?.ir) {
-      console.log(location.state.ir);
       const { ir, readOnly } = location.state;
+      const statusDetail = ir?.irStatusDetails?.find(
+        (item) => item.status.toString() === "11"
+      );
+      if (statusDetail) {
+        ir.acknowledgeDetail = statusDetail;
+      }
       setIr(ir);
     }
   }, [location]);
@@ -320,6 +331,31 @@ export default function IncidentReporting() {
             }
           />
         </div>
+        {ir?.status.toString() === "11" && (
+          <div className={s.acknowledged}>
+            <span className={s.icon}>
+              <FaCheckCircle />
+            </span>
+            <div>
+              <p>
+                <span className={s.ack}>Acknowledged</span>{" "}
+                {ir.acknowledgeDetail && (
+                  <>
+                    by{" "}
+                    {parameters?.users.find(
+                      (user) => user.value === ir.acknowledgeDetail.userid
+                    )?.label || ir.acknowledgeDetail.userid}{" "}
+                    on{" "}
+                    <Moment format="DD/MM/YYYY hh:mm">
+                      {ir.acknowledgeDetail.dateTime}
+                    </Moment>
+                  </>
+                )}
+              </p>
+              <p className={s.content}>Acknowledge remarks content here</p>
+            </div>
+          </div>
+        )}
         <Box label="INCIDENT DETAILS" collapsable={true}>
           <div className={s.incidentDetail}>
             <Data
@@ -510,6 +546,14 @@ export default function IncidentReporting() {
             updateStatus({
               ...ir,
               status: "11",
+              irStatusDetails: [
+                ...ir.irStatusDetails,
+                {
+                  status: 11,
+                  dateTime: new Date().toISOString(),
+                  userid: user.id,
+                },
+              ],
             }).then(({ data }) => {
               console.log(data);
               if (data?.id) {

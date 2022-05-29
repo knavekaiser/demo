@@ -192,6 +192,9 @@ const IrInput = () => {
       >
         <RequestInputForm
           parameters={parameters}
+          previous={
+            inputs.filter((input) => input.__type === "reqInput").slice(-1)[0]
+          }
           onSuccess={(newReqInput) => {
             setRequestInput(false);
             setIr((prev) => ({
@@ -313,10 +316,10 @@ const SingleInput = ({ input, parameters, setIr }) => {
                 <p>{input.response}</p>
               </li>
             </ul>
-            {document.upload && (
-              <p>
+            {input.upload && (
+              <p className={s.upload}>
                 <span className={s.label}>Document Uploaded:</span>{" "}
-                <a _target="_blank" href={input.upload}>
+                <a target="_blank" href={input.upload}>
                   {input.upload}
                 </a>
               </p>
@@ -337,7 +340,7 @@ const SingleInput = ({ input, parameters, setIr }) => {
   );
 };
 
-const RequestInputForm = ({ onSuccess, parameters }) => {
+const RequestInputForm = ({ onSuccess, previous, parameters }) => {
   const { ir } = useContext(InvestigationContext);
   const { user } = useContext(SiteContext);
 
@@ -354,6 +357,7 @@ const RequestInputForm = ({ onSuccess, parameters }) => {
       description: ir.inciDescription,
       deptInv: ir.deptsLookupMultiselect.split(","),
       person: ir.personAffected,
+
       // category template
       //
     },
@@ -364,6 +368,12 @@ const RequestInputForm = ({ onSuccess, parameters }) => {
   const { post: saveRequest, loading: savingRequest } = useFetch(
     defaultEndpoints.requestInputs
   );
+
+  useEffect(() => {
+    if (irInfo?.includes("copyPrev") && previous) {
+      setValue("copyPrev", previous.response);
+    }
+  }, [irInfo]);
 
   return (
     <form
@@ -416,7 +426,11 @@ const RequestInputForm = ({ onSuccess, parameters }) => {
         placeholder="Select"
         multiple
         options={[
-          { value: "copyPrev", label: "Copy From Previous" },
+          {
+            value: "copyPrev",
+            label: "Copy From Previous",
+            disabled: !previous,
+          },
           { value: "description", label: "Description" },
           { value: "deptInv", label: "Departments Involved" },
           { value: "personAff", label: "Person Affected" },
@@ -426,6 +440,14 @@ const RequestInputForm = ({ onSuccess, parameters }) => {
       />
       {irInfo?.length > 0 && (
         <section className={s.descriptions}>
+          {irInfo.includes("copyPrev") && (
+            <Textarea
+              label="From Previous"
+              {...register("copyPrev")}
+              readOnly
+              error={errors.copyPrev}
+            />
+          )}
           {irInfo.includes("description") && (
             <Textarea
               label="Description"

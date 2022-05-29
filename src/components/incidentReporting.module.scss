@@ -151,6 +151,24 @@ main {
       .summary {
         background: rgb(246, 244, 244);
       }
+      .acknowledged {
+        display: flex;
+        align-items: center;
+        grid-gap: 10px;
+        background: #f8fef0;
+        border: 1px solid $primary-grey;
+        padding: 12px;
+        font-weight: 500;
+        font-size: 1.15em;
+        .ack {
+          color: $green;
+        }
+        .icon {
+          display: grid;
+          font-size: 2rem;
+          color: $green;
+        }
+      }
       .highlight {
         background: rgb(237, 251, 249);
         padding: 5px 10px;
