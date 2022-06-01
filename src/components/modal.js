@@ -36,7 +36,7 @@ export const Modal = forwardRef(
           <div
             style={{ ...style }}
             ref={ref}
-            className={`modal ${className || ""}`}
+            className={`modal ${className || ""} ${head ? "withHead" : ""}`}
           >
             {head && (
               <div className="head">

@@ -179,9 +179,10 @@ function Dashboard() {
           {checkPermission({
             roleId: ["incidentManager", "irInvestigator", "incidentReporter"],
           }) && <SidebarItem_IrDashboard />}
-          {checkPermission({
-            roleId: ["incidentManager", "irInvestigator"],
-          }) && (
+          {
+            //   checkPermission({
+            //   roleId: ["incidentManager", "irInvestigator"],
+            // }) && (
             <li
               className={`${s.sidebarItem} ${
                 location.pathname.startsWith(paths.irQueryDashboard)
@@ -196,7 +197,8 @@ function Dashboard() {
                 </span>
               </Link>
             </li>
-          )}
+            // )
+          }
           {checkPermission({
             roleId: ["incidentManager", "irInvestigator", "incidentReporter"],
           }) && (

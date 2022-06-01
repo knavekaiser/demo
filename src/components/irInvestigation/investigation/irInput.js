@@ -104,8 +104,9 @@ const IrInput = () => {
         _inputs.push({
           __type: "reqInput",
           id: input.id,
-          queryBy: input.userId,
+          queryBy: input.queryRaisedBy,
           queryDateTime: input.queryDateTime,
+          description: input.description,
           ...(response && {
             userId: response.responseBy,
             dateTime: response.responseOn,
@@ -193,7 +194,12 @@ const IrInput = () => {
         <RequestInputForm
           parameters={parameters}
           previous={
-            inputs.filter((input) => input.__type === "reqInput").slice(-1)[0]
+            inputs
+              .filter((input) => input.__type === "reqInput")
+              .sort((a, b) =>
+                new Date(a.queryDateTime) > new Date(b.queryDateTime) ? 1 : -1
+              )
+              .slice(-1)[0]
           }
           onSuccess={(newReqInput) => {
             setRequestInput(false);
@@ -304,17 +310,21 @@ const SingleInput = ({ input, parameters, setIr }) => {
             <p>{input.query}</p>
             <p>Please provide inputs on this incident.</p>
             <ul className={s.responses}>
-              <li>
-                <p className={s.responseFrom}>
-                  <span className={s.no}>#1 Response</span> - by{" "}
-                  {parameters?.users?.find(
-                    ({ value }) => value === input.userId
-                  )?.label || input.userId}{" "}
-                  on <Moment format="DD/MM/YYYY">{input.dateTime}</Moment> at{" "}
-                  <Moment format="hh:mm">{input.dateTime}</Moment>
-                </p>
-                <p>{input.response}</p>
-              </li>
+              {input.response ? (
+                <li>
+                  <p className={s.responseFrom}>
+                    <span className={s.no}>#1 Response</span> - by{" "}
+                    {parameters?.users?.find(
+                      ({ value }) => value === input.userId
+                    )?.label || input.userId}{" "}
+                    on <Moment format="DD/MM/YYYY">{input.dateTime}</Moment> at{" "}
+                    <Moment format="hh:mm">{input.dateTime}</Moment>
+                  </p>
+                  <p>{input.response}</p>
+                </li>
+              ) : (
+                <li>No response yet</li>
+              )}
             </ul>
             {input.upload && (
               <p className={s.upload}>
@@ -355,11 +365,16 @@ const RequestInputForm = ({ onSuccess, previous, parameters }) => {
   } = useForm({
     defaultValues: {
       description: ir.inciDescription,
-      deptInv: ir.deptsLookupMultiselect.split(","),
+      deptInv: ir.deptsLookupMultiselect
+        .split(",")
+        .map(
+          (deptId) =>
+            parameters?.departments?.find(
+              (dept) => dept.value.toString() === deptId
+            )?.label || deptId
+        )
+        .join(", "),
       person: ir.personAffected,
-
-      // category template
-      //
     },
   });
 
@@ -371,7 +386,7 @@ const RequestInputForm = ({ onSuccess, previous, parameters }) => {
 
   useEffect(() => {
     if (irInfo?.includes("copyPrev") && previous) {
-      setValue("copyPrev", previous.response);
+      setValue("copyPrev", previous.description);
     }
   }, [irInfo]);
 
@@ -383,9 +398,9 @@ const RequestInputForm = ({ onSuccess, previous, parameters }) => {
           userId: values.user,
           query: values.query,
           // irInfo: "irInfo",
-          // copyPrev: "copyPrev",
+          copyPrev: values.copyPrev,
           description: values.description,
-          deptInv: values.departments,
+          deptInv: values.deptInv,
           personAff: values.personAffected,
           incidentReport: { id: ir.id },
           queryRaisedBy: user.id,
@@ -465,7 +480,7 @@ const RequestInputForm = ({ onSuccess, previous, parameters }) => {
           {irInfo.includes("deptInv") && (
             <Textarea
               label="Departments Involved"
-              {...register("departments")}
+              {...register("deptInv")}
               readOnly
             />
           )}

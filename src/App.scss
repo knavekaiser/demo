@@ -162,6 +162,7 @@ button {
   z-index: 10;
   background: white;
   max-height: calc(100vh - 2rem);
+  max-width: calc(100vw - 2rem);
   & ~ .modalBackdrop {
     z-index: 10;
     & ~ .modal {
@@ -176,6 +177,14 @@ button {
   left: auto;
   height: max-content;
   width: max-content;
+  &.withHead {
+    overflow: hidden;
+    & > div:nth-child(2) {
+      overflow: auto;
+      max-height: calc(100vh - (3rem + 36px));
+      max-width: calc(100vw - 3rem);
+    }
+  }
   .head {
     background: #323d4f;
     border-radius: 4px;

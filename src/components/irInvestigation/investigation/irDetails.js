@@ -28,6 +28,7 @@ import {
 import { IoClose } from "react-icons/io5";
 import { BsPencilFill } from "react-icons/bs";
 import { useFetch } from "../../../hooks";
+import { wait } from "../../../helpers";
 import {
   endpoints as defaultEndpoints,
   permissions,
@@ -125,7 +126,6 @@ const IrDetails = () => {
 
   const submitMainForm = useCallback(
     (values) => {
-      console.log(ir.irInvestigation);
       (ir.irInvestigation?.length ? updateIrDetail : saveIrDetail)({
         ...(ir.irInvestigation.length ?? ir.irInvestigation[0]),
         ...values,
@@ -135,7 +135,6 @@ const IrDetails = () => {
           setIr((prev) => ({ ...prev, irInvestigation: [data] }));
         }
       });
-      console.log(values);
     },
     [ir]
   );
@@ -219,17 +218,18 @@ const IrDetails = () => {
 
   useEffect(() => {
     if (ir.irInvestigation?.length) {
+      const investigation = ir.irInvestigation[0];
       methods.reset({
-        ...ir.irInvestigation[0],
-        riskSeverity: ir.irInvestigation[0].riskSeverity || "",
-        riskLikeliHood: ir.irInvestigation[0].riskLikeliHood || "",
-        ipsg: ir.irInvestigation[0].ipsg || "",
-        name: ir.irInvestigation[0].name || "",
-        dept: ir.irInvestigation[0].dept || "",
-        prevSimilar: ir.irInvestigation[0].prevSimilar.toString(),
-        riskIncluded: ir.irInvestigation[0].riskIncluded.toString(),
-        selfRep: ir.irInvestigation[0].selfRep.toString(),
-        ipsgBreach: ir.irInvestigation[0].ipsgBreach.toString(),
+        ...investigation,
+        riskSeverity: investigation.riskSeverity || "",
+        riskLikeliHood: investigation.riskLikeliHood || "",
+        ipsg: investigation.ipsg || "",
+        name: investigation.name || "",
+        dept: investigation.dept || "",
+        prevSimilar: investigation.prevSimilar.toString(),
+        riskIncluded: investigation.riskIncluded.toString(),
+        selfRep: investigation.selfRep.toString(),
+        ipsgBreach: investigation.ipsgBreach.toString(),
       });
     }
   }, [ir.irInvestigation]);
@@ -654,7 +654,7 @@ const EventForm = ({ edit, onSuccess, clearForm }) => {
   const { post: saveEvent, patch: updateEvent, loading } = useFetch(
     defaultEndpoints.investigationEvents + `/${edit?.id || ""}`
   );
-  const { post: saveIrDetail, savingIrDetail } = useFetch(
+  const { post: saveIrDetail, loading: savingIrDetail } = useFetch(
     defaultEndpoints.irInvestigation
   );
 
@@ -673,10 +673,7 @@ const EventForm = ({ edit, onSuccess, clearForm }) => {
         let irDetail = ir.irInvestigation[0];
         if (!irDetail) {
           irDetail = await saveIrDetail({ incidentReport: { id: ir.id } }).then(
-            ({ data }) => {
-              setIr((prev) => ({ ...prev, irInvestigation: [data] }));
-              return data;
-            }
+            ({ data }) => data
           );
         }
 
@@ -688,7 +685,7 @@ const EventForm = ({ edit, onSuccess, clearForm }) => {
         }
 
         const newSequence =
-          irDetail.events.sort((a, b) => (a.sequence > b.sequence ? 1 : -1))[
+          irDetail.events?.sort((a, b) => (a.sequence > b.sequence ? 1 : -1))[
             irDetail.events.length - 1
           ]?.sequence + 1 || 1;
 
@@ -701,7 +698,8 @@ const EventForm = ({ edit, onSuccess, clearForm }) => {
           irId: ir.id,
         })
           .then(({ data }) => {
-            if (data.id) {
+            if (data) {
+              setIr((prev) => ({ ...prev, irInvestigation: [irDetail] }));
               onSuccess(data);
               reset();
             }
@@ -950,7 +948,7 @@ const NoteForm = ({ edit, onSuccess, clearForm }) => {
   const { post: saveNote, put: updateNote, loading } = useFetch(
     defaultEndpoints.investigationNotes + `/${edit?.id || ""}`
   );
-  const { post: saveIrDetail, savingIrDetail } = useFetch(
+  const { post: saveIrDetail, loading: savingIrDetail } = useFetch(
     defaultEndpoints.irInvestigation
   );
 
@@ -969,10 +967,7 @@ const NoteForm = ({ edit, onSuccess, clearForm }) => {
         let irDetail = ir.irInvestigation[0];
         if (!irDetail) {
           irDetail = await saveIrDetail({ incidentReport: { id: ir.id } }).then(
-            ({ data }) => {
-              setIr((prev) => ({ ...prev, irInvestigation: [data] }));
-              return data;
-            }
+            ({ data }) => data
           );
         }
 
@@ -990,7 +985,8 @@ const NoteForm = ({ edit, onSuccess, clearForm }) => {
           irInvestigation: { id: irDetail.id },
         })
           .then(({ data }) => {
-            if (data.id) {
+            if (data?.id) {
+              setIr((prev) => ({ ...prev, irInvestigation: [irDetail] }));
               onSuccess(data);
               reset();
             }

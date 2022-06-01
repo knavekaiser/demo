@@ -144,9 +144,19 @@ export default function Login() {
                   .then((data) => {
                     if (data.access_token) {
                       sessionStorage.setItem("access-token", data.access_token);
+                    } else {
+                      Prompt({
+                        type: "error",
+                        message:
+                          data.error_description || "Invalid Credentials",
+                      });
                     }
                   })
                   .catch((err) => {
+                    Prompt({
+                      type: "error",
+                      message: err.message,
+                    });
                     setLoading(false);
                   });
               }

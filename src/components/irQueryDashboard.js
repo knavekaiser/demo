@@ -325,7 +325,7 @@ const SingleIr = memo(
           open={showResForm}
           setOpen={setShowResForm}
           head={true}
-          label="TAT DETAILS"
+          label="SUBMIT IR INPUT"
           className={s.responseForm}
         >
           <ResponseForm

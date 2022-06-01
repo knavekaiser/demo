@@ -15,6 +15,7 @@ import {
   Moment,
   moment,
   CustomRadio,
+  FishboneDiagram,
 } from "../../elements";
 import { ImEye } from "react-icons/im";
 import {
@@ -673,15 +674,35 @@ const Causes = ({}) => {
       Escort: [],
       Pholebotomist: [],
       Dispather: ["Heavy Workload", "No tracing processes"],
-      "Lab tech": [],
+      // "Lab tech": [],
+      // asdgasPholebotomist: [],
+      // Dispaasasdfdther: ["Heavy Workload", "No tracing processes"],
+      // "Lab tasdfech": [],
+      // Pholeboasdftomist: [],
+      // Dispathasdfer: ["Heavy Workload", "No tracing processes"],
+      // "Lab teasdfch": [],
+      // Pholeboasdftomist: [],
+      // Dispathasdfer: ["Heavy Workload", "No tracing processes"],
+      // "Lab teasdfch": [],
+      // Pholeboadsftomist: [],
+      // Dispatasdfher: ["Heavy Workload", "No tracing processes"],
+      // "Lab teasdfch": [],
+      // Pholeboasdftomist: [],
+      // Dispathasdfer: ["Heavy Workload", "No tracing processes"],
+      // "Lab teasdfch": [],
     },
     Environment: {
       Clocks: ["Inaccurate", "Don't agree"],
       Rounding: [],
     },
     Materials: {
-      "Lab Supplies": ["Unavailable", "Spoiled"],
-      Specimen: ["Unavailable", "Spoiled"],
+      "Lab Supplies": [
+        // "Unavailable",
+        "Spoiled",
+      ],
+      Specimen: [
+        // "Unavailable", "Spoiled"
+      ],
     },
     Methods: {
       "Too many people Involved": [],
@@ -692,12 +713,46 @@ const Causes = ({}) => {
     },
     Equipment: {
       Broken: [],
-      "Needs to looked at": [],
+      asdgasPholebotomist: [],
+      Dispaasasdfdther: ["Heavy Workload", "No tracing processes"],
+      // "Lab tasdfech": [],
+      // Pholeboasdftomist: [],
+      // Dispathasdfer: ["Heavy Workload", "No tracing processes"],
+      // "Lab teasdfch": [],
+      // Pholeboasdftomist: [],
+      // Dispathasdfer: ["Heavy Workload", "No tracing processes"],
+      // "Lab teasdfch": [],
+      // Pholeboadsftomist: [],
+      // Dispatasdfher: ["Heavy Workload", "No tracing processes"],
+      // "Lab teasdfch": [],
+      // Pholeboasdftomist: [],
+      // Dispathasdfer: ["Heavy Workload", "No tracing processes"],
+      // "Lab teasdfch": [],
+      // asdgasPhol23423ebotomist: [],
+      // Dispaasasd23423fdther: ["Heavy Workload", "No tracing processes"],
+      // "Lab tasdf23423ech": [],
+      // Pholeboasdf23423tomist: [],
+      // Dispathas23423dfer: ["Heavy Workload", "No tracing processes"],
+      // "Lab teas23423dfch": [],
+      // Pholeboas23423dftomist: [],
+      // Dispathasd23423fer: ["Heavy Workload", "No tracing processes"],
+      // "Lab teasd23423fch": [],
+      // Pholeboads23423ftomist: [],
+      // Dispatasdfh23423er: ["Heavy Workload", "No tracing processes"],
+      // "Lab teasd23423fch": [],
+      // Pholeboasd23423ftomist: [],
+      // Dispathasd23423fer: ["Heavy Workload", "No tracing processes"],
+      // "Lab teasd23423fch": [],
+      // "Needs to lo23423oked at": [],
     },
   });
+  const [showDiagram, setShowDiagram] = useState(false);
   return (
     <div className={s.causeBreakdown}>
-      <button className={`btn clear ${s.btn}`}>
+      <button
+        className={`btn clear ${s.btn}`}
+        onClick={() => setShowDiagram(true)}
+      >
         <FaExternalLinkAlt /> Generate Fishbone Diagram
       </button>
       <ul className={s.wrapper}>
@@ -731,6 +786,14 @@ const Causes = ({}) => {
           </li>
         ))}
       </ul>
+      <Modal
+        open={showDiagram}
+        setOpen={setShowDiagram}
+        head
+        label="Fishbone Diagram"
+      >
+        <FishboneDiagram data={causes} />
+      </Modal>
     </div>
   );
 };
