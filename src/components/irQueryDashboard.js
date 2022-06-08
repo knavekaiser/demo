@@ -156,6 +156,7 @@ export const MyDashboard = () => {
               irId: ir.id,
               reqId: req.id,
               query: req.query,
+              typeofInci: ir.typeofInci,
               ...(response && { response }),
             });
           });
@@ -375,7 +376,7 @@ const ResponseForm = ({ ir, parameters, setShowResForm, onSuccess }) => {
   const { post: upload, laoding: uploadingFiles } = useFetch(
     defaultEndpoints.uploadFiles
   );
-
+  console.log(ir);
   return (
     <div className={s.content}>
       <ul className={s.irDetail}>
@@ -416,7 +417,7 @@ const ResponseForm = ({ ir, parameters, setShowResForm, onSuccess }) => {
       </p>
       <form
         onSubmit={handleSubmit(async (values) => {
-          if (values.upload?.length) {
+          if (values.upload?.filter((item) => !item.uploadFilePath).length) {
             const { links, error: uploadError } = await uploadFiles({
               files: values.upload,
               uploadFiles: upload,
@@ -425,9 +426,15 @@ const ResponseForm = ({ ir, parameters, setShowResForm, onSuccess }) => {
               return Prompt({ type: "error", message: uploadError.message });
             }
 
-            values.upload = links[0];
+            values.upload = links[0].uri;
+            values.fileName = links[0].name;
+          } else if (values.upload?.length) {
+            const _file = values.upload[0];
+            values.fileName = _file.fileName;
+            values.upload = _file.uploadFilePath;
           } else {
             values.upload = "";
+            values.fileName = "";
           }
 
           saveResponse({

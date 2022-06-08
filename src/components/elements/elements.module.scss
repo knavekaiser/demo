@@ -555,6 +555,7 @@
   overflow-x: auto !important;
   width: 100%;
   border: 1px solid #b7b7b7;
+  position: relative;
   tr {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
@@ -584,19 +585,9 @@
     }
   }
   tbody {
-    // border-top: none;
-    // border-top: none;
-    // overflow-y: auto !important;
-    // overflow-x: hidden !important;
     tr {
       font-size: 13px;
       min-height: 30px;
-      &:nth-child(even) {
-        background: #f3f3f3;
-      }
-      &:nth-child(odd) {
-        background: #ffffff;
-      }
       td {
         text-align: left;
         &:last-child {
@@ -653,6 +644,23 @@
           z-index: 20;
         }
       }
+    }
+  }
+  &:not(.virtual) {
+    tbody {
+      tr {
+        &:nth-child(even) {
+          background: #f3f3f3;
+        }
+        &:nth-child(odd) {
+          background: #ffffff;
+        }
+      }
+    }
+  }
+  &.virtual {
+    tbody {
+      min-height: 60vh;
     }
   }
 }

@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useContext, useRef } from "react";
 import s from "./style.module.scss";
 import { Box } from "../../incidentReport";
 import { InvestigationContext } from "../InvestigationContext";
+import { SiteContext } from "../../../SiteContext";
 import {
   Select,
   Table,
@@ -43,6 +44,7 @@ export const ConnectForm = ({ children }) => {
 };
 
 const IrDetails = () => {
+  const { user } = useContext(SiteContext);
   const { ir, setIr } = useContext(InvestigationContext);
   const [parameters, setParameters] = useState({
     severity: [],
@@ -130,9 +132,13 @@ const IrDetails = () => {
         ...(ir.irInvestigation.length ?? ir.irInvestigation[0]),
         ...values,
         incidentReport: { id: ir.id },
-      }).then(({ data }) => {
+      }).then(async ({ data }) => {
         if (data.id) {
           setIr((prev) => ({ ...prev, irInvestigation: [data] }));
+          Prompt({
+            type: "success",
+            message: "Investigation detail has been successfully saved.",
+          });
         }
       });
     },
@@ -299,9 +305,11 @@ const IrDetails = () => {
           >
             Close
           </button>
-          <button onClick={() => {}} className="btn secondary wd-100">
-            Save
-          </button>
+          {
+            // <button onClick={() => {}} className="btn secondary wd-100">
+            //   Save
+            // </button>
+          }
           <button onClick={() => {}} className="btn wd-100">
             Submit
           </button>
@@ -347,6 +355,7 @@ const RiskAssessment = ({
         clearErrors,
         control,
       }) => {
+        const riskIncluded = watch("riskIncluded");
         return (
           <div className={s.riskAssessment}>
             <Combobox
@@ -399,7 +408,13 @@ const RiskAssessment = ({
                 ]}
               />
             </section>
-            <Input label="Risk ID" {...register("riskId")} />
+            <Input
+              label={<>Risk ID {riskIncluded === "true" && "*"}</>}
+              {...register("riskId", {
+                required: riskIncluded === "true" ? "Enter risk ID" : false,
+              })}
+              error={errors.riskId}
+            />
           </div>
         );
       }}
@@ -643,7 +658,8 @@ const Events = ({ events }) => {
   );
 };
 const EventForm = ({ edit, onSuccess, clearForm }) => {
-  const { ir, setIr } = useContext(InvestigationContext);
+  const { user } = useContext(SiteContext);
+  const { ir, setIr, updateIr } = useContext(InvestigationContext);
   const {
     handleSubmit,
     register,
@@ -673,7 +689,7 @@ const EventForm = ({ edit, onSuccess, clearForm }) => {
         let irDetail = ir.irInvestigation[0];
         if (!irDetail) {
           irDetail = await saveIrDetail({ incidentReport: { id: ir.id } }).then(
-            ({ data }) => data
+            async ({ data }) => data
           );
         }
 
@@ -714,7 +730,12 @@ const EventForm = ({ edit, onSuccess, clearForm }) => {
       />
       <Input
         type="datetime-local"
-        {...register("dateTime", { required: "Please enter Date & Time" })}
+        {...register("dateTime", {
+          required: "Please enter Date & Time",
+          validate: (v) =>
+            new Date(v) < new Date() || "Can not select date from future",
+        })}
+        max={moment({ time: new Date(), format: "YYYY-MM-DDThh:mm" })}
         error={errors.dateTime}
       />
       <div className={s.btns}>
@@ -742,6 +763,7 @@ const EventForm = ({ edit, onSuccess, clearForm }) => {
 };
 
 const Notes = ({ notes, parameters }) => {
+  const { user } = useContext(SiteContext);
   const { ir, setIr } = useContext(InvestigationContext);
   const [edit, setEdit] = useState(null);
   const { remove: deleteNote } = useFetch(
@@ -760,7 +782,22 @@ const Notes = ({ notes, parameters }) => {
           control,
         }) => {
           const dept = watch("dept");
-
+          const selfReporting = watch("selfRep");
+          const name = watch("name");
+          if (selfReporting === "true" && name !== user.id) {
+            setValue("dept", user.department);
+            setValue("name", user.id);
+            setValue(
+              "designaion",
+              user.role
+                .map(
+                  (role) =>
+                    parameters.roles.find((r) => r.value === role)?.label ||
+                    role
+                )
+                .join(", ")
+            );
+          }
           return (
             <>
               <div className={s.selfReporting}>
@@ -780,6 +817,7 @@ const Notes = ({ notes, parameters }) => {
                   name="name"
                   label="Name"
                   options={parameters.users}
+                  readOnly={selfReporting === "true"}
                   onChange={(option) => {
                     setValue("dept", option.department);
                     setValue(
@@ -804,14 +842,6 @@ const Notes = ({ notes, parameters }) => {
                   }
                   readOnly
                 />
-                {
-                  //   <Select
-                  //   control={control}
-                  //   name="dept"
-                  //   label="Department"
-                  //   options={parameters.departments}
-                  // />
-                }
                 <Input
                   label="Designation"
                   {...register("designaion")}
@@ -937,6 +967,7 @@ const Notes = ({ notes, parameters }) => {
   );
 };
 const NoteForm = ({ edit, onSuccess, clearForm }) => {
+  const { user } = useContext(SiteContext);
   const { ir, setIr } = useContext(InvestigationContext);
   const {
     handleSubmit,
@@ -967,7 +998,7 @@ const NoteForm = ({ edit, onSuccess, clearForm }) => {
         let irDetail = ir.irInvestigation[0];
         if (!irDetail) {
           irDetail = await saveIrDetail({ incidentReport: { id: ir.id } }).then(
-            ({ data }) => data
+            async ({ data }) => data
           );
         }
 
@@ -1000,7 +1031,12 @@ const NoteForm = ({ edit, onSuccess, clearForm }) => {
       />
       <Input
         type="datetime-local"
-        {...register("dateTime", { required: "Please enter Date & Time" })}
+        {...register("dateTime", {
+          required: "Please enter Date & Time",
+          validate: (v) =>
+            new Date(v) < new Date() || "Can not select date from future",
+        })}
+        max={moment({ time: new Date(), format: "YYYY-MM-DDThh:mm" })}
         error={errors.dateTime}
       />
       <div className={s.btns}>

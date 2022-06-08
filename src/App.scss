@@ -338,6 +338,12 @@ button {
       display: none;
     }
   }
+  &.readOnly {
+    pointer-events: none;
+    .reactSelect__control {
+      background: #f5f4f4;
+    }
+  }
 }
 
 .deathPage {

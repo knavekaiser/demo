@@ -17,6 +17,7 @@ import {
   TableActions,
   moment,
   Moment,
+  uploadFiles,
 } from "./elements";
 import { Prompt, Modal } from "./modal";
 import { useForm, FormProvider, useFormContext } from "react-hook-form";
@@ -77,7 +78,7 @@ export default function IncidentReporting() {
   const uploads = methods.watch("upload");
   const [detailValues, setDetailValues] = useState({});
 
-  const { post: uploadFiles, laoding: uploadingFiles } = useFetch(
+  const { post: upload, laoding: uploadingFiles } = useFetch(
     defaultEndpoints.uploadFiles
   );
   const { post: postIr, put: updateIr, loading } = useFetch(
@@ -88,40 +89,18 @@ export default function IncidentReporting() {
     (data) => {
       const postData = async () => {
         if (data.upload?.length) {
-          const formData = new FormData();
-          const uploaded = [];
-          const newFiles = [];
-
-          for (var _file of data.upload) {
-            if (typeof _file === "string" || _file.uri) {
-              uploaded.push(_file.uri || _file);
-            } else {
-              newFiles.push(_file);
-              formData.append("files", _file);
-            }
+          const { links, error: uploadError } = await uploadFiles({
+            files: data.upload,
+            uploadFiles: upload,
+          });
+          if (uploadError) {
+            return Prompt({ type: "error", message: uploadError.message });
           }
 
-          let links = [];
-
-          if (newFiles.length) {
-            links = await uploadFiles(formData)
-              .then(({ data }) => (links = data?.map((item) => item.uri) || []))
-              .catch((err) => {
-                Prompt({
-                  type: "error",
-                  message: "Invalid file, Please check",
-                });
-                return [];
-              });
-          }
-
-          if (newFiles.length !== links.length) {
-            return;
-          }
-
-          data.upload = [...uploaded, ...links].map((item) => ({
+          data.upload = links.map((item, i) => ({
             upload: true,
-            uploadFilePath: item,
+            uploadFilePath: item.uploadFilePath || item.uri,
+            fileName: item.name || item.fileName,
           }));
         }
         (edit ? updateIr : postIr)({
@@ -252,7 +231,7 @@ export default function IncidentReporting() {
         }),
         preventability: edit.preventability?.toString() || "",
         typeofInci: edit.typeofInci?.toString() || "",
-        upload: edit.upload.map((item) => item.uploadFilePath),
+        upload: edit.upload,
         deptsLookupMultiselect:
           edit.deptsLookupMultiselect
             ?.split(",")
@@ -800,6 +779,7 @@ export default function IncidentReporting() {
               multiple={true}
               prefill={uploads}
               onChange={(files) => {
+                console.log(files);
                 methods.setValue("upload", files);
               }}
             />

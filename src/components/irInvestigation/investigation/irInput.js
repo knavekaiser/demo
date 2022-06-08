@@ -74,6 +74,7 @@ const IrInput = () => {
             _parameters.users = users?._embedded?.user.map((item) => ({
               label: item.name,
               value: item.id,
+              department: item.department,
             }));
           }
           if (sources?.twoFieldMasterDetails) {
@@ -107,6 +108,14 @@ const IrInput = () => {
           queryBy: input.queryRaisedBy,
           queryDateTime: input.queryDateTime,
           description: input.description,
+          queryToUserId: input.userId,
+          queryToDeptId: input.deptId,
+          query: input.query,
+          irInfo: input.irInfo?.split(",") || [],
+          copyPrev: input.copyPrev,
+          deptInv: input.deptInv,
+          personAffected: input.personAff,
+          categoryTemplate: input.subcateg,
           ...(response && {
             userId: response.responseBy,
             dateTime: response.responseOn,
@@ -123,16 +132,29 @@ const IrInput = () => {
           userId: rec.responseFrom,
           deptId: rec.deptId,
           dateTime: rec.recdOn,
+          response: rec.response,
+          upload: rec.upload,
+          fileName: rec.fileName,
+          source: rec.source,
         })
       );
 
       setInputs(
         _inputs.sort((a, b) =>
-          new Date(a.queryDateTime) < new Date(b.queryDateTime) ? 1 : -1
+          a.dateTime && b.dateTime
+            ? new Date(a.dateTime) < new Date(b.dateTime)
+              ? 1
+              : -1
+            : new Date(a.queryDateTime) < new Date(b.queryDateTime)
+            ? 1
+            : -1
         )
       );
     }
   }, [ir]);
+
+  const [reqEdit, setReqEdit] = useState(null);
+  const [recEdit, setRecEdit] = useState(null);
 
   return (
     <div className={s.irInput}>
@@ -160,6 +182,10 @@ const IrInput = () => {
             key={i}
             parameters={parameters}
             setIr={setIr}
+            setReqEdit={setReqEdit}
+            setRecEdit={setRecEdit}
+            setRecordInput={setRecordInput}
+            setRequestInput={setRequestInput}
           />
         ))}
       </Table>
@@ -174,6 +200,7 @@ const IrInput = () => {
         className={s.recordInputModal}
       >
         <RecordInputForm
+          edit={recEdit}
           parameters={parameters}
           onSuccess={(newRecordInput) => {
             setRecordInput(false);
@@ -192,6 +219,7 @@ const IrInput = () => {
         className={s.requestInput}
       >
         <RequestInputForm
+          edit={reqEdit}
           parameters={parameters}
           previous={
             inputs
@@ -205,15 +233,28 @@ const IrInput = () => {
             setRequestInput(false);
             setIr((prev) => ({
               ...prev,
-              reqInput: [newReqInput, ...prev.reqInput],
+              reqInput: reqEdit
+                ? prev.reqInput.map((input) =>
+                    input.id === newReqInput.id ? newReqInput : input
+                  )
+                : [newReqInput, ...prev.reqInput],
             }));
+            setReqEdit(null);
           }}
         />
       </Modal>
     </div>
   );
 };
-const SingleInput = ({ input, parameters, setIr }) => {
+const SingleInput = ({
+  setRecEdit,
+  setReqEdit,
+  setRecordInput,
+  setRequestInput,
+  input,
+  parameters,
+  setIr,
+}) => {
   const [view, setView] = useState(false);
   const { remove: deleteRecord } = useFetch(
     defaultEndpoints.recordInputs + "/{ID}"
@@ -249,6 +290,19 @@ const SingleInput = ({ input, parameters, setIr }) => {
         <TableActions
           actions={[
             { label: "View", icon: <ImEye />, callBack: () => setView(true) },
+            {
+              icon: <BsPencilFill />,
+              label: "Edit",
+              callBack: () => {
+                if (input.__type === "recordInput") {
+                  setRecEdit(input);
+                  setRecordInput(true);
+                } else if (input.__type === "reqInput") {
+                  setReqEdit(input);
+                  setRequestInput(true);
+                }
+              },
+            },
             {
               label: "Delete",
               icon: <FaRegTrashAlt />,
@@ -299,13 +353,15 @@ const SingleInput = ({ input, parameters, setIr }) => {
         className={s.inputView}
       >
         <div className={s.content}>
-          <p className={""}>
-            <strong>Query Raised by</strong> -{" "}
-            {parameters?.users?.find(({ value }) => value === input.queryBy)
-              ?.label || input.queryBy}{" "}
-            on <Moment format="DD/MM/YYYY">{input.queryDateTime}</Moment> at{" "}
-            <Moment format="hh:mm">{input.queryDateTime}</Moment>
-          </p>
+          {input.queryBy && (
+            <p>
+              <strong>Query Raised by</strong> -{" "}
+              {parameters?.users?.find(({ value }) => value === input.queryBy)
+                ?.label || input.queryBy}{" "}
+              on <Moment format="DD/MM/YYYY">{input.queryDateTime}</Moment> at{" "}
+              <Moment format="hh:mm">{input.queryDateTime}</Moment>
+            </p>
+          )}
           <div className={s.innerWrapper}>
             <p>{input.query}</p>
             <p>Please provide inputs on this incident.</p>
@@ -330,7 +386,7 @@ const SingleInput = ({ input, parameters, setIr }) => {
               <p className={s.upload}>
                 <span className={s.label}>Document Uploaded:</span>{" "}
                 <a target="_blank" href={input.upload}>
-                  {input.upload}
+                  {input.fileName || input.upload}
                 </a>
               </p>
             )}
@@ -350,7 +406,7 @@ const SingleInput = ({ input, parameters, setIr }) => {
   );
 };
 
-const RequestInputForm = ({ onSuccess, previous, parameters }) => {
+const RequestInputForm = ({ edit, onSuccess, previous, parameters }) => {
   const { ir } = useContext(InvestigationContext);
   const { user } = useContext(SiteContext);
 
@@ -380,9 +436,11 @@ const RequestInputForm = ({ onSuccess, previous, parameters }) => {
 
   const irInfo = watch("irInformation"); // ["Description", "Copy From Previous"];
 
-  const { post: saveRequest, loading: savingRequest } = useFetch(
-    defaultEndpoints.requestInputs
-  );
+  const {
+    post: saveRequest,
+    put: updateRequest,
+    loading: savingRequest,
+  } = useFetch(defaultEndpoints.requestInputs + "/" + (edit?.id || ""));
 
   useEffect(() => {
     if (irInfo?.includes("copyPrev") && previous) {
@@ -390,21 +448,46 @@ const RequestInputForm = ({ onSuccess, previous, parameters }) => {
     }
   }, [irInfo]);
 
+  const dept = watch("department");
+
+  useEffect(() => {
+    reset({
+      department: edit?.queryToDeptId,
+      user: edit?.queryToUserId,
+      irInformation: edit?.irInfo,
+      query: edit?.query,
+      copyPrev: edit?.copcopyPrev,
+      description: edit?.description || ir.inciDescription,
+      deptInv:
+        edit?.deptInv ||
+        ir.deptsLookupMultiselect
+          .split(",")
+          .map(
+            (deptId) =>
+              parameters?.departments?.find(
+                (dept) => dept.value.toString() === deptId
+              )?.label || deptId
+          )
+          .join(", "),
+      personAffected: edit?.personAffected || ir.personAffected,
+      categoryTemplate: edit?.categoryTemplate,
+    });
+  }, [edit]);
   return (
     <form
       onSubmit={handleSubmit((values) => {
-        saveRequest({
+        (edit ? updateRequest : saveRequest)({
           deptId: values.department,
           userId: values.user,
           query: values.query,
-          // irInfo: "irInfo",
+          irInfo: values.irInformation.join(),
           copyPrev: values.copyPrev,
           description: values.description,
           deptInv: values.deptInv,
           personAff: values.personAffected,
           incidentReport: { id: ir.id },
           queryRaisedBy: user.id,
-          queryDateTime: new Date(),
+          queryDateTime: edit?.queryDateTime || new Date(),
         })
           .then(({ data }) => {
             if (data.id) {
@@ -428,7 +511,11 @@ const RequestInputForm = ({ onSuccess, previous, parameters }) => {
         name="user"
         label="User"
         formOptions={{ reuqried: "Select a User" }}
-        options={parameters.users}
+        options={
+          dept
+            ? parameters.users.filter((user) => dept === user.department)
+            : parameters.users
+        }
         error={errors.user}
       />
       <Combobox
@@ -507,7 +594,7 @@ const RequestInputForm = ({ onSuccess, previous, parameters }) => {
       <Input
         label="Raised on"
         value={moment({
-          time: new Date().toISOString(),
+          time: edit?.queryDateTime || new Date(),
           format: "YYYY-MM-DD hh:mm",
         })}
         readOnly
@@ -527,7 +614,7 @@ const RequestInputForm = ({ onSuccess, previous, parameters }) => {
     </form>
   );
 };
-const RecordInputForm = ({ parameters, onSuccess }) => {
+const RecordInputForm = ({ edit, parameters, onSuccess }) => {
   const { user } = useContext(SiteContext);
   const { ir } = useContext(InvestigationContext);
   const {
@@ -541,15 +628,32 @@ const RecordInputForm = ({ parameters, onSuccess }) => {
 
   const uploads = watch("upload");
 
-  const { post: saveInput, loading } = useFetch(defaultEndpoints.recordInputs);
+  const { post: saveInput, put: updateInput, loading } = useFetch(
+    defaultEndpoints.recordInputs + "/" + (edit?.id || "")
+  );
   const { post: upload, laoding: uploadingFiles } = useFetch(
     defaultEndpoints.uploadFiles
   );
 
+  useEffect(() => {
+    reset({
+      ...edit,
+      responseFrom: edit?.responseFrom || user.name,
+      recievedOn: moment({ time: edit?.dateTime, format: "YYYY-MM-DDThh:mm" }),
+      ...(edit?.upload && {
+        upload: [
+          {
+            fileName: edit.fileName || edit.upload,
+            uploadFilePath: edit.upload,
+          },
+        ],
+      }),
+    });
+  }, [edit]);
   return (
     <form
       onSubmit={handleSubmit(async (values) => {
-        if (values.upload?.length) {
+        if (values.upload?.filter((item) => !item.uploadFilePath).length) {
           const { links, error: uploadError } = await uploadFiles({
             files: values.upload,
             uploadFiles: upload,
@@ -558,16 +662,23 @@ const RecordInputForm = ({ parameters, onSuccess }) => {
             return Prompt({ type: "error", message: uploadError.message });
           }
 
-          values.upload = links[0];
+          values.upload = links[0].uri;
+          values.fileName = links[0].name;
+        } else if (values.upload?.length) {
+          const _file = values.upload[0];
+          values.fileName = _file.fileName;
+          values.upload = _file.uploadFilePath;
         } else {
           values.upload = "";
+          values.fileName = "";
         }
 
-        saveInput({
+        (edit ? updateInput : saveInput)({
           source: values.source,
-          responseFrom: user.id,
-          // responseFrom: values.responseFrom,
+          // responseFrom: user.id,
+          responseFrom: values.responseFrom,
           upload: values.upload,
+          fileName: values.fileName,
           response: values.response,
           recdOn: values.recievedOn,
           incidentReport: { id: ir.id },
@@ -586,14 +697,12 @@ const RecordInputForm = ({ parameters, onSuccess }) => {
     >
       <Input
         label="Response From"
-        // {...register("responseFrom", { required: "Enter From" })}
-        // error={errors.from}
-        value={user.name}
-        readOnly
+        {...register("responseFrom", { required: "Enter Name" })}
+        error={errors.responseFrom}
       />
       <Combobox
         label="Source"
-        name="evidenceSource"
+        name="source"
         watch={watch}
         register={register}
         formOptions={{ required: "Select Evidence Source" }}
@@ -605,7 +714,12 @@ const RecordInputForm = ({ parameters, onSuccess }) => {
       <Input
         label="Recieved On"
         type="datetime-local"
-        {...register("recievedOn", { required: "Enter Recieved Date" })}
+        {...register("recievedOn", {
+          required: "Enter Recieved Date",
+          validate: (v) =>
+            new Date(v) < new Date() || "Can not select date from future",
+        })}
+        max={moment({ time: new Date(), format: "YYYY-MM-DDThh:mm" })}
         error={errors.recievedOn}
       />
       <Textarea
@@ -716,7 +830,7 @@ const Evidence = ({ parameters }) => {
           </td>
           <td className="textEllips">
             <a target="_blank" href={evid.upload}>
-              {evid.upload}
+              {evid.fileName || evid.upload}
             </a>
           </td>
           <TableActions
@@ -785,25 +899,32 @@ const EvidenceForm = ({
       dateTime: edit
         ? moment({ time: edit.dateTime, format: "YYYY-MM-DDThh:mm" })
         : "",
-      upload: edit?.upload ? [edit.upload] : [],
+      upload: edit?.upload
+        ? [{ fileName: edit.fileName, uploadFilePath: edit.upload }]
+        : [],
     });
   }, [edit]);
   return (
     <form
       onSubmit={handleSubmit(async (values) => {
-        if (values.upload?.length) {
+        if (values.upload?.filter((item) => !item.uploadFilePath).length) {
           const { links, error: uploadError } = await uploadFiles({
             files: values.upload,
             uploadFiles: upload,
           });
-          console.log(links, uploadError);
           if (uploadError) {
             return Prompt({ type: "error", message: uploadError.message });
           }
 
-          values.upload = links[0];
+          values.upload = links[0].uri;
+          values.fileName = links[0].name;
+        } else if (values.upload?.length) {
+          const _file = values.upload[0];
+          values.fileName = _file.fileName;
+          values.upload = _file.uploadFilePath;
         } else {
           values.upload = "";
+          values.fileName = "";
         }
 
         (edit ? updateEvidence : postEvidence)({
@@ -859,7 +980,10 @@ const EvidenceForm = ({
         type="datetime-local"
         {...register("dateTime", {
           required: "Select Evidence Date & Time",
+          validate: (v) =>
+            new Date(v) < new Date() || "Can not select date from future",
         })}
+        max={moment({ time: new Date(), format: "YYYY-MM-DDThh:mm" })}
         error={errors.dateTime}
       />
       <FileInput

@@ -344,6 +344,7 @@ export const Select = ({
   placeholder,
   renderMultipleValue,
   setValue,
+  readOnly,
   onChange: _onChange,
 }) => {
   return (
@@ -355,7 +356,7 @@ export const Select = ({
         field: { onChange, onBlur, value, name, ref },
         fieldState: { invalid, isTouched, isDirty, error },
       }) => (
-        <section className={s.select}>
+        <section className={`${s.select}`}>
           {label && <label>{label}</label>}
           <div className={s.field}>
             <ReactSelect
@@ -365,9 +366,9 @@ export const Select = ({
                   : placeholder || "Enter"
               }
               components={{ DropdownIndicator }}
-              className={`reactSelect ${s.reactSelect} ${error ? "err" : ""} ${
-                className || ""
-              } ${
+              className={`reactSelect ${s.reactSelect} ${
+                readOnly ? "readOnly" : ""
+              } ${error ? "err" : ""} ${className || ""} ${
                 renderMultipleValue ? `hideMultipleValue ${s.customValue}` : ""
               }`}
               classNamePrefix="reactSelect"

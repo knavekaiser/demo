@@ -19,11 +19,12 @@ import { GoCalendar } from "react-icons/go";
 import { Link, useLocation, createSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { Modal } from "../modal";
-import Sortable from "sortablejs";
+
 import s from "./elements.module.scss";
 import countries from "../../countries";
 import { useFetch } from "../../hooks";
 import { phone } from "phone";
+import { Table, TableActions } from "./Table";
 
 import { Combobox } from "./combobox";
 
@@ -218,7 +219,7 @@ export const FileInput = ({ label, required, multiple, onChange, prefill }) => {
     if (prefill?.length !== files.length) {
       setFiles(
         prefill?.map((file) =>
-          typeof file === "string" ? { name: file, uri: file } : file
+          typeof file === "string" ? { name: file, uploadFilePath: file } : file
         ) || []
       );
     }
@@ -246,12 +247,21 @@ export const FileInput = ({ label, required, multiple, onChange, prefill }) => {
         required={required}
         onChange={(e) => {
           if (e.target.files.length > 0) {
-            setFiles((prev) => [
-              ...prev,
-              ...[...e.target.files].filter(
-                (item) => !files.some((file) => file.name === item.name)
-              ),
-            ]);
+            if (multiple) {
+              setFiles((prev) => [
+                ...prev,
+                ...[...e.target.files].filter(
+                  (item) =>
+                    !files.some(
+                      (file) =>
+                        (file.name || file.fileName) ===
+                        (item.name || item.fileName)
+                    )
+                ),
+              ]);
+            } else {
+              setFiles([e.target.files[0]]);
+            }
             // e.target.files = {};
           }
         }}
@@ -260,7 +270,7 @@ export const FileInput = ({ label, required, multiple, onChange, prefill }) => {
         <label htmlFor={id.current}>
           <span className={s.fileNames}>
             {files.reduce((p, a) => {
-              return p + a.name + ", ";
+              return p + (a.name || a.fileName) + ", ";
             }, "") || "Item select"}
           </span>
           <span className={s.btn}>
@@ -280,8 +290,8 @@ export const FileInput = ({ label, required, multiple, onChange, prefill }) => {
             {files.map((file, i) => (
               <tr key={i}>
                 <td>
-                  <a target="_blank" href={file.name}>
-                    {file.name}
+                  <a target="_blank" href={file.uploadFilePath}>
+                    {file.name || file.fileName || file.uploadFilePath}
                   </a>
                 </td>
                 <TableActions
@@ -294,7 +304,8 @@ export const FileInput = ({ label, required, multiple, onChange, prefill }) => {
                           prev.filter((f) =>
                             typeof f === "string"
                               ? f !== file
-                              : f.name !== file.name
+                              : (f.name || f.fileName) !==
+                                (file.name || file.fileName)
                           )
                         );
                       },
@@ -318,8 +329,8 @@ export const uploadFiles = async ({ files, uploadFiles }) => {
     const newFiles = [];
 
     for (var _file of files) {
-      if (typeof _file === "string" || _file.uri) {
-        uploaded.push(_file.uri || _file);
+      if (typeof _file === "string" || _file.uploadFilePath) {
+        uploaded.push(_file);
       } else {
         newFiles.push(_file);
         formData.append("files", _file);
@@ -327,11 +338,19 @@ export const uploadFiles = async ({ files, uploadFiles }) => {
     }
 
     if (newFiles.length) {
-      links = await uploadFiles(formData)
-        .then(({ data }) => (links = data?.map((item) => item.uri) || []))
+      const newLinks = await uploadFiles(formData)
+        .then(
+          ({ data }) =>
+            data?.map((item, i) => ({
+              ...item,
+              name: newFiles[i].name,
+            })) || []
+        )
         .catch((err) => {
           error = err;
         });
+
+      links = [...uploaded, ...newLinks];
     }
   }
   return { links, error };
@@ -803,138 +822,6 @@ export const Tabs = ({
       )}
       <span className={s.fill} />
     </div>
-  );
-};
-export const Table = ({
-  columns,
-  className,
-  children,
-  sortable,
-  actions,
-  loading,
-}) => {
-  const tbody = useRef();
-  const table = useRef();
-  const [style, setStyle] = useState({});
-  useEffect(() => {
-    if (sortable) {
-      Sortable.create(tbody.current, {
-        animation: 250,
-        easing: "ease-in-out",
-        removeCloneOnHide: true,
-        ...sortable,
-      });
-    }
-  }, []);
-  return (
-    <table
-      ref={table}
-      className={`${s.table} ${className || ""} ${actions ? s.actions : ""}`}
-      cellPadding={0}
-      cellSpacing={0}
-    >
-      {columns && (
-        <thead>
-          <tr>
-            {columns.map((column, i) => (
-              <th key={i}>{column.label}</th>
-            ))}
-          </tr>
-        </thead>
-      )}
-      <tbody ref={tbody}>
-        {loading ? (
-          <tr className={s.loading}>
-            <td>
-              <span className={s.icon}>
-                <FaCircleNotch />
-              </span>
-              Loading...
-            </td>
-          </tr>
-        ) : (
-          children
-        )}
-      </tbody>
-    </table>
-  );
-};
-export const TableActions = ({ actions }) => {
-  const btn = useRef();
-  const popupContainerRef = useRef();
-  const [open, setOpen] = useState(false);
-  const [style, setStyle] = useState({});
-  useLayoutEffect(() => {
-    if (actions.length > 3) {
-      const { width, height, x, y } = btn.current.getBoundingClientRect();
-      const top = window.innerHeight - y;
-      setStyle({
-        position: "absolute",
-        right: window.innerWidth - (x + width),
-        top: Math.max(
-          Math.min(
-            y + height,
-            window.innerHeight -
-              ((popupContainerRef.current?.querySelector("button")
-                .clientHeight || 35) *
-                actions.length +
-                8)
-          ),
-          8
-        ),
-        // width: width,
-        // height: 28 * actions.length,
-        maxHeight: window.innerHeight - 16,
-      });
-    }
-  }, [open]);
-  return actions.length < 4 ? (
-    <td className={s.tableActions} data-testid="tableActions">
-      {actions.map((action, i) => (
-        <button
-          key={i}
-          title={action.label}
-          className="clear"
-          onClick={action.callBack}
-        >
-          {action.icon}
-        </button>
-      ))}
-    </td>
-  ) : (
-    <td className={s.tableActions}>
-      <button
-        className={s.btn}
-        ref={btn}
-        data-testid="gear-btn"
-        onClick={() => setOpen(true)}
-      >
-        <BsFillGearFill className={s.gear} /> <FaSortDown className={s.sort} />
-      </button>
-      <Modal
-        style={style}
-        className={s.actionModal}
-        open={open}
-        onBackdropClick={() => setOpen(false)}
-        backdropClass={s.actionBackdrop}
-      >
-        <div ref={popupContainerRef}>
-          {actions.map((action, i) => (
-            <button
-              key={i}
-              title={action.label}
-              className="clear"
-              onClick={() => {
-                setOpen(false);
-                action.callBack();
-              }}
-            >
-              {action.icon} {action.label}
-            </button>
-          ))}
-        </div>
-      </Modal>
-    </td>
   );
 };
 

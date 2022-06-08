@@ -47,6 +47,7 @@ import {
   Input,
   Combobox,
   Table,
+  VirtualTable,
   TableActions,
   Moment,
   moment,
@@ -598,7 +599,7 @@ const ReportCount = ({ label, className, irs }) => {
   );
 };
 const SingleIr = memo(
-  ({ ir, focus, setFocus, className, actions, parameters }) => {
+  ({ ir, focus, setFocus, className, actions, parameters, styles }) => {
     const { tatConfig } = useContext(IrDashboardContext);
     const { irTypes } = useContext(SiteContext);
     const [showTatDetails, setShowTatDetails] = useState(false);
@@ -647,6 +648,7 @@ const SingleIr = memo(
           onClick={() => {
             setFocus && setFocus(ir.id);
           }}
+          style={styles || {}}
         >
           <td className={s.irCode}>
             <span className={s.icons}>
@@ -699,7 +701,7 @@ const SingleIr = memo(
               {parameters?.categories
                 ?.find((item) => item.id === ir.inciCateg)
                 ?.subCategorys?.find((item) => item.id === ir.inciSubCat)
-                ?.reportable?.length > 0 && (
+                ?.reportable.length > 0 && (
                 <>
                   <BsFillExclamationTriangleFill className={s.reportable} />
                 </>
@@ -1393,10 +1395,17 @@ export const QualityDashboard = () => {
             <button className={"btn clear"} onClick={handlePrint}>
               Print <FaPrint />
             </button>
+            <PrintMemo
+              incidents={incidents}
+              parameters={parameters}
+              ref={printRef}
+              irTypes={irTypes}
+              tatConfig={tatConfig}
+            />
           </>
         )}
       </div>
-      <Table
+      <VirtualTable
         columns={[
           { label: "IR Code" },
           { label: "Reporting Date & Time" },
@@ -1413,20 +1422,53 @@ export const QualityDashboard = () => {
         ]}
         actions={true}
         loading={loading}
-      >
-        {incidents
-          .sort((a, b) =>
-            new Date(a.reportingDate) > new Date(b.reportingDate) ? -1 : 1
-          )
-          .map((inc) => (
-            <SingleIr
-              key={inc.id}
-              ir={inc}
-              actions={getActions(inc)}
-              parameters={parameters}
-            />
-          ))}
-      </Table>
+        rows={incidents.sort((a, b) =>
+          new Date(a.reportingDate) > new Date(b.reportingDate) ? -1 : 1
+        )}
+        rowHeight={50}
+        rowRenderer={(inc, styles) => (
+          <SingleIr
+            key={inc.id}
+            ir={inc}
+            actions={getActions(inc)}
+            parameters={parameters}
+            styles={styles}
+          />
+        )}
+      />
+      {
+        //   <Table
+        //   columns={[
+        //     { label: "IR Code" },
+        //     { label: "Reporting Date & Time" },
+        //     { label: "Incident Date & Time" },
+        //     { label: "Incident Location" },
+        //     { label: "Category" },
+        //     { label: "Subcategory" },
+        //     { label: "Incident Type" },
+        //     { label: "Reported / Captured by" },
+        //     { label: "IR Investigator" },
+        //     { label: "Status" },
+        //     { label: "TAT" },
+        //     { label: "Actions" },
+        //   ]}
+        //   actions={true}
+        //   loading={loading}
+        // >
+        //   {incidents
+        //     .sort((a, b) =>
+        //       new Date(a.reportingDate) > new Date(b.reportingDate) ? -1 : 1
+        //     )
+        //     .map((inc, i) => (
+        //       <SingleIr
+        //         key={inc.id}
+        //         ir={inc}
+        //         actions={getActions(inc)}
+        //         parameters={parameters}
+        //       />
+        //     ))}
+        // </Table>
+      }
       <div className={s.legend}>
         <span>
           <span className={s.icon} style={{ color: "rgb(230, 16, 54)" }}>
@@ -1471,13 +1513,6 @@ export const QualityDashboard = () => {
           IR Acknowledge
         </span>
       </div>
-      <PrintMemo
-        incidents={incidents}
-        parameters={parameters}
-        ref={printRef}
-        irTypes={irTypes}
-        tatConfig={tatConfig}
-      />
       <Modal
         head={true}
         label={+assign?.status === 2 ? "ASSIGN IR" : "RE-ASSIGN IR"}
