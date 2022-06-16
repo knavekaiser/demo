@@ -449,16 +449,28 @@ export const MyDashboard = () => {
 
     if (Object.entries(_filters).length) {
       searchIrs(null, { query: _filters })
-        .then((data) => {
-          if (data._embedded?.IncidentReport) {
+        .then(({ data, error }) => {
+          if (error) {
+            return Prompt({
+              type: "error",
+              message: error.message || error,
+            });
+          }
+          if (data?._embedded?.IncidentReport) {
             setIncidents(data._embedded.IncidentReport);
           }
         })
         .catch((err) => Prompt({ type: "error", message: err.message }));
     } else {
       searchIrs(null, { query: { userId: user.id } })
-        .then((data) => {
-          if (data._embedded?.IncidentReport) {
+        .then(({ data, error }) => {
+          if (error) {
+            return Prompt({
+              type: "error",
+              message: error.message || error,
+            });
+          }
+          if (data?._embedded?.IncidentReport) {
             setIncidents(data._embedded.IncidentReport);
           }
         })
@@ -1275,8 +1287,14 @@ export const QualityDashboard = () => {
           status: _filters.status ? _filters.status : "2,3,4,5,6,7,8,9,11",
         },
       })
-        .then((data) => {
-          if (data._embedded?.IncidentReport) {
+        .then(({ data, error }) => {
+          if (error) {
+            return Prompt({
+              type: "error",
+              message: error.message || error,
+            });
+          }
+          if (data?._embedded?.IncidentReport) {
             setIncidents(data._embedded.IncidentReport);
             setCsvDraft({
               headers: Object.entries({
@@ -1346,8 +1364,14 @@ export const QualityDashboard = () => {
         .catch((err) => Prompt({ type: "error", message: err.message }));
     } else {
       searchIrs(null, { query: { status: "2,3,4,5,6,7,8,9,11" } })
-        .then((data) => {
-          if (data._embedded?.IncidentReport) {
+        .then(({ data, error }) => {
+          if (error) {
+            return Prompt({
+              type: "error",
+              message: error.message || error,
+            });
+          }
+          if (data?._embedded?.IncidentReport) {
             setIncidents(data._embedded.IncidentReport);
           }
         })

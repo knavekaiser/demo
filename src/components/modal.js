@@ -74,7 +74,7 @@ export const Prompt = ({ className, type, message, btns, callback }) => {
       callback();
   };
   if (type === "error") {
-    console.trace(message);
+    // console.trace(message);
   }
   ReactDOM.render(
     <>

@@ -78,17 +78,24 @@ export const useFetch = (
         signal: controller.current.signal,
       })
         .then(async (res) => {
-          const data = await res
-            .json()
-            .catch((err) => {})
-            .finally(() => null);
-          return {
-            ...data,
-            res,
-            data,
-          };
+          try {
+            const data = await res.json();
+            return {
+              ...data,
+              res,
+              data,
+            };
+          } catch (error) {
+            return {
+              res,
+              error,
+            };
+          }
         })
         .catch((err) => {
+          if (["The user aborted a request."].includes(err?.message)) {
+            return {};
+          }
           setError(err);
           return { error: err };
         });
@@ -110,7 +117,10 @@ export const useFetch = (
         }
       }
       setLoading(false);
-      return response;
+      return {
+        ...response,
+        ...(error && { error }),
+      };
     },
     [url]
   );

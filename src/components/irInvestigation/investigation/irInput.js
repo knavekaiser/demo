@@ -130,7 +130,7 @@ const IrInput = () => {
           __type: "recordInput",
           id: rec.id,
           userId: rec.responseFrom,
-          deptId: rec.deptId,
+          deptId: rec.dept,
           dateTime: rec.recdOn,
           response: rec.response,
           upload: rec.upload,
@@ -206,8 +206,13 @@ const IrInput = () => {
             setRecordInput(false);
             setIr((prev) => ({
               ...prev,
-              recordInput: [newRecordInput, ...prev.recordInput],
+              recordInput: recEdit
+                ? prev.recordInput.map((rec) =>
+                    rec.id === newRecordInput.id ? newRecordInput : rec
+                  )
+                : [newRecordInput, ...prev.recordInput],
             }));
+            setRecEdit(null);
           }}
         />
       </Modal>
@@ -640,6 +645,7 @@ const RecordInputForm = ({ edit, parameters, onSuccess }) => {
       ...edit,
       responseFrom: edit?.responseFrom || user.name,
       recievedOn: moment({ time: edit?.dateTime, format: "YYYY-MM-DDThh:mm" }),
+      dept: edit?.deptId || "",
       ...(edit?.upload && {
         upload: [
           {
@@ -653,7 +659,10 @@ const RecordInputForm = ({ edit, parameters, onSuccess }) => {
   return (
     <form
       onSubmit={handleSubmit(async (values) => {
-        if (values.upload?.filter((item) => !item.uploadFilePath).length) {
+        if (
+          Array.isArray(values.upload) &&
+          values.upload.filter((item) => !item.uploadFilePath).length
+        ) {
           const { links, error: uploadError } = await uploadFiles({
             files: values.upload,
             uploadFiles: upload,
@@ -675,7 +684,7 @@ const RecordInputForm = ({ edit, parameters, onSuccess }) => {
 
         (edit ? updateInput : saveInput)({
           source: values.source,
-          // responseFrom: user.id,
+          dept: values.dept,
           responseFrom: values.responseFrom,
           upload: values.upload,
           fileName: values.fileName,
@@ -701,6 +710,17 @@ const RecordInputForm = ({ edit, parameters, onSuccess }) => {
         error={errors.responseFrom}
       />
       <Combobox
+        label="Department"
+        name="dept"
+        watch={watch}
+        register={register}
+        formOptions={{ required: "Select Department" }}
+        setValue={setValue}
+        placeholder="Select"
+        options={parameters?.departments}
+        errors={errors.dept}
+      />
+      <Combobox
         label="Source"
         name="source"
         watch={watch}
@@ -712,10 +732,10 @@ const RecordInputForm = ({ edit, parameters, onSuccess }) => {
         errors={errors.evidenceSource}
       />
       <Input
-        label="Recieved On"
+        label="Received On"
         type="datetime-local"
         {...register("recievedOn", {
-          required: "Enter Recieved Date",
+          required: "Enter Received Date",
           validate: (v) =>
             new Date(v) < new Date() || "Can not select date from future",
         })}
