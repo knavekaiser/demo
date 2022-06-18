@@ -28,6 +28,7 @@ export const InvestigationProvider = ({ children }) => {
       update({
         ...ir,
         actionTakens: undefined,
+        _links: undefined,
         status: 4,
         irStatusDetails: [
           // ...ir.irStatusDetails,

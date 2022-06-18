@@ -392,8 +392,8 @@ main {
 }
 
 .acknowledgeForm {
-  width: 100% !important;
-  max-width: 35rem;
+  // width: 100% !important;
+  max-width: 35rem !important;
   form {
     padding: 20px;
     padding-top: 10px;

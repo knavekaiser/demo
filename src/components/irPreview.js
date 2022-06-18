@@ -545,6 +545,8 @@ export default function IncidentReporting() {
           onSuccess={() => {
             updateStatus({
               ...ir,
+              actionTakens: undefined,
+              _links: undefined,
               status: "11",
               irStatusDetails: [
                 ...ir.irStatusDetails,
