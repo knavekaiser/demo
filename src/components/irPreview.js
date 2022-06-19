@@ -524,7 +524,11 @@ export default function IncidentReporting() {
               className="btn secondary wd-100"
               type="button"
               onClick={() => {
-                console.log("close");
+                if (location.state?.from) {
+                  navigate(location.state.from, {
+                    state: { focus: location.state.focus },
+                  });
+                }
               }}
             >
               Close
