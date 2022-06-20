@@ -73,7 +73,7 @@ import IrInvestigation from "./irInvestigation";
 const calculateDays = (ir, exclude = []) => {
   let status = {};
   ir.irStatusDetails.forEach((detail) => {
-    if (detail.status === 10) {
+    if ([10, 11].includes(detail.status)) {
       return;
     }
     if (Array.isArray(status[detail.status])) {
@@ -1204,33 +1204,16 @@ export const QualityDashboard = () => {
           },
         ]
       : []),
-    ...(checkPermission({
-      roleId: ["hod"],
-      permission: "Acknowledge IR",
-    }) && irConfig.hodAcknowledgement
-      ? [
-          {
-            icon: <FaExternalLinkAlt />,
-            label: (
-              <>
-                Acknowledge IR{" "}
-                {inc.status.toString() === "11" && (
-                  <FaFlag style={{ color: "rgb(21, 164, 40)" }} />
-                )}
-              </>
-            ),
-            callBack: () => {
-              navigate(paths.irPreview, {
-                state: {
-                  ir: inc,
-                  focus: inc.id,
-                  from: location?.pathname,
-                },
-              });
-            },
-          },
-        ]
-      : []),
+    {
+      icon: <FaRegFileAlt />,
+      label: (
+        <>
+          Review IR <FaFlag style={{ color: "rgb(21, 164, 40)" }} />
+          <FiCheckSquare />
+        </>
+      ),
+      callBack: () => {},
+    },
     {
       icon: <FaAdjust />,
       label: "IR Combine",

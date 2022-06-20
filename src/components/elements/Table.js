@@ -94,7 +94,11 @@ export const TableActions = ({ actions }) => {
       {actions.map((action, i) => (
         <button
           key={i}
-          title={action.label}
+          title={
+            typeof action.label === "string"
+              ? action.label
+              : action.label?.props?.children[0]
+          }
           className="clear"
           onClick={action.callBack}
         >
@@ -123,7 +127,11 @@ export const TableActions = ({ actions }) => {
           {actions.map((action, i) => (
             <button
               key={i}
-              title={action.label}
+              title={
+                typeof action.label === "string"
+                  ? action.label
+                  : action.label?.props?.children[0] || ""
+              }
               className="clear"
               onClick={() => {
                 setOpen(false);

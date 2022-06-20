@@ -255,7 +255,6 @@ export default function IncidentReporting() {
       setIr(ir);
     }
   }, [location]);
-
   return (
     <div
       className={`${s.container} ${s.preview}`}
@@ -352,7 +351,7 @@ export default function IncidentReporting() {
                   </>
                 )}
               </p>
-              <p className={s.content}>Acknowledge remarks content here</p>
+              <p className={s.content}>{ir?.acknowledgeDetail?.remarks}</p>
             </div>
           </div>
         )}
@@ -546,7 +545,7 @@ export default function IncidentReporting() {
         <AcknowledgeForm
           ir={ir}
           closeForm={() => setShowAcknowledgeForm(false)}
-          onSuccess={() => {
+          onSuccess={(acknowledgeDetail) => {
             updateStatus({
               ...ir,
               actionTakens: undefined,
@@ -563,9 +562,15 @@ export default function IncidentReporting() {
             }).then(({ data }) => {
               console.log(data);
               if (data?.id) {
-                setIr(data);
+                setIr({
+                  ...data,
+                  acknowledgeDetail: {
+                    ...acknowledgeDetail,
+                    dateTime: acknowledgeDetail.responseOn,
+                  },
+                });
                 setShowAcknowledgeForm(false);
-                Prompt({ type: "information", message: "IR Achknowledged" });
+                Prompt({ type: "information", message: "IR Acknowledged" });
               } else {
                 Prompt({
                   type: "error",
@@ -604,9 +609,9 @@ const AcknowledgeForm = ({ ir, onSuccess, closeForm }) => {
           responseOn: values.responseTime,
           irId: ir.id,
         })
-          .then((res) => {
-            if (res.data?.id) {
-              return onSuccess();
+          .then(({ data }) => {
+            if (data?.id) {
+              return onSuccess(data);
             } else {
               Prompt({
                 type: "error",
