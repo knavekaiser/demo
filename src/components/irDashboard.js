@@ -82,7 +82,7 @@ const calculateDays = (ir, exclude = []) => {
       status[detail.status] = [detail];
     }
   });
-  if (ir.irStatusDetails.length === 0) {
+  if (ir.irStatusDetails.length === 0 || Object.keys(status).length == 0) {
     return 0;
   }
   Object.entries(status).forEach(([sts, detail]) => {
@@ -90,7 +90,6 @@ const calculateDays = (ir, exclude = []) => {
       new Date(a.dateTime) < new Date(b.dateTime) ? 1 : -1
     );
   });
-
   const startDate = new Date(Object.values(status)[0][0].dateTime);
   const endDate = new Date(
     Object.values(status)[Object.values(status).length - 1][
@@ -1158,16 +1157,6 @@ export const QualityDashboard = () => {
       : []),
     ...(+inc.status === 2
       ? [
-          {
-            icon: <FaRegFileAlt />,
-            label: (
-              <>
-                Review IR <FaFlag style={{ color: "rgb(21, 164, 40)" }} />
-                <FiCheckSquare />
-              </>
-            ),
-            callBack: () => {},
-          },
           ...(checkPermission({
             roleId: ["irInvestigator", "incidentManager"],
             permission: "Cancel IR",
