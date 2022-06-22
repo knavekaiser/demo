@@ -58,10 +58,6 @@ export default function IncidentReporting() {
   });
   const { get: getCategories } = useFetch(defaultEndpoints.categories);
 
-  const { put: updateStatus } = useFetch(
-    defaultEndpoints.incidentReport + `/${ir?.id || ""}`
-  );
-
   useEffect(() => {
     let active = true;
     Promise.all([
@@ -249,9 +245,7 @@ export default function IncidentReporting() {
   useEffect(() => {
     if (location.state?.ir) {
       const { ir, readOnly } = location.state;
-      const statusDetail = ir?.irStatusDetails?.find(
-        (item) => item.status.toString() === "11"
-      );
+      const statusDetail = ir?.irHodAck[0];
       if (statusDetail) {
         ir.acknowledgeDetail = statusDetail;
       }
@@ -333,7 +327,7 @@ export default function IncidentReporting() {
             }
           />
         </div>
-        {ir?.status.toString() === "11" && (
+        {ir?.irHodAck[0] && (
           <div className={s.acknowledged}>
             <span className={s.icon}>
               <FaCheckCircle />
@@ -345,11 +339,11 @@ export default function IncidentReporting() {
                   <>
                     by{" "}
                     {parameters?.users.find(
-                      (user) => user.value === ir.acknowledgeDetail.userid
-                    )?.label || ir.acknowledgeDetail.userid}{" "}
+                      (user) => user.value === ir.acknowledgeDetail.userId
+                    )?.label || ir.acknowledgeDetail.userId}{" "}
                     on{" "}
                     <Moment format="DD/MM/YYYY hh:mm">
-                      {ir.acknowledgeDetail.dateTime}
+                      {ir.acknowledgeDetail.responseOn}
                     </Moment>
                   </>
                 )}
@@ -512,7 +506,7 @@ export default function IncidentReporting() {
             )?.label || ir?.headofDepart}
           </Data>
         </div>
-        {ir && ir?.status.toString() !== "11" && (
+        {ir && !ir.irHodAck[0] && (
           <div className={s.btns}>
             <button
               onClick={() => {
@@ -549,39 +543,13 @@ export default function IncidentReporting() {
           ir={ir}
           closeForm={() => setShowAcknowledgeForm(false)}
           onSuccess={(acknowledgeDetail) => {
-            updateStatus({
-              ...ir,
-              id: undefined,
-              actionTakens: undefined,
-              _links: undefined,
-              status: "11",
-              irStatusDetails: [
-                ...ir.irStatusDetails,
-                {
-                  status: 11,
-                  dateTime: new Date().toISOString(),
-                  userid: user.id,
-                },
-              ],
-            }).then(({ data }) => {
-              if (data?.id) {
-                setIr({
-                  ...data,
-                  acknowledgeDetail: {
-                    ...acknowledgeDetail,
-                    userid: acknowledgeDetail.userId,
-                    dateTime: acknowledgeDetail.responseOn,
-                  },
-                });
-                setShowAcknowledgeForm(false);
-                Prompt({ type: "information", message: "IR Acknowledged" });
-              } else {
-                Prompt({
-                  type: "error",
-                  message: "Could not update IR status",
-                });
-              }
-            });
+            setIr((prev) => ({
+              ...prev,
+              irHodAck: [acknowledgeDetail],
+              acknowledgeDetail,
+            }));
+            setShowAcknowledgeForm(false);
+            Prompt({ type: "information", message: "IR Acknowledged" });
           }}
         />
       </Modal>
