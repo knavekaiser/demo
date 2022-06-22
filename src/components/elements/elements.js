@@ -450,7 +450,7 @@ export const CustomRadio = ({
             htmlFor={name + v}
             key={i}
             className={`${s.option} ${
-              selected?.includes?.(v)
+              selected?.includes && selected?.includes(v)
                 ? s.selected + " " + (selectedClassName || "")
                 : ""
             } ${disabled ? s.disabled : ""}`}
@@ -461,11 +461,15 @@ export const CustomRadio = ({
               name={name}
               id={name + v}
               value={v}
-              checked={selected === v || selected?.includes?.(v) || ""}
+              checked={
+                selected === v ||
+                (selected?.includes && selected?.includes(v)) ||
+                ""
+              }
               onChange={(e) => {
                 if (
                   e.target.value === selected ||
-                  selected?.includes?.(e.target.value)
+                  (selected?.includes && selected?.includes(e.target.value))
                 ) {
                   if (multiple) {
                     setValue(

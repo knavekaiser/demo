@@ -70,6 +70,8 @@ import { countDays } from "../helpers";
 
 import IrInvestigation from "./irInvestigation";
 
+// This will count the TAT
+//
 const calculateDays = (ir, exclude = []) => {
   let status = {};
   ir.irStatusDetails.forEach((detail) => {

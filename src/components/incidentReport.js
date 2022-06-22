@@ -238,7 +238,6 @@ export default function IncidentReporting() {
             .filter((item) => item)
             .map((item) => +item) || [],
       };
-      console.log(_edit);
       methods.reset(_edit);
     }
   }, [edit]);
@@ -412,7 +411,10 @@ export default function IncidentReporting() {
         }
       )
       .catch((err) => {
-        console.log(err);
+        Prompt({
+          type: "error",
+          message: err.message,
+        });
       });
 
     return () => {
@@ -625,36 +627,10 @@ export default function IncidentReporting() {
                     },
                   }}
                   name="typeofInci"
-                  options={
-                    irTypes
-                    //   .map((type) => {
-                    //   if (type.value === 8) {
-                    //     return {
-                    //       ...type,
-                    //       label: (
-                    //         <>
-                    //           {type.label}{" "}
-                    //           <button
-                    //             className={`clear ${s.info}`}
-                    //             onClick={(e) =>
-                    //               console.log("Show table or something")
-                    //             }
-                    //           >
-                    //             <FaInfoCircle />
-                    //           </button>
-                    //         </>
-                    //       ),
-                    //     };
-                    //   }
-                    //   return type;
-                    // })
-                  }
+                  options={irTypes}
                   error={methods.formState.errors.typeofInci}
                 />
-                <button
-                  className={`clear ${s.info}`}
-                  onClick={(e) => console.log("Show table or something")}
-                >
+                <button className={`clear ${s.info}`}>
                   <FaInfoCircle />
                 </button>
               </div>
@@ -779,7 +755,6 @@ export default function IncidentReporting() {
               multiple={true}
               prefill={uploads}
               onChange={(files) => {
-                console.log(files);
                 methods.setValue("upload", files);
               }}
             />

@@ -161,7 +161,10 @@ const IrScreen = () => {
                 }
               })
               .catch((err) => {
-                console.log(err);
+                Prompt({
+                  type: "error",
+                  message: err.message,
+                });
               });
           }}
         >
@@ -211,7 +214,6 @@ const TypesOfIncident = () => {
               }}
               typesOfIncident={typesOfIncident}
               onSuccess={(newCat) => {
-                console.log(newCat);
                 setTypesOfIncident((prev) => {
                   return prev.find((c) => c.id === newCat.id)
                     ? prev.map((c) => (c.id === newCat.id ? newCat : c))
@@ -787,7 +789,10 @@ const HodApprovalProcess = () => {
                 }
               })
               .catch((err) => {
-                console.log(err);
+                Prompt({
+                  type: "error",
+                  message: err.message,
+                });
               });
           }}
         >
@@ -1024,7 +1029,10 @@ const DashboardDataElements = () => {
                 }
               })
               .catch((err) => {
-                console.log(err);
+                Prompt({
+                  type: "error",
+                  message: err.message,
+                });
               });
           }}
           className="btn wd-100"
@@ -1157,7 +1165,10 @@ const IncidentClosure = () => {
                 }
               })
               .catch((err) => {
-                console.log(err);
+                Prompt({
+                  type: "error",
+                  message: err.message,
+                });
               });
           }}
         >
@@ -1550,7 +1561,10 @@ const IrInvestigationDetails = () => {
                 }
               })
               .catch((err) => {
-                console.log(err);
+                Prompt({
+                  type: "error",
+                  message: err.message,
+                });
               });
           }}
         >

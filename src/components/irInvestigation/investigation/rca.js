@@ -131,7 +131,6 @@ const Rca = () => {
 
   const submitMainForm = useCallback(
     (values) => {
-      console.log(ir.irInvestigation);
       (ir.irInvestigation?.length ? updateIrDetail : saveIrDetail)({
         ...(ir.irInvestigation.length ?? ir.irInvestigation[0]),
         ...values,
@@ -141,7 +140,6 @@ const Rca = () => {
           setIr((prev) => ({ ...prev, irInvestigation: [data] }));
         }
       });
-      console.log(values);
     },
     [ir]
   );
@@ -386,7 +384,7 @@ const AddCauseFrom = ({ onSuccess }) => {
     <form
       className={s.addCause}
       onSubmit={handleSubmit((values) => {
-        console.log(JSON.parse(JSON.stringify(values)));
+        //
       })}
     >
       <Input
@@ -398,9 +396,7 @@ const AddCauseFrom = ({ onSuccess }) => {
         <Input
           key={id}
           label={i === 0 ? "Why's" : ""}
-          {...register(`why.${id}`, {
-            // required: "Field is required"
-          })}
+          {...register(`why.${id}`)}
           error={errors[`why.${id}`]}
           icon={
             i > 0 ? (

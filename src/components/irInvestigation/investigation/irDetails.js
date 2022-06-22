@@ -487,11 +487,6 @@ const Events = ({ events }) => {
                 sequence: i + 1,
               }));
 
-              // console.log(
-              //   events.map((evt) => evt),
-              //   newEvents.map((evt) => evt)
-              // );
-
               Promise.all(
                 newEvents
                   .filter(

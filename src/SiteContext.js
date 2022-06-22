@@ -66,7 +66,6 @@ export const Provider = ({ children }) => {
     sessionStorage.removeItem("access-token");
     sessionStorage.removeItem("tenant-id");
     sessionStorage.removeItem("tenant-timezone");
-    // sessionStorage.removeItem("db-schema");
     navigate(
       `/login${
         sessionStorage.getItem("db-schema")
@@ -204,14 +203,6 @@ export const IrDashboardContextProvider = ({ children }) => {
     getDataElements().then(({ data }) => {
       if (data?._embedded?.dashboardElements) {
         setDataElements(data._embedded.dashboardElements);
-        // setDataElements(
-        //   data._embedded.dashboardElements.reduce((p, a) => {
-        //     p[a.statusOption] = [];
-        //     if (a.irMgr) p[a.statusOption].push("incidentManager");
-        //     if (a.irInvestigator) p[a.statusOption].push("irInvestigator");
-        //     return p;
-        //   }, {})
-        // );
       }
     });
   });
@@ -289,7 +280,10 @@ export const IrDashboardContextProvider = ({ children }) => {
           updateUsers();
         })
         .catch((err) => {
-          console.log(err);
+          Prompt({
+            type: "error",
+            message: err.message,
+          });
         });
       updateTatConfig();
       updateIrTypes();

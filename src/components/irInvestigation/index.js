@@ -220,7 +220,10 @@ const IrInvestigation = () => {
         }
       )
       .catch((err) => {
-        console.log(err);
+        Prompt({
+          type: "error",
+          message: err.message,
+        });
       });
 
     return () => {

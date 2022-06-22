@@ -413,40 +413,12 @@ const UserForm = ({
         clearErrors={clearErrors}
       />
       <Input
-        {...register("dob", {
-          // ...(!addFromHis && { required: "Date of Birth" }),
-        })}
+        {...register("dob")}
         type="date"
         className={s.dobInput}
         error={errors.dob}
       />
-      {
-        //   <Input
-        //   {...register("employeeId", {
-        //     required: "Employee ID",
-        //   })}
-        //   error={errors.employeeId}
-        //   placeholder="Enter"
-        // />
-      }
       <SearchField
-        // url={defaultEndpoints.users + `?size=10000`}
-        // processData={(data, value) => {
-        //   if (data?._embedded?.user) {
-        //     console.log(data._embedded?.user.length);
-        //     return data._embedded.user
-        //       .filter((user) => new RegExp(value, "i").test(user.employeeId))
-        //       .map((user) => ({
-        //         value: user.employeeId,
-        //         label: user.employeeId,
-        //         data: {
-        //           ...user,
-        //           role: user.role?.split(",") || [],
-        //         },
-        //       }));
-        //   }
-        //   return [];
-        // }}
         data={users.map((user) => ({
           label: user.employeeId,
           value: user.employeeId,

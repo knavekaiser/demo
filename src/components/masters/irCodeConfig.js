@@ -146,11 +146,8 @@ export default function IrCodeConfig() {
                 const { oldIndex, newIndex } = e;
                 if (oldIndex !== newIndex) {
                   setCodeConfig((prev) => {
-                    console.log(prev);
                     const items = [...prev.filter((item, i) => i !== oldIndex)];
-                    console.log(items);
                     items.splice(newIndex, 0, prev[oldIndex]);
-                    console.log(items);
                     return items;
                   });
                 }

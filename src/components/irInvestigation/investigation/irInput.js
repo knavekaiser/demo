@@ -91,7 +91,10 @@ const IrInput = () => {
         }
       )
       .catch((err) => {
-        console.log(err);
+        Prompt({
+          type: "error",
+          message: err.message,
+        });
       });
   }, []);
 

@@ -189,11 +189,6 @@ export const VirtualTable = ({
             return (
               <th
                 key={i}
-                onClick={() => {
-                  if (item.sort) {
-                    console.log("do something");
-                  }
-                }}
                 className={item.className || ""}
                 onClick={item.onClick}
               >

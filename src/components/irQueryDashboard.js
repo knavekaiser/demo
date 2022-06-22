@@ -376,7 +376,6 @@ const ResponseForm = ({ ir, parameters, setShowResForm, onSuccess }) => {
   const { post: upload, laoding: uploadingFiles } = useFetch(
     defaultEndpoints.uploadFiles
   );
-  console.log(ir);
   return (
     <div className={s.content}>
       <ul className={s.irDetail}>

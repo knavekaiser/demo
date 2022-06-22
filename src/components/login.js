@@ -346,7 +346,10 @@ export default function Login() {
                 }
               }
             } catch (err) {
-              console.log(err);
+              Prompt({
+                type: "error",
+                message: err.message,
+              });
             }
           })}
         >

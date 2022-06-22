@@ -235,7 +235,10 @@ export default function IncidentReporting() {
         }
       )
       .catch((err) => {
-        console.log(err);
+        Prompt({
+          type: "error",
+          message: err.message,
+        });
       });
 
     return () => {
@@ -509,7 +512,7 @@ export default function IncidentReporting() {
             )?.label || ir?.headofDepart}
           </Data>
         </div>
-        {ir?.status.toString() !== "11" && (
+        {ir && ir?.status.toString() !== "11" && (
           <div className={s.btns}>
             <button
               onClick={() => {
@@ -548,6 +551,7 @@ export default function IncidentReporting() {
           onSuccess={(acknowledgeDetail) => {
             updateStatus({
               ...ir,
+              id: undefined,
               actionTakens: undefined,
               _links: undefined,
               status: "11",
@@ -560,12 +564,12 @@ export default function IncidentReporting() {
                 },
               ],
             }).then(({ data }) => {
-              console.log(data);
               if (data?.id) {
                 setIr({
                   ...data,
                   acknowledgeDetail: {
                     ...acknowledgeDetail,
+                    userid: acknowledgeDetail.userId,
                     dateTime: acknowledgeDetail.responseOn,
                   },
                 });
@@ -607,7 +611,10 @@ const AcknowledgeForm = ({ ir, onSuccess, closeForm }) => {
           responseBy: user.id,
           userId: user.id,
           responseOn: values.responseTime,
-          irId: ir.id,
+          incidentReport: {
+            // irId: ir.id,
+            id: ir.id,
+          },
         })
           .then(({ data }) => {
             if (data?.id) {
@@ -645,7 +652,9 @@ const AcknowledgeForm = ({ ir, onSuccess, closeForm }) => {
         >
           Clear
         </button>
-        <button className="btn wd-100">Acknowledge</button>
+        <button className="btn wd-100" disabled={!ir || !user}>
+          Acknowledge
+        </button>
       </section>
     </form>
   );
