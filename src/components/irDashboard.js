@@ -94,9 +94,7 @@ const calculateDays = (ir, exclude = []) => {
   });
   const startDate = new Date(Object.values(status)[0][0].dateTime);
   const endDate = new Date(
-    Object.values(status)[Object.values(status).length - 1][
-      Object.values(status)[Object.values(status).length - 1].length - 1
-    ].dateTime
+    Object.values(status)[Object.values(status).length - 1][0].dateTime
   );
 
   return countDays(startDate, endDate, exclude);
@@ -144,8 +142,6 @@ class Print extends Component {
                 new Date(a.reportingDate) > new Date(b.reportingDate) ? -1 : 1
               )
               .map((ir, i) => {
-                // return <SingleIr key={ir.id} ir={ir} parameters={parameters} />;
-
                 const tat = calculateDays(ir, tatConfig.excludeWeek);
 
                 return (
@@ -635,19 +631,15 @@ const SingleIr = memo(
           new Date(a.dateTime) < new Date(b.dateTime) ? 1 : -1
         );
       });
-      // if (ir.sequence === "112 /03/2022 IR NAP") {
-      //   console.log(ir.irStatusDetails, status);
-      // }
       setTimeline(status);
     }, [ir.irStatusDetails]);
     useEffect(() => {
       if (Object.keys(timeline).length) {
         const startDate = new Date(Object.values(timeline)[0][0].dateTime);
         const endDate = new Date(
-          Object.values(timeline)[Object.values(timeline).length - 1][
-            Object.values(timeline)[Object.values(timeline).length - 1].length -
-              1
-          ].dateTime
+          Object.values(timeline)[
+            Object.values(timeline).length - 1
+          ][0].dateTime
         );
 
         setTotalTat(
@@ -880,7 +872,7 @@ const TatDetails = ({
                   {(prevFirstDetail
                     ? countDays(
                         new Date(prevFirstDetail.dateTime),
-                        new Date(details[details.length - 1]?.dateTime),
+                        new Date(details[0]?.dateTime),
                         tatConfig?.excludeWeek || []
                       )
                     : 0) || 0}
