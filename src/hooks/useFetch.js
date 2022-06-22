@@ -109,9 +109,11 @@ export const useFetch = (
         ) {
           sessionStorage.removeItem("access-token");
           sessionStorage.removeItem("HIS-access-token");
-          return Prompt({
+          Prompt({
             type: "error",
-            message: `${user.name} is logged in from another device. Please log in again.`,
+            message: `${
+              user?.name || "User"
+            } is logged in from another device. Please log in again.`,
             callback: logout,
           });
         }

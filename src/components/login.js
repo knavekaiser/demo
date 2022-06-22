@@ -121,7 +121,7 @@ export default function Login() {
               let token = sessionStorage.getItem("access-token");
 
               if (!token) {
-                await fetch(
+                const resp = await fetch(
                   `${defaultEndpoints.token}?tenantId=${sessionStorage.getItem(
                     "db-schema"
                   )}`,
@@ -141,17 +141,6 @@ export default function Login() {
                   }
                 )
                   .then((res) => res.json())
-                  .then((data) => {
-                    if (data.access_token) {
-                      sessionStorage.setItem("access-token", data.access_token);
-                    } else {
-                      Prompt({
-                        type: "error",
-                        message:
-                          data.error_description || "Invalid Credentials",
-                      });
-                    }
-                  })
                   .catch((err) => {
                     Prompt({
                       type: "error",
@@ -159,6 +148,15 @@ export default function Login() {
                     });
                     setLoading(false);
                   });
+
+                if (resp?.access_token) {
+                  sessionStorage.setItem("access-token", resp?.access_token);
+                } else {
+                  return Prompt({
+                    type: "error",
+                    message: resp.error_description || "Invalid Credentials",
+                  });
+                }
               }
 
               if (his) {
@@ -299,10 +297,10 @@ export default function Login() {
                   query: { username: data.username },
                 })
                   .then(({ data: user }) =>
-                    user
+                    user?.id
                       ? {
                           ...user,
-                          role: user.role.split(",").filter((role) => role),
+                          role: user.role?.split(",").filter((role) => role),
                         }
                       : null
                   )
@@ -327,10 +325,10 @@ export default function Login() {
                 const _user = await getUserDetail(null, {
                   query: { username: data.username },
                 }).then(({ data: user }) => {
-                  return user
+                  return user?.id
                     ? {
                         ...user,
-                        role: user.role.split(",").filter((role) => role),
+                        role: user.role?.split(",").filter((role) => role),
                       }
                     : null;
                 });

@@ -635,6 +635,9 @@ const SingleIr = memo(
           new Date(a.dateTime) < new Date(b.dateTime) ? 1 : -1
         );
       });
+      // if (ir.sequence === "112 /03/2022 IR NAP") {
+      //   console.log(ir.irStatusDetails, status);
+      // }
       setTimeline(status);
     }, [ir.irStatusDetails]);
     useEffect(() => {
@@ -841,7 +844,7 @@ const TatDetails = ({
               : -1
           )
           .map(([status, details], i, arr) => {
-            const prevFirstDetail = arr[i + 1]?.[1]?.[arr[i + 1][1].length - 1];
+            const prevFirstDetail = arr[i + 1]?.[1]?.[0];
             return (
               <tr key={status}>
                 <td>
@@ -853,7 +856,7 @@ const TatDetails = ({
                       <p key={detail.id}>
                         {parameters?.users?.find(
                           (user) => user.value === detail.userid
-                        )?.label || detail.userid}
+                        )?.label || "Anonymous"}
                       </p>
                     );
                   })}
@@ -866,7 +869,7 @@ const TatDetails = ({
                     .map((detail) => {
                       return (
                         <p key={detail.id}>
-                          <Moment format="MM/DD/YYYY hh:mm">
+                          <Moment format="DD/MM/YYYY hh:mm">
                             {detail.dateTime}
                           </Moment>
                         </p>
@@ -880,7 +883,7 @@ const TatDetails = ({
                         new Date(details[details.length - 1]?.dateTime),
                         tatConfig?.excludeWeek || []
                       )
-                    : 0) || null}
+                    : 0) || 0}
                 </td>
               </tr>
             );
