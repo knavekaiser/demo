@@ -483,7 +483,10 @@ export const MyDashboard = () => {
           irs={[
             { label: "My IRs", count: count.myIr },
             ...((checkPermission({ roleId: "hod" }) && [
-              { label: "Department IRs", count: count.departmentIr },
+              {
+                label: "Department IRs",
+                count: count.departmentIr,
+              },
             ]) ||
               []),
           ]}
@@ -896,7 +899,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, checkPermission, irTypes } = useContext(SiteContext);
-  const { parameters } = useContext(IrDashboardContext);
+  const { parameters, irConfig } = useContext(IrDashboardContext);
   const defaultView = user?.role?.includes?.("incidentManager")
     ? "all"
     : "assigned";
@@ -1082,6 +1085,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
                 {
                   label: "My Department IRs",
                   value: "department",
+                  disabled: !irConfig.hodAcknowledgement,
                 },
               ]) ||
                 []),

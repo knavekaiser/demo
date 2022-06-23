@@ -86,10 +86,10 @@ export const useFetch = (
               data,
             };
           } catch (error) {
-            return {
-              res,
-              error,
-            };
+            if (["The user aborted a request."].includes(error?.message)) {
+              return { res };
+            }
+            return { res, error };
           }
         })
         .catch((err) => {
