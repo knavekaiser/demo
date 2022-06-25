@@ -1,12 +1,14 @@
 const countDays = (start, end, exclude = []) => {
   const days = [];
+  start = new Date(new Date(start).setHours(0, 0, 0, 0));
+  end = new Date(new Date(end).setHours(0, 0, 0, 0));
 
   for (
     var d = new Date(new Date(start).setHours(0, 0, 0, 0));
-    d <= new Date(new Date(end).setHours(0, 0, 0, 0));
+    d <= end;
     d.setDate(d.getDate() + 1)
   ) {
-    if (d > start && !exclude.includes(d.getDay())) {
+    if (d >= start && !exclude.includes(d.getDay())) {
       days.push(new Date(d));
     }
   }

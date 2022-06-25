@@ -1343,6 +1343,7 @@ const IrInvestigationDetails = () => {
   useEffect(() => {
     getElements().then((data) => {
       if (data?._embedded?.irInvestigationDetails) {
+        console.log(data._embedded.irInvestigationDetails);
         elementRef.current = data._embedded.irInvestigationDetails;
         setElements(data._embedded.irInvestigationDetails);
       }

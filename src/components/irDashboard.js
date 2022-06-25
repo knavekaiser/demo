@@ -94,7 +94,9 @@ const calculateDays = (ir, exclude = []) => {
   });
   const startDate = new Date(Object.values(status)[0][0].dateTime);
   const endDate = new Date(
-    Object.values(status)[Object.values(status).length - 1][0].dateTime
+    Object.values(status)[Object.values(status).length - 1][
+      Object.values(status)[Object.values(status).length - 1].length - 1
+    ].dateTime
   );
 
   return countDays(startDate, endDate, exclude);
@@ -142,7 +144,12 @@ class Print extends Component {
                 new Date(a.reportingDate) > new Date(b.reportingDate) ? -1 : 1
               )
               .map((ir, i) => {
-                const tat = calculateDays(ir, tatConfig.excludeWeek);
+                const tat = calculateDays(
+                  ir,
+                  ir.typeofInci === 8
+                    ? tatConfig.sentinelExcludeWeek
+                    : tatConfig?.excludeWeek
+                );
 
                 return (
                   <tr key={i}>
@@ -640,13 +647,20 @@ const SingleIr = memo(
       if (Object.keys(timeline).length) {
         const startDate = new Date(Object.values(timeline)[0][0].dateTime);
         const endDate = new Date(
-          Object.values(timeline)[
-            Object.values(timeline).length - 1
-          ][0].dateTime
+          Object.values(timeline)[Object.values(timeline).length - 1][
+            Object.values(timeline)[Object.values(timeline).length - 1].length -
+              1
+          ].dateTime
         );
 
         setTotalTat(
-          countDays(startDate, endDate, tatConfig?.excludeWeek || [])
+          countDays(
+            startDate,
+            endDate,
+            ir.typeofInci === 8
+              ? tatConfig.sentinelExcludeWeek
+              : tatConfig?.excludeWeek || []
+          )
         );
       }
     }, [timeline]);
@@ -839,7 +853,8 @@ const TatDetails = ({
               : -1
           )
           .map(([status, details], i, arr) => {
-            const prevFirstDetail = arr[i + 1]?.[1]?.[0];
+            // const prevFirstDetail = arr[i + 1]?.[1]?.[0];
+            const prevFirstDetail = arr[i + 1]?.[1]?.[arr[i + 1][1].length - 1];
             return (
               <tr key={status}>
                 <td>
@@ -872,13 +887,15 @@ const TatDetails = ({
                     })}
                 </td>
                 <td>
-                  {(prevFirstDetail
+                  {prevFirstDetail
                     ? countDays(
                         new Date(prevFirstDetail.dateTime),
-                        new Date(details[0]?.dateTime),
-                        tatConfig?.excludeWeek || []
+                        new Date(details[details.length - 1]?.dateTime),
+                        ir.typeofInci === 8
+                          ? tatConfig.sentinelExcludeWeek
+                          : tatConfig?.excludeWeek || []
                       )
-                    : 0) || 0}
+                    : null}
                 </td>
               </tr>
             );
@@ -1289,7 +1306,12 @@ export const QualityDashboard = () => {
               data: data._embedded.IncidentReport.sort((a, b) =>
                 new Date(a.reportingDate) > new Date(b.reportingDate) ? -1 : 1
               ).map((ir) => {
-                const tat = calculateDays(ir, tatConfig?.excludeWeek);
+                const tat = calculateDays(
+                  ir,
+                  ir.typeofInci === 8
+                    ? tatConfig.sentinelExcludeWeek
+                    : tatConfig?.excludeWeek
+                );
 
                 return {
                   ...ir,

@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from "react";
-import { SiteContext } from "../../SiteContext";
+import { SiteContext, IrDashboardContext } from "../../SiteContext";
 import { FaPlus, FaCheck, FaRegTrashAlt, FaSearch } from "react-icons/fa";
 import { BsPencilFill } from "react-icons/bs";
 import { IoClose } from "react-icons/io5";
@@ -296,6 +296,7 @@ const UserForm = ({
   role,
 }) => {
   const { endpoints } = useContext(SiteContext);
+  const { irConfig } = useContext(IrDashboardContext);
   const {
     handleSubmit,
     register,
@@ -601,7 +602,11 @@ const UserForm = ({
         name="role"
         setValue={setValue}
         watch={watch}
-        options={role}
+        options={
+          irConfig.hodAcknowledgement
+            ? role
+            : role.filter((role) => role.value !== "hod")
+        }
         multiple={true}
         error={errors.role}
         clearErrors={clearErrors}

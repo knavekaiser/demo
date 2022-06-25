@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useContext } from "react";
-import { SiteContext } from "../../SiteContext";
+import { SiteContext, IrDashboardContext } from "../../SiteContext";
 import { FaInfoCircle, FaPlus, FaRegTrashAlt } from "react-icons/fa";
 import { BsPencilFill } from "react-icons/bs";
 import { BiSearch } from "react-icons/bi";
@@ -42,6 +42,7 @@ const readOnly = [
 export default function UserPermission() {
   const permissionRef = useRef(null);
   const { user, setRoles } = useContext(SiteContext);
+  const { irConfig } = useContext(IrDashboardContext);
   const [userPermission, setUserPermission] = useState(null);
 
   const { get: getPermissions } = useFetch(defaultEndpoints.userPermissions);
@@ -70,109 +71,122 @@ export default function UserPermission() {
         <h3>USER MANAGEMENT</h3>
       </header>
       <div className={s.userPermission}>
-        {permissions.map(({ role, label, permissions }) => (
-          <Box label={label.toUpperCase()} key={role} collapsable>
-            <Table columns={[{ label: "Permissions" }]}>
-              {Object.entries(permissions).map(([key, value]) => {
-                const _permission = userPermission?.find(
-                  (item) => item.role === role
-                )?.permission;
-                if (typeof value === "object") {
-                  return (
-                    <tr key={key}>
-                      <td className={s.multipleOptions}>
-                        <p className={s.permissionLabel}>{key}</p>
-                        <div className={s.options}>
-                          {Object.entries(value).map(
-                            ([subKey, subValue], i) => {
-                              const permission = key + subKey;
-                              return (
-                                <div key={i}>
-                                  <label htmlFor={role + permission}>
-                                    <input
-                                      id={role + permission}
-                                      type="checkbox"
-                                      checked={
-                                        _permission?.includes(permission) ||
-                                        false
-                                      }
-                                      onChange={() => {
-                                        if (
-                                          readOnly
-                                            .find((item) => item.role === role)
-                                            ?.permissions?.includes(permission)
-                                        ) {
-                                          return;
+        {permissions
+          .filter((item) => {
+            if (item.role === "hod") {
+              return irConfig.hodAcknowledgement;
+            } else {
+              return item;
+            }
+          })
+          .map(({ role, label, permissions }) => (
+            <Box label={label.toUpperCase()} key={role} collapsable>
+              <Table columns={[{ label: "Permissions" }]}>
+                {Object.entries(permissions).map(([key, value]) => {
+                  const _permission = userPermission?.find(
+                    (item) => item.role === role
+                  )?.permission;
+                  if (typeof value === "object") {
+                    return (
+                      <tr key={key}>
+                        <td className={s.multipleOptions}>
+                          <p className={s.permissionLabel}>{key}</p>
+                          <div className={s.options}>
+                            {Object.entries(value).map(
+                              ([subKey, subValue], i) => {
+                                const permission = key + subKey;
+                                return (
+                                  <div key={i}>
+                                    <label htmlFor={role + permission}>
+                                      <input
+                                        id={role + permission}
+                                        type="checkbox"
+                                        checked={
+                                          _permission?.includes(permission) ||
+                                          false
                                         }
-                                        setUserPermission((prev) =>
-                                          prev.map((item) => {
-                                            if (item.role !== role) return item;
-                                            return {
-                                              ...item,
-                                              permission: _permission?.includes(
+                                        onChange={() => {
+                                          if (
+                                            readOnly
+                                              .find(
+                                                (item) => item.role === role
+                                              )
+                                              ?.permissions?.includes(
                                                 permission
                                               )
-                                                ? item.permission.filter(
-                                                    (p) => p !== permission
-                                                  )
-                                                : [
-                                                    ...item.permission,
-                                                    permission,
-                                                  ],
-                                            };
-                                          })
-                                        );
-                                      }}
-                                    />{" "}
-                                    {subKey}
-                                  </label>
-                                </div>
+                                          ) {
+                                            return;
+                                          }
+                                          setUserPermission((prev) =>
+                                            prev.map((item) => {
+                                              if (item.role !== role)
+                                                return item;
+                                              return {
+                                                ...item,
+                                                permission: _permission?.includes(
+                                                  permission
+                                                )
+                                                  ? item.permission.filter(
+                                                      (p) => p !== permission
+                                                    )
+                                                  : [
+                                                      ...item.permission,
+                                                      permission,
+                                                    ],
+                                              };
+                                            })
+                                          );
+                                        }}
+                                      />{" "}
+                                      {subKey}
+                                    </label>
+                                  </div>
+                                );
+                              }
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  }
+                  return (
+                    <tr key={key}>
+                      <td>
+                        <label htmlFor={role + key}>
+                          <input
+                            id={role + key}
+                            type="checkbox"
+                            checked={_permission?.includes(key) || false}
+                            onChange={() => {
+                              if (
+                                readOnly
+                                  .find((item) => item.role === role)
+                                  ?.permissions?.includes(key)
+                              ) {
+                                return;
+                              }
+                              setUserPermission((prev) =>
+                                prev.map((item) => {
+                                  if (item.role !== role) return item;
+                                  return {
+                                    ...item,
+                                    permission: _permission?.includes(key)
+                                      ? item.permission.filter((p) => p !== key)
+                                      : [...item.permission, key],
+                                  };
+                                })
                               );
-                            }
-                          )}
-                        </div>
+                            }}
+                          />{" "}
+                          {key}
+                        </label>
                       </td>
                     </tr>
                   );
-                }
-                return (
-                  <tr key={key}>
-                    <td>
-                      <label htmlFor={role + key}>
-                        <input
-                          id={role + key}
-                          type="checkbox"
-                          checked={_permission?.includes(key) || false}
-                          onChange={() => {
-                            if (
-                              readOnly
-                                .find((item) => item.role === role)
-                                ?.permissions?.includes(key)
-                            ) {
-                              return;
-                            }
-                            setUserPermission((prev) =>
-                              prev.map((item) => {
-                                if (item.role !== role) return item;
-                                return {
-                                  ...item,
-                                  permission: _permission?.includes(key)
-                                    ? item.permission.filter((p) => p !== key)
-                                    : [...item.permission, key],
-                                };
-                              })
-                            );
-                          }}
-                        />{" "}
-                        {key}
-                      </label>
-                    </td>
-                  </tr>
-                );
-              })}
-            </Table>
-          </Box>
-        ))}
+                })}
+              </Table>
+            </Box>
+          ))}
       </div>
       <div className={s.btns}>
         <button
