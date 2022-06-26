@@ -384,7 +384,15 @@ export const MyDashboard = () => {
       : [
           {
             icon: <FaEye />,
-            label: "Review IR",
+            label: (
+              <>
+                Review IR{" "}
+                {inc.irHodAck?.length && (
+                  <FaFlag style={{ color: "rgb(21, 164, 40)" }} />
+                )}
+                <FiCheckSquare />
+              </>
+            ),
             callBack: () => {
               navigate(paths.incidentReport, {
                 state: {
@@ -1215,7 +1223,10 @@ export const QualityDashboard = () => {
       icon: <FaRegFileAlt />,
       label: (
         <>
-          Review IR <FaFlag style={{ color: "rgb(21, 164, 40)" }} />
+          Review IR{" "}
+          {inc.irHodAck?.length && (
+            <FaFlag style={{ color: "rgb(21, 164, 40)" }} />
+          )}
           <FiCheckSquare />
         </>
       ),
