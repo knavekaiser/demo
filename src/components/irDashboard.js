@@ -449,11 +449,12 @@ export const MyDashboard = () => {
       _filters.toreportingDate = _filters.toreportingDate + " 23:59:59";
     }
 
-    if (_filters.byIr !== "department") {
+    if (_filters.irBy !== "department") {
       _filters.userId = user.id;
     } else {
       delete _filters.userId;
     }
+
     // if (_filters.irBy === "self") {
     // } else {
     //   delete _filters.userId;
@@ -474,7 +475,9 @@ export const MyDashboard = () => {
         })
         .catch((err) => Prompt({ type: "error", message: err.message }));
     } else {
-      searchIrs(null, { query: { userId: user.id } })
+      searchIrs(null, {
+        query: { userId: user.id },
+      })
         .then(({ data, error }) => {
           if (error) {
             return Prompt({
