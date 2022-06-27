@@ -1448,9 +1448,12 @@ const IrInvestigationDetails = () => {
               label="Duration"
               value={elements.find((el) => el.elements === 6)?.value || ""}
               options={[
-                { value: "oneYear", label: "Last one year" },
-                { value: "twoYears", label: "Last two years" },
-                { value: "threeYears", label: "Last three years" },
+                { value: "oneMonth", label: "Last 1 Month" },
+                { value: "threeMonths", label: "Last 3 months" },
+                { value: "sixMonths", label: "Last 6 months" },
+                { value: "oneYear", label: "Last 1 year" },
+                { value: "twoYears", label: "Last 2 years" },
+                { value: "threeYears", label: "Last 3 years" },
               ]}
               setValue={(n, value) =>
                 setElements((prev) =>
