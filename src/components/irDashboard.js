@@ -387,7 +387,7 @@ export const MyDashboard = () => {
             label: (
               <>
                 Review IR{" "}
-                {inc.irHodAck?.length && (
+                {inc.irHodAck?.length > 0 && (
                   <FaFlag style={{ color: "rgb(21, 164, 40)" }} />
                 )}
                 <FiCheckSquare />
@@ -1224,7 +1224,7 @@ export const QualityDashboard = () => {
       label: (
         <>
           Review IR{" "}
-          {inc.irHodAck?.length && (
+          {inc.irHodAck?.length > 0 && (
             <FaFlag style={{ color: "rgb(21, 164, 40)" }} />
           )}
           <FiCheckSquare />

@@ -869,7 +869,7 @@ const Evidence = ({ parameters }) => {
                 callBack: () =>
                   Prompt({
                     type: "confirmation",
-                    message: `Are you sure you want to remove ${evid.name}?`,
+                    message: `Are you sure you want to remove this evidence?`,
                     callback: () => {
                       deleteEvidence(null, {
                         params: { "{ID}": evid.id },
