@@ -146,9 +146,11 @@ class Print extends Component {
               .map((ir, i) => {
                 const tat = calculateDays(
                   ir,
-                  ir.typeofInci === 8
-                    ? tatConfig.sentinelExcludeWeek
-                    : tatConfig?.excludeWeek
+                  (tatConfig &&
+                    (ir.typeofInci === 8
+                      ? tatConfig.sentinelExcludeWeek
+                      : tatConfig.excludeWeek)) ||
+                    []
                 );
 
                 return (
@@ -668,9 +670,11 @@ const SingleIr = memo(
           countDays(
             startDate,
             endDate,
-            ir.typeofInci === 8
-              ? tatConfig.sentinelExcludeWeek
-              : tatConfig?.excludeWeek || []
+            (tatConfig &&
+              (ir.typeofInci === 8
+                ? tatConfig.sentinelExcludeWeek
+                : tatConfig.excludeWeek)) ||
+              []
           )
         );
       }
@@ -864,7 +868,6 @@ const TatDetails = ({
               : -1
           )
           .map(([status, details], i, arr) => {
-            // const prevFirstDetail = arr[i + 1]?.[1]?.[0];
             const prevFirstDetail = arr[i + 1]?.[1]?.[arr[i + 1][1].length - 1];
             return (
               <tr key={status}>
@@ -902,9 +905,11 @@ const TatDetails = ({
                     ? countDays(
                         new Date(prevFirstDetail.dateTime),
                         new Date(details[details.length - 1]?.dateTime),
-                        ir.typeofInci === 8
-                          ? tatConfig.sentinelExcludeWeek
-                          : tatConfig?.excludeWeek || []
+                        (tatConfig &&
+                          (ir.typeofInci === 8
+                            ? tatConfig.sentinelExcludeWeek
+                            : tatConfig.excludeWeek)) ||
+                          []
                       )
                     : null}
                 </td>
@@ -1171,6 +1176,10 @@ export const QualityDashboard = () => {
   const [assign, setAssign] = useState(null);
   const handlePrint = useReactToPrint({ content: () => printRef.current });
 
+  const { put: updateStatus } = useFetch(
+    defaultEndpoints.incidentReport + "/{ID}"
+  );
+
   const getActions = useCallback((inc) => [
     ...(checkPermission({
       roleId: "incidentManager",
@@ -1243,7 +1252,63 @@ export const QualityDashboard = () => {
     {
       icon: <FaCrosshairs />,
       label: "IR Investigation",
-      callBack: () =>
+      callBack: () => {
+        if (inc.status.toString() !== "4") {
+          return Prompt({
+            type: "confirmation",
+            message:
+              "IR status will be updated as under investigation. Do you wish to start IR investigation?",
+            callback: async () => {
+              const { data: result } = await updateStatus(
+                {
+                  ...inc,
+                  irInvestigator: user.id,
+                  status: 4,
+                  irStatusDetails: [
+                    ...(inc.irStatusDetails || []).map((evt) => ({
+                      ...evt,
+                      id: undefined,
+                    })),
+                    {
+                      userid: user.id,
+                      status: 4,
+                      dateTime: new Date().toISOString(),
+                    },
+                  ],
+                  actionTakens: undefined,
+                  _links: undefined,
+                },
+                { params: { "{ID}": inc.id } }
+              ).catch((err) => {
+                Prompt({
+                  type: "error",
+                  message: err.message,
+                });
+              });
+
+              if (!result?.id) {
+                return Prompt({
+                  type: "error",
+                  message:
+                    result.message ||
+                    "Count not update IR status. Please try again",
+                });
+              }
+              navigate({
+                pathname: `${
+                  paths.incidentDashboard.basePath
+                }/${paths.incidentDashboard.irInvestigation.basePath.replace(
+                  ":irId",
+                  inc.id
+                )}/${
+                  paths.incidentDashboard.irInvestigation.investigation.basePath
+                }`,
+                // search: "?" + createSearchParams({ irId: inc.id }),
+              });
+            },
+          });
+        }
+
         navigate({
           pathname: `${
             paths.incidentDashboard.basePath
@@ -1252,7 +1317,8 @@ export const QualityDashboard = () => {
             inc.id
           )}/${paths.incidentDashboard.irInvestigation.investigation.basePath}`,
           // search: "?" + createSearchParams({ irId: inc.id }),
-        }),
+        });
+      },
     },
     {
       icon: <FaRegStar />,
@@ -1322,9 +1388,11 @@ export const QualityDashboard = () => {
               ).map((ir) => {
                 const tat = calculateDays(
                   ir,
-                  ir.typeofInci === 8
-                    ? tatConfig.sentinelExcludeWeek
-                    : tatConfig?.excludeWeek
+                  (tatConfig &&
+                    (ir.typeofInci === 8
+                      ? tatConfig.sentinelExcludeWeek
+                      : tatConfig.excludeWeek)) ||
+                    []
                 );
 
                 return {

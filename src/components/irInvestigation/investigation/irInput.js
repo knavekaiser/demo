@@ -298,58 +298,62 @@ const SingleInput = ({
         <TableActions
           actions={[
             { label: "View", icon: <ImEye />, callBack: () => setView(true) },
-            {
-              icon: <BsPencilFill />,
-              label: "Edit",
-              callBack: () => {
-                if (input.__type === "recordInput") {
-                  setRecEdit(input);
-                  setRecordInput(true);
-                } else if (input.__type === "reqInput") {
-                  setReqEdit(input);
-                  setRequestInput(true);
-                }
-              },
-            },
-            {
-              label: "Delete",
-              icon: <FaRegTrashAlt />,
-              callBack: () => {
-                Prompt({
-                  type: "confirmation",
-                  message: "Are you sure you want to delete this record?",
-                  callback: () => {
-                    if (input.__type === "recordInput") {
-                      deleteRecord(null, {
-                        params: { "{ID}": input.id },
-                      }).then(({ res }) => {
-                        if (res.status === 204) {
-                          setIr((prev) => ({
-                            ...prev,
-                            recordInput: prev.recordInput.filter(
-                              (rec) => rec.id !== input.id
-                            ),
-                          }));
-                        }
-                      });
-                    } else {
-                      deleteRequest(null, {
-                        params: { "{ID}": input.id },
-                      }).then(({ res }) => {
-                        if (res.status === 204) {
-                          setIr((prev) => ({
-                            ...prev,
-                            reqInput: prev.reqInput.filter(
-                              (rec) => rec.id !== input.id
-                            ),
-                          }));
-                        }
-                      });
-                    }
+            ...(!input.dateTime
+              ? [
+                  {
+                    icon: <BsPencilFill />,
+                    label: "Edit",
+                    callBack: () => {
+                      if (input.__type === "recordInput") {
+                        setRecEdit(input);
+                        setRecordInput(true);
+                      } else if (input.__type === "reqInput") {
+                        setReqEdit(input);
+                        setRequestInput(true);
+                      }
+                    },
                   },
-                });
-              },
-            },
+                  {
+                    label: "Delete",
+                    icon: <FaRegTrashAlt />,
+                    callBack: () => {
+                      Prompt({
+                        type: "confirmation",
+                        message: "Are you sure you want to delete this record?",
+                        callback: () => {
+                          if (input.__type === "recordInput") {
+                            deleteRecord(null, {
+                              params: { "{ID}": input.id },
+                            }).then(({ res }) => {
+                              if (res.status === 204) {
+                                setIr((prev) => ({
+                                  ...prev,
+                                  recordInput: prev.recordInput.filter(
+                                    (rec) => rec.id !== input.id
+                                  ),
+                                }));
+                              }
+                            });
+                          } else {
+                            deleteRequest(null, {
+                              params: { "{ID}": input.id },
+                            }).then(({ res }) => {
+                              if (res.status === 204) {
+                                setIr((prev) => ({
+                                  ...prev,
+                                  reqInput: prev.reqInput.filter(
+                                    (rec) => rec.id !== input.id
+                                  ),
+                                }));
+                              }
+                            });
+                          }
+                        },
+                      });
+                    },
+                  },
+                ]
+              : []),
           ]}
         />
       </tr>
