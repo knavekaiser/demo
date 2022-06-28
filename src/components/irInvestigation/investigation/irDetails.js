@@ -761,9 +761,22 @@ const Notes = ({ notes, parameters }) => {
   const { user } = useContext(SiteContext);
   const { ir, setIr } = useContext(InvestigationContext);
   const [edit, setEdit] = useState(null);
+  const [investigationDetails, setInvestigationDetails] = useState([]);
+
+  const { get: getElements } = useFetch(
+    defaultEndpoints.irInvestigationDetails
+  );
+
   const { remove: deleteNote } = useFetch(
     defaultEndpoints.investigationNotes + "/{ID}"
   );
+  useEffect(() => {
+    getElements().then(({ data }) => {
+      if (data?._embedded.irInvestigationDetails) {
+        setInvestigationDetails(data._embedded.irInvestigationDetails);
+      }
+    });
+  }, []);
   return (
     <div className={s.notesWrapper}>
       <ConnectForm>
@@ -843,32 +856,35 @@ const Notes = ({ notes, parameters }) => {
                   readOnly
                 />
               </div>
-              <div className={s.ipsg}>
-                <section className={s.radio}>
-                  <label>IPSG Breach</label>
-                  <Radio
+              {investigationDetails.find((item) => item.elements === 9)
+                ?.enable && (
+                <div className={s.ipsg}>
+                  <section className={s.radio}>
+                    <label>IPSG Breach</label>
+                    <Radio
+                      register={register}
+                      name="ipsgBreach"
+                      options={[
+                        { label: "Yes", value: true },
+                        { label: "No", value: false },
+                      ]}
+                    />
+                  </section>
+                  <Combobox
+                    label="Select"
+                    name="ipsg"
+                    watch={watch}
                     register={register}
-                    name="ipsgBreach"
+                    setValue={setValue}
                     options={[
-                      { label: "Yes", value: true },
-                      { label: "No", value: false },
+                      {
+                        label: "IPSG 1 patient identification error",
+                        value: "1",
+                      },
                     ]}
                   />
-                </section>
-                <Combobox
-                  label="Select"
-                  name="ipsg"
-                  watch={watch}
-                  register={register}
-                  setValue={setValue}
-                  options={[
-                    {
-                      label: "IPSG 1 patient identification error",
-                      value: "1",
-                    },
-                  ]}
-                />
-              </div>
+                </div>
+              )}
             </>
           );
         }}

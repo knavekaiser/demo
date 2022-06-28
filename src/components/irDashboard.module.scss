@@ -331,6 +331,11 @@ main {
         display: grid;
         grid-template-columns: 1fr 1.5fr 1fr;
         grid-gap: 10px;
+        .response {
+          label {
+            color: $green;
+          }
+        }
         .response,
         p {
           grid-column: 1/-1;

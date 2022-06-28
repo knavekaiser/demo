@@ -1180,58 +1180,62 @@ export const QualityDashboard = () => {
     defaultEndpoints.incidentReport + "/{ID}"
   );
 
-  const getActions = useCallback((inc) => [
-    ...(checkPermission({
-      roleId: "incidentManager",
-      permission: "Assign IRs",
-    }) && [2, 3].includes(+inc.status)
-      ? [
-          {
-            icon: <FaRegUser />,
-            label: +inc.status === 2 ? "Assign IR" : "Re-assign IR",
-            callBack: () => setAssign(inc),
-          },
-        ]
-      : []),
-    ...(+inc.status === 2
-      ? [
-          ...(checkPermission({
-            roleId: ["irInvestigator", "incidentManager"],
-            permission: "Cancel IR",
-          })
-            ? [
-                {
-                  icon: <FaRegTimesCircle />,
-                  label: "Cancel IR",
-                  callBack: () => {},
-                },
-              ]
-            : []),
-          {
-            icon: <FaExternalLinkAlt />,
-            label: "Reportable Incident",
-            callBack: () => {},
-          },
-          {
-            icon: <FaAdjust />,
-            label: "Merge/Un-Merge IR",
-            callBack: () => {},
-          },
-        ]
-      : []),
-    ...(checkPermission({
-      roleId: ["incidentManager", "hod"],
-      permission: "Approve IRs",
-    })
-      ? [
-          {
-            icon: <FiCheckSquare />,
-            label: "IR Approval",
-            callBack: () => {},
-          },
-        ]
-      : []),
-    {
+  const getActions = useCallback((inc) => {
+    const permissions = [];
+
+    if (
+      checkPermission({
+        roleId: "incidentManager",
+        permission: "Assign IRs",
+      }) &&
+      [2, 3].includes(+inc.status)
+    ) {
+      permissions.push({
+        icon: <FaRegUser />,
+        label: +inc.status === 2 ? "Assign IR" : "Re-assign IR",
+        callBack: () => setAssign(inc),
+      });
+    }
+
+    if (+inc.status === 2) {
+      if (
+        checkPermission({
+          roleId: ["irInvestigator", "incidentManager"],
+          permission: "Cancel IR",
+        })
+      ) {
+        permissions.push({
+          icon: <FaRegTimesCircle />,
+          label: "Cancel IR",
+          callBack: () => {},
+        });
+      }
+      permissions.push({
+        icon: <FaExternalLinkAlt />,
+        label: "Reportable Incident",
+        callBack: () => {},
+      });
+      permissions.push({
+        icon: <FaAdjust />,
+        label: "Merge/Un-Merge IR",
+        callBack: () => {},
+      });
+    }
+
+    if (
+      checkPermission({
+        roleId: ["incidentManager", "hod"],
+        permission: "Approve IRs",
+      })
+    ) {
+      permissions.push({
+        icon: <FiCheckSquare />,
+        label: "IR Approval",
+        callBack: () => {},
+      });
+    }
+
+    permissions.push({
       icon: <FaRegFileAlt />,
       label: (
         <>
@@ -1243,13 +1247,15 @@ export const QualityDashboard = () => {
         </>
       ),
       callBack: () => {},
-    },
-    {
+    });
+
+    permissions.push({
       icon: <FaAdjust />,
       label: "IR Combine",
       callBack: () => {},
-    },
-    {
+    });
+
+    const investigationAction = {
       icon: <FaCrosshairs />,
       label: "IR Investigation",
       callBack: () => {
@@ -1319,18 +1325,37 @@ export const QualityDashboard = () => {
           // search: "?" + createSearchParams({ irId: inc.id }),
         });
       },
-    },
-    {
+    };
+    if (
+      checkPermission({
+        roleId: ["incidentManager"],
+      })
+    ) {
+      permissions.push(investigationAction);
+    } else if (
+      checkPermission({
+        roleId: ["irInvestigator"],
+      }) &&
+      inc.status.toString() === "3" &&
+      inc.irInvestigator === user.id
+    ) {
+      permissions.push(investigationAction);
+    }
+
+    permissions.push({
       icon: <FaRegStar />,
       label: "CAPA",
       callBack: () => {},
-    },
-    {
+    });
+
+    permissions.push({
       icon: <svg />,
       label: "IR Closure",
       callBack: () => {},
-    },
-  ]);
+    });
+
+    return permissions;
+  });
 
   const { get: searchIrs, loading } = useFetch(defaultEndpoints.searchIrs);
 

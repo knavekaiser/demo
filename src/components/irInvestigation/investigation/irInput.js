@@ -466,7 +466,7 @@ const RequestInputForm = ({ edit, onSuccess, previous, parameters }) => {
     reset({
       department: edit?.queryToDeptId,
       user: edit?.queryToUserId,
-      irInformation: edit?.irInfo,
+      irInformation: edit?.irInfo || [],
       query: edit?.query,
       copyPrev: edit?.copcopyPrev,
       description: edit?.description || ir.inciDescription,
@@ -514,28 +514,25 @@ const RequestInputForm = ({ edit, onSuccess, previous, parameters }) => {
         control={control}
         name="department"
         label="Department"
-        formOptions={{ reuqried: "Select a Department" }}
+        formOptions={{ required: "Select a Department" }}
         options={parameters.departments}
-        error={errors.department}
       />
       <Select
         control={control}
         name="user"
         label="User"
-        formOptions={{ reuqried: "Select a User" }}
+        formOptions={{ required: "Select a User" }}
         options={
           dept
             ? parameters.users.filter((user) => dept === user.department)
             : parameters.users
         }
-        error={errors.user}
       />
       <Combobox
         label="IR Information"
         name="irInformation"
         watch={watch}
         register={register}
-        formOptions={{ required: "Select IR Information" }}
         setValue={setValue}
         placeholder="Select"
         multiple
@@ -550,7 +547,6 @@ const RequestInputForm = ({ edit, onSuccess, previous, parameters }) => {
           { value: "personAff", label: "Person Affected" },
           { value: "categoryTemplate", label: "Category Template" },
         ]}
-        errors={errors.irInformation}
       />
       {irInfo?.length > 0 && (
         <section className={s.descriptions}>
