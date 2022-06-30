@@ -41,7 +41,7 @@ export default function Categories() {
 
   useEffect(() => {
     getCategories()
-      .then((data) => {
+      .then(({ data }) => {
         if (data._embedded?.category) {
           setCategories(data._embedded.category);
           setSelected(data._embedded.category[0]?.id);
@@ -51,7 +51,7 @@ export default function Categories() {
     getFormTemplates({
       isChildRequired: false,
     })
-      .then((data) => {
+      .then(({ data }) => {
         if (data?.success) {
           setFormTemplates(
             data.dataBean.map((template) => ({
@@ -205,7 +205,7 @@ const CategoryForm = ({ edit, onSuccess, clearForm, categories }) => {
         }
 
         (edit ? updateCategory : postCategory)(data)
-          .then((data) => {
+          .then(({ data }) => {
             if (data.name) {
               onSuccess(data);
               reset();
@@ -600,7 +600,7 @@ export const ReportableForm = ({
   );
 
   useEffect(() => {
-    getReportables().then((data) => {
+    getReportables().then(({ data }) => {
       const _parameters = { ...parameters };
       if (data.id) {
         _parameters.reportTo = data.twoFieldMasterDetails.map((item) => ({
@@ -723,7 +723,7 @@ const ReportableInlineForm = ({
 
   useEffect(() => {
     getReportTo()
-      .then((data) => {
+      .then(({ data }) => {
         if (data.id) {
           setReportTo(
             data.twoFieldMasterDetails
@@ -755,7 +755,7 @@ const ReportableInlineForm = ({
           return;
         }
         addReportable({ ...data, subCategory: { id: subCategoryId } })
-          .then((data) => {
+          .then(({ data }) => {
             if (data.id) {
               onSuccess(data);
             }

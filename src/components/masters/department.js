@@ -42,7 +42,7 @@ export default function Department() {
 
   useEffect(() => {
     getDepartments()
-      .then((data) => {
+      .then(({ data }) => {
         if (data._embedded?.department) {
           setDepartments(data._embedded.department);
         }
@@ -141,7 +141,7 @@ const DepartmentForm = ({ edit, onSuccess, clearForm, departments }) => {
           return;
         }
         (edit ? updateDepartment : postDepartment)(data)
-          .then((data) => {
+          .then(({ data }) => {
             if (data.name) {
               onSuccess(data);
               reset();

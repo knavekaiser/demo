@@ -345,21 +345,23 @@ testParent({
   ui: <Departments />,
   allRenderTextMatch: "NeurologyGynaecology",
   data: {
-    _embedded: {
-      department: [
-        {
-          id: 1,
-          name: "Cardiology",
-        },
-        {
-          id: 2,
-          name: "Neurology",
-        },
-        {
-          id: 4,
-          name: "Gynaecology",
-        },
-      ],
+    data: {
+      _embedded: {
+        department: [
+          {
+            id: 1,
+            name: "Cardiology",
+          },
+          {
+            id: 2,
+            name: "Neurology",
+          },
+          {
+            id: 4,
+            name: "Gynaecology",
+          },
+        ],
+      },
     },
   },
   addConflictValue: "Cardiology",
@@ -381,68 +383,70 @@ testParentChild({
   },
   ui: <Categories />,
   data: {
-    _embedded: {
-      category: [
-        {
-          id: 4,
-          name: "Medication Error",
-          subCategorys: [
-            {
-              id: 12,
-              name: "Department3",
-              template: 45,
-              sentinel: true,
-              reportStatus: false,
-              status: false,
-              reportable: [],
-            },
-            {
-              id: 39,
-              name: "asdgasd",
-              template: 234,
-              sentinel: true,
-              reportStatus: false,
-              status: true,
-              reportable: [],
-            },
-            {
-              id: 18,
-              name: "Critical 45",
-              template: 454,
-              sentinel: true,
-              reportStatus: false,
-              status: true,
-              reportable: [
-                {
-                  id: 16,
-                  reporting_instructions: "asdh asdhgasdh asdh",
-                  report_to: 23,
-                },
-                {
-                  id: 14,
-                  reporting_instructions: "asdh asdhgasdh asdhasd ghasdhg",
-                  report_to: 22,
-                },
-                {
-                  id: 15,
-                  reporting_instructions: "asdh asdhgasdh asdh",
-                  report_to: 24,
-                },
-                {
-                  id: 13,
-                  reporting_instructions: "asdh asdhgasdh asdh",
-                  report_to: 25,
-                },
-              ],
-            },
-          ],
-        },
-        {
-          id: 5,
-          name: "category 2",
-          subCategorys: [],
-        },
-      ],
+    data: {
+      _embedded: {
+        category: [
+          {
+            id: 4,
+            name: "Medication Error",
+            subCategorys: [
+              {
+                id: 12,
+                name: "Department3",
+                template: 45,
+                sentinel: true,
+                reportStatus: false,
+                status: false,
+                reportable: [],
+              },
+              {
+                id: 39,
+                name: "asdgasd",
+                template: 234,
+                sentinel: true,
+                reportStatus: false,
+                status: true,
+                reportable: [],
+              },
+              {
+                id: 18,
+                name: "Critical 45",
+                template: 454,
+                sentinel: true,
+                reportStatus: false,
+                status: true,
+                reportable: [
+                  {
+                    id: 16,
+                    reporting_instructions: "asdh asdhgasdh asdh",
+                    report_to: 23,
+                  },
+                  {
+                    id: 14,
+                    reporting_instructions: "asdh asdhgasdh asdhasd ghasdhg",
+                    report_to: 22,
+                  },
+                  {
+                    id: 15,
+                    reporting_instructions: "asdh asdhgasdh asdh",
+                    report_to: 24,
+                  },
+                  {
+                    id: 13,
+                    reporting_instructions: "asdh asdhgasdh asdh",
+                    report_to: 25,
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            id: 5,
+            name: "category 2",
+            subCategorys: [],
+          },
+        ],
+      },
     },
   },
   allRenderTextMatch: "Medication Errorcategory 2",
@@ -589,32 +593,34 @@ testParentChild({
   },
   ui: <ContributingFactor />,
   data: {
-    _embedded: {
-      contributingFactors: [
-        {
-          id: 4,
-          name: "Parent 1",
-          contributingFactorDetails: [
-            {
-              id: 12,
-              name: "Department3",
-            },
-            {
-              id: 39,
-              name: "asdgasd",
-            },
-            {
-              id: 18,
-              name: "Critical 45",
-            },
-          ],
-        },
-        {
-          id: 5,
-          name: "Parent 2",
-          contributingFactorDetails: [],
-        },
-      ],
+    data: {
+      _embedded: {
+        contributingFactors: [
+          {
+            id: 4,
+            name: "Parent 1",
+            contributingFactorDetails: [
+              {
+                id: 12,
+                name: "Department3",
+              },
+              {
+                id: 39,
+                name: "asdgasd",
+              },
+              {
+                id: 18,
+                name: "Critical 45",
+              },
+            ],
+          },
+          {
+            id: 5,
+            name: "Parent 2",
+            contributingFactorDetails: [],
+          },
+        ],
+      },
     },
   },
   allRenderTextMatch: "Parent 1Parent 2",
@@ -627,55 +633,57 @@ testParent({
   ui: <Location />,
   allRenderTextMatch: "Front OfficeLaboratoryICU #2",
   data: {
-    _embedded: {
-      location: [
+    data: {
+      _embedded: {
+        location: [
+          {
+            id: 2,
+            code: 0,
+            name: "Front Office",
+            locationType: 32,
+            status: true,
+          },
+          {
+            id: 3,
+            code: 0,
+            name: "ICU #2",
+            locationType: 13,
+            status: true,
+          },
+          {
+            id: 4,
+            code: 0,
+            name: "General Ward #2",
+            locationType: 13,
+            status: true,
+          },
+        ],
+      },
+      id: 6,
+      name: "Location Type",
+      twoFieldMasterDetails: [
         {
-          id: 2,
-          code: 0,
-          name: "Front Office",
-          locationType: 32,
-          status: true,
+          id: 13,
+          name: "Type 1",
+          showToggle: true,
         },
         {
-          id: 3,
-          code: 0,
-          name: "ICU #2",
-          locationType: 13,
-          status: true,
+          id: 14,
+          name: "Type 2",
+          showToggle: true,
         },
         {
-          id: 4,
-          code: 0,
-          name: "General Ward #2",
-          locationType: 13,
-          status: true,
+          id: 15,
+          name: "Type 3",
+          showToggle: true,
+        },
+        {
+          id: 32,
+          name: "Laboratory",
+          showToggle: true,
         },
       ],
     },
-    id: 6,
-    name: "Location Type",
-    twoFieldMasterDetails: [
-      {
-        id: 13,
-        name: "Type 1",
-        showToggle: true,
-      },
-      {
-        id: 14,
-        name: "Type 2",
-        showToggle: true,
-      },
-      {
-        id: 15,
-        name: "Type 3",
-        showToggle: true,
-      },
-      {
-        id: 32,
-        name: "Laboratory",
-        showToggle: true,
-      },
-    ],
   },
   addConflictValue: "Front Office",
   inputSelector: `input[name]`,
@@ -686,43 +694,45 @@ testParent({
 });
 
 const personAffectedData = {
-  _embedded: {
-    personAffected: [
-      {
-        pa_id: 1,
-        name: "Person 1",
-        show: true,
-        personAffectedDetails: [
-          {
-            id: 2,
-            name: "Season",
-            show: true,
-          },
-          {
-            id: 3,
-            name: "Age",
-            show: true,
-          },
-          {
-            id: 4,
-            name: "Gender",
-            show: true,
-          },
-        ],
-      },
-      {
-        pa_id: 5,
-        name: "Person 2",
-        show: true,
-        personAffectedDetails: [
-          {
-            id: 6,
-            name: "Medical",
-            show: false,
-          },
-        ],
-      },
-    ],
+  data: {
+    _embedded: {
+      personAffected: [
+        {
+          pa_id: 1,
+          name: "Person 1",
+          show: true,
+          personAffectedDetails: [
+            {
+              id: 2,
+              name: "Season",
+              show: true,
+            },
+            {
+              id: 3,
+              name: "Age",
+              show: true,
+            },
+            {
+              id: 4,
+              name: "Gender",
+              show: true,
+            },
+          ],
+        },
+        {
+          pa_id: 5,
+          name: "Person 2",
+          show: true,
+          personAffectedDetails: [
+            {
+              id: 6,
+              name: "Medical",
+              show: false,
+            },
+          ],
+        },
+      ],
+    },
   },
 };
 testParentChild({
@@ -746,56 +756,58 @@ testParent({
   ui: <Ram />,
   allRenderTextMatch: "Most Likely3857",
   data: {
-    _embedded: {
-      riskAssement: [
+    data: {
+      _embedded: {
+        riskAssement: [
+          {
+            id: 17,
+            likelihood: 20,
+            serverity: 40,
+            riskscore: 5,
+            riskstatus: 8,
+            color: "2",
+            template: null,
+            status: true,
+            show: false,
+          },
+          {
+            id: 18,
+            likelihood: 35,
+            serverity: 38,
+            riskscore: 5,
+            riskstatus: 7,
+            color: "4",
+            template: null,
+            status: true,
+            show: false,
+          },
+        ],
+      },
+      id: 9,
+      name: "Likelihood",
+      twoFieldMasterDetails: [
         {
-          id: 17,
-          likelihood: 20,
-          serverity: 40,
-          riskscore: 5,
-          riskstatus: 8,
-          color: "2",
-          template: null,
-          status: true,
-          show: false,
+          id: 20,
+          name: "likely",
+          showToggle: true,
         },
         {
-          id: 18,
-          likelihood: 35,
-          serverity: 38,
-          riskscore: 5,
-          riskstatus: 7,
-          color: "4",
-          template: null,
-          status: true,
-          show: false,
+          id: 21,
+          name: "unlikely",
+          showToggle: true,
+        },
+        {
+          id: 35,
+          name: "Most Likely",
+          showToggle: true,
+        },
+        {
+          id: 50,
+          name: "Most unlikely",
+          showToggle: true,
         },
       ],
     },
-    id: 9,
-    name: "Likelihood",
-    twoFieldMasterDetails: [
-      {
-        id: 20,
-        name: "likely",
-        showToggle: true,
-      },
-      {
-        id: 21,
-        name: "unlikely",
-        showToggle: true,
-      },
-      {
-        id: 35,
-        name: "Most Likely",
-        showToggle: true,
-      },
-      {
-        id: 50,
-        name: "Most unlikely",
-        showToggle: true,
-      },
-    ],
   },
   addConflictValue: "",
   inputSelector: `input[name]`,
@@ -816,32 +828,34 @@ testParentChild({
   },
   ui: <Rca />,
   data: {
-    _embedded: {
-      rca: [
-        {
-          id: 4,
-          name: "Parent 1",
-          rcaCauses: [
-            {
-              id: 12,
-              name: "Department3",
-            },
-            {
-              id: 39,
-              name: "asdgasd",
-            },
-            {
-              id: 18,
-              name: "Critical 45",
-            },
-          ],
-        },
-        {
-          id: 5,
-          name: "Parent 2",
-          rcaCauses: [],
-        },
-      ],
+    data: {
+      _embedded: {
+        rca: [
+          {
+            id: 4,
+            name: "Parent 1",
+            rcaCauses: [
+              {
+                id: 12,
+                name: "Department3",
+              },
+              {
+                id: 39,
+                name: "asdgasd",
+              },
+              {
+                id: 18,
+                name: "Critical 45",
+              },
+            ],
+          },
+          {
+            id: 5,
+            name: "Parent 2",
+            rcaCauses: [],
+          },
+        ],
+      },
     },
   },
   allRenderTextMatch: "Parent 1Parent 2",
@@ -859,32 +873,34 @@ testParentChild({
   },
   ui: <TwoFieldMaster />,
   data: {
-    _embedded: {
-      twoFieldMaster: [
-        {
-          id: 4,
-          name: "Parent 1",
-          twoFieldMasterDetails: [
-            {
-              id: 12,
-              name: "Department3",
-            },
-            {
-              id: 39,
-              name: "asdgasd",
-            },
-            {
-              id: 18,
-              name: "Critical 45",
-            },
-          ],
-        },
-        {
-          id: 5,
-          name: "Parent 2",
-          twoFieldMasterDetails: [],
-        },
-      ],
+    data: {
+      _embedded: {
+        twoFieldMaster: [
+          {
+            id: 4,
+            name: "Parent 1",
+            twoFieldMasterDetails: [
+              {
+                id: 12,
+                name: "Department3",
+              },
+              {
+                id: 39,
+                name: "asdgasd",
+              },
+              {
+                id: 18,
+                name: "Critical 45",
+              },
+            ],
+          },
+          {
+            id: 5,
+            name: "Parent 2",
+            twoFieldMasterDetails: [],
+          },
+        ],
+      },
     },
   },
   allRenderTextMatch: "Parent 1Parent 2",
@@ -892,60 +908,62 @@ testParentChild({
 });
 
 const userData = {
-  _embedded: {
-    user: [
-      {
-        id: 9,
-        name: "Sunny",
-        gender: "male",
-        dob: "1996-10-03T00:00:00.000+05:30",
-        employeeId: "13145",
-        contact: "9955414157",
-        email: "abc@abc.com",
-        department: 5,
-        role: "incidentReporter,irInvestigator",
-        password: "1234",
-      },
-      {
-        id: 10,
-        name: "Suresh Mallela",
-        gender: "male",
-        dob: "1998-01-04T00:00:00.000+05:30",
-        employeeId: "53535",
-        contact: "9988761616",
-        email: "abc1@abc.com",
-        department: 1,
-        role: "irInvestigator,incidentReporter",
-        password: "1234",
-      },
-      {
-        id: 11,
-        name: "Vishnu Reddy",
-        gender: "male",
-        dob: "1995-10-04T00:00:00.000+05:30",
-        employeeId: "1234",
-        contact: "997766518",
-        email: "abc@@abc.com",
-        department: 2,
-        role: "incidentReporter",
-        password: "71717",
-      },
-    ],
-    department: [
-      {
-        id: 1,
-        name: "Cardiology",
-      },
-      {
-        id: 2,
-        name: "Neurology",
-      },
+  data: {
+    _embedded: {
+      user: [
+        {
+          id: 9,
+          name: "Sunny",
+          gender: "male",
+          dob: "1996-10-03T00:00:00.000+05:30",
+          employeeId: "13145",
+          contact: "9955414157",
+          email: "abc@abc.com",
+          department: 5,
+          role: "incidentReporter,irInvestigator",
+          password: "1234",
+        },
+        {
+          id: 10,
+          name: "Suresh Mallela",
+          gender: "male",
+          dob: "1998-01-04T00:00:00.000+05:30",
+          employeeId: "53535",
+          contact: "9988761616",
+          email: "abc1@abc.com",
+          department: 1,
+          role: "irInvestigator,incidentReporter",
+          password: "1234",
+        },
+        {
+          id: 11,
+          name: "Vishnu Reddy",
+          gender: "male",
+          dob: "1995-10-04T00:00:00.000+05:30",
+          employeeId: "1234",
+          contact: "997766518",
+          email: "abc@@abc.com",
+          department: 2,
+          role: "incidentReporter",
+          password: "71717",
+        },
+      ],
+      department: [
+        {
+          id: 1,
+          name: "Cardiology",
+        },
+        {
+          id: 2,
+          name: "Neurology",
+        },
 
-      {
-        id: 5,
-        name: "Paediatrics",
-      },
-    ],
+        {
+          id: 5,
+          name: "Paediatrics",
+        },
+      ],
+    },
   },
 };
 testParent({
@@ -990,7 +1008,7 @@ describe("User Master more", () => {
     });
   });
 
-  test("Search for user", async () => {
+  test("Search for user success", async () => {
     const input = document.querySelector("table input");
 
     setMockFetch(userData);
@@ -1001,11 +1019,11 @@ describe("User Master more", () => {
 
     const optionOne = document.querySelector(`.modal .options li`);
 
-    await act(async () => {
-      await userEvent.click(optionOne);
-    });
+    // await act(async () => {
+    //   await userEvent.click(optionOne);
+    // });
   });
-  test("Search for user", async () => {
+  test("Search for user fail", async () => {
     const input = document.querySelector("table input");
 
     setMockFailFetch();
@@ -1021,7 +1039,7 @@ describe("User Master more", () => {
     });
   });
 
-  test("Search for email", async () => {
+  test("Search for email fail", async () => {
     const input = document.querySelector(`input[name="email"]`);
 
     await act(async () => {
@@ -1030,12 +1048,12 @@ describe("User Master more", () => {
 
     const optionOne = document.querySelector(`.modal .options li`);
 
-    await act(async () => {
-      await userEvent.click(optionOne);
-    });
+    // await act(async () => {
+    //   await userEvent.click(optionOne);
+    // });
   });
 
-  test("Search for email", async () => {
+  test("Search for email success", async () => {
     const input = document.querySelector(`input[name="email"]`);
 
     setMockFetch(userData);

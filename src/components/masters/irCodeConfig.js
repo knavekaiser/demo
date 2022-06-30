@@ -59,7 +59,7 @@ export default function IrCodeConfig() {
   }, [reseed]);
   useEffect(() => {
     getSequence()
-      .then((data) => {
+      .then(({ data }) => {
         if (data._embedded.sequence) {
           const sequence = data._embedded.sequence[0].sequence
             .split(",")
@@ -112,7 +112,7 @@ export default function IrCodeConfig() {
               },
               { params: { "{ID}": data.id } }
             )
-              .then((data) => {
+              .then(({ data }) => {
                 if (data.id) {
                   reset({
                     id: data.id,
