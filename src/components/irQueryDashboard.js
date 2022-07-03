@@ -137,31 +137,10 @@ export const MyDashboard = () => {
     _filters.userId = user.id;
 
     searchIrs(null, { query: _filters })
-      .then((data) => {
-        const _ir = [];
-        data?.data?.forEach((ir) => {
-          ir.reqInput.forEach((req) => {
-            const response = ir.responseIrInput.find(
-              (res) => res.reqId === req.id
-            );
-            _ir.push({
-              irCode: ir.sequence,
-              reportingDate: ir.reportingDate,
-              incident_Date_Time: ir.incident_Date_Time,
-              location: ir.location,
-              inciCateg: ir.inciCateg,
-              inciSubCat: ir.inciSubCat,
-              queryRaisedBy: req.queryRaisedBy,
-              queryDateTime: req.queryDateTime,
-              irId: ir.id,
-              reqId: req.id,
-              query: req.query,
-              typeofInci: ir.typeofInci,
-              ...(response && { response }),
-            });
-          });
-        });
-        setIncidents(_ir);
+      .then(({ data }) => {
+        setIncidents(
+          data.map((ir) => ({ ...ir, response: ir.responseIrInput[0] }))
+        );
       })
       .catch((err) => Prompt({ type: "error", message: err.message }));
   }, [location.search]);
@@ -283,7 +262,7 @@ const SingleIr = memo(
           //   setFocus && setFocus(ir.id);
           // }}
         >
-          <td className={s.sequence}>{ir.irCode}</td>
+          <td className={s.sequence}>{ir.sequence}</td>
           <td>
             <Moment format="DD/MM/YYYY hh:mm">{ir.reportingDate}</Moment>
           </td>
@@ -336,7 +315,7 @@ const SingleIr = memo(
             onSuccess={(newRes) => {
               setIncidents((prev) =>
                 prev.map((ir) =>
-                  ir.reqId === newRes.reqId
+                  ir.reqInputId === newRes.reqId
                     ? {
                         ...ir,
                         response: newRes,
@@ -438,8 +417,8 @@ const ResponseForm = ({ ir, parameters, setShowResForm, onSuccess }) => {
 
           saveResponse({
             ...values,
-            reqId: ir.reqId,
-            incidentReport: { id: ir.irId },
+            reqId: ir.reqInputId,
+            incidentReport: { id: ir.id },
           })
             .then(({ data }) => {
               if (data?.id) {

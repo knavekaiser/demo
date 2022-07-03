@@ -5,6 +5,10 @@ const permissions = [
     permissions: {
       "Access and update all IRs": false,
       "Quality Dashboard": false,
+      Print: {
+        "Reported IR": false,
+        "IR Closure Screen": false,
+      },
       "Cancel IR": false,
       "Assign IRs": false,
       "Merge IRs": false,
@@ -17,10 +21,6 @@ const permissions = [
         "Monthly IR Reports": false,
         "Injury Reports": false,
         "CAPA Reports": false,
-      },
-      Print: {
-        "Reported IR": false,
-        "IR Closure Screen": false,
       },
     },
   },
