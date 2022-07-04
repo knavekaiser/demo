@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useContext, useRef } from "react";
 import s from "./style.module.scss";
 import { Box } from "../../incidentReport";
 import { InvestigationContext } from "../InvestigationContext";
-import { SiteContext } from "../../../SiteContext";
+import { SiteContext, IrDashboardContext } from "../../../SiteContext";
 import {
   Select,
   Table,
@@ -46,6 +46,7 @@ export const ConnectForm = ({ children }) => {
 const IrDetails = () => {
   const { user } = useContext(SiteContext);
   const { ir, setIr } = useContext(InvestigationContext);
+  const { irInvestigationDetails } = useContext(IrDashboardContext);
   const [parameters, setParameters] = useState({
     severity: [],
     likelihood: [],
@@ -270,14 +271,16 @@ const IrDetails = () => {
             <FaFlag className={s.problem} /> Potential problem areas
           </div>
         </Box>
-        <Box collapsable label="RISK ASSESSMENT">
-          <RiskAssessment
-            methods={methods}
-            investigationDetails={ir.irInvestigation && ir.irInvestigation[0]}
-            parameters={parameters}
-            submitMainForm={submitMainForm}
-          />
-        </Box>
+        {irInvestigationDetails.find((item) => item.id === 7)?.enable && (
+          <Box collapsable label="RISK ASSESSMENT">
+            <RiskAssessment
+              methods={methods}
+              investigationDetails={ir.irInvestigation && ir.irInvestigation[0]}
+              parameters={parameters}
+              submitMainForm={submitMainForm}
+            />
+          </Box>
+        )}
         <Box label="NOTES" collapsable>
           <Notes
             parameters={parameters}
@@ -760,23 +763,12 @@ const EventForm = ({ edit, onSuccess, clearForm }) => {
 const Notes = ({ notes, parameters }) => {
   const { user } = useContext(SiteContext);
   const { ir, setIr } = useContext(InvestigationContext);
+  const { irInvestigationDetails } = useContext(IrDashboardContext);
   const [edit, setEdit] = useState(null);
-  const [investigationDetails, setInvestigationDetails] = useState([]);
-
-  const { get: getElements } = useFetch(
-    defaultEndpoints.irInvestigationDetails
-  );
 
   const { remove: deleteNote } = useFetch(
     defaultEndpoints.investigationNotes + "/{ID}"
   );
-  useEffect(() => {
-    getElements().then(({ data }) => {
-      if (data?._embedded.irInvestigationDetails) {
-        setInvestigationDetails(data._embedded.irInvestigationDetails);
-      }
-    });
-  }, []);
   return (
     <div className={s.notesWrapper}>
       <ConnectForm>
@@ -808,56 +800,57 @@ const Notes = ({ notes, parameters }) => {
           }
           return (
             <>
-              <div className={s.selfReporting}>
-                <section className={s.radio}>
-                  <label>Self reporting</label>
-                  <Radio
-                    register={register}
-                    name="selfRep"
-                    options={[
-                      { label: "Yes", value: true },
-                      { label: "No", value: false },
-                    ]}
+              {irInvestigationDetails.find((item) => item.id === 8)?.enable && (
+                <div className={s.selfReporting}>
+                  <section className={s.radio}>
+                    <label>Self reporting</label>
+                    <Radio
+                      register={register}
+                      name="selfRep"
+                      options={[
+                        { label: "Yes", value: true },
+                        { label: "No", value: false },
+                      ]}
+                    />
+                  </section>
+                  <Select
+                    control={control}
+                    name="name"
+                    label="Name"
+                    options={parameters.users}
+                    readOnly={selfReporting === "true"}
+                    onChange={(option) => {
+                      setValue("dept", option.department);
+                      setValue(
+                        "designaion",
+                        option.role
+                          .map(
+                            (role) =>
+                              parameters.roles.find((r) => r.value === role)
+                                ?.label || role
+                          )
+                          .join(", ")
+                      );
+                    }}
                   />
-                </section>
-                <Select
-                  control={control}
-                  name="name"
-                  label="Name"
-                  options={parameters.users}
-                  readOnly={selfReporting === "true"}
-                  onChange={(option) => {
-                    setValue("dept", option.department);
-                    setValue(
-                      "designaion",
-                      option.role
-                        .map(
-                          (role) =>
-                            parameters.roles.find((r) => r.value === role)
-                              ?.label || role
-                        )
-                        .join(", ")
-                    );
-                  }}
-                />
-                <Input
-                  label="Department"
-                  {...register("dept")}
-                  value={
-                    parameters.departments.find(
-                      (dpt) => dpt.value.toString() === dept?.toString()
-                    )?.label || ""
-                  }
-                  readOnly
-                />
-                <Input
-                  label="Designation"
-                  {...register("designaion")}
-                  readOnly
-                />
-              </div>
-              {investigationDetails.find((item) => item.elements === 9)
-                ?.enable && (
+                  <Input
+                    label="Department"
+                    {...register("dept")}
+                    value={
+                      parameters.departments.find(
+                        (dpt) => dpt.value.toString() === dept?.toString()
+                      )?.label || ""
+                    }
+                    readOnly
+                  />
+                  <Input
+                    label="Designation"
+                    {...register("designaion")}
+                    readOnly
+                  />
+                </div>
+              )}
+              {irInvestigationDetails.find((item) => item.id === 9)?.enable && (
                 <div className={s.ipsg}>
                   <section className={s.radio}>
                     <label>IPSG Breach</label>

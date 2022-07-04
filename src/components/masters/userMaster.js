@@ -442,36 +442,7 @@ const UserForm = ({
         }}
         error={errors.employeeId}
       />
-      {
-        //   <MobileNumberInput
-        //   name="contact"
-        //   // required={!addFromHis}
-        //   register={register}
-        //   error={errors.contact}
-        //   clearErrors={clearErrors}
-        //   setValue={setValue}
-        //   watch={watch}
-        // />
-      }
       <SearchField
-        // url={defaultEndpoints.users + `?size=10000`}
-        // processData={(data, value) => {
-        //   if (data?._embedded?.user) {
-        //     return data._embedded.user
-        //       .filter((user) =>
-        //         new RegExp(value.replace("+", ""), "i").test(user.contact)
-        //       )
-        //       .map((user) => ({
-        //         value: user.contact,
-        //         label: user.contact,
-        //         data: {
-        //           ...user,
-        //           role: user.role?.split(",") || [],
-        //         },
-        //       }));
-        //   }
-        //   return [];
-        // }}
         data={users.map((user) => ({
           label: user.contact,
           value: user.contact,

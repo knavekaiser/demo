@@ -139,6 +139,15 @@ export const IrDashboardContextProvider = ({ children }) => {
   const [irConfig, setIrConfig] = useState({});
   const [hodApprovalConfig, setHodApprovalConfig] = useState(false);
 
+  // Config
+  const [irInvestigationDetails, setIrInvestigationDetails] = useState([]);
+  const [irScreenDetails, setIrScreenDetails] = useState([]);
+
+  const { get: getIrInvestigationDetails } = useFetch(
+    defaultEndpoints.irInvestigationDetails
+  );
+  const { get: getIrScreenDetails } = useFetch(defaultEndpoints.configirscreen);
+
   const { get: getUsers } = useFetch(`${defaultEndpoints.users}?size=10000`);
   const { get: getCountStatusDetailByState } = useFetch(
     `${defaultEndpoints.countStateDetailByStatus}?status=3`
@@ -267,18 +276,39 @@ export const IrDashboardContextProvider = ({ children }) => {
   }, [parameters]);
   useEffect(async () => {
     if (user && !parametersFetched.current) {
-      Promise.all([getLocations(), getCategories()])
-        .then(async ([{ data: location }, { data: category }]) => {
-          const _parameters = { ...parameters };
-          if (location?._embedded.location) {
-            _parameters.locations = location._embedded.location;
+      Promise.all([
+        getLocations(),
+        getCategories(),
+        getIrInvestigationDetails(),
+        getIrScreenDetails(),
+      ])
+        .then(
+          async ([
+            { data: location },
+            { data: category },
+            { data: irInvestigationDetails },
+            { data: irScreens },
+          ]) => {
+            if (irInvestigationDetails?._embedded?.irInvestigationDetails) {
+              setIrInvestigationDetails(
+                irInvestigationDetails._embedded.irInvestigationDetails
+              );
+            }
+            if (irScreens?._embedded?.configirscreen) {
+              setIrScreenDetails(irScreens._embedded.configirscreen);
+            }
+
+            const _parameters = { ...parameters };
+            if (location?._embedded.location) {
+              _parameters.locations = location._embedded.location;
+            }
+            if (category?._embedded.category) {
+              _parameters.categories = category._embedded.category;
+            }
+            setParameters(_parameters);
+            updateUsers();
           }
-          if (category?._embedded.category) {
-            _parameters.categories = category._embedded.category;
-          }
-          setParameters(_parameters);
-          updateUsers();
-        })
+        )
         .catch((err) => {
           Prompt({
             type: "error",
@@ -377,6 +407,11 @@ export const IrDashboardContextProvider = ({ children }) => {
         dataElements,
         updateHodApproval,
         irConfig,
+
+        irInvestigationDetails,
+        setIrInvestigationDetails,
+        irScreenDetails,
+        setIrScreenDetails,
       }}
     >
       {children}

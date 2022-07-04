@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useContext } from "react";
+import { IrDashboardContext } from "../../SiteContext";
 import {
   FaInfoCircle,
   FaPlus,
@@ -34,20 +35,18 @@ import s from "./config.module.scss";
 
 const IrScreen = () => {
   const { handleSubmit, register, setValue, watch } = useForm();
+  const {
+    irScreenDetails: screens,
+    setIrScreenDetails: setScreens,
+  } = useContext(IrDashboardContext);
   const screenRef = useRef([]);
-  const [screens, setScreens] = useState([]);
   const [update, setUpdate] = useState([]);
-  const { get: getIrScreens } = useFetch(defaultEndpoints.configirscreen);
+
   const { put: updateScreen } = useFetch(
     defaultEndpoints.configirscreen + "/{ID}"
   );
   useEffect(() => {
-    getIrScreens().then((data) => {
-      if (data?._embedded?.configirscreen) {
-        screenRef.current = data._embedded.configirscreen;
-        setScreens(data._embedded.configirscreen);
-      }
-    });
+    screenRef.current = screens;
   }, []);
   useEffect(() => {
     setUpdate(
@@ -1331,22 +1330,17 @@ const AcceptableTat = () => {
 };
 
 const IrInvestigationDetails = () => {
+  const {
+    irInvestigationDetails: elements,
+    setIrInvestigationDetails: setElements,
+  } = useContext(IrDashboardContext);
   const elementRef = useRef([]);
-  const [elements, setElements] = useState([]);
   const [update, setUpdate] = useState([]);
-  const { get: getElements } = useFetch(
-    defaultEndpoints.irInvestigationDetails
-  );
   const { put: updateElement } = useFetch(
     defaultEndpoints.irInvestigationDetails + "/{ID}"
   );
   useEffect(() => {
-    getElements().then((data) => {
-      if (data?._embedded?.irInvestigationDetails) {
-        elementRef.current = data._embedded.irInvestigationDetails;
-        setElements(data._embedded.irInvestigationDetails);
-      }
-    });
+    elementRef.current = elements;
   }, []);
   useEffect(() => {
     setUpdate(

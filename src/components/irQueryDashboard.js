@@ -145,93 +145,98 @@ export const MyDashboard = () => {
       .catch((err) => Prompt({ type: "error", message: err.message }));
   }, [location.search]);
   return (
-    <div key="myDashboard" className={`${s.myDashboard} ${s.queryDashboard}`}>
-      <div className={s.reportCounts}>
-        <ReportCount
-          className="open"
-          label="OPEN IRS"
-          irs={[
-            { label: "My IRs", count: count.myIr },
-            ...((checkPermission({ roleId: "hod" }) && [
-              { label: "Department IRs", count: count.departmentIr },
-            ]) ||
-              []),
-          ]}
-        />
-        <ReportCount
-          className="pending"
-          label="PENDING"
-          irs={[
-            { label: "IR Query", count: 0 },
-            { label: "CAPA Actions", count: 5 },
-            { label: "IR Acknowledgement", count: 5 },
-          ]}
-        />
-        <ReportCount
-          className="closure"
-          label="IR CLOSURE"
-          irs={[
-            { label: "IR Closure", count: 0 },
-            { label: "Addendum", count: 5 },
-            { label: "CAPA Closure", count: 5 },
-          ]}
-        />
-      </div>
-      <Filters
-        onSubmit={(values) => {
-          const _filters = {};
-          for (var field in values) {
-            if (values[field]) {
-              if (values[field] === "self") {
-                _filters.userId = user.id;
+    <>
+      <header>
+        <h3>IR QUERY DASHBOARD</h3>
+      </header>
+      <div key="myDashboard" className={`${s.myDashboard} ${s.queryDashboard}`}>
+        <div className={s.reportCounts}>
+          <ReportCount
+            className="open"
+            label="OPEN IRS"
+            irs={[
+              { label: "My IRs", count: count.myIr },
+              ...((checkPermission({ roleId: "hod" }) && [
+                { label: "Department IRs", count: count.departmentIr },
+              ]) ||
+                []),
+            ]}
+          />
+          <ReportCount
+            className="pending"
+            label="PENDING"
+            irs={[
+              { label: "IR Query", count: 0 },
+              { label: "CAPA Actions", count: 5 },
+              { label: "IR Acknowledgement", count: 5 },
+            ]}
+          />
+          <ReportCount
+            className="closure"
+            label="IR CLOSURE"
+            irs={[
+              { label: "IR Closure", count: 0 },
+              { label: "Addendum", count: 5 },
+              { label: "CAPA Closure", count: 5 },
+            ]}
+          />
+        </div>
+        <Filters
+          onSubmit={(values) => {
+            const _filters = {};
+            for (var field in values) {
+              if (values[field]) {
+                if (values[field] === "self") {
+                  _filters.userId = user.id;
+                }
+                if (values[field] === "department") {
+                  _filters.department = user.department;
+                }
+                _filters[field] = values[field]?.join?.(",") || values[field];
               }
-              if (values[field] === "department") {
-                _filters.department = user.department;
-              }
-              _filters[field] = values[field]?.join?.(",") || values[field];
             }
-          }
-          // delete _filters.irBy;
-          navigate({
-            pathname: location?.pathname,
-            search: `?${createSearchParams(_filters)}`,
-          });
-          // setFilters(_filters);
-        }}
-      />
-      <div className={s.report} />
-      <Table
-        className={s.irQueries}
-        columns={[
-          { label: "IR Code" },
-          { label: "Reporting Date & Time" },
-          { label: "Incident Date & Time" },
-          { label: "Incident Location" },
-          { label: "Category" },
-          { label: "Subcategory" },
-          { label: "Query raised by" },
-          { label: "Query Date Time" },
-          { label: "Actions" },
-        ]}
-        actions
-        loading={loading}
-      >
-        {incidents
-          .sort((a, b) =>
-            new Date(a.queryDateTime) > new Date(b.queryDateTime) ? -1 : 1
-          )
-          .map((inc, i) => (
-            <SingleIr
-              focus={focus}
-              setFocus={setFocus}
-              key={i}
-              ir={inc}
-              parameters={parameters}
-              setIncidents={setIncidents}
-            />
-          ))}
-      </Table>
-    </div>
+            // delete _filters.irBy;
+            navigate({
+              pathname: location?.pathname,
+              search: `?${createSearchParams(_filters)}`,
+            });
+            // setFilters(_filters);
+          }}
+        />
+        <div className={s.report} />
+        <Table
+          className={s.irQueries}
+          columns={[
+            { label: "IR Code" },
+            { label: "Reporting Date & Time" },
+            { label: "Incident Date & Time" },
+            { label: "Incident Location" },
+            { label: "Category" },
+            { label: "Subcategory" },
+            { label: "Query raised by" },
+            { label: "Query Date Time" },
+            { label: "Actions" },
+          ]}
+          actions
+          loading={loading}
+        >
+          {incidents
+            .sort((a, b) =>
+              new Date(a.queryDateTime) > new Date(b.queryDateTime) ? -1 : 1
+            )
+            .map((inc, i) => (
+              <SingleIr
+                focus={focus}
+                setFocus={setFocus}
+                key={i}
+                ir={inc}
+                parameters={parameters}
+                setIncidents={setIncidents}
+              />
+            ))}
+        </Table>
+      </div>
+    </>
   );
 };
 const ReportCount = ({ label, className, irs }) => {

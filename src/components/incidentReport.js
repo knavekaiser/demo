@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useCallback } from "react";
-import { SiteContext } from "../SiteContext";
+import { SiteContext, IrDashboardContext } from "../SiteContext";
 import { FaInfoCircle, FaRegTrashAlt, FaPlus, FaCheck } from "react-icons/fa";
 import { IoClose } from "react-icons/io5";
 import { BiChevronsDown } from "react-icons/bi";
@@ -67,6 +67,7 @@ export const ConnectForm = ({ children }) => {
 };
 export default function IncidentReporting() {
   const { user, endpoints, irTypes } = useContext(SiteContext);
+  const { irScreenDetails } = useContext(IrDashboardContext);
   const location = useLocation();
   const navigate = useNavigate();
   const methods = useForm({ defaultValues: defaultFormValues });
@@ -77,6 +78,7 @@ export default function IncidentReporting() {
   const patientComplaint = methods.watch("patientYesOrNo");
   const uploads = methods.watch("upload");
   const [detailValues, setDetailValues] = useState({});
+  const [allowAnonymous, setAllowAnonymous] = useState(true);
 
   const { post: upload, laoding: uploadingFiles } = useFetch(
     defaultEndpoints.uploadFiles
@@ -108,15 +110,10 @@ export default function IncidentReporting() {
           actionTakens: undefined,
           deptsLookupMultiselect:
             data.deptsLookupMultiselect?.join?.(",") || "",
-          ...(anonymous
-            ? {
-                userId: undefined,
-                department: undefined,
-              }
-            : {
-                userId: user.id,
-                department: user.department,
-              }),
+          ...(anonymous && {
+            userId: undefined,
+            department: undefined,
+          }),
           ...(data.status === 2 && {
             irStatusDetails: [
               {
@@ -183,14 +180,18 @@ export default function IncidentReporting() {
     methods.reset({
       ...defaultFormValues,
       incident_Date_Time: "",
+      userId: user.id,
+      department: user.department,
       headofDepart:
         parameters?.hods?.length === 1 ? parameters.hods[0].value : "",
     });
     setAnonymous(false);
   }, [parameters]);
+
   const witnesses = methods.watch("witness");
   const actions = methods.watch("actionTaken");
   const notifications = methods.watch("notification");
+  const department = methods.watch("department");
 
   const { get: getLocations } = useFetch(
     endpoints?.locations.url || defaultEndpoints.locations,
@@ -239,6 +240,8 @@ export default function IncidentReporting() {
             .map((item) => +item) || [],
       };
       methods.reset(_edit);
+    } else {
+      resetForm();
     }
   }, [edit]);
   useEffect(() => {
@@ -448,27 +451,29 @@ export default function IncidentReporting() {
             punitive measure will be taken against any staff reporting any
             incident.
           </span>
-          <section style={readOnly ? { pointerEvents: "none" } : {}}>
-            <input
-              type="checkbox"
-              id="anonymous"
-              name="anonymous"
-              checked={anonymous}
-              onChange={(e) => {
-                if (!anonymous) {
-                  Prompt({
-                    type: "confirmation",
-                    message:
-                      "This incident will be submitted as Anonymous report. You will not be able to view or track the IR status. Do you wish to continue",
-                    callback: () => setAnonymous(true),
-                  });
-                } else {
-                  setAnonymous(!anonymous);
-                }
-              }}
-            />
-            <label htmlFor="anonymous">Report Anonymously</label>
-          </section>
+          {allowAnonymous && (
+            <section style={readOnly ? { pointerEvents: "none" } : {}}>
+              <input
+                type="checkbox"
+                id="anonymous"
+                name="anonymous"
+                checked={anonymous}
+                onChange={(e) => {
+                  if (!anonymous) {
+                    Prompt({
+                      type: "confirmation",
+                      message:
+                        "This incident will be submitted as Anonymous report. You will not be able to view or track the IR status. Do you wish to continue",
+                      callback: () => setAnonymous(true),
+                    });
+                  } else {
+                    setAnonymous(!anonymous);
+                  }
+                }}
+              />
+              <label htmlFor="anonymous">Report Anonymously</label>
+            </section>
+          )}
         </span>
       </header>
       <FormProvider {...methods}>
@@ -677,47 +682,51 @@ export default function IncidentReporting() {
               <button style={{ display: "none" }}>submit</button>
             </form>
           </Box>
-          <Box label="CONTRIBUTING FACTORS" collapsable={true}>
-            <div className={s.contributingFactor}>
-              <div className={s.placeholder}>Placeholder</div>
-              <input
-                style={{ display: "none" }}
-                {...methods.register("status")}
-              />
-            </div>
-          </Box>
-          <form
-            className={`${s.preventabilityWrapper} ${
-              methods.formState.errors.preventability ? s.err : ""
-            }`}
-            onSubmit={methods.handleSubmit(submitForm)}
-          >
-            <Table
-              className={s.preventability}
-              columns={[{ label: "Preventability of incident" }]}
+          {irScreenDetails.find((el) => el.id === 3)?.enableDisable && (
+            <Box label="CONTRIBUTING FACTORS" collapsable={true}>
+              <div className={s.contributingFactor}>
+                <div className={s.placeholder}>Placeholder</div>
+                <input
+                  style={{ display: "none" }}
+                  {...methods.register("status")}
+                />
+              </div>
+            </Box>
+          )}
+          {irScreenDetails.find((el) => el.id === 2)?.enableDisable && (
+            <form
+              className={`${s.preventabilityWrapper} ${
+                methods.formState.errors.preventability ? s.err : ""
+              }`}
+              onSubmit={methods.handleSubmit(submitForm)}
             >
-              {preventability.map((item) => (
-                <tr key={item.label}>
-                  <td>
-                    <input
-                      id={"preventability" + item.value}
-                      type="radio"
-                      {...methods.register("preventability")}
-                      value={item.value}
-                    />{" "}
-                    <label htmlFor={"preventability" + item.value}>
-                      {item.label}
-                    </label>
-                  </td>
-                </tr>
-              ))}
-            </Table>
-            {methods.formState.errors.preventability && (
-              <span className={s.errMsg}>
-                {methods.formState.errors.preventability.message}
-              </span>
-            )}
-          </form>
+              <Table
+                className={s.preventability}
+                columns={[{ label: "Preventability of incident" }]}
+              >
+                {preventability.map((item) => (
+                  <tr key={item.label}>
+                    <td>
+                      <input
+                        id={"preventability" + item.value}
+                        type="radio"
+                        {...methods.register("preventability")}
+                        value={item.value}
+                      />{" "}
+                      <label htmlFor={"preventability" + item.value}>
+                        {item.label}
+                      </label>
+                    </td>
+                  </tr>
+                ))}
+              </Table>
+              {methods.formState.errors.preventability && (
+                <span className={s.errMsg}>
+                  {methods.formState.errors.preventability.message}
+                </span>
+              )}
+            </form>
+          )}
           <div className={s.tables}>
             <div className={s.actionWrapper}>
               <h4>Immediate Action Taken</h4>
@@ -758,21 +767,26 @@ export default function IncidentReporting() {
                 methods.setValue("upload", files);
               }}
             />
-            <Input
+            <Select
+              readOnly={
+                !irScreenDetails.find((el) => el.id === 4)?.enableDisable
+              }
               label="Incident Reported by"
-              value={!anonymous ? user.name : "Anonymous"}
-              readOnly={true}
+              name="userId"
+              control={methods.control}
+              onChange={(opt) => {
+                methods.setValue("department", opt.department);
+              }}
+              options={parameters?.users}
             />
             {!anonymous && (
               <>
                 <Input
                   label="Department"
                   value={
-                    parameters?.departments?.find((item, i) => {
-                      return (
-                        item.value.toString() === user.department.toString()
-                      );
-                    })?.label || ""
+                    parameters?.departments?.find(
+                      (dept) => dept.value.toString() === department.toString()
+                    )?.label || department
                   }
                   readOnly={true}
                 />
