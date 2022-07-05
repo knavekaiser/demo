@@ -40,6 +40,7 @@ export default {
   countIrByUserId: `${baseApiUrl}/IncidentReport/search/countByUserId`,
   countIrByDepartment: `${baseApiUrl}/IncidentReport/search/countByDepartment`,
   countIrByTat: `${baseApiUrl}/irStatusDetails/search/countByDays`,
+  countAnonymousIr: `${baseApiUrl}/IncidentReport/search/getAnonymousCount`,
 
   typesOfIncident: `${baseApiUrl}/configTypeOfIncident`,
   configTat: `${baseApiUrl}/configAcceptableTAT`,
@@ -66,4 +67,6 @@ export default {
   requestInputs: `${baseApiUrl}/reqInput`,
   responseInputs: `${baseApiUrl}/responseIrInput`,
   irInvestigation: `${baseApiUrl}/irInvestigation`,
+
+  serverDateTime: `${baseApiUrl}/getServerDateTime`,
 };

@@ -110,16 +110,18 @@ export default function IncidentReporting() {
           actionTakens: undefined,
           deptsLookupMultiselect:
             data.deptsLookupMultiselect?.join?.(",") || "",
-          ...(anonymous && {
-            userId: undefined,
-            department: undefined,
-          }),
+          ...(allowAnonymous &&
+            anonymous && {
+              userId: undefined,
+              department: undefined,
+            }),
           ...(data.status === 2 && {
             irStatusDetails: [
               {
                 status: 2,
                 dateTime: new Date().toISOString(),
-                ...(!anonymous && { userid: user.id }),
+                userid: user.id,
+                ...(allowAnonymous && anonymous && { userid: undefined }),
               },
             ],
           }),
@@ -173,7 +175,7 @@ export default function IncidentReporting() {
         postData();
       }
     },
-    [edit, user, anonymous]
+    [edit, user, anonymous, allowAnonymous]
   );
   const resetForm = useCallback(() => {
     setDetailValues({ value: Math.random() });
@@ -210,6 +212,9 @@ export default function IncidentReporting() {
   const { get: getUsers } = useFetch(endpoints?.users?.url || "", {
     his: true,
   });
+  const { get: getAnonymousCount } = useFetch(
+    defaultEndpoints.countAnonymousIr
+  );
 
   useEffect(() => {
     if (location.state?.edit) {
@@ -424,6 +429,53 @@ export default function IncidentReporting() {
       active = false;
     };
   }, []);
+
+  useEffect(() => {
+    const config = irScreenDetails.find((el) => el.id === 5);
+    if (config) {
+      const fullYear = new Date().getFullYear();
+      const month = new Date().getMonth() + 1;
+      const date = new Date().getDate();
+      const day = new Date().getDay();
+
+      let startDate = new Date();
+      let endDate = new Date();
+      switch (config.rulesPeriod) {
+        case "day":
+          // do nothing
+          break;
+        case "week":
+          startDate = `${fullYear}-${month.pad(2)}-${(date - day + 1).pad(2)}`;
+          endDate = `${fullYear}-${month.pad(2)}-${(date - day + 7).pad(2)}`;
+          break;
+        case "month":
+          startDate = new Date(fullYear, month - 1, 1);
+          endDate = new Date(fullYear, month, 0);
+          break;
+        case "year":
+          startDate = new Date(fullYear, 0, 1);
+          endDate = new Date(fullYear, 11, 31);
+          break;
+      }
+
+      getAnonymousCount(null, {
+        query: {
+          fromreportingDate: moment({
+            time: new Date(startDate),
+            format: "YYYY-MM-DD",
+          }),
+          toreportingDate: moment({
+            time: new Date(endDate),
+            format: "YYYY-MM-DD",
+          }),
+        },
+      }).then(({ data: irCount }) => {
+        if (irCount >= config.rulesCount) {
+          setAllowAnonymous(false);
+        }
+      });
+    }
+  }, [irScreenDetails]);
   return (
     <div className={s.container} data-testid="incidentReportingForm">
       <header>

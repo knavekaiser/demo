@@ -14,6 +14,12 @@ Array.prototype.swap = function (oldIndex, newIndex) {
   return this;
 };
 
+Number.prototype.pad = function (l) {
+  let ziros = "";
+  for (let i = 0; i < l; i++) ziros += "0";
+  return ziros.length >= `${this}`.length ? (ziros + this).slice(-l) : this;
+};
+
 function App() {
   const { user } = useContext(SiteContext);
   const navigate = useNavigate();
