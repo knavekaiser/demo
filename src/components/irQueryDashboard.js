@@ -300,7 +300,7 @@ const SingleIr = memo(
             actions={[
               {
                 icon: <FaExternalLinkAlt />,
-                label: "Reponse",
+                label: "Response",
                 callBack: () => setShowResForm(true),
               },
             ]}
@@ -363,7 +363,7 @@ const ResponseForm = ({ ir, parameters, setShowResForm, onSuccess }) => {
   return (
     <div className={s.content}>
       <ul className={s.irDetail}>
-        <li>IR Code: {ir?.irCode}</li>
+        <li>IR Code: {ir?.sequence}</li>
         <li>
           Incident Date & Time:{" "}
           <Moment format="DD/MM/YYYY hh:mm">{ir?.incident_Date_Time}</Moment>
