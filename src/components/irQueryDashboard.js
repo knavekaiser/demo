@@ -156,7 +156,7 @@ export const MyDashboard = () => {
             label="OPEN IRS"
             irs={[
               { label: "My IRs", count: count.myIr },
-              ...((checkPermission({ roleId: "hod" }) && [
+              ...((checkPermission({ roleId: 9 }) && [
                 { label: "Department IRs", count: count.departmentIr },
               ]) ||
                 []),

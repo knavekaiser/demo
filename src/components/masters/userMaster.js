@@ -28,7 +28,7 @@ export default function UserMaster() {
       { label: "Female", value: "female" },
       { label: "Other", value: "other" },
     ],
-    role: permissions.map((p) => ({ value: p.role, label: p.label })),
+    role: permissions.map((p) => ({ value: p.id, label: p.label })),
   });
   const [users, setUsers] = useState([]);
   const [hisUsers, setHisUsers] = useState([]);
@@ -102,7 +102,11 @@ export default function UserMaster() {
           setUsers(
             data._embedded.user.map((user) => ({
               ...user,
-              role: user.role?.split(",").filter((role) => role) || [],
+              role:
+                user.role
+                  ?.split(",")
+                  .map((role) => +role || "")
+                  .filter((role) => role) || [],
             }))
           );
         }
@@ -223,8 +227,8 @@ export default function UserMaster() {
                   (r) =>
                     r.value ===
                     user.role?.sort((a, b) =>
-                      permissions.findIndex((item) => item.role === a) >
-                      permissions.findIndex((item) => item.role === b)
+                      permissions.findIndex((item) => item.id === a) >
+                      permissions.findIndex((item) => item.id === b)
                         ? 1
                         : -1
                     )[0]
@@ -314,7 +318,7 @@ const UserForm = ({
 
   useEffect(() => {
     reset({
-      role: ["incidentReporter"],
+      role: [2],
       ...edit,
       ...(edit?.dob && {
         dob: moment({ time: edit.dob, format: "YYYY-MM-DD" }),
@@ -359,7 +363,10 @@ const UserForm = ({
             if (data.name) {
               onSuccess({
                 ...data,
-                role: data.role.split(",").filter((r) => r),
+                role: data.role
+                  .split(",")
+                  .map((role) => +role)
+                  .filter((r) => r),
               });
               reset();
             }

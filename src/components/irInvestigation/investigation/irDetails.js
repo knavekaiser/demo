@@ -204,7 +204,10 @@ const IrDetails = () => {
             label: user.name,
             value: user.id,
             department: user.department,
-            role: user.role.split(",").filter((item) => item),
+            role: user.role
+              .split(",")
+              .map((role) => +role)
+              .filter((item) => item),
           }));
         }
 

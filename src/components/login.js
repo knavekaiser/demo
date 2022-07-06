@@ -86,7 +86,10 @@ export default function Login() {
             }
             handleUser({
               ...user,
-              role: user.role.split(",").filter((role) => role),
+              role: user.role
+                .split(",")
+                .map((role) => +role)
+                .filter((role) => role),
             });
           }
         });

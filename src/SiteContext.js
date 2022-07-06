@@ -15,7 +15,7 @@ import defaultEndpoints from "./config/endpoints";
 export const SiteContext = createContext();
 export const Provider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [roles, setRoles] = useState(null);
+  const [permissions, setPermissions] = useState(null);
   const [endpoints, setEndpoints] = useState(null);
   const [his, setHis] = useState(false);
   const [irTypes, setIrTypes] = useState([]);
@@ -32,14 +32,21 @@ export const Provider = ({ children }) => {
       if (roleMatch && !permission) {
         return true;
       }
-      const allPermissions = [
-        ...new Set(
-          roles?.reduce((p, a) => [...p, ...(a.permission || [])], [])
-        ),
-      ];
-      return (roleMatch && allPermissions?.includes(permission)) || false;
+      let permissionMatch = false;
+      const allPermissions =
+        permissions?.reduce((p, c) => [...p, ...(c.permissions || [])], []) ||
+        [];
+      if (Array.isArray(permission)) {
+        permissionMatch = allPermissions.find((perm) =>
+          permission.includes(perm.id)
+        )?.enable;
+      } else {
+        permissionMatch = allPermissions.find((perm) => perm.id === permission)
+          ?.enable;
+      }
+      return roleMatch && permissionMatch;
     },
-    [roles, user]
+    [permissions, user]
   );
 
   const logout = useCallback(() => {
@@ -59,7 +66,7 @@ export const Provider = ({ children }) => {
     }
 
     setUser(null);
-    setRoles(null);
+    setPermissions(null);
     setHis(false);
     setEndpoints(null);
     sessionStorage.removeItem("HIS-access-token");
@@ -76,9 +83,9 @@ export const Provider = ({ children }) => {
   }, [user, endpoints]);
 
   useEffect(() => {
-    if (!roles && user) {
+    if (!permissions && user) {
       fetch(
-        defaultEndpoints.userPermissions +
+        defaultEndpoints.rolePermissions +
           `?tenantId=${sessionStorage.getItem("db-schema")}`,
         {
           headers: {
@@ -88,30 +95,54 @@ export const Provider = ({ children }) => {
       )
         .then((res) => res.json())
         .then((data) => {
-          if (data._embedded.userPermission) {
-            setRoles(
-              data._embedded.userPermission
-                .filter((p) => user.role.includes(p.role))
-                .map((role) => ({
-                  ...role,
-                  permission: role.permission.split(",").map((p) => p),
-                }))
-            );
+          if (data?._embedded.rolePermission) {
+            const permissions = data._embedded.rolePermission
+              .filter(({ role: { id: roleId } }) => user.role.includes(roleId))
+              .reduce((p, c) => {
+                let role = p.find((role) => role.id === c.role.id);
+                if (role) {
+                  if (c.permission) {
+                    role.permissions.push({
+                      id: c.id,
+                      permission: c.permission.permission,
+                      permId: c.permission.id,
+                      enable: c.enable,
+                    });
+                  }
+                } else {
+                  role = {
+                    id: c.role.id,
+                    role: c.role.role,
+                    permissions: c.permission
+                      ? [
+                          {
+                            id: c.id,
+                            permission: c.permission.permission,
+                            permId: c.permission.id,
+                            enable: c.enable,
+                          },
+                        ]
+                      : [],
+                  };
+                }
+                return [...p.filter((role) => role.id !== c.role.id), role];
+              }, []);
+            setPermissions(permissions);
           } else {
             alert("Could not fetch permissions");
           }
         })
         .catch((err) => Prompt({ type: "error", message: err.message }));
     }
-  }, [user]);
+  }, [permissions, user]);
   return (
     <SiteContext.Provider
       value={{
         user,
         setUser,
         checkPermission,
-        roles,
-        setRoles,
+        permissions,
+        setPermissions,
         endpoints,
         setEndpoints,
         his,

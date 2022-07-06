@@ -18,8 +18,11 @@ export default {
   personAffecteds: `${baseApiUrl}/personAffected`,
   personAffectedDetails: `${baseApiUrl}/personAffectedDetails`,
   rcaCauses: `${baseApiUrl}/rcaCauses`,
+
   userPermissions: `${baseApiUrl}/userPermission`,
   userPermission_updateByRole: `${baseApiUrl}/userPermission/search/updateByRole`,
+  rolePermissions: `${baseApiUrl}/rolePermission`,
+
   uploadFiles: `${baseApiUrl}/upload-multiple-files`,
   apiUrl: `${baseApiUrl}/apiurls`,
   token: `${baseApiUrl}/oauth/token`,

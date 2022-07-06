@@ -146,9 +146,7 @@ function Dashboard() {
           <BiChevronLeft />
         </button>
         <ul className={s.links}>
-          {checkPermission({
-            roleId: ["incidentManager", "irInvestigator", "incidentReporter"],
-          }) && (
+          {checkPermission({ roleId: [7, 4, 2] }) && (
             <li
               className={`${s.sidebarItem} ${
                 location.pathname.startsWith(paths.incidentReport)
@@ -176,13 +174,11 @@ function Dashboard() {
               </span>
             </Link>
           </li>
-          {checkPermission({
-            roleId: ["incidentManager", "irInvestigator", "incidentReporter"],
-          }) && <SidebarItem_IrDashboard />}
+          {checkPermission({ roleId: [7, 4, 2] }) && (
+            <SidebarItem_IrDashboard />
+          )}
           {
-            //   checkPermission({
-            //   roleId: ["incidentManager", "irInvestigator"],
-            // }) && (
+            //   checkPermission({ roleId: [7, 4] }) && (
             <li
               className={`${s.sidebarItem} ${
                 location.pathname.startsWith(paths.irQueryDashboard)
@@ -199,9 +195,7 @@ function Dashboard() {
             </li>
             // )
           }
-          {checkPermission({
-            roleId: ["incidentManager", "irInvestigator", "incidentReporter"],
-          }) && (
+          {checkPermission({ roleId: [7, 4, 2] }) && (
             <li
               className={`${s.sidebarItem} ${
                 location.pathname.startsWith(paths.capaReport) ? s.active : ""
@@ -215,9 +209,7 @@ function Dashboard() {
               </Link>
             </li>
           )}
-          {checkPermission({
-            roleId: ["incidentManager", "irInvestigator"],
-          }) && (
+          {checkPermission({ roleId: [7, 4] }) && (
             <li
               className={`${s.sidebarItem} ${
                 location.pathname.startsWith(paths.reports) ? s.active : ""
@@ -231,10 +223,7 @@ function Dashboard() {
               </Link>
             </li>
           )}
-          {checkPermission({
-            roleId: "irAdmin",
-            permission: "IR Configuration",
-          }) && (
+          {checkPermission({ roleId: 1, permission: 46 }) && (
             <Accordion
               label=<span className={s.label}>
                 <IrConfigIcon className={s.icon} />{" "}
@@ -265,7 +254,7 @@ function Dashboard() {
               ]}
             />
           )}
-          {checkPermission({ roleId: "irAdmin", permission: "IR Master" }) && (
+          {checkPermission({ roleId: 1, permission: 33 }) && (
             <Accordion
               label=<span className={s.label}>
                 <MastersIcon className={s.icon} />{" "}

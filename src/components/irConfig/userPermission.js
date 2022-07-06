@@ -12,56 +12,111 @@ import { useFetch } from "../../hooks";
 import defaultEndpoints from "../../config/endpoints";
 import s from "./config.module.scss";
 
-const readOnly = [
-  {
-    role: "irAdmin",
-    permissions: ["IR Master", "IR Configuration"],
-  },
-  {
-    role: "incidentReporter",
-    permissions: ["Incident Reporting", "IR Query Dashboard"],
-  },
-  {
-    role: "irInvestigator",
-    permissions: [
-      "Access to view IRs in quality dashboardAssigned IR",
-      "Update IR investigation for assigned IRs",
-      "CAPA Dashboard - Update CAPA for assigned IRs and Re-Assign CAPA activities",
-      "Update CAPA tab for assigned IRs",
-      "Update IR Closure report for Assigned IRs",
-      "Add addendum",
-      "Re-portable IR for Assigned IRs",
-    ],
-  },
-  {
-    role: "incidentManager",
-    permissions: ["Access and update all IRs", "Assign IRs"],
-  },
-];
-
 export default function UserPermission() {
   const permissionRef = useRef(null);
-  const { user, setRoles } = useContext(SiteContext);
+  const { user, setRoles, setPermissions } = useContext(SiteContext);
   const { irConfig } = useContext(IrDashboardContext);
   const [userPermission, setUserPermission] = useState(null);
+  const [updates, setUpdates] = useState([]);
 
-  const { get: getPermissions } = useFetch(defaultEndpoints.userPermissions);
-  const { get: updatePermissions } = useFetch(
-    defaultEndpoints.userPermission_updateByRole
+  const { get: getRolePermission } = useFetch(defaultEndpoints.rolePermissions);
+  const { put: updateRolePermission, loading } = useFetch(
+    defaultEndpoints.rolePermissions + "/{ID}"
   );
 
   const fetchUserPermissions = useCallback(() => {
-    getPermissions().then((data) => {
-      if (data?._embedded?.userPermission) {
-        const _permissions = data._embedded.userPermission.map((item) => ({
-          ...item,
-          permission: item.permission.split(","),
-        }));
-        setUserPermission(_permissions);
-        permissionRef.current = _permissions;
-      }
-    });
+    getRolePermission()
+      .then()
+      .then(({ data }) => {
+        if (data?._embedded.rolePermission) {
+          const permissions = data._embedded.rolePermission.reduce((p, c) => {
+            let role = p.find((role) => role.id === c.role.id);
+            if (role) {
+              if (c.permission) {
+                role.permissions.push({
+                  id: c.id,
+                  permission: c.permission.permission,
+                  permId: c.permission.id,
+                  enable: c.enable,
+                });
+              }
+            } else {
+              role = {
+                id: c.role.id,
+                role: c.role.role,
+                permissions: c.permission
+                  ? [
+                      {
+                        id: c.id,
+                        permission: c.permission.permission,
+                        permId: c.permission.id,
+                        enable: c.enable,
+                      },
+                    ]
+                  : [],
+              };
+            }
+
+            return [...p.filter((role) => role.id !== c.role.id), role];
+          }, []);
+
+          setUserPermission(permissions);
+          setPermissions(
+            permissions.filter((role) => user.role.includes(role.id))
+          );
+          setUpdates([]);
+          permissionRef.current = permissions.reduce(
+            (p, c) => [...p, ...c.permissions],
+            []
+          );
+        }
+      });
   }, []);
+  const handleInputChange = useCallback(
+    ({ roleId, permissionId, readOnly }) => {
+      if (readOnly) return;
+      setUserPermission((prev) =>
+        prev.map((item) => {
+          if (item.id !== roleId) return item;
+          return {
+            ...item,
+            permissions: item.permissions.map((perm) => {
+              if (perm.id !== permissionId) return perm;
+
+              const ref = permissionRef.current.find(
+                (item) => item.id === permissionId
+              );
+
+              setUpdates((prev) => [
+                ...prev.filter((item) => item.id !== permissionId),
+                ...(ref.enable !== !perm.enable
+                  ? [
+                      {
+                        id: permissionId,
+                        role: {
+                          id: roleId,
+                        },
+                        permission: {
+                          id: ref.permId,
+                        },
+                        enable: !perm.enable,
+                      },
+                    ]
+                  : []),
+              ]);
+
+              return {
+                ...perm,
+                enable: !perm.enable,
+              };
+            }),
+          };
+        })
+      );
+    },
+    []
+  );
+
   useEffect(() => {
     fetchUserPermissions();
   }, []);
@@ -79,111 +134,91 @@ export default function UserPermission() {
               return item;
             }
           })
-          .map(({ role, label, permissions }) => (
+          .map(({ id: roleId, role, label, permissions }) => (
             <Box label={label.toUpperCase()} key={role} collapsable>
               <Table columns={[{ label: "Permissions" }]}>
-                {Object.entries(permissions).map(([key, value]) => {
-                  const _permission = userPermission?.find(
-                    (item) => item.role === role
-                  )?.permission;
-                  if (typeof value === "object") {
-                    return (
-                      <tr key={key}>
-                        <td className={s.multipleOptions}>
-                          <p className={s.permissionLabel}>{key}</p>
-                          <div className={s.options}>
-                            {Object.entries(value).map(
-                              ([subKey, subValue], i) => {
-                                const permission = key + subKey;
-                                return (
-                                  <div key={i}>
-                                    <label htmlFor={role + permission}>
-                                      <input
-                                        id={role + permission}
-                                        type="checkbox"
-                                        checked={
-                                          _permission?.includes(permission) ||
-                                          false
-                                        }
-                                        onChange={() => {
-                                          if (
-                                            readOnly
-                                              .find(
-                                                (item) => item.role === role
-                                              )
-                                              ?.permissions?.includes(
-                                                permission
-                                              )
-                                          ) {
-                                            return;
+                {permissions.map(
+                  ({
+                    id: permissionId,
+                    permission,
+                    label,
+                    permissions,
+                    enable,
+                    readOnly,
+                  }) => {
+                    const _permissions = userPermission?.find(
+                      (item) => item.id === roleId
+                    )?.permissions;
+                    if (label) {
+                      return (
+                        <tr key={label}>
+                          <td className={s.multipleOptions}>
+                            <p className={s.permissionLabel}>{label}</p>
+                            <div className={s.options}>
+                              {permissions.map(
+                                ({
+                                  id: permissionId,
+                                  permission,
+                                  enable,
+                                  readOnly,
+                                }) => {
+                                  return (
+                                    <div key={permission}>
+                                      <label htmlFor={roleId + permissionId}>
+                                        <input
+                                          id={roleId + permissionId}
+                                          type="checkbox"
+                                          checked={
+                                            _permissions?.find(
+                                              (item) => item.id === permissionId
+                                            )?.enable || false
                                           }
-                                          setUserPermission((prev) =>
-                                            prev.map((item) => {
-                                              if (item.role !== role)
-                                                return item;
-                                              return {
-                                                ...item,
-                                                permission: _permission?.includes(
-                                                  permission
-                                                )
-                                                  ? item.permission.filter(
-                                                      (p) => p !== permission
-                                                    )
-                                                  : [
-                                                      ...item.permission,
-                                                      permission,
-                                                    ],
-                                              };
+                                          onChange={() =>
+                                            handleInputChange({
+                                              roleId,
+                                              permissionId,
+                                              readOnly,
                                             })
-                                          );
-                                        }}
-                                      />{" "}
-                                      {subKey}
-                                    </label>
-                                  </div>
-                                );
+                                          }
+                                        />{" "}
+                                        {permission}
+                                      </label>
+                                    </div>
+                                  );
+                                }
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    }
+                    return (
+                      <tr key={permission}>
+                        <td>
+                          <label htmlFor={roleId + permissionId}>
+                            <input
+                              id={roleId + permissionId}
+                              type="checkbox"
+                              checked={
+                                _permissions?.find(
+                                  (item) => item.id === permissionId
+                                )?.enable || false
                               }
-                            )}
-                          </div>
+                              onChange={() =>
+                                handleInputChange({
+                                  roleId,
+                                  permissionId,
+                                  readOnly,
+                                })
+                              }
+                            />{" "}
+                            {permission}
+                          </label>
                         </td>
                       </tr>
                     );
                   }
-                  return (
-                    <tr key={key}>
-                      <td>
-                        <label htmlFor={role + key}>
-                          <input
-                            id={role + key}
-                            type="checkbox"
-                            checked={_permission?.includes(key) || false}
-                            onChange={() => {
-                              if (
-                                readOnly
-                                  .find((item) => item.role === role)
-                                  ?.permissions?.includes(key)
-                              ) {
-                                return;
-                              }
-                              setUserPermission((prev) =>
-                                prev.map((item) => {
-                                  if (item.role !== role) return item;
-                                  return {
-                                    ...item,
-                                    permission: _permission?.includes(key)
-                                      ? item.permission.filter((p) => p !== key)
-                                      : [...item.permission, key],
-                                  };
-                                })
-                              );
-                            }}
-                          />{" "}
-                          {key}
-                        </label>
-                      </td>
-                    </tr>
-                  );
-                })}
+                )}
               </Table>
             </Box>
           ))}
@@ -191,51 +226,29 @@ export default function UserPermission() {
       <div className={s.btns}>
         <button
           className="btn wd-100"
+          disabled={loading || updates.length === 0}
           onClick={() => {
-            const updatePending = userPermission.filter(
-              (item) =>
-                !permissionRef.current.find(
-                  (p) => JSON.stringify(p) === JSON.stringify(item)
-                )
-            );
-            if (updatePending.length > 0) {
-              Promise.all(
-                updatePending.map((item) =>
-                  updatePermissions(null, {
-                    query: {
-                      role: item.role,
-                      permission: item.permission.join(","),
-                    },
-                  })
+            Promise.all(
+              updates.map((item) =>
+                updateRolePermission(
+                  { ...item },
+                  { params: { "{ID}": item.id } }
                 )
               )
-                .then((resData) => {
-                  const currentUserUpdate = updatePending.filter((item) =>
-                    user.role.includes(item.role)
-                  );
-                  if (currentUserUpdate.length) {
-                    setRoles((prev) => [
-                      ...prev.filter((prevRole) =>
-                        currentUserUpdate.some(
-                          (newRole) => newRole.role !== prevRole.role
-                        )
-                      ),
-                      ...currentUserUpdate,
-                    ]);
-                  }
-                  fetchUserPermissions();
-                  Prompt({
-                    type: "information",
-                    message: "Permission has been saved.",
-                  });
-                })
-                .catch((err) => {
-                  Prompt({
-                    type: "error",
-                    message: err.message,
-                  });
+            )
+              .then((resData) => {
+                fetchUserPermissions();
+                Prompt({
+                  type: "information",
+                  message: "Permission has been saved.",
                 });
-            }
+              })
+              .catch((err) => {
+                Prompt({
+                  type: "error",
+                  message: err.message,
+                });
+              });
           }}
         >
           Save
