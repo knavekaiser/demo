@@ -242,7 +242,7 @@ const IrInvestigation = () => {
             paths.incidentDashboard.qualityDashboard
           }
         >
-          Bank to IR Dashboard
+          Back to IR Dashboard
         </Link>
       </header>
       <div className={s.summary}>
