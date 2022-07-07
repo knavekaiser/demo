@@ -433,6 +433,9 @@ export default function IncidentReporting() {
   useEffect(() => {
     const config = irScreenDetails.find((el) => el.id === 5);
     if (config) {
+      if (!config.enableDisable) {
+        return setAllowAnonymous(false);
+      }
       const fullYear = new Date().getFullYear();
       const month = new Date().getMonth() + 1;
       const date = new Date().getDate();

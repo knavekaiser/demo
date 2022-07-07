@@ -107,6 +107,7 @@
       }
       .selfReporting,
       .ipsg {
+        max-width: 18rem;
         padding: 10px;
         border: 1px solid $primary-grey;
         .radio {
