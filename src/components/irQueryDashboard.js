@@ -139,7 +139,7 @@ export const MyDashboard = () => {
     searchIrs(null, { query: _filters })
       .then(({ data }) => {
         setIncidents(
-          data.map((ir) => ({ ...ir, response: ir.responseIrInput[0] }))
+          data.map((ir) => ({ ...ir, response: ir.responseIrInput }))
         );
       })
       .catch((err) => Prompt({ type: "error", message: err.message }));

@@ -303,7 +303,10 @@ export default function Login() {
                     user?.id
                       ? {
                           ...user,
-                          role: user.role?.split(",").filter((role) => role),
+                          role: user.role
+                            ?.split(",")
+                            .map((item) => +item)
+                            .filter((role) => role),
                         }
                       : null
                   )
@@ -331,7 +334,10 @@ export default function Login() {
                   return user?.id
                     ? {
                         ...user,
-                        role: user.role?.split(",").filter((role) => role),
+                        role: user.role
+                          ?.split(",")
+                          .map((item) => +item)
+                          .filter((role) => role),
                       }
                     : null;
                 });

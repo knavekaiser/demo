@@ -64,7 +64,6 @@ export const Provider = ({ children }) => {
       //   });
       // })();
     }
-
     setUser(null);
     setPermissions(null);
     setHis(false);
