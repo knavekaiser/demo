@@ -78,7 +78,7 @@ export default function IncidentReporting() {
   const patientComplaint = methods.watch("patientYesOrNo");
   const uploads = methods.watch("upload");
   const [detailValues, setDetailValues] = useState({});
-  const [allowAnonymous, setAllowAnonymous] = useState(true);
+  const [allowAnonymous, setAllowAnonymous] = useState(false);
 
   const { post: upload, laoding: uploadingFiles } = useFetch(
     defaultEndpoints.uploadFiles
@@ -190,6 +190,7 @@ export default function IncidentReporting() {
     setAnonymous(false);
   }, [parameters]);
 
+  const incidentDateTime = methods.watch("incident_Date_Time");
   const witnesses = methods.watch("witness");
   const actions = methods.watch("actionTaken");
   const notifications = methods.watch("notification");
@@ -432,24 +433,29 @@ export default function IncidentReporting() {
 
   useEffect(() => {
     const config = irScreenDetails.find((el) => el.id === 5);
-    if (config) {
+    if (config && incidentDateTime) {
       if (!config.enableDisable) {
         return setAllowAnonymous(false);
       }
-      const fullYear = new Date().getFullYear();
-      const month = new Date().getMonth() + 1;
-      const date = new Date().getDate();
-      const day = new Date().getDay();
+      const fullYear = new Date(incidentDateTime).getFullYear();
+      const month = new Date(incidentDateTime).getMonth() + 1;
+      const date = new Date(incidentDateTime).getDate();
+      const day = new Date(incidentDateTime).getDay();
 
-      let startDate = new Date();
-      let endDate = new Date();
+      let startDate = new Date(incidentDateTime);
+      let endDate = new Date(incidentDateTime);
       switch (config.rulesPeriod) {
         case "day":
           // do nothing
           break;
         case "week":
-          startDate = `${fullYear}-${month.pad(2)}-${(date - day + 1).pad(2)}`;
-          endDate = `${fullYear}-${month.pad(2)}-${(date - day + 7).pad(2)}`;
+          if (day === 0) {
+            startDate = new Date(fullYear, month - 1, date - 6);
+            endDate = new Date(fullYear, month - 1, date);
+          } else {
+            startDate = new Date(fullYear, month - 1, date - day + 1);
+            endDate = new Date(fullYear, month - 1, date - day + 7);
+          }
           break;
         case "month":
           startDate = new Date(fullYear, month - 1, 1);
@@ -473,12 +479,10 @@ export default function IncidentReporting() {
           }),
         },
       }).then(({ data: irCount }) => {
-        if (irCount >= config.rulesCount) {
-          setAllowAnonymous(false);
-        }
+        setAllowAnonymous(irCount < config.rulesCount);
       });
     }
-  }, [irScreenDetails]);
+  }, [incidentDateTime, irScreenDetails]);
   return (
     <div className={s.container} data-testid="incidentReportingForm">
       <header>

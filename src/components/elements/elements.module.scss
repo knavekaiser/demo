@@ -496,6 +496,13 @@
       &.hover {
         background: #eeeeee !important;
       }
+      &.disabled {
+        cursor: default;
+        input {
+          cursor: default;
+        }
+        background: rgb(244, 244, 244);
+      }
     }
     overflow-x: hidden;
     margin: 0 !important;

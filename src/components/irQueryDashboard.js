@@ -427,6 +427,10 @@ const ResponseForm = ({ ir, parameters, setShowResForm, onSuccess }) => {
           })
             .then(({ data }) => {
               if (data?.id) {
+                Prompt({
+                  type: "success",
+                  message: "Response submitted successfully.",
+                });
                 return onSuccess(data);
               }
               Prompt({

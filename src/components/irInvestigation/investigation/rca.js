@@ -54,7 +54,7 @@ const Rca = () => {
     likelihood: [],
     users: [],
     departments: [],
-    roles: permissions.map((p) => ({ value: p.role, label: p.label })),
+    roles: permissions.map((p) => ({ value: p.id, label: p.label })),
     risks: [],
     riskStatus: [],
   });

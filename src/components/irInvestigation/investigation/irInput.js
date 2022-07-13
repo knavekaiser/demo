@@ -298,7 +298,8 @@ const SingleInput = ({
         <TableActions
           actions={[
             { label: "View", icon: <ImEye />, callBack: () => setView(true) },
-            ...(!input.dateTime
+            ...(input.__type === "recordInput" ||
+            (input.__type === "reqInput" && input.response)
               ? [
                   {
                     icon: <BsPencilFill />,
@@ -503,6 +504,10 @@ const RequestInputForm = ({ edit, onSuccess, previous, parameters }) => {
         })
           .then(({ data }) => {
             if (data.id) {
+              Prompt({
+                type: "success",
+                message: `Request submitted successfully.`,
+              });
               return onSuccess(data);
             }
             Prompt({ type: "error", message: data.message });
@@ -697,6 +702,10 @@ const RecordInputForm = ({ edit, parameters, onSuccess }) => {
         })
           .then(({ data }) => {
             if (data?.id) {
+              Prompt({
+                type: "success",
+                message: `Record submitted successfully.`,
+              });
               return onSuccess(data);
             }
             Prompt({
