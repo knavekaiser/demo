@@ -85,7 +85,7 @@ const IrScreen = () => {
                 />
               </td>
               <td>
-                {scr.rulesPeriod ? (
+                {scr.rulesPeriod && scr.enableDisable ? (
                   <span
                     style={{
                       display: "flex",
