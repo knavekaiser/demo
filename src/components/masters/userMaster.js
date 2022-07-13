@@ -359,8 +359,12 @@ const UserForm = ({
             }),
           role: data.role.join(","),
         })
-          .then((data) => {
+          .then(({ data, error }) => {
             if (data.name) {
+              Prompt({
+                type: "success",
+                message: `User successfully ${edit ? "updated" : "added"}.`,
+              });
               onSuccess({
                 ...data,
                 role: data.role
@@ -369,6 +373,14 @@ const UserForm = ({
                   .filter((r) => r),
               });
               reset();
+            } else if (data.cause) {
+              Prompt({
+                type: "error",
+                message:
+                  data.cause.cause?.message ||
+                  data.cause.message ||
+                  data.message,
+              });
             }
           })
           .catch((err) => Prompt({ type: "error", message: err.message }));
@@ -397,11 +409,27 @@ const UserForm = ({
         }}
         error={errors.name}
       />
-      <Input
-        {...register("username", {
+      <SearchField
+        data={users.map((user) => ({
+          label: user.username,
+          value: user.id,
+          data: user,
+        }))}
+        register={register}
+        name="username"
+        formOptions={{
           required: "Please enter a Username",
-        })}
-        placeholder="Enter"
+        }}
+        renderListItem={(item) => <>{item.label}</>}
+        watch={watch}
+        setValue={setValue}
+        onChange={(user) => {
+          if (typeof user === "string") {
+            setValue("username", user);
+          } else {
+            setEdit(user);
+          }
+        }}
         error={errors.username}
       />
       <Combobox
@@ -589,10 +617,7 @@ const UserForm = ({
         error={errors.role}
         clearErrors={clearErrors}
         onChange={({ value }) => {
-          if (
-            value === "incidentManager" &&
-            getValues("role").includes(value)
-          ) {
+          if (value === 7 && getValues("role").includes(value)) {
             setValue(
               "role",
               role?.map((role) => role.value)
