@@ -43,7 +43,8 @@ export default {
   countIrByUserId: `${baseApiUrl}/IncidentReport/search/countByUserId`,
   countIrByDepartment: `${baseApiUrl}/IncidentReport/search/countByDepartment`,
   countIrByTat: `${baseApiUrl}/irStatusDetails/search/countByDays`,
-  countAnonymousIr: `${baseApiUrl}/IncidentReport/search/getAnonymousCount`,
+  // countAnonymousIr: `${baseApiUrl}/IncidentReport/search/getAnonymousCount`,
+  countAnonymousIr: `${baseApiUrl}/getAnonymousCount`,
 
   typesOfIncident: `${baseApiUrl}/configTypeOfIncident`,
   configTat: `${baseApiUrl}/configAcceptableTAT`,
