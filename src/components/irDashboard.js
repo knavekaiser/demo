@@ -287,7 +287,7 @@ function IrDashboard() {
             element={<QualityDashboard />}
           />
         )}
-        {checkPermission({ roleId: 4 }) && (
+        {checkPermission({ roleId: [4, 7] }) && (
           <Route
             path={paths.incidentDashboard.irInvestigation.basePath + "/*"}
             element={<IrInvestigation />}
@@ -1165,7 +1165,7 @@ export const QualityDashboard = () => {
     const permissions = [];
 
     if (
-      checkPermission({ roleId: 7, permission: 61 }) &&
+      checkPermission({ roleId: [7, 4], permission: [61, 69] }) &&
       [2, 3].includes(+inc.status)
     ) {
       permissions.push({

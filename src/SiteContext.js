@@ -275,7 +275,11 @@ export const IrDashboardContextProvider = ({ children }) => {
     const users = await getUsers().then(({ data }) =>
       (data?._embedded?.user || []).map((user) => ({
         ...user,
-        role: user.role?.split(",").filter((r) => r) || [],
+        role:
+          user.role
+            ?.split(",")
+            .map((r) => +r)
+            .filter((r) => r) || [],
       }))
     );
 
