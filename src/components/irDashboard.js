@@ -1298,7 +1298,7 @@ export const QualityDashboard = () => {
       permissions.push(investigationAction);
     } else if (
       checkPermission({ roleId: 4 }) &&
-      inc.status.toString() === "3" &&
+      ["3", "4"].includes(inc.status.toString()) &&
       inc.irInvestigator === user.id
     ) {
       permissions.push(investigationAction);
