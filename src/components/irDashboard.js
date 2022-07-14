@@ -261,10 +261,8 @@ function IrDashboard() {
                               "/" +
                               paths.incidentDashboard.qualityDashboard,
                             search: {
-                              view: user.role.includes("incidentManager")
-                                ? "all"
-                                : "assigned",
-                              ...(user.role.includes("incidentManager")
+                              view: user.role.includes(7) ? "all" : "assigned",
+                              ...(user.role.includes(7)
                                 ? {}
                                 : { irInvestigator: user.id }),
                             },
@@ -925,15 +923,13 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
   const navigate = useNavigate();
   const { user, checkPermission, irTypes } = useContext(SiteContext);
   const { parameters, irConfig } = useContext(IrDashboardContext);
-  const defaultView = user?.role?.includes?.("incidentManager")
-    ? "all"
-    : "assigned";
+  const defaultView = user?.role?.includes?.(7) ? "all" : "assigned";
   const { handleSubmit, register, watch, reset, setValue, getValues } = useForm(
     {
       defaultValues: {
         irBy: "self",
         status: "",
-        view: user?.role?.includes?.("incidentManager") ? "all" : "assigned",
+        view: user?.role?.includes?.(7) ? "all" : "assigned",
       },
     }
   );

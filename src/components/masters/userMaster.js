@@ -611,7 +611,7 @@ const UserForm = ({
         options={
           irConfig.hodAcknowledgement
             ? role
-            : role.filter((role) => role.value !== "hod")
+            : role.filter((role) => role.value !== 9)
         }
         multiple={true}
         error={errors.role}

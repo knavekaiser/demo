@@ -146,7 +146,7 @@ const IrInvestigation = () => {
             _parameters.hods = _users
               .filter(
                 (u) =>
-                  u.role?.includes("hod") &&
+                  u.role?.includes(9) &&
                   u.department.toString() === user.department.toString()
               )
               .map((item) => ({
@@ -176,7 +176,7 @@ const IrInvestigation = () => {
             _parameters.hods = _users
               .filter(
                 (u) =>
-                  u.role?.includes("hod") &&
+                  u.role?.includes(9) &&
                   u.department.toString() === user.department.toString()
               )
               .map((item) => ({
@@ -191,8 +191,7 @@ const IrInvestigation = () => {
           } else {
             _parameters.hods = userDetails
               .filter(
-                (u) =>
-                  u.role.includes("hod") && u.department === user.department
+                (u) => u.role.includes(9) && u.department === user.department
               )
               .map((item) => ({
                 label: item.name,

@@ -488,9 +488,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
   const navigate = useNavigate();
   const { user, checkPermission, irTypes } = useContext(SiteContext);
   const { parameters } = useContext(IrDashboardContext);
-  const defaultView = user?.role?.includes?.("incidentManager")
-    ? "all"
-    : "assigned";
+  const defaultView = user?.role?.includes?.(7) ? "all" : "assigned";
   const {
     handleSubmit,
     register,

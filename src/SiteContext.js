@@ -252,8 +252,8 @@ export const IrDashboardContextProvider = ({ children }) => {
       );
       if (!dataEl) return false;
       return (
-        (dataEl.irMgr && user.role.includes("incidentManager")) ||
-        (dataEl.irInvestigator && user.role.includes("irInvestigator"))
+        (dataEl.irMgr && user.role.includes(7)) ||
+        (dataEl.irInvestigator && user.role.includes(4))
       );
     },
     [dataElements, user]
@@ -293,7 +293,7 @@ export const IrDashboardContextProvider = ({ children }) => {
     }));
 
     _parameters.investigators = users
-      .filter((user) => user.role.includes("irInvestigator"))
+      .filter((user) => user.role.includes(4))
       .map((user) => ({
         label: user.name,
         value: user.id,
