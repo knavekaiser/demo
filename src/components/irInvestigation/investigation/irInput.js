@@ -299,7 +299,7 @@ const SingleInput = ({
           actions={[
             { label: "View", icon: <ImEye />, callBack: () => setView(true) },
             ...(input.__type === "recordInput" ||
-            (input.__type === "reqInput" && input.response)
+            (input.__type === "reqInput" && !input.response)
               ? [
                   {
                     icon: <BsPencilFill />,
