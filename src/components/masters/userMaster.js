@@ -312,9 +312,13 @@ const UserForm = ({
     clearErrors,
   } = useForm();
 
-  const { post: postUser, patch: updateUser, loading } = useFetch(
-    defaultEndpoints.users + `/${edit?.id || ""}`
-  );
+  const {
+    post: postUser,
+    patch: updateUser,
+    loading,
+  } = useFetch(defaultEndpoints.users + `/${edit?.id || ""}`, {
+    validator: { pword: /^.+$/gi },
+  });
 
   useEffect(() => {
     reset({
