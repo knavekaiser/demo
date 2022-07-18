@@ -450,6 +450,14 @@
       }
     }
   }
+  &.readOnly {
+    pointer-events: none;
+    .field {
+      .displayValue {
+        background: #f5f4f4;
+      }
+    }
+  }
   .errMsg {
     color: red !important;
     font-size: 10pt;

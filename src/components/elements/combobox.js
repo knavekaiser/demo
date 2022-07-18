@@ -33,6 +33,7 @@ export const Combobox = ({
   renderValue,
   required,
   value,
+  readOnly,
 }) => {
   const id = useRef(Math.random().toString(36).substr(-8));
   const container = useRef();
@@ -145,7 +146,7 @@ export const Combobox = ({
       data-testid="combobox-container"
       className={`${s.combobox} ${className || ""} ${open ? s.open : ""} ${
         !(Array.isArray(options) && options.length) ? s.noOptions : ""
-      } ${error ? s.err : ""}`}
+      } ${error ? s.err : ""} ${readOnly ? s.readOnly : ""}`}
     >
       {label && (
         <label data-testid="combobox-label">

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef, useContext } from "react";
 import { SiteContext } from "../SiteContext";
 import { Prompt } from "../components/modal";
 import { endpoints as defaultEndpoints } from "../config";
+import { getTenantId } from "../helpers";
 
 const defaultRegex = /^[\-\+.,:@ a-z0-9]+$/gi;
 
@@ -12,7 +13,7 @@ const badCharacters = (payload, defaultRegex, validator = {}) => {
     const [key, value] = arr[i];
     if (!value || typeof value !== "string") continue;
     if (!new RegExp(validator[key] || defaultRegex).test(value)) {
-      result = `${key} contains invalid characters. use Only A-Z 0-9 ,.-:`;
+      result = `${key} contains invalid characters. use Only A-Z 0-9 ,.-:+@`;
       break;
     }
   }
@@ -63,12 +64,10 @@ export const useFetch = (
       if (
         noDbSchema !== true &&
         !his &&
-        sessionStorage.getItem("db-schema") &&
+        getTenantId() &&
         !_url.startsWith(defaultEndpoints.apiUrl)
       ) {
-        _url += `${
-          _url.includes("?") ? "" : "?"
-        }&tenantId=${sessionStorage.getItem("db-schema")}`;
+        _url += `${_url.includes("?") ? "" : "?"}&tenantId=${getTenantId()}`;
       }
       setLoading(true);
       const response = await fetch(_url, {
@@ -82,7 +81,6 @@ export const useFetch = (
               ? {
                   Authorization:
                     "Bearer " + sessionStorage.getItem("access-token"),
-                  // tenantId: sessionStorage.getItem("db-schema") || null,
                 }
               : {
                   SECURITY_TOKEN: sessionStorage.getItem("HIS-access-token"),

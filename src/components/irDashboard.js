@@ -1158,7 +1158,10 @@ export const QualityDashboard = () => {
   const handlePrint = useReactToPrint({ content: () => printRef.current });
 
   const { put: updateStatus } = useFetch(
-    defaultEndpoints.incidentReport + "/{ID}"
+    defaultEndpoints.incidentReport + "/{ID}",
+    {
+      validator: { sequence: /^.+$/gi },
+    }
   );
 
   const getActions = useCallback((inc) => {
@@ -1233,7 +1236,7 @@ export const QualityDashboard = () => {
             message:
               "IR status will be updated as under investigation. Do you wish to start IR investigation?",
             callback: async () => {
-              const { data: result } = await updateStatus(
+              updateStatus(
                 {
                   ...inc,
                   irInvestigator: user.id,
@@ -1253,32 +1256,35 @@ export const QualityDashboard = () => {
                   _links: undefined,
                 },
                 { params: { "{ID}": inc.id } }
-              ).catch((err) => {
-                Prompt({
-                  type: "error",
-                  message: err.message,
+              )
+                .then(({ data: result }) => {
+                  if (!result?.id) {
+                    return Prompt({
+                      type: "error",
+                      message:
+                        result.message ||
+                        "Count not update IR status. Please try again",
+                    });
+                  }
+                  navigate({
+                    pathname: `${
+                      paths.incidentDashboard.basePath
+                    }/${paths.incidentDashboard.irInvestigation.basePath.replace(
+                      ":irId",
+                      inc.id
+                    )}/${
+                      paths.incidentDashboard.irInvestigation.investigation
+                        .basePath
+                    }`,
+                    // search: "?" + createSearchParams({ irId: inc.id }),
+                  });
+                })
+                .catch((err) => {
+                  Prompt({
+                    type: "error",
+                    message: err.message,
+                  });
                 });
-              });
-
-              if (!result?.id) {
-                return Prompt({
-                  type: "error",
-                  message:
-                    result.message ||
-                    "Count not update IR status. Please try again",
-                });
-              }
-              navigate({
-                pathname: `${
-                  paths.incidentDashboard.basePath
-                }/${paths.incidentDashboard.irInvestigation.basePath.replace(
-                  ":irId",
-                  inc.id
-                )}/${
-                  paths.incidentDashboard.irInvestigation.investigation.basePath
-                }`,
-                // search: "?" + createSearchParams({ irId: inc.id }),
-              });
             },
           });
         }

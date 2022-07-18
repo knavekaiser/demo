@@ -1,4 +1,7 @@
-const countDays = (start, end, exclude = []) => {
+import { createCipheriv, createDecipheriv } from "crypto";
+import { appConfig } from "../config";
+
+export const countDays = (start, end, exclude = []) => {
   const days = [];
   start = new Date(new Date(start).setHours(0, 0, 0, 0));
   end = new Date(new Date(end).setHours(0, 0, 0, 0));
@@ -16,10 +19,41 @@ const countDays = (start, end, exclude = []) => {
   return days.length;
 };
 
-const wait = (ms) => {
+export const wait = (ms) => {
   return new Promise((resolve, reject) => {
     setTimeout(() => resolve(), ms);
   });
 };
 
-export { countDays, wait };
+export const encrypt = (data) => {
+  let cipher = createCipheriv(
+    "aes-256-cbc",
+    Buffer.from(appConfig.aes_key),
+    appConfig.iv_key
+  );
+  return Buffer.concat([cipher.update(data), cipher.final()]).toString("hex");
+};
+export const decrypt = (text) => {
+  let decrypted;
+  try {
+    let decipher = createDecipheriv(
+      "aes-256-cbc",
+      Buffer.from(appConfig.aes_key),
+      appConfig.iv_key
+    );
+    decrypted = Buffer.concat([
+      decipher.update(Buffer.from(text, "hex")),
+      decipher.final(),
+    ]).toString();
+  } catch (err) {
+    // do nothing
+  }
+  return decrypted;
+};
+
+export const getTenantId = () => {
+  return decrypt(sessionStorage.getItem("db-schema"));
+};
+export const setTenantId = (id) => {
+  sessionStorage.setItem("db-schema", encrypt(id));
+};

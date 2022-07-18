@@ -11,6 +11,7 @@ import { irStatus } from "./config";
 import { useFetch } from "./hooks";
 import { Prompt } from "./components/modal";
 import defaultEndpoints from "./config/endpoints";
+import { getTenantId } from "./helpers";
 
 export const SiteContext = createContext();
 export const Provider = ({ children }) => {
@@ -72,26 +73,16 @@ export const Provider = ({ children }) => {
     sessionStorage.removeItem("access-token");
     sessionStorage.removeItem("tenant-id");
     sessionStorage.removeItem("tenant-timezone");
-    navigate(
-      `/login${
-        sessionStorage.getItem("db-schema")
-          ? `?tenantId=${sessionStorage.getItem("db-schema")}`
-          : ""
-      }`
-    );
+    navigate(`/login${getTenantId() ? `?tenantId=${getTenantId()}` : ""}`);
   }, [user, endpoints]);
 
   useEffect(() => {
     if (!permissions && user) {
-      fetch(
-        defaultEndpoints.rolePermissions +
-          `?tenantId=${sessionStorage.getItem("db-schema")}`,
-        {
-          headers: {
-            Authorization: "Bearer " + sessionStorage.getItem("access-token"),
-          },
-        }
-      )
+      fetch(defaultEndpoints.rolePermissions + `?tenantId=${getTenantId()}`, {
+        headers: {
+          Authorization: "Bearer " + sessionStorage.getItem("access-token"),
+        },
+      })
         .then((res) => res.json())
         .then((data) => {
           if (data?._embedded.rolePermission) {
@@ -371,11 +362,11 @@ export const IrDashboardContextProvider = ({ children }) => {
                   ...(dashboard === "myDashboard" && {
                     userId: user.id,
                   }),
-                  tenantId: sessionStorage.getItem("db-schema"),
+                  tenantId: getTenantId(),
                 }).toString()}`
               : `${defaultEndpoints.countIrByStatus}?status=${
                   status.id
-                }&tenantId=${sessionStorage.getItem("db-schema")}`,
+                }&tenantId=${getTenantId()}`,
             {
               headers: {
                 Authorization:

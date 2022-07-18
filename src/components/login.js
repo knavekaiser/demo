@@ -16,6 +16,7 @@ import { useFetch } from "../hooks";
 import { appConfig, endpoints as defaultEndpoints, paths } from "../config";
 // import hisEndpoints from "../config/hisEndpoints.js";
 import jwt_decode from "jwt-decode";
+import { getTenantId, setTenantId } from "../helpers";
 
 export default function Login() {
   const { user, setUser, setEndpoints, his, setHis } = useContext(SiteContext);
@@ -27,7 +28,7 @@ export default function Login() {
     defaultEndpoints.searchUserByUsername
   );
   const { get: getEndpoints } = useFetch(
-    defaultEndpoints.apiUrl + `?tenantId=${sessionStorage.getItem("db-schema")}`
+    defaultEndpoints.apiUrl + `?tenantId=${getTenantId()}`
   );
 
   const handleUser = useCallback(
@@ -58,7 +59,8 @@ export default function Login() {
   useEffect(() => {
     const accessToken = sessionStorage.getItem("access-token");
     const hisAccessToken = sessionStorage.getItem("HIS-access-token");
-    if (accessToken) {
+    const tenantId = getTenantId();
+    if (accessToken && tenantId) {
       var decoded = jwt_decode(accessToken);
       if (decoded && new Date() > new Date(decoded.exp)) {
         getUserDetail(null, {
@@ -100,10 +102,7 @@ export default function Login() {
       return;
     }
     if (new URLSearchParams(location.search).get("tenantId")) {
-      sessionStorage.setItem(
-        "db-schema",
-        new URLSearchParams(location.search).get("tenantId")
-      );
+      setTenantId(new URLSearchParams(location.search).get("tenantId"));
     }
   }, []);
   return (
@@ -125,9 +124,7 @@ export default function Login() {
 
               if (!token) {
                 const resp = await fetch(
-                  `${defaultEndpoints.token}?tenantId=${sessionStorage.getItem(
-                    "db-schema"
-                  )}`,
+                  `${defaultEndpoints.token}?tenantId=${getTenantId()}`,
                   {
                     method: "POST",
                     headers: {
