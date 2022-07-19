@@ -473,7 +473,7 @@ const RiskAssessment = ({
             />
             <Input
               label="Risk Category"
-              {...register("riskCateg")}
+              // {...register("riskCateg")}
               value={
                 parameters.riskStatus.find(
                   (item) =>
@@ -494,24 +494,27 @@ const RiskAssessment = ({
               }
               readOnly
             />
-            <section className={s.riskIncluded}>
-              <label>Risk inlcuded in Risk Register</label>
-              <Radio
-                register={register}
-                name="riskIncluded"
-                options={[
-                  { label: "Yes", value: true },
-                  { label: "No", value: false },
-                ]}
+
+            <div className={s.riskId}>
+              <section className={s.riskIncluded}>
+                <label>Risk inlcuded in Risk Register?</label>
+                <Radio
+                  register={register}
+                  name="riskIncluded"
+                  options={[
+                    { label: "Yes", value: true },
+                    { label: "No", value: false },
+                  ]}
+                />
+              </section>
+              <Input
+                label={<>Risk ID {riskIncluded === "true" && "*"}</>}
+                {...register("riskId", {
+                  required: riskIncluded === "true" ? "Enter risk ID" : false,
+                })}
+                error={errors.riskId}
               />
-            </section>
-            <Input
-              label={<>Risk ID {riskIncluded === "true" && "*"}</>}
-              {...register("riskId", {
-                required: riskIncluded === "true" ? "Enter risk ID" : false,
-              })}
-              error={errors.riskId}
-            />
+            </div>
           </div>
         );
       }}
@@ -617,7 +620,7 @@ const Events = ({ events, setEvents }) => {
         .map((ev, i) => (
           <tr key={i}>
             <td className={`handle ${s.handle}`}>
-              <FaEllipsisV /> {ev.no}
+              <FaEllipsisV /> {i + 1}
             </td>
             <td className={s.dscr}>
               <span className={`${s.flag} ${ev.problem ? s.problem : ""}`}>
@@ -723,8 +726,8 @@ const EventForm = ({ edit, onSuccess, clearForm }) => {
         return reset();
       })}
     >
-      <span />
       <Input
+        className={s.detail}
         {...register("details", { required: "Please enter Detail" })}
         error={errors.details}
       />
@@ -969,9 +972,10 @@ const NoteForm = ({ edit, onSuccess, clearForm }) => {
   useEffect(() => {
     reset({
       ...edit,
-      dateTime: edit
-        ? moment({ time: edit.dateTime, format: "YYYY-MM-DDThh:mm" })
-        : "",
+      dateTime: moment({
+        time: edit?.dateTime || new Date(),
+        format: "YYYY-MM-DDThh:mm",
+      }),
     });
   }, [edit]);
 
