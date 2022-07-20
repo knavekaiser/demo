@@ -31,11 +31,13 @@ import { BsPencilFill } from "react-icons/bs";
 import { useFetch } from "../../../hooks";
 import { wait } from "../../../helpers";
 import {
+  paths,
   endpoints as defaultEndpoints,
   permissions,
   riskColors,
 } from "../../../config";
 import { Prompt, Modal } from "../../modal";
+import { useNavigate } from "react-router-dom";
 import { useForm, FormProvider, useFormContext } from "react-hook-form";
 
 export const ConnectForm = ({ children }) => {
@@ -123,6 +125,7 @@ const IrDetails = () => {
   const [events, setEvents] = useState([]);
   const [notes, setNotes] = useState([]);
   const methods = useForm();
+  const navigate = useNavigate();
 
   const { post: saveIrDetail, put: updateIrDetail, savingIrDetail } = useFetch(
     defaultEndpoints.irInvestigation +
@@ -400,7 +403,20 @@ const IrDetails = () => {
           <button
             className="btn secondary wd-100"
             type="button"
-            onClick={() => {}}
+            onClick={() =>
+              navigate(
+                paths.incidentDashboard.basePath +
+                  "/" +
+                  paths.incidentDashboard.qualityDashboard +
+                  "?" +
+                  new URLSearchParams({
+                    view: user.role.includes(7) ? "all" : "assigned",
+                    ...(user.role.includes(7)
+                      ? {}
+                      : { irInvestigator: user.id }),
+                  })
+              )
+            }
           >
             Close
           </button>
@@ -871,7 +887,12 @@ const Notes = ({ notes, setNotes, parameters }) => {
                     readOnly={ipsgBreach === "false"}
                     watch={watch}
                     register={register}
+                    formOptions={{
+                      required:
+                        ipsgBreach === "false" ? false : "Field is required",
+                    }}
                     setValue={setValue}
+                    error={errors.ipsg}
                     options={[
                       {
                         label: "IPSG 1 patient identification error",

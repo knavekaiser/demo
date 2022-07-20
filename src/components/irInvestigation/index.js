@@ -238,7 +238,12 @@ const IrInvestigation = () => {
           to={
             paths.incidentDashboard.basePath +
             "/" +
-            paths.incidentDashboard.qualityDashboard
+            paths.incidentDashboard.qualityDashboard +
+            "?" +
+            new URLSearchParams({
+              view: user.role.includes(7) ? "all" : "assigned",
+              ...(user.role.includes(7) ? {} : { irInvestigator: user.id }),
+            })
           }
         >
           Back to IR Dashboard
