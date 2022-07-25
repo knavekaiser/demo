@@ -110,7 +110,9 @@ export const MyDashboard = () => {
   const [filters, setFilters] = useState({});
   const [focus, setFocus] = useState(null);
 
-  const { get: searchIrs, loading } = useFetch(defaultEndpoints.irQuerySearch);
+  const { get: searchIrs, loading } = useFetch(defaultEndpoints.irQuerySearch, {
+    validator: { irCode: /^.+$/gi },
+  });
 
   useEffect(() => {
     setDashboard("myDashboard");
