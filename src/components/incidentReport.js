@@ -290,7 +290,10 @@ export default function IncidentReporting() {
             (user) => {
               user.role = Array.isArray(user.role)
                 ? user.role
-                : user.role?.split(",") || [];
+                : user.role
+                    ?.split(",")
+                    .map((r) => +r)
+                    .filter((r) => r) || [];
               return user;
             }
           );

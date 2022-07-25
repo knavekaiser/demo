@@ -309,7 +309,9 @@ export const MyDashboard = () => {
   const [filters, setFilters] = useState({});
   const [focus, setFocus] = useState(null);
 
-  const { get: searchIrs, loading } = useFetch(defaultEndpoints.searchIrs);
+  const { get: searchIrs, loading } = useFetch(defaultEndpoints.searchIrs, {
+    validator: { sequence: /^.+$/gi },
+  });
   const { remove: deleteIr } = useFetch(
     defaultEndpoints.incidentReport + "/" + "{ID}"
   );
@@ -1325,7 +1327,9 @@ export const QualityDashboard = () => {
     return permissions;
   });
 
-  const { get: searchIrs, loading } = useFetch(defaultEndpoints.searchIrs);
+  const { get: searchIrs, loading } = useFetch(defaultEndpoints.searchIrs, {
+    validator: { sequence: /^.+$/gi },
+  });
 
   useEffect(() => {
     const _filters = paramsToObject(new URLSearchParams(location.search));

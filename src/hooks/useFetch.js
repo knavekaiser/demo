@@ -61,14 +61,14 @@ export const useFetch = (
           query
         ).toString()}`;
       }
-      if (
-        noDbSchema !== true &&
-        !his &&
-        getTenantId() &&
-        !_url.startsWith(defaultEndpoints.apiUrl)
-      ) {
-        _url += `${_url.includes("?") ? "" : "?"}&tenantId=${getTenantId()}`;
-      }
+      // if (
+      //   noDbSchema !== true &&
+      //   !his &&
+      //   getTenantId() &&
+      //   !_url.startsWith(defaultEndpoints.apiUrl)
+      // ) {
+      //   _url += `${_url.includes("?") ? "" : "?"}&tenantId=${getTenantId()}`;
+      // }
       setLoading(true);
       const response = await fetch(_url, {
         method: method,

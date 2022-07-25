@@ -1,0 +1,45 @@
+@import "../../variables";
+
+.mainContainer {
+  display: grid;
+  grid-gap: 20px;
+  .inlineForm {
+    form {
+      grid-gap: 20px;
+      display: grid;
+      align-items: center;
+      .btns {
+        display: flex;
+        grid-gap: 6px;
+      }
+    }
+    grid-column: 1 / -1;
+  }
+  .problemAreas {
+    tr {
+      grid-template-columns: 2rem 1fr;
+    }
+  }
+  .rootCauses {
+    tr {
+      grid-template-columns: 2rem 0.7fr 0.4fr 1fr;
+    }
+  }
+  .preventiveActionPlans {
+    tr,
+    .inlineForm form {
+      grid-template-columns: 1fr 1fr 8rem 6rem 1fr 15rem 5rem 3.5rem;
+    }
+  }
+  .irTeamMembers {
+    tr,
+    .inlineForm form {
+      grid-template-columns: 1fr 1fr 1fr 3.5rem;
+    }
+  }
+  .btns {
+    display: flex;
+    justify-content: center;
+    grid-gap: 10px;
+  }
+}

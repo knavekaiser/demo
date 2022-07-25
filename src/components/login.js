@@ -27,9 +27,7 @@ export default function Login() {
   const { get: getUserDetail } = useFetch(
     defaultEndpoints.searchUserByUsername
   );
-  const { get: getEndpoints } = useFetch(
-    defaultEndpoints.apiUrl + `?tenantId=${getTenantId()}`
-  );
+  const { get: getEndpoints } = useFetch(defaultEndpoints.apiUrl);
 
   const handleUser = useCallback(
     (user) => {
@@ -59,8 +57,8 @@ export default function Login() {
   useEffect(() => {
     const accessToken = sessionStorage.getItem("access-token");
     const hisAccessToken = sessionStorage.getItem("HIS-access-token");
-    const tenantId = getTenantId();
-    if (accessToken && tenantId) {
+    // const tenantId = getTenantId();
+    if (accessToken) {
       var decoded = jwt_decode(accessToken);
       if (decoded && new Date() > new Date(decoded.exp)) {
         getUserDetail(null, {
@@ -101,9 +99,9 @@ export default function Login() {
       navigate("/");
       return;
     }
-    if (new URLSearchParams(location.search).get("tenantId")) {
-      setTenantId(new URLSearchParams(location.search).get("tenantId"));
-    }
+    // if (new URLSearchParams(location.search).get("tenantId")) {
+    //   setTenantId(new URLSearchParams(location.search).get("tenantId"));
+    // }
   }, []);
   return (
     <div className={s.login} data-testid="login">
@@ -123,23 +121,23 @@ export default function Login() {
               let token = sessionStorage.getItem("access-token");
 
               if (!token) {
-                const resp = await fetch(
-                  `${defaultEndpoints.token}?tenantId=${getTenantId()}`,
-                  {
-                    method: "POST",
-                    headers: {
-                      Authorization:
-                        "Basic " +
-                        Buffer.from(`napier:my-secret-key`).toString("base64"),
-                      "Content-Type": "application/x-www-form-urlencoded",
-                    },
-                    body: new URLSearchParams({
-                      grant_type: "password",
-                      username: data.username,
-                      password: data.password,
-                    }).toString(),
-                  }
-                )
+                const resp = await fetch(`${defaultEndpoints.token}`, {
+                  method: "POST",
+                  headers: {
+                    Authorization:
+                      "Basic " +
+                      Buffer.from(`napier:my-secret-key`).toString("base64"),
+                    "Content-Type": "application/x-www-form-urlencoded",
+                  },
+                  body: new URLSearchParams({
+                    grant_type: "password",
+                    username: data.username,
+                    password: data.password,
+                    tenantId: new URLSearchParams(location.search).get(
+                      "tenantId"
+                    ),
+                  }).toString(),
+                })
                   .then((res) => res.json())
                   .catch((err) => {
                     Prompt({

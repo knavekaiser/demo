@@ -12,6 +12,7 @@ import { Prompt } from "../modal";
 import s from "./style.module.scss";
 
 import Investigation from "./investigation";
+import Capa from "./capa";
 
 const Data = ({ label, value }) => {
   return (
@@ -319,6 +320,10 @@ const IrInvestigation = () => {
             path:
               paths.incidentDashboard.irInvestigation.investigation.basePath,
           },
+          {
+            label: "CAPA",
+            path: paths.incidentDashboard.irInvestigation.capa,
+          },
         ]}
       />
       <Routes>
@@ -328,6 +333,10 @@ const IrInvestigation = () => {
             "/*"
           }
           element={<Investigation />}
+        />
+        <Route
+          path={paths.incidentDashboard.irInvestigation.capa + "/*"}
+          element={<Capa />}
         />
       </Routes>
     </div>

@@ -21,6 +21,7 @@ export default {
         irDetails: "irDetails",
         irRca: "irRca",
       },
+      capa: "capa",
     },
   },
   irQueryDashboard: "/irQueryDashboard",

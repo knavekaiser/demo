@@ -12,6 +12,7 @@ import { useFetch } from "./hooks";
 import { Prompt } from "./components/modal";
 import defaultEndpoints from "./config/endpoints";
 import { getTenantId } from "./helpers";
+import jwt_decode from "jwt-decode";
 
 export const SiteContext = createContext();
 export const Provider = ({ children }) => {
@@ -73,7 +74,11 @@ export const Provider = ({ children }) => {
     sessionStorage.removeItem("access-token");
     sessionStorage.removeItem("tenant-id");
     sessionStorage.removeItem("tenant-timezone");
-    navigate(`/login${getTenantId() ? `?tenantId=${getTenantId()}` : ""}`);
+    let decoded = null;
+    try {
+      decoded = jwt_decode(sessionStorage.getItem("access-token"));
+    } catch (err) {}
+    navigate(`/login${decoded?.schema ? "?tenantId=" + decoded.schema : ""}`);
   }, [user, endpoints]);
 
   useEffect(() => {
