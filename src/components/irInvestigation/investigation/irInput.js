@@ -660,9 +660,13 @@ const RecordInputForm = ({ edit, parameters, onSuccess }) => {
 
   const uploads = watch("upload");
 
-  const { post: saveInput, put: updateInput, loading } = useFetch(
-    defaultEndpoints.recordInputs + "/" + (edit?.id || "")
-  );
+  const {
+    post: saveInput,
+    put: updateInput,
+    loading,
+  } = useFetch(defaultEndpoints.recordInputs + "/" + (edit?.id || ""), {
+    validator: { upload: /^.+$/gi },
+  });
   const { post: upload, laoding: uploadingFiles } = useFetch(
     defaultEndpoints.uploadFiles
   );
@@ -938,7 +942,10 @@ const EvidenceForm = ({
 
   const uploads = watch("upload");
   const { post: postEvidence, put: updateEvidence, loading } = useFetch(
-    defaultEndpoints.evidences + `/${edit?.id || ""}`
+    defaultEndpoints.evidences + `/${edit?.id || ""}`,
+    {
+      validator: { upload: /^.+$/gi },
+    }
   );
   const { post: upload, laoding: uploadingFiles } = useFetch(
     defaultEndpoints.uploadFiles

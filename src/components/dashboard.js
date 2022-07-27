@@ -27,6 +27,7 @@ import {
 import IncidentReport from "./incidentReport";
 import IrPreview from "./irPreview";
 import IrDashboard from "./irDashboard";
+import CapaDashboard from "./capaDashboard";
 import Masters from "./masters/index";
 import IrConfig from "./irConfig/index";
 import IrQueryDashboard from "./irQueryDashboard";
@@ -196,18 +197,19 @@ function Dashboard() {
             // )
           }
           {checkPermission({ roleId: [7, 4, 2] }) && (
-            <li
-              className={`${s.sidebarItem} ${
-                location.pathname.startsWith(paths.capaReport) ? s.active : ""
-              }`}
-            >
-              <Link to={paths.capaReport}>
-                <span className={s.label}>
-                  <CapaIcon className={s.icon} />{" "}
-                  <span className={s.text}>CAPA Reporting</span>
-                </span>
-              </Link>
-            </li>
+            <SidebarItem_CapaDashboard />
+            // <li
+            //   className={`${s.sidebarItem} ${
+            //     location.pathname.startsWith(paths.capaReport) ? s.active : ""
+            //   }`}
+            // >
+            //   <Link to={paths.capaReport}>
+            //     <span className={s.label}>
+            //       <CapaIcon className={s.icon} />{" "}
+            //       <span className={s.text}>CAPA Reporting</span>
+            //     </span>
+            //   </Link>
+            // </li>
           )}
           {checkPermission({ roleId: [7, 4] }) && (
             <li
@@ -309,6 +311,10 @@ function Dashboard() {
             path={paths.incidentDashboard.basePath + "/*"}
             element={<IrDashboard />}
           />
+          <Route
+            path={paths.capaDashboard.basePath + "/*"}
+            element={<CapaDashboard />}
+          />
           <Route path={paths.irConfig.basePath + "/*"} element={<IrConfig />} />
           <Route
             path={paths.masters.basePath + "/*"}
@@ -325,7 +331,7 @@ function Dashboard() {
 const SidebarItem_IrDashboard = () => {
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const { dataElements, count, checkDataElements } = useContext(
+  const { irDashboardDataElements, count, checkDataElements } = useContext(
     IrDashboardContext
   );
   const [listItems, setListItems] = useState({});
@@ -583,7 +589,7 @@ const SidebarItem_IrDashboard = () => {
               ? s.active
               : ""
           }`,
-          items: dataElements
+          items: irDashboardDataElements
             .filter(
               (dataEl) =>
                 dataEl.type === 1 && checkDataElements(dataEl.statusOption)
@@ -600,7 +606,7 @@ const SidebarItem_IrDashboard = () => {
               ? s.active
               : ""
           }`,
-          items: dataElements
+          items: irDashboardDataElements
             .filter(
               (dataEl) =>
                 dataEl.type === 2 && checkDataElements(dataEl.statusOption)
@@ -614,6 +620,88 @@ const SidebarItem_IrDashboard = () => {
           //     search: `capaClosure=active`,
           //   },
           // },
+        },
+      ]}
+    />
+  );
+};
+const SidebarItem_CapaDashboard = () => {
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const { capaDashboardDataElements, count, checkDataElements } = useContext(
+    IrDashboardContext
+  );
+  const [listItems, setListItems] = useState({});
+  useEffect(() => {
+    const pathname = location.pathname.startsWith(paths.capaDashboard.basePath)
+      ? location.pathname
+      : paths.capaDashboard.basePath;
+    // +
+    //   "/" +
+    //   paths.capaDashboard.myDashboard;
+    setListItems({
+      "CAPA Action": {
+        label: (
+          <>
+            CAPA Action{" "}
+            {count["2"] ? <span className={s.count}>{count["2"]}</span> : null}
+          </>
+        ),
+        path: {
+          pathname,
+          search: `status=2`,
+        },
+      },
+      "CAPA Monitoring": {
+        label: (
+          <>
+            CAPA Monitoring{" "}
+            {
+              // count["2"] ? <span className={s.count}>{count["2"]}</span> : null
+            }
+          </>
+        ),
+        path: {
+          pathname,
+          // search: `status=2`,
+        },
+      },
+    });
+  }, [count]);
+  return (
+    <Accordion
+      label=<span className={s.label}>
+        <CapaIcon className={s.icon} />{" "}
+        <span className={s.text}>CAPA Dashboard</span>
+      </span>
+      basePath={paths.capaDashboard.basePath}
+      className={`${s.sidebarItem} ${
+        location.pathname.startsWith(paths.capaDashboard.basePath)
+          ? s.active
+          : ""
+      }`}
+      startPath={
+        paths.capaDashboard.basePath
+        // "/" +
+        // paths.capaDashboard.myDashboard
+      }
+      items={[
+        {
+          accordion: true,
+          label: <span className={s.label}>Deadline Crossed</span>,
+          basePath: paths.capaDashboard.basePath,
+          className: `${s.sidebarItem} ${
+            location.pathname.startsWith(paths.irConfig.basePath)
+              ? s.active
+              : ""
+          }`,
+          items: capaDashboardDataElements
+            // .filter((dataEl) =>
+            // dataEl.type === 1 &&
+            // checkDataElements(dataEl.statusOption)
+            // )
+            .map((dataEl) => listItems[dataEl.statusOption])
+            .filter((item) => item),
         },
       ]}
     />

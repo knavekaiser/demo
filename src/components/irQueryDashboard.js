@@ -358,7 +358,9 @@ const ResponseForm = ({ ir, parameters, setShowResForm, onSuccess }) => {
   });
   const uploads = watch("upload");
 
-  const { post: saveResponse } = useFetch(defaultEndpoints.responseInputs);
+  const { post: saveResponse } = useFetch(defaultEndpoints.responseInputs, {
+    validator: { upload: /^.+$/gi },
+  });
   const { post: upload, laoding: uploadingFiles } = useFetch(
     defaultEndpoints.uploadFiles
   );

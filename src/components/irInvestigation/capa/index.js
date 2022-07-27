@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useContext, useRef } from "react";
 import s from "./style.module.scss";
 import { Box } from "../../incidentReport";
+import { SiteContext } from "../../../SiteContext";
 import { InvestigationContext } from "../InvestigationContext";
 import {
   Select,
@@ -31,6 +32,7 @@ import {
   FaUndo,
   FaExternalLinkAlt,
   FaTimes,
+  FaHeartbeat,
 } from "react-icons/fa";
 import { IoClose } from "react-icons/io5";
 import { BsPencilFill } from "react-icons/bs";
@@ -163,13 +165,13 @@ const Capa = () => {
                 detail: 'Facility policy "Maintenance & PPM" to be updated',
               },
               {
-                no: 1,
+                no: 2,
                 rootCause: "New equipment brought without labeling critical",
                 category: "Equipment management",
                 detail: "Equipment validation process to be checked",
               },
               {
-                no: 1,
+                no: 3,
                 rootCause: "Allowed work without permission",
                 category: "Staff negligence",
                 detail:
@@ -185,7 +187,7 @@ const Capa = () => {
             methods={methods}
             actionPlans={[
               {
-                id: 2,
+                id: 1,
                 plan: "Labe safety officer to be counselled",
                 detail:
                   "Counselling to be done to ensure facility team is informed for any outsources work",
@@ -215,7 +217,7 @@ const Capa = () => {
             methods={methods}
             members={[
               {
-                id: 2,
+                id: 1,
                 name: "Joseph",
                 department: "Laboratory",
                 designation: "Lab technician",
@@ -308,9 +310,19 @@ const RootCause = ({ causes }) => {
   );
 };
 
+const Data = ({ label, value }) => {
+  return (
+    <section className={s.data}>
+      <span className={s.label}>{label}</span>:{" "}
+      <span className={s.value}>{value}</span>
+    </section>
+  );
+};
+
 const PreventiveActionPlans = ({ actionPlans, parameters }) => {
   const { ir, setIr } = useContext(InvestigationContext);
   const [edit, setEdit] = useState(null);
+  const [monitoringPlan, setMonitoringPlan] = useState(null);
   const { remove: deleteNote } = useFetch(
     defaultEndpoints.investigationNotes + "/{ID}"
   );
@@ -361,7 +373,16 @@ const PreventiveActionPlans = ({ actionPlans, parameters }) => {
             <td>{plan.plan}</td>
             <td>{plan.detail}</td>
             <td>{plan.category}</td>
-            <td>{plan.monitoring}</td>
+            {plan.monitoring === "Yes" ? (
+              <td
+                className={s.planMonitoringYes}
+                onClick={() => setMonitoringPlan(plan)}
+              >
+                {plan.monitoring} <FaHeartbeat />
+              </td>
+            ) : (
+              <td>{plan.monitoring}</td>
+            )}
             <td>{plan.responsiblities}</td>
             <td>{plan.deadline}</td>
             <td>{plan.status}</td>
@@ -410,7 +431,222 @@ const PreventiveActionPlans = ({ actionPlans, parameters }) => {
         ))}
       </Table>
       <p>CAPA monitoring responsiblities: IR investigator 2</p>
+      <Modal
+        open={monitoringPlan}
+        setOpen={() => setMonitoringPlan(null)}
+        head
+        label="CAPA MONITORING PLAN"
+        className={s.monitoringPlanModal}
+      >
+        <MonitoringPlanModal plan={monitoringPlan} parameters={parameters} />
+      </Modal>
     </>
+  );
+};
+const MonitoringPlanModal = ({ parameters }) => {
+  const { irTypes } = useContext(SiteContext);
+  const { ir } = useContext(InvestigationContext);
+  const {
+    handleSubmit,
+    register,
+    watch,
+    setValue,
+    reset,
+    clearErrors,
+    formState: { errors },
+  } = useForm();
+  return (
+    <div className={s.monitoringPlanModalContent}>
+      <div className={s.summary}>
+        <Data label="IR Code" value={ir?.sequence} />
+        <Data
+          label="Incident Date & Time"
+          value={moment({
+            time: ir?.incident_Date_Time,
+            format: "DD/MM/YYYY hh:mm",
+          })}
+        />
+        <Data
+          label="Incident Type"
+          value={
+            irTypes?.find(
+              (item) => item.value?.toString() === ir?.typeofInci?.toString()
+            )?.label || ir?.typeofInci
+          }
+        />
+        <Data
+          label="Category"
+          value={
+            parameters?.categories?.find(
+              (item) => item.id?.toString() === ir?.inciCateg?.toString()
+            )?.name || ir?.inciCateg
+          }
+        />
+        <Data
+          label="Sub Category"
+          value={
+            parameters?.categories
+              ?.find(
+                (item) => item.id?.toString() === ir?.inciCateg?.toString()
+              )
+              ?.subCategorys?.find(
+                (item) => item.id?.toString() === ir?.inciSubCat?.toString()
+              )?.name || ir?.inciSubCat
+          }
+        />
+        <Data
+          label="Location"
+          value={
+            parameters?.locations?.find(
+              (item) => item.value?.toString() === ir?.location?.toString()
+            )?.label || ir?.location
+          }
+        />
+      </div>
+
+      <form
+        onSubmit={handleSubmit((values) => {
+          //
+        })}
+      >
+        <Combobox
+          label="Methodology"
+          name="methodology"
+          watch={watch}
+          register={register}
+          formOptions={{ required: "Field is required" }}
+          setValue={setValue}
+          placeholder="Select"
+          options={[
+            { value: "description", label: "Description" },
+            { value: "deptInv", label: "Departments Involved" },
+            { value: "personAff", label: "Person Affected" },
+            { value: "categoryTemplate", label: "Category Template" },
+          ]}
+          error={errors.methodology}
+          clearErrors={clearErrors}
+        />
+
+        <Input
+          label="Title"
+          {...register("title", { required: "Field is required" })}
+          error={errors.title}
+        />
+
+        <Combobox
+          label="Frequency"
+          name="frequency"
+          watch={watch}
+          register={register}
+          setValue={setValue}
+          placeholder="Select"
+          formOptions={{ required: "Field is required" }}
+          options={[
+            { value: "description", label: "Description" },
+            { value: "deptInv", label: "Departments Involved" },
+            { value: "personAff", label: "Person Affected" },
+            { value: "categoryTemplate", label: "Category Template" },
+          ]}
+          error={errors.frequency}
+          clearErrors={clearErrors}
+        />
+
+        <Input
+          type="date"
+          label="Start date for CAPA monitoring"
+          {...register("startCapaDate", {
+            required: "Field is required",
+            // validate: (v) => {
+            //   if (v) {
+            //     return (
+            //       new Date(v) < new Date() || "Can not select date from future"
+            //     );
+            //   }
+            //   return "Select Date & Time";
+            // },
+          })}
+          error={errors.startCapaDate}
+        />
+
+        <Input
+          type="date"
+          label="End date for CAPA monitoring"
+          {...register("endCapaDate", {
+            required: "Field is required",
+            // validate: (v) => {
+            //   if (v) {
+            //     return (
+            //       new Date(v) < new Date() || "Can not select date from future"
+            //     );
+            //   }
+            //   return "Select Date & Time";
+            // },
+          })}
+          error={errors.endCapaDate}
+        />
+
+        <Combobox
+          label="Tool Used"
+          name="toolUsed"
+          watch={watch}
+          register={register}
+          formOptions={{ required: "Field is required" }}
+          setValue={setValue}
+          placeholder="Select"
+          options={[
+            { value: "description", label: "Description" },
+            { value: "deptInv", label: "Departments Involved" },
+            { value: "personAff", label: "Person Affected" },
+            { value: "categoryTemplate", label: "Category Template" },
+          ]}
+          error={errors.toolUsed}
+          clearErrors={clearErrors}
+        />
+
+        <Input
+          label="Sample size"
+          {...register("sampleSize", { required: "Field is required" })}
+          error={errors.sampleSize}
+        />
+
+        <Input
+          label="Deadline"
+          type="date"
+          {...register("deadline", {
+            required: "Field is required",
+            // validate: (v) => {
+            //   if (v) {
+            //     return (
+            //       new Date(v) < new Date() || "Can not select date from future"
+            //     );
+            //   }
+            //   return "Select Date & Time";
+            // },
+          })}
+          error={errors.deadline}
+        />
+
+        <Textarea
+          className={s.details}
+          label="Details"
+          {...register("detail", { required: "Field is required" })}
+          error={errors.detail}
+        />
+
+        <div className={s.btns}>
+          <button
+            className="btn secondary wd-100"
+            type="button"
+            onClick={() => reset()}
+          >
+            Clear
+          </button>
+          <button className="btn primary wd-100" type="submit">
+            Sumit
+          </button>
+        </div>
+      </form>
+    </div>
   );
 };
 const PreventiveActionPlansForm = ({
@@ -427,6 +663,7 @@ const PreventiveActionPlansForm = ({
     watch,
     setValue,
     control,
+    clearErrors,
     formState: { errors },
   } = useForm();
 
@@ -436,6 +673,9 @@ const PreventiveActionPlansForm = ({
   const { post: saveIrDetail, savingIrDetail } = useFetch(
     defaultEndpoints.irInvestigation
   );
+
+  const [showPlanModal, setShowPlanModal] = useState(false);
+  const [monitoringPlan, setMonitoringPlan] = useState(null);
 
   useEffect(() => {
     reset({
@@ -447,102 +687,116 @@ const PreventiveActionPlansForm = ({
   }, [edit]);
 
   return (
-    <form
-      onSubmit={handleSubmit(async (values) => {
-        let irDetail = ir.irInvestigation[0];
-        if (!irDetail) {
-          irDetail = await saveIrDetail({ incidentReport: { id: ir.id } }).then(
-            ({ data }) => {
+    <>
+      <form
+        onSubmit={handleSubmit(async (values) => {
+          let irDetail = ir.irInvestigation[0];
+          if (!irDetail) {
+            irDetail = await saveIrDetail({
+              incidentReport: { id: ir.id },
+            }).then(({ data }) => {
               setIr((prev) => ({ ...prev, irInvestigation: [data] }));
               return data;
-            }
-          );
-        }
+            });
+          }
 
-        if (!irDetail) {
-          return Prompt({
-            type: "error",
-            message: "Please save IR Investigation before saving notes.",
-          });
-        }
+          if (!irDetail) {
+            return Prompt({
+              type: "error",
+              message: "Please save IR Investigation before saving notes.",
+            });
+          }
 
-        (edit ? updateNote : saveNote)({
-          ...edit,
-          ...values,
-          irId: ir.id,
-          irInvestigation: { id: irDetail.id },
-        })
-          .then(({ data }) => {
-            if (data.id) {
-              onSuccess(data);
-              reset();
-            }
+          (edit ? updateNote : saveNote)({
+            ...edit,
+            ...values,
+            irId: ir.id,
+            irInvestigation: { id: irDetail.id },
           })
-          .catch((err) => Prompt({ type: "error", message: err.message }));
-      })}
-    >
-      <Input
-        {...register("plan", { required: "Field is required" })}
-        error={errors.plan}
-      />
-      <Input
-        {...register("detail", { required: "Field is required" })}
-        error={errors.detail}
-      />
-      <Combobox
-        name="category"
-        watch={watch}
-        register={register}
-        setValue={setValue}
-        placeholder="Select"
-        options={[
-          { value: "description", label: "Description" },
-          { value: "deptInv", label: "Departments Involved" },
-          { value: "personAff", label: "Person Affected" },
-          { value: "categoryTemplate", label: "Category Template" },
-        ]}
-      />
-      <Toggle
-        name="monitor"
-        register={register}
-        required
-        watch={watch}
-        setValue={setValue}
-      />
-      <Select
-        options={parameters.responsiblities}
-        name="responsiblities"
-        multiple
-        control={control}
-        formOptions={{ required: "Field is required" }}
-      />
-      <Input
-        type="datetime-local"
-        {...register("deadline", { required: "Field is required" })}
-        error={errors.deadline}
-      />
-      <span />
-      <div className={s.btns}>
-        <button className="btn secondary" type="submit">
-          {edit ? (
-            <FaCheck />
-          ) : (
-            <>
-              <FaPlus /> Add
-            </>
-          )}
-        </button>
-        {edit && (
-          <button
-            type="button"
-            onClick={() => clearForm(null)}
-            className="btn secondary"
-          >
-            <IoClose />
+            .then(({ data }) => {
+              if (data.id) {
+                onSuccess(data);
+                reset();
+              }
+            })
+            .catch((err) => Prompt({ type: "error", message: err.message }));
+        })}
+      >
+        <Input
+          {...register("plan", { required: "Field is required" })}
+          error={errors.plan}
+        />
+        <Input
+          {...register("detail", { required: "Field is required" })}
+          error={errors.detail}
+        />
+        <Combobox
+          name="category"
+          watch={watch}
+          register={register}
+          formOptions={{ required: "Field is required" }}
+          setValue={setValue}
+          placeholder="Select"
+          options={[
+            { value: "description", label: "Description" },
+            { value: "deptInv", label: "Departments Involved" },
+            { value: "personAff", label: "Person Affected" },
+            { value: "categoryTemplate", label: "Category Template" },
+          ]}
+          error={errors.category}
+          clearErrors={clearErrors}
+        />
+        <Toggle
+          name="monitor"
+          register={register}
+          required
+          watch={watch}
+          setValue={setValue}
+        />
+        <Select
+          options={parameters.responsiblities}
+          name="responsiblities"
+          multiple
+          control={control}
+          formOptions={{ required: "Field is required" }}
+        />
+        <Input
+          type="datetime-local"
+          {...register("deadline", { required: "Field is required" })}
+          error={errors.deadline}
+        />
+        <span />
+        <div className={s.btns}>
+          <button className="btn secondary" type="submit">
+            {edit ? (
+              <FaCheck />
+            ) : (
+              <>
+                <FaPlus /> Add
+              </>
+            )}
           </button>
-        )}
-      </div>
-    </form>
+          {edit && (
+            <button
+              type="button"
+              onClick={() => clearForm(null)}
+              className="btn secondary"
+            >
+              <IoClose />
+            </button>
+          )}
+        </div>
+      </form>
+      <Modal
+        open={showPlanModal}
+        setOpen={setShowPlanModal}
+        head
+        label="CAPA MONITORING PLAN"
+        className={s.monitoringPlanModal}
+      >
+        <MonitoringPlanModal parameters={parameters} />
+      </Modal>
+    </>
   );
 };
 

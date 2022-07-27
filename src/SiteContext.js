@@ -161,7 +161,10 @@ export const IrDashboardContextProvider = ({ children }) => {
   const [dashboard, setDashboard] = useState("myDashboard");
   const [count, setCount] = useState({});
   const [tatConfig, setTatConfig] = useState(null);
-  const [dataElements, setDataElements] = useState([]);
+  const [irDashboardDataElements, setIrDashboardDataElements] = useState([]);
+  const [capaDashboardDataElements, setCapaDashboardDataElements] = useState(
+    []
+  );
   const [irConfig, setIrConfig] = useState({});
   const [hodApprovalConfig, setHodApprovalConfig] = useState(false);
 
@@ -237,13 +240,29 @@ export const IrDashboardContextProvider = ({ children }) => {
   const updateDataElements = useCallback(() => {
     getDataElements().then(({ data }) => {
       if (data?._embedded?.dashboardElements) {
-        setDataElements(data._embedded.dashboardElements);
+        setIrDashboardDataElements(data._embedded.dashboardElements);
+        setCapaDashboardDataElements([
+          {
+            id: 3,
+            statusOption: "CAPA Action",
+            irMgr: true,
+            irInvestigator: true,
+            type: 3,
+          },
+          {
+            id: 4,
+            statusOption: "CAPA Monitoring",
+            irMgr: true,
+            irInvestigator: false,
+            type: 1,
+          },
+        ]);
       }
     });
   });
   const checkDataElements = useCallback(
     (element) => {
-      const dataEl = dataElements.find(
+      const dataEl = irDashboardDataElements.find(
         (dataEl) => dataEl.statusOption === element
       );
       if (!dataEl) return false;
@@ -252,7 +271,7 @@ export const IrDashboardContextProvider = ({ children }) => {
         (dataEl.irInvestigator && user.role.includes(4))
       );
     },
-    [dataElements, user]
+    [irDashboardDataElements, user]
   );
 
   const { get: getHodApproval } = useFetch(defaultEndpoints.hodApproval);
@@ -434,7 +453,8 @@ export const IrDashboardContextProvider = ({ children }) => {
         updateDataElements,
         checkDataElements,
         tatConfig,
-        dataElements,
+        irDashboardDataElements,
+        capaDashboardDataElements,
         updateHodApproval,
         irConfig,
 
