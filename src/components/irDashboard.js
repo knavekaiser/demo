@@ -710,8 +710,8 @@ const SingleIr = memo(
                   <FaCircle className={s.sentinel} />
                 </>
               )}
-              {ir.typeofInci === 8
-                ? totalTat > tatConfig?.acceptableTatSentinel && (
+              {ir.typeofInci === 8 && tatConfig
+                ? totalTat > tatConfig.acceptableTatSentinel && (
                     <span
                       className={s.icon}
                       style={{ color: "rgb(230, 163, 16)", fontSize: "1.15em" }}
@@ -719,7 +719,7 @@ const SingleIr = memo(
                       <WiTime9 />
                     </span>
                   )
-                : totalTat > tatConfig?.acceptableTAT && (
+                : totalTat > tatConfig.acceptableTAT && (
                     <span
                       className={s.icon}
                       style={{
@@ -1669,7 +1669,8 @@ const AssignForm = ({ assign, users, setAssign, onSuccess }) => {
   const [timeline, setTimeline] = useState([]);
 
   const { put: assignIr, loading } = useFetch(
-    defaultEndpoints.incidentReport + "/" + (assign.id || "")
+    defaultEndpoints.incidentReport + "/" + (assign.id || ""),
+    { validator: { sequence: /^.+$/gi } }
   );
 
   const {

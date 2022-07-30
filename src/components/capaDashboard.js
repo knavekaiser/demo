@@ -36,6 +36,7 @@ import {
   FaCircle,
   FaPlusSquare,
   FaMinusSquare,
+  FaHeartbeat,
 } from "react-icons/fa";
 import { BiSearch } from "react-icons/bi";
 import { AiOutlinePlus } from "react-icons/ai";
@@ -107,114 +108,6 @@ export const MyDashboard = () => {
   const { get: searchIrs, loading } = useFetch(defaultEndpoints.searchIrs, {
     validator: { sequence: /^.+$/gi },
   });
-  const { remove: deleteIr } = useFetch(
-    defaultEndpoints.incidentReport + "/" + "{ID}"
-  );
-
-  const getActions = useCallback((inc) => [
-    ...(+inc.status === 1
-      ? [
-          {
-            icon: <BsPencilFill />,
-            label: "Edit",
-            callBack: () => {
-              navigate(paths.incidentReport, {
-                state: {
-                  edit: inc,
-                  focus: inc.id,
-                  from: location?.pathname,
-                },
-              });
-            },
-          },
-          // {
-          //   icon: <FaRegTrashAlt />,
-          //   label: "Delete",
-          //   callBack: () => {
-          //     Prompt({
-          //       type: "confirmation",
-          //       message: `Are you sure you want to remove this incident?`,
-          //       callback: () => {
-          //         deleteIr(null, {
-          //           params: { "{ID}": inc.id },
-          //         }).then(({ res }) => {
-          //           if (res.status === 204) {
-          //             setIncidents((prev) =>
-          //               prev.filter((ir) => ir.id !== inc.id)
-          //             );
-          //           }
-          //         });
-          //       },
-          //     });
-          //   },
-          // },
-          ...((checkPermission({ roleId: [4, 7], permission: [89, 91] }) && [
-            {
-              icon: <FaRegTrashAlt />,
-              label: "Delete",
-              callBack: () => {
-                Prompt({
-                  type: "confirmation",
-                  message: "Are you sure you want to delete this report?",
-                  callback: () => {
-                    deleteIr(null, {
-                      params: { "{ID}": inc.id },
-                    }).then(({ res }) => {
-                      if (res.status === 204) {
-                        setIncidents((prev) =>
-                          prev.filter((ir) => ir.id !== inc.id)
-                        );
-                      }
-                    });
-                  },
-                });
-              },
-            },
-          ]) ||
-            []),
-        ]
-      : [
-          {
-            icon: <FaEye />,
-            label: (
-              <>
-                Review IR{" "}
-                {inc.irHodAck?.length > 0 && (
-                  <FaFlag style={{ color: "rgb(21, 164, 40)" }} />
-                )}
-                <FiCheckSquare />
-              </>
-            ),
-            callBack: () => {
-              navigate(paths.incidentReport, {
-                state: {
-                  edit: inc,
-                  readOnly: true,
-                  focus: inc.id,
-                  from: location?.pathname,
-                },
-              });
-            },
-          },
-        ]),
-    ...((checkPermission({ roleId: 9, permission: 47 }) &&
-      irConfig.hodAcknowledgement && [
-        {
-          icon: <FaExternalLinkAlt />,
-          label: "Acknowledge IR",
-          callBack: () => {
-            navigate(paths.irPreview, {
-              state: {
-                ir: inc,
-                focus: inc.id,
-                from: location?.pathname,
-              },
-            });
-          },
-        },
-      ]) ||
-      []),
-  ]);
 
   useEffect(() => {
     setDashboard("myDashboard");
@@ -408,7 +301,6 @@ export const MyDashboard = () => {
               focus={focus}
               key={inc.id}
               ir={inc}
-              actions={getActions(inc)}
               parameters={parameters}
             />
           ))}
@@ -425,7 +317,7 @@ export const MyDashboard = () => {
   );
 };
 const SingleIr = memo(
-  ({ ir, focus, setFocus, className, actions, parameters, styles }) => {
+  ({ ir, focus, setFocus, className, parameters, styles }) => {
     const { tatConfig } = useContext(IrDashboardContext);
     const { irTypes } = useContext(SiteContext);
     const [showPlans, setShowPlans] = useState(false);
@@ -529,7 +421,7 @@ const SingleIr = memo(
           )?.label || ir.irInvestigator}
         </td>
         <td className={s.capa}>{ir.irInvestigators}</td>
-        {actions && <TableActions actions={actions} />}
+        <td />
         {showPlans && (
           <td className={s.actionPlans}>
             <Table
@@ -549,7 +441,20 @@ const SingleIr = memo(
                   </td>
                   <td>{plan.responsibility}</td>
                   <td>{plan.status}</td>
-                  <TableActions actions={actions} />
+                  <TableActions
+                    actions={[
+                      {
+                        icon: <FaExternalLinkAlt />,
+                        label: "View IR",
+                        callBack: () => {},
+                      },
+                      {
+                        icon: <FaHeartbeat />,
+                        label: "CAPA Monitoring",
+                        callBack: () => {},
+                      },
+                    ]}
+                  />
                 </tr>
               ))}
             </Table>
