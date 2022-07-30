@@ -18,7 +18,8 @@ main {
     }
   }
   .myDashboard,
-  .qualityDashboard {
+  .qualityDashboard,
+  .capaDashboard {
     display: grid;
     .report {
       padding: 6px 0;
@@ -228,6 +229,38 @@ main {
     table {
       tbody {
         max-height: calc(100vh - 440px);
+      }
+    }
+  }
+  .capaDashboard {
+    grid-gap: 0.5rem;
+    .irs {
+      & > thead {
+        tr {
+          th:nth-child(2) {
+            margin-left: 1.5rem;
+          }
+        }
+      }
+      tr {
+        grid-template-columns: 1.75rem 12rem 10rem 10rem 11rem 10rem 10rem 4.5rem;
+        grid-row-gap: 0;
+        .expandBtn {
+          color: $primary-color;
+        }
+        .actionPlans {
+          grid-column: 2/-1;
+          border: none;
+          padding: 0;
+          table {
+            thead {
+              background: $primary-color;
+            }
+            tr {
+              grid-template-columns: 1fr 12rem 1fr 12rem 4.5rem;
+            }
+          }
+        }
       }
     }
   }

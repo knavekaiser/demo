@@ -584,7 +584,7 @@
     }
   }
   thead {
-    background: #647299;
+    background: #647299 !important;
     position: sticky;
     top: 0;
     z-index: 10;
@@ -662,8 +662,8 @@
     }
   }
   &:not(.virtual) {
-    tbody {
-      tr {
+    & > tbody {
+      & > tr {
         &:nth-child(even) {
           background: #f3f3f3;
         }

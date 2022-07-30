@@ -34,6 +34,8 @@ import {
   FaPrint,
   FaRegCheckCircle,
   FaCircle,
+  FaPlusSquare,
+  FaMinusSquare,
 } from "react-icons/fa";
 import { BiSearch } from "react-icons/bi";
 import { AiOutlinePlus } from "react-icons/ai";
@@ -257,7 +259,74 @@ export const MyDashboard = () => {
             });
           }
           if (data?._embedded?.IncidentReport) {
-            setIncidents(data._embedded.IncidentReport);
+            setIncidents([
+              {
+                id: 2,
+                actionPlans: [
+                  {
+                    id: 1,
+                    action: "This are some actions",
+                    responsibility: "Thomas",
+                    status: "Accepted",
+                    deadline: "2022-02-16T16:18:00.000+05:30",
+                  },
+                  {
+                    id: 2,
+                    action: "This are some more actions",
+                    responsibility: "Ameem",
+                    status: "Accepted",
+                    deadline: "2022-02-16T16:18:00.000+05:30",
+                  },
+                ],
+                sequence: "040 /07/2022 NAP H",
+                status: "11",
+                department: "1",
+                userDept: "",
+                userId: 15,
+                irInvestigator: null,
+                capturedBy: null,
+                reportingDate: "2022-02-16T16:18:57.563+05:30",
+                irStatusDetails: [
+                  {
+                    id: 22896,
+                    status: 11,
+                    dateTime: "2022-06-22T13:13:09.597+05:30",
+                    userid: 15,
+                  },
+                  {
+                    id: 2,
+                    status: 2,
+                    dateTime: "2022-02-16T16:21:37.889+05:30",
+                    userid: 15,
+                  },
+                ],
+                templateData: [],
+                irHodAck: [],
+                reqInput: [],
+                recordInput: [],
+                responseIrInput: [],
+                irInvestigation: [],
+                location: 1,
+                incident_Date_Time: "2022-02-10T04:17:00.000+05:30",
+                locationDetailsEntry: "first room",
+                patientYesOrNo: null,
+                patientname: "",
+                complaIntegerDatetime: null,
+                complaIntegerIdEntry: null,
+                typeofInci: 4,
+                inciCateg: 1,
+                inciSubCat: 1,
+                template: null,
+                personAffected: null,
+                inciDescription: "dvfsdfsdf",
+                deptsLookupMultiselect: "102",
+                contribFactorYesOrNo: null,
+                preventability: 1,
+                incidentReportedDept: null,
+                headofDepart: null,
+                contribFactor: null,
+              },
+            ]);
           }
         })
         .catch((err) => Prompt({ type: "error", message: err.message }));
@@ -280,7 +349,7 @@ export const MyDashboard = () => {
     }
   }, [location.search]);
   return (
-    <div key="myDashboard" className={s.myDashboard}>
+    <div key="myDashboard" className={s.capaDashboard}>
       <header>
         <h3>CAPA DASHBOARD</h3>
       </header>
@@ -306,22 +375,27 @@ export const MyDashboard = () => {
           // setFilters(_filters);
         }}
       />
-      <div className={s.report} />
+      <div className={s.report}>
+        Records Display: <strong>{incidents?.length}</strong>
+      </div>
       <Table
         columns={[
+          { label: "" },
           { label: "IR Code" },
           { label: "Reporting Date & Time" },
           { label: "Incident Date & Time" },
           { label: "Incident Location" },
-          { label: "Category" },
-          { label: "Subcategory" },
-          { label: "Incident Type" },
-          { label: "Reported / Captured by" },
+          // { label: "Category" },
+          // { label: "Subcategory" },
+          // { label: "Incident Type" },
+          // { label: "Reported / Captured by" },
           { label: "IR Investigator" },
-          { label: "Status" },
-          { label: "TAT" },
+          { label: "CAPA Monitoring" },
+          // { label: "Status" },
+          // { label: "TAT" },
           { label: "Actions" },
         ]}
+        className={s.irs}
         actions={true}
         loading={loading}
       >
@@ -332,7 +406,6 @@ export const MyDashboard = () => {
           .map((inc) => (
             <SingleIr
               focus={focus}
-              setFocus={setFocus}
               key={inc.id}
               ir={inc}
               actions={getActions(inc)}
@@ -342,28 +415,10 @@ export const MyDashboard = () => {
       </Table>
       <div className={s.legend}>
         <span>
-          <span className={s.icon} style={{ color: "rgb(230, 16, 54)" }}>
-            <FaCircle />
-          </span>{" "}
-          Sentinel Event
-        </span>
-        <span>
           <span className={s.icon} style={{ color: "rgb(230, 163, 16)" }}>
             <WiTime9 />
           </span>{" "}
-          IRs Beyond TAT
-        </span>
-        <span>
-          <span className={s.icon} style={{ color: "rgb(115, 49, 162)" }}>
-            <BsFillExclamationTriangleFill />
-          </span>{" "}
-          Reportable Incident
-        </span>
-        <span>
-          <span className={s.icon} style={{ color: "rgb(230, 112, 16)" }}>
-            <FaUser />
-          </span>{" "}
-          Patient Complaint
+          Deadline Crossed
         </span>
       </div>
     </div>
@@ -373,7 +428,7 @@ const SingleIr = memo(
   ({ ir, focus, setFocus, className, actions, parameters, styles }) => {
     const { tatConfig } = useContext(IrDashboardContext);
     const { irTypes } = useContext(SiteContext);
-    const [showTatDetails, setShowTatDetails] = useState(false);
+    const [showPlans, setShowPlans] = useState(false);
     const [timeline, setTimeline] = useState({});
     const [totalTat, setTotalTat] = useState(0);
     useEffect(() => {
@@ -419,118 +474,88 @@ const SingleIr = memo(
       }
     }, [timeline]);
     return (
-      <>
-        <tr
-          className={`${ir.typeofInci === 8 ? s.sentinel : ""} ${
-            focus === ir.id ? s.focus : ""
-          } ${className || ""}`}
-          onClick={() => {
-            setFocus && setFocus(ir.id);
-          }}
-          style={styles || {}}
-        >
-          <td className={s.irCode}>
-            <span className={s.icons}>
-              {ir.patientYesOrNo && (
-                <>
-                  <FaUser className={s.user} />
-                  <span className={s.patientDetail}>
-                    <p>
-                      Patient Name: <b>{ir.patientname}</b>
-                    </p>
-                    <p>
-                      Complaint Date & Time:{" "}
-                      <b>
-                        <Moment format="DD/MM/YYYY hh:mm">
-                          {ir.complaIntegerDatetime}
-                        </Moment>
-                      </b>
-                    </p>
-                    <p>
-                      Complaint ID: <b>{ir.complaIntegerIdEntry}</b>
-                    </p>
+      <tr
+        className={`${ir.typeofInci === 8 ? s.sentinel : ""} ${
+          focus === ir.id ? s.focus : ""
+        } ${className || ""}`}
+        style={styles || {}}
+      >
+        <td>
+          <button
+            className={`btn clear ${s.expandBtn}`}
+            onClick={() => setShowPlans(!showPlans)}
+          >
+            {showPlans ? <FaMinusSquare /> : <FaPlusSquare />}
+          </button>
+        </td>
+        <td className={s.irCode}>
+          <span className={s.icons}>
+            {ir.typeofInci === 8
+              ? totalTat > tatConfig.acceptableTatSentinel && (
+                  <span
+                    className={s.icon}
+                    style={{ color: "rgb(230, 163, 16)", fontSize: "1.15em" }}
+                  >
+                    <WiTime9 />
                   </span>
-                </>
-              )}
-              {ir.typeofInci === 8 && (
-                <>
-                  <FaCircle className={s.sentinel} />
-                </>
-              )}
-              {ir.typeofInci === 8
-                ? totalTat > tatConfig?.acceptableTatSentinel && (
-                    <span
-                      className={s.icon}
-                      style={{ color: "rgb(230, 163, 16)", fontSize: "1.15em" }}
-                    >
-                      <WiTime9 />
-                    </span>
-                  )
-                : totalTat > tatConfig?.acceptableTAT && (
-                    <span
-                      className={s.icon}
-                      style={{
-                        color: "rgb(230, 163, 16)",
-                        fontSize: "1.15rem",
-                      }}
-                    >
-                      <WiTime9 />
-                    </span>
-                  )}
-              {parameters?.categories
-                ?.find((item) => item.id === ir.inciCateg)
-                ?.subCategorys?.find((item) => item.id === ir.inciSubCat)
-                ?.reportable.length > 0 && (
-                <>
-                  <BsFillExclamationTriangleFill className={s.reportable} />
-                </>
-              )}
-            </span>
-            {ir.sequence}
+                )
+              : totalTat > tatConfig.acceptableTAT && (
+                  <span
+                    className={s.icon}
+                    style={{
+                      color: "rgb(230, 163, 16)",
+                      fontSize: "1.15rem",
+                    }}
+                  >
+                    <WiTime9 />
+                  </span>
+                )}
+          </span>
+          {ir.sequence}
+        </td>
+        <td>
+          <Moment format="DD/MM/YYYY hh:mm">{ir.reportingDate}</Moment>
+        </td>
+        <td>
+          <Moment format="DD/MM/YYYY hh:mm">{ir.incident_Date_Time}</Moment>
+        </td>
+        <td>
+          {parameters?.locations?.find((item) => item.id === ir.location)
+            ?.name || ir.location}
+        </td>
+        <td>
+          {parameters?.investigators?.find(
+            ({ value }) => value === ir.irInvestigator
+          )?.label || ir.irInvestigator}
+        </td>
+        <td className={s.capa}>{ir.irInvestigators}</td>
+        {actions && <TableActions actions={actions} />}
+        {showPlans && (
+          <td className={s.actionPlans}>
+            <Table
+              columns={[
+                { label: "Action Plan" },
+                { label: "Deadline" },
+                { label: "Action Responsibility" },
+                { label: "CAPA Status" },
+                { label: "Actions" },
+              ]}
+            >
+              {ir.actionPlans.map((plan) => (
+                <tr key={plan.id}>
+                  <td>{plan.action}</td>
+                  <td>
+                    <Moment format="DD/MM/YYYY">{plan.deadline}</Moment>
+                  </td>
+                  <td>{plan.responsibility}</td>
+                  <td>{plan.status}</td>
+                  <TableActions actions={actions} />
+                </tr>
+              ))}
+            </Table>
           </td>
-          <td>
-            <Moment format="DD/MM/YYYY hh:mm">{ir.reportingDate}</Moment>
-          </td>
-          <td>
-            <Moment format="DD/MM/YYYY hh:mm">{ir.incident_Date_Time}</Moment>
-          </td>
-          <td>
-            {parameters?.locations?.find((item) => item.id === ir.location)
-              ?.name || ir.location}
-          </td>
-          <td>
-            {parameters?.categories?.find((item) => item.id === ir.inciCateg)
-              ?.name || ir.inciCateg}
-          </td>
-          <td>
-            {parameters?.categories
-              ?.find((item) => item.id === ir.inciCateg)
-              ?.subCategorys?.find((item) => item.id === ir.inciSubCat)?.name ||
-              ir.inciSubCat}
-          </td>
-          <td>
-            {irTypes.find(({ value }) => value === ir.typeofInci)?.label || [
-              ir.typeofInci,
-            ]}
-          </td>
-          <td>
-            {parameters?.users?.find(({ value }) => value === ir.userId)
-              ?.label || "Anonymous"}
-          </td>
-          <td>
-            {parameters?.investigators?.find(
-              ({ value }) => value === ir.irInvestigator
-            )?.label || ir.irInvestigator}
-          </td>
-          <td>
-            {irStatus.find((item) => item.id === +ir.status)?.name || ir.status}
-          </td>
-          <td className={s.tat} onClick={() => setShowTatDetails(true)}>
-            {ir.status !== "1" && totalTat}
-          </td>
-          {actions && <TableActions actions={actions} />}
-        </tr>
-      </>
+        )}
+      </tr>
     );
   }
 );
@@ -630,7 +655,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
       </section>
       <Combobox
         placeholder="All"
-        label="Action Responsibilitiy"
+        label="Action Responsibility"
         name="InciCateg"
         setValue={setValue}
         watch={watch}
@@ -667,7 +692,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
         <Checkbox
           {...register("capaResponsibility")}
           name="view"
-          label="CAPA Responsibilitiy"
+          label="CAPA Responsibility"
         />
       </section>
       <section className={s.btns}>
