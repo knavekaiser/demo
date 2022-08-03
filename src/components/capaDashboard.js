@@ -321,6 +321,7 @@ const SingleIr = memo(
     const { tatConfig } = useContext(IrDashboardContext);
     const { irTypes } = useContext(SiteContext);
     const [showPlans, setShowPlans] = useState(false);
+    const [showCapaMonitoring, setShowCapaMonitoring] = useState(true);
     const [timeline, setTimeline] = useState({});
     const [totalTat, setTotalTat] = useState(0);
     useEffect(() => {
@@ -455,6 +456,19 @@ const SingleIr = memo(
                       },
                     ]}
                   />
+                  <Modal
+                    head
+                    label="CAPA MONITORING"
+                    open={showCapaMonitoring}
+                    setOpen={setShowCapaMonitoring}
+                    className={s.capaMonitoringModal}
+                  >
+                    <CapaMonitoringModal
+                      ir={ir}
+                      plan={plan}
+                      parameters={parameters}
+                    />
+                  </Modal>
                 </tr>
               ))}
             </Table>
@@ -629,6 +643,117 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
         </button>
       </section>
     </form>
+  );
+};
+
+const Data = ({ label, value }) => {
+  return (
+    <section className={s.data}>
+      <span className={s.label}>{label}</span>:{" "}
+      <span className={s.value}>{value}</span>
+    </section>
+  );
+};
+const CapaMonitoringModal = ({ ir, plan, parameters }) => {
+  const { irTypes } = useContext(SiteContext);
+  const [activeTab, setActiveTab] = useState("capaInfo");
+  return (
+    <div className={s.capaMonitoring}>
+      <Tabs
+        secondary
+        tabs={[
+          { label: "CAPA INFO", value: "capaInfo" },
+          { label: "HISTORY OF COMMENTS", value: "history" },
+        ]}
+        activeTab={activeTab}
+        onChange={(tab) => {
+          setActiveTab(tab.value);
+        }}
+      />
+
+      {activeTab === "capaInfo" && (
+        <>
+          <div className={s.summary}>
+            <Data label="IR Code" value={ir?.sequence} />
+            <Data
+              label="Incident Date & Time"
+              value={moment({
+                time: ir?.incident_Date_Time,
+                format: "DD/MM/YYYY hh:mm",
+              })}
+            />
+            <Data
+              label="Incident Type"
+              value={
+                irTypes?.find(
+                  (item) =>
+                    item.value?.toString() === ir?.typeofInci?.toString()
+                )?.label || ir?.typeofInci
+              }
+            />
+            <Data
+              label="Category"
+              value={
+                parameters?.categories?.find(
+                  (item) => item.id?.toString() === ir?.inciCateg?.toString()
+                )?.name || ir?.inciCateg
+              }
+            />
+            <Data
+              label="Sub Category"
+              value={
+                parameters?.categories
+                  ?.find(
+                    (item) => item.id?.toString() === ir?.inciCateg?.toString()
+                  )
+                  ?.subCategorys?.find(
+                    (item) => item.id?.toString() === ir?.inciSubCat?.toString()
+                  )?.name || ir?.inciSubCat
+              }
+            />
+            <Data
+              label="Location"
+              value={
+                parameters?.locations?.find(
+                  (item) => item.value?.toString() === ir?.location?.toString()
+                )?.label || ir?.location
+              }
+            />
+          </div>
+          <h4>CAPA Monitoring Plan</h4>
+          <div className={`${s.summary} ${s.capaMonitoring}`}>
+            <Data label="Methodology" value={plan.methodology} />
+            <Data label="Title" value={plan.title} />
+            <Data label="Frequency" value={plan.frequency} />
+            <Data
+              label="Start date for CAPA monitoring"
+              value={
+                plan.capaStartDate
+                  ? moment({ time: plan.capaStartDate, format: "DD-MM-YYYY" })
+                  : "NA"
+              }
+            />
+            <Data
+              label="End date for CAPA monitoring"
+              value={
+                plan.capaStartDate
+                  ? moment({ time: plan.capaEndDate, format: "DD-MM-YYYY" })
+                  : "NA"
+              }
+            />
+            <Data label="Tool used" value={plan.toolUsed} />
+            <Data label="Sample size" value={plan.sampleSize} />
+            <Data
+              label="Deadline"
+              value={moment({ time: plan.deadline, format: "DD-MM-YYYY" })}
+            />
+            <Data label="Details" value={plan.details} />
+          </div>
+
+          <form>form inputs</form>
+        </>
+      )}
+    </div>
   );
 };
 

@@ -73,4 +73,8 @@ export default {
   irInvestigation: `${baseApiUrl}/irInvestigation`,
 
   serverDateTime: `${baseApiUrl}/getServerDateTime`,
+
+  rcaRootCauses: `${baseApiUrl}/rcaRootcause`,
+  rcaIdentified: `${baseApiUrl}/rcaIdentified`,
+  rcaTeam: `${baseApiUrl}/rcaTeam`,
 };

@@ -181,12 +181,16 @@
           background: $primary-color;
         }
       }
+      form {
+        display: grid;
+        grid-gap: 10px;
+      }
       .addCause {
         border: 1px solid $comp-grey;
         padding: 10px;
         display: flex;
-        flex-wrap: wrap;
         grid-gap: 10px;
+        flex-wrap: wrap;
         align-items: flex-end;
         .addWhy {
           color: rgb(152, 152, 152);

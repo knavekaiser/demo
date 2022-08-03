@@ -145,6 +145,7 @@ export default function Login() {
                       message: err.message,
                     });
                     setLoading(false);
+                    return err;
                   });
 
                 if (resp?.access_token) {
@@ -152,7 +153,10 @@ export default function Login() {
                 } else {
                   return Prompt({
                     type: "error",
-                    message: resp.error_description || "Invalid Credentials",
+                    message:
+                      resp?.error_description ||
+                      resp?.message ||
+                      "Invalid Credentials",
                   });
                 }
               }

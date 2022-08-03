@@ -451,6 +451,41 @@ main {
   }
 }
 
+.capaMonitoringModal {
+  width: 100%;
+  max-width: 65rem;
+}
+.capaMonitoring {
+  padding: 1rem;
+  display: grid;
+  grid-gap: 10px;
+
+  .summary {
+    background: rgb(246, 244, 244);
+    grid-gap: 6px;
+    padding: 10px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    .data {
+      .value {
+        font-weight: bold;
+      }
+      &.richData {
+        & > .label {
+          display: block;
+          font-size: 13px;
+          color: $primary-color;
+          font-weight: 500;
+          margin-bottom: 4px;
+        }
+      }
+    }
+    &.capaMonitoring {
+      background: rgba($green, 0.125);
+    }
+  }
+}
+
 @media print {
   .paper {
     display: block;
