@@ -471,14 +471,16 @@ export default function IncidentReporting() {
 
       getAnonymousCount(null, {
         query: {
-          fromreportingDate: moment({
-            time: new Date(startDate),
-            format: "YYYY-MM-DD",
-          }),
-          toreportingDate: moment({
-            time: new Date(endDate),
-            format: "YYYY-MM-DD",
-          }),
+          fromreportingDate:
+            moment({
+              time: new Date(startDate),
+              format: "YYYY-MM-DD",
+            }) + "T00:00:00Z",
+          toreportingDate:
+            moment({
+              time: new Date(endDate),
+              format: "YYYY-MM-DD",
+            }) + "T23:59:59Z",
         },
       }).then(({ data: irCount }) => {
         setAllowAnonymous(irCount < config.rulesCount);
