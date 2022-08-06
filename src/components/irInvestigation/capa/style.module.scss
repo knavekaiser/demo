@@ -28,7 +28,7 @@
   .preventiveActionPlans {
     tr,
     .inlineForm form {
-      grid-template-columns: 1fr 1fr 8rem 6rem 1fr 15rem 5rem 3.5rem;
+      grid-template-columns: 1fr 1fr 8rem 6rem 1fr 10rem 8rem 3.5rem;
     }
     .planMonitoringYes {
       text-decoration: underline;
@@ -36,10 +36,10 @@
       cursor: pointer;
     }
   }
-  .irTeamMembers {
+  .rcaTeamMembers {
     tr,
     .inlineForm form {
-      grid-template-columns: 1fr 1fr 1fr 3.5rem;
+      grid-template-columns: 1fr 1fr 1fr 4rem;
     }
   }
   .btns {

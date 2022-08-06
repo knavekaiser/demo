@@ -77,4 +77,6 @@ export default {
   rcaRootCauses: `${baseApiUrl}/rcaRootcause`,
   rcaIdentified: `${baseApiUrl}/rcaIdentified`,
   rcaTeam: `${baseApiUrl}/rcaTeam`,
+  capaPlan: `${baseApiUrl}/capaPlan`,
+  capaMonitoringPlan: `${baseApiUrl}/capaMonitoringPlan`,
 };

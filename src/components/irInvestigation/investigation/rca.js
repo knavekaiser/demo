@@ -244,6 +244,10 @@ const Rca = () => {
             ],
             rcaTeam: [..._rcaTeam, ...rcaTeam.filter((item) => !item.action)],
           }));
+          Prompt({
+            type: "success",
+            message: "Updates have been saved.",
+          });
         })
         .catch((err) =>
           Prompt({
@@ -349,7 +353,6 @@ const Rca = () => {
             rcaTeam={rcaTeam}
             setRcaTeam={setRcaTeam}
             parameters={parameters}
-            methods={methods}
           />
         </Box>
         <Modal
