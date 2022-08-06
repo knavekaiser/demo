@@ -252,9 +252,7 @@ function IrDashboard() {
                         paths.incidentDashboard.myDashboard,
                       search: { userId: user.id },
                     },
-                    ...(checkPermission({
-                      roleId: ["irInvestigator", "incidentManager"],
-                    })
+                    ...(checkPermission({ roleId: [4, 7] })
                       ? [
                           {
                             label: "Quality Dashboard",
@@ -263,10 +261,8 @@ function IrDashboard() {
                               "/" +
                               paths.incidentDashboard.qualityDashboard,
                             search: {
-                              view: user.role.includes("incidentManager")
-                                ? "all"
-                                : "assigned",
-                              ...(user.role.includes("incidentManager")
+                              view: user.role.includes(7) ? "all" : "assigned",
+                              ...(user.role.includes(7)
                                 ? {}
                                 : { irInvestigator: user.id }),
                             },
@@ -285,13 +281,13 @@ function IrDashboard() {
           path={paths.incidentDashboard.myDashboard + "/*"}
           element={<MyDashboard />}
         />
-        {checkPermission({ roleId: ["irInvestigator", "incidentManager"] }) && (
+        {checkPermission({ roleId: [4, 7] }) && (
           <Route
             path={paths.incidentDashboard.qualityDashboard + "/*"}
             element={<QualityDashboard />}
           />
         )}
-        {checkPermission({ roleId: ["irInvestigator"] }) && (
+        {checkPermission({ roleId: [4, 7] }) && (
           <Route
             path={paths.incidentDashboard.irInvestigation.basePath + "/*"}
             element={<IrInvestigation />}
@@ -313,7 +309,9 @@ export const MyDashboard = () => {
   const [filters, setFilters] = useState({});
   const [focus, setFocus] = useState(null);
 
-  const { get: searchIrs, loading } = useFetch(defaultEndpoints.searchIrs);
+  const { get: searchIrs, loading } = useFetch(defaultEndpoints.searchIrs, {
+    validator: { sequence: /^.+$/gi },
+  });
   const { remove: deleteIr } = useFetch(
     defaultEndpoints.incidentReport + "/" + "{ID}"
   );
@@ -334,31 +332,28 @@ export const MyDashboard = () => {
               });
             },
           },
-          {
-            icon: <FaRegTrashAlt />,
-            label: "Delete",
-            callBack: () => {
-              Prompt({
-                type: "confirmation",
-                message: `Are you sure you want to remove this incident?`,
-                callback: () => {
-                  deleteIr(null, {
-                    params: { "{ID}": inc.id },
-                  }).then(({ res }) => {
-                    if (res.status === 204) {
-                      setIncidents((prev) =>
-                        prev.filter((ir) => ir.id !== inc.id)
-                      );
-                    }
-                  });
-                },
-              });
-            },
-          },
-          ...((checkPermission({
-            roleId: ["irInvestigator", "incidentManager"],
-            permission: "Cancel IR",
-          }) && [
+          // {
+          //   icon: <FaRegTrashAlt />,
+          //   label: "Delete",
+          //   callBack: () => {
+          //     Prompt({
+          //       type: "confirmation",
+          //       message: `Are you sure you want to remove this incident?`,
+          //       callback: () => {
+          //         deleteIr(null, {
+          //           params: { "{ID}": inc.id },
+          //         }).then(({ res }) => {
+          //           if (res.status === 204) {
+          //             setIncidents((prev) =>
+          //               prev.filter((ir) => ir.id !== inc.id)
+          //             );
+          //           }
+          //         });
+          //       },
+          //     });
+          //   },
+          // },
+          ...((checkPermission({ roleId: [4, 7], permission: [89, 91] }) && [
             {
               icon: <FaRegTrashAlt />,
               label: "Delete",
@@ -407,10 +402,7 @@ export const MyDashboard = () => {
             },
           },
         ]),
-    ...((checkPermission({
-      roleId: "hod",
-      permission: "Acknowledge IR",
-    }) &&
+    ...((checkPermission({ roleId: 9, permission: 47 }) &&
       irConfig.hodAcknowledgement && [
         {
           icon: <FaExternalLinkAlt />,
@@ -502,7 +494,7 @@ export const MyDashboard = () => {
           label="OPEN IRS"
           irs={[
             { label: "My IRs", count: count.myIr },
-            ...((checkPermission({ roleId: "hod" }) && [
+            ...((checkPermission({ roleId: 9 }) && [
               {
                 label: "Department IRs",
                 count: count.departmentIr,
@@ -718,8 +710,8 @@ const SingleIr = memo(
                   <FaCircle className={s.sentinel} />
                 </>
               )}
-              {ir.typeofInci === 8
-                ? totalTat > tatConfig?.acceptableTatSentinel && (
+              {ir.typeofInci === 8 && tatConfig
+                ? totalTat > tatConfig.acceptableTatSentinel && (
                     <span
                       className={s.icon}
                       style={{ color: "rgb(230, 163, 16)", fontSize: "1.15em" }}
@@ -727,7 +719,7 @@ const SingleIr = memo(
                       <WiTime9 />
                     </span>
                   )
-                : totalTat > tatConfig?.acceptableTAT && (
+                : totalTat > tatConfig.acceptableTAT && (
                     <span
                       className={s.icon}
                       style={{
@@ -932,15 +924,13 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
   const navigate = useNavigate();
   const { user, checkPermission, irTypes } = useContext(SiteContext);
   const { parameters, irConfig } = useContext(IrDashboardContext);
-  const defaultView = user?.role?.includes?.("incidentManager")
-    ? "all"
-    : "assigned";
+  const defaultView = user?.role?.includes?.(7) ? "all" : "assigned";
   const { handleSubmit, register, watch, reset, setValue, getValues } = useForm(
     {
       defaultValues: {
         irBy: "self",
         status: "",
-        view: user?.role?.includes?.("incidentManager") ? "all" : "assigned",
+        view: user?.role?.includes?.(7) ? "all" : "assigned",
       },
     }
   );
@@ -1078,21 +1068,14 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
             register={register}
             name="view"
             options={[
-              ...((checkPermission({
-                roleId: ["irInvestigator"],
-                permission:
-                  "Access to view IRs in quality dashboardAssigned IR",
-              }) && [
+              ...((checkPermission({ roleId: 4, permission: 69 }) && [
                 {
                   label: "Assigned IRs",
                   value: "assigned",
                 },
               ]) ||
                 []),
-              ...(checkPermission({
-                roleId: ["irInvestigator"],
-                permission: "Access to view IRs in quality dashboardAll IRs",
-              })
+              ...(checkPermission({ roleId: 4, permission: 70 })
                 ? [
                     {
                       label: "All IRs",
@@ -1113,7 +1096,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
                 label: "My IRs",
                 value: "self",
               },
-              ...((checkPermission({ roleId: "hod" }) && [
+              ...((checkPermission({ roleId: 9 }) && [
                 {
                   label: "My Department IRs",
                   value: "department",
@@ -1176,17 +1159,17 @@ export const QualityDashboard = () => {
   const handlePrint = useReactToPrint({ content: () => printRef.current });
 
   const { put: updateStatus } = useFetch(
-    defaultEndpoints.incidentReport + "/{ID}"
+    defaultEndpoints.incidentReport + "/{ID}",
+    {
+      validator: { sequence: /^.+$/gi },
+    }
   );
 
   const getActions = useCallback((inc) => {
     const permissions = [];
 
     if (
-      checkPermission({
-        roleId: "incidentManager",
-        permission: "Assign IRs",
-      }) &&
+      checkPermission({ roleId: [7, 4], permission: [61, 69] }) &&
       [2, 3].includes(+inc.status)
     ) {
       permissions.push({
@@ -1197,12 +1180,7 @@ export const QualityDashboard = () => {
     }
 
     if (+inc.status === 2) {
-      if (
-        checkPermission({
-          roleId: ["irInvestigator", "incidentManager"],
-          permission: "Cancel IR",
-        })
-      ) {
+      if (checkPermission({ roleId: [4, 7], permission: [89, 91] })) {
         permissions.push({
           icon: <FaRegTimesCircle />,
           label: "Cancel IR",
@@ -1221,12 +1199,7 @@ export const QualityDashboard = () => {
       });
     }
 
-    if (
-      checkPermission({
-        roleId: ["incidentManager", "hod"],
-        permission: "Approve IRs",
-      })
-    ) {
+    if (checkPermission({ roleId: [7, 9] })) {
       permissions.push({
         icon: <FiCheckSquare />,
         label: "IR Approval",
@@ -1264,7 +1237,7 @@ export const QualityDashboard = () => {
             message:
               "IR status will be updated as under investigation. Do you wish to start IR investigation?",
             callback: async () => {
-              const { data: result } = await updateStatus(
+              updateStatus(
                 {
                   ...inc,
                   irInvestigator: user.id,
@@ -1284,32 +1257,35 @@ export const QualityDashboard = () => {
                   _links: undefined,
                 },
                 { params: { "{ID}": inc.id } }
-              ).catch((err) => {
-                Prompt({
-                  type: "error",
-                  message: err.message,
+              )
+                .then(({ data: result }) => {
+                  if (!result?.id) {
+                    return Prompt({
+                      type: "error",
+                      message:
+                        result.message ||
+                        "Count not update IR status. Please try again",
+                    });
+                  }
+                  navigate({
+                    pathname: `${
+                      paths.incidentDashboard.basePath
+                    }/${paths.incidentDashboard.irInvestigation.basePath.replace(
+                      ":irId",
+                      inc.id
+                    )}/${
+                      paths.incidentDashboard.irInvestigation.investigation
+                        .basePath
+                    }`,
+                    // search: "?" + createSearchParams({ irId: inc.id }),
+                  });
+                })
+                .catch((err) => {
+                  Prompt({
+                    type: "error",
+                    message: err.message,
+                  });
                 });
-              });
-
-              if (!result?.id) {
-                return Prompt({
-                  type: "error",
-                  message:
-                    result.message ||
-                    "Count not update IR status. Please try again",
-                });
-              }
-              navigate({
-                pathname: `${
-                  paths.incidentDashboard.basePath
-                }/${paths.incidentDashboard.irInvestigation.basePath.replace(
-                  ":irId",
-                  inc.id
-                )}/${
-                  paths.incidentDashboard.irInvestigation.investigation.basePath
-                }`,
-                // search: "?" + createSearchParams({ irId: inc.id }),
-              });
             },
           });
         }
@@ -1325,17 +1301,11 @@ export const QualityDashboard = () => {
         });
       },
     };
-    if (
-      checkPermission({
-        roleId: ["incidentManager"],
-      })
-    ) {
+    if (checkPermission({ roleId: 7 })) {
       permissions.push(investigationAction);
     } else if (
-      checkPermission({
-        roleId: ["irInvestigator"],
-      }) &&
-      inc.status.toString() === "3" &&
+      checkPermission({ roleId: 4 }) &&
+      ["3", "4"].includes(inc.status.toString()) &&
       inc.irInvestigator === user.id
     ) {
       permissions.push(investigationAction);
@@ -1356,7 +1326,9 @@ export const QualityDashboard = () => {
     return permissions;
   });
 
-  const { get: searchIrs, loading } = useFetch(defaultEndpoints.searchIrs);
+  const { get: searchIrs, loading } = useFetch(defaultEndpoints.searchIrs, {
+    validator: { sequence: /^.+$/gi },
+  });
 
   useEffect(() => {
     const _filters = paramsToObject(new URLSearchParams(location.search));
@@ -1505,10 +1477,7 @@ export const QualityDashboard = () => {
         qualityDashboard={true}
       />
       <div className={s.report}>
-        {checkPermission({
-          roleId: ["irInvestigator", "irManager"],
-          permission: "PrintReported IR",
-        }) && (
+        {checkPermission({ roleId: [4, 7], permission: [58, 85] }) && (
           <>
             {csvDraft && (
               <button className={"btn clear"}>
@@ -1699,7 +1668,8 @@ const AssignForm = ({ assign, users, setAssign, onSuccess }) => {
   const [timeline, setTimeline] = useState([]);
 
   const { put: assignIr, loading } = useFetch(
-    defaultEndpoints.incidentReport + "/" + (assign.id || "")
+    defaultEndpoints.incidentReport + "/" + (assign.id || ""),
+    { validator: { sequence: /^.+$/gi } }
   );
 
   const {

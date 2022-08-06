@@ -11,11 +11,13 @@ import { irStatus } from "./config";
 import { useFetch } from "./hooks";
 import { Prompt } from "./components/modal";
 import defaultEndpoints from "./config/endpoints";
+import { getTenantId } from "./helpers";
+import jwt_decode from "jwt-decode";
 
 export const SiteContext = createContext();
 export const Provider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [roles, setRoles] = useState(null);
+  const [permissions, setPermissions] = useState(null);
   const [endpoints, setEndpoints] = useState(null);
   const [his, setHis] = useState(false);
   const [irTypes, setIrTypes] = useState([]);
@@ -32,14 +34,21 @@ export const Provider = ({ children }) => {
       if (roleMatch && !permission) {
         return true;
       }
-      const allPermissions = [
-        ...new Set(
-          roles?.reduce((p, a) => [...p, ...(a.permission || [])], [])
-        ),
-      ];
-      return (roleMatch && allPermissions?.includes(permission)) || false;
+      let permissionMatch = false;
+      const allPermissions =
+        permissions?.reduce((p, c) => [...p, ...(c.permissions || [])], []) ||
+        [];
+      if (Array.isArray(permission)) {
+        permissionMatch = allPermissions.find((perm) =>
+          permission.includes(perm.id)
+        )?.enable;
+      } else {
+        permissionMatch = allPermissions.find((perm) => perm.id === permission)
+          ?.enable;
+      }
+      return roleMatch && permissionMatch;
     },
-    [roles, user]
+    [permissions, user]
   );
 
   const logout = useCallback(() => {
@@ -57,61 +66,78 @@ export const Provider = ({ children }) => {
       //   });
       // })();
     }
-
     setUser(null);
-    setRoles(null);
+    setPermissions(null);
     setHis(false);
     setEndpoints(null);
     sessionStorage.removeItem("HIS-access-token");
     sessionStorage.removeItem("access-token");
     sessionStorage.removeItem("tenant-id");
     sessionStorage.removeItem("tenant-timezone");
-    navigate(
-      `/login${
-        sessionStorage.getItem("db-schema")
-          ? `?tenantId=${sessionStorage.getItem("db-schema")}`
-          : ""
-      }`
-    );
+    let decoded = null;
+    try {
+      decoded = jwt_decode(sessionStorage.getItem("access-token"));
+    } catch (err) {}
+    navigate(`/login${decoded?.schema ? "?tenantId=" + decoded.schema : ""}`);
   }, [user, endpoints]);
 
   useEffect(() => {
-    if (!roles && user) {
-      fetch(
-        defaultEndpoints.userPermissions +
-          `?tenantId=${sessionStorage.getItem("db-schema")}`,
-        {
-          headers: {
-            Authorization: "Bearer " + sessionStorage.getItem("access-token"),
-          },
-        }
-      )
+    if (!permissions && user) {
+      fetch(defaultEndpoints.rolePermissions + `?tenantId=${getTenantId()}`, {
+        headers: {
+          Authorization: "Bearer " + sessionStorage.getItem("access-token"),
+        },
+      })
         .then((res) => res.json())
         .then((data) => {
-          if (data._embedded.userPermission) {
-            setRoles(
-              data._embedded.userPermission
-                .filter((p) => user.role.includes(p.role))
-                .map((role) => ({
-                  ...role,
-                  permission: role.permission.split(",").map((p) => p),
-                }))
-            );
+          if (data?._embedded.rolePermission) {
+            const permissions = data._embedded.rolePermission
+              .filter(({ role: { id: roleId } }) => user.role.includes(roleId))
+              .reduce((p, c) => {
+                let role = p.find((role) => role.id === c.role.id);
+                if (role) {
+                  if (c.permission) {
+                    role.permissions.push({
+                      id: c.id,
+                      permission: c.permission.permission,
+                      permId: c.permission.id,
+                      enable: c.enable,
+                    });
+                  }
+                } else {
+                  role = {
+                    id: c.role.id,
+                    role: c.role.role,
+                    permissions: c.permission
+                      ? [
+                          {
+                            id: c.id,
+                            permission: c.permission.permission,
+                            permId: c.permission.id,
+                            enable: c.enable,
+                          },
+                        ]
+                      : [],
+                  };
+                }
+                return [...p.filter((role) => role.id !== c.role.id), role];
+              }, []);
+            setPermissions(permissions);
           } else {
             alert("Could not fetch permissions");
           }
         })
         .catch((err) => Prompt({ type: "error", message: err.message }));
     }
-  }, [user]);
+  }, [permissions, user]);
   return (
     <SiteContext.Provider
       value={{
         user,
         setUser,
         checkPermission,
-        roles,
-        setRoles,
+        permissions,
+        setPermissions,
         endpoints,
         setEndpoints,
         his,
@@ -135,9 +161,21 @@ export const IrDashboardContextProvider = ({ children }) => {
   const [dashboard, setDashboard] = useState("myDashboard");
   const [count, setCount] = useState({});
   const [tatConfig, setTatConfig] = useState(null);
-  const [dataElements, setDataElements] = useState([]);
+  const [irDashboardDataElements, setIrDashboardDataElements] = useState([]);
+  const [capaDashboardDataElements, setCapaDashboardDataElements] = useState(
+    []
+  );
   const [irConfig, setIrConfig] = useState({});
   const [hodApprovalConfig, setHodApprovalConfig] = useState(false);
+
+  // Config
+  const [irInvestigationDetails, setIrInvestigationDetails] = useState([]);
+  const [irScreenDetails, setIrScreenDetails] = useState([]);
+
+  const { get: getIrInvestigationDetails } = useFetch(
+    defaultEndpoints.irInvestigationDetails
+  );
+  const { get: getIrScreenDetails } = useFetch(defaultEndpoints.configirscreen);
 
   const { get: getUsers } = useFetch(`${defaultEndpoints.users}?size=10000`);
   const { get: getCountStatusDetailByState } = useFetch(
@@ -202,22 +240,38 @@ export const IrDashboardContextProvider = ({ children }) => {
   const updateDataElements = useCallback(() => {
     getDataElements().then(({ data }) => {
       if (data?._embedded?.dashboardElements) {
-        setDataElements(data._embedded.dashboardElements);
+        setIrDashboardDataElements(data._embedded.dashboardElements);
+        setCapaDashboardDataElements([
+          {
+            id: 3,
+            statusOption: "CAPA Action",
+            irMgr: true,
+            irInvestigator: true,
+            type: 3,
+          },
+          {
+            id: 4,
+            statusOption: "CAPA Monitoring",
+            irMgr: true,
+            irInvestigator: false,
+            type: 1,
+          },
+        ]);
       }
     });
   });
   const checkDataElements = useCallback(
     (element) => {
-      const dataEl = dataElements.find(
+      const dataEl = irDashboardDataElements.find(
         (dataEl) => dataEl.statusOption === element
       );
       if (!dataEl) return false;
       return (
-        (dataEl.irMgr && user.role.includes("incidentManager")) ||
-        (dataEl.irInvestigator && user.role.includes("irInvestigator"))
+        (dataEl.irMgr && user.role.includes(7)) ||
+        (dataEl.irInvestigator && user.role.includes(4))
       );
     },
-    [dataElements, user]
+    [irDashboardDataElements, user]
   );
 
   const { get: getHodApproval } = useFetch(defaultEndpoints.hodApproval);
@@ -236,7 +290,11 @@ export const IrDashboardContextProvider = ({ children }) => {
     const users = await getUsers().then(({ data }) =>
       (data?._embedded?.user || []).map((user) => ({
         ...user,
-        role: user.role?.split(",").filter((r) => r) || [],
+        role:
+          user.role
+            ?.split(",")
+            .map((r) => +r)
+            .filter((r) => r) || [],
       }))
     );
 
@@ -254,7 +312,7 @@ export const IrDashboardContextProvider = ({ children }) => {
     }));
 
     _parameters.investigators = users
-      .filter((user) => user.role.includes("irInvestigator"))
+      .filter((user) => user.role.includes(4))
       .map((user) => ({
         label: user.name,
         value: user.id,
@@ -267,18 +325,39 @@ export const IrDashboardContextProvider = ({ children }) => {
   }, [parameters]);
   useEffect(async () => {
     if (user && !parametersFetched.current) {
-      Promise.all([getLocations(), getCategories()])
-        .then(async ([{ data: location }, { data: category }]) => {
-          const _parameters = { ...parameters };
-          if (location?._embedded.location) {
-            _parameters.locations = location._embedded.location;
+      Promise.all([
+        getLocations(),
+        getCategories(),
+        getIrInvestigationDetails(),
+        getIrScreenDetails(),
+      ])
+        .then(
+          async ([
+            { data: location },
+            { data: category },
+            { data: irInvestigationDetails },
+            { data: irScreens },
+          ]) => {
+            if (irInvestigationDetails?._embedded?.irInvestigationDetails) {
+              setIrInvestigationDetails(
+                irInvestigationDetails._embedded.irInvestigationDetails
+              );
+            }
+            if (irScreens?._embedded?.configirscreen) {
+              setIrScreenDetails(irScreens._embedded.configirscreen);
+            }
+
+            const _parameters = { ...parameters };
+            if (location?._embedded.location) {
+              _parameters.locations = location._embedded.location;
+            }
+            if (category?._embedded.category) {
+              _parameters.categories = category._embedded.category;
+            }
+            setParameters(_parameters);
+            updateUsers();
           }
-          if (category?._embedded.category) {
-            _parameters.categories = category._embedded.category;
-          }
-          setParameters(_parameters);
-          updateUsers();
-        })
+        )
         .catch((err) => {
           Prompt({
             type: "error",
@@ -307,11 +386,11 @@ export const IrDashboardContextProvider = ({ children }) => {
                   ...(dashboard === "myDashboard" && {
                     userId: user.id,
                   }),
-                  tenantId: sessionStorage.getItem("db-schema"),
+                  tenantId: getTenantId(),
                 }).toString()}`
               : `${defaultEndpoints.countIrByStatus}?status=${
                   status.id
-                }&tenantId=${sessionStorage.getItem("db-schema")}`,
+                }&tenantId=${getTenantId()}`,
             {
               headers: {
                 Authorization:
@@ -374,9 +453,15 @@ export const IrDashboardContextProvider = ({ children }) => {
         updateDataElements,
         checkDataElements,
         tatConfig,
-        dataElements,
+        irDashboardDataElements,
+        capaDashboardDataElements,
         updateHodApproval,
         irConfig,
+
+        irInvestigationDetails,
+        setIrInvestigationDetails,
+        irScreenDetails,
+        setIrScreenDetails,
       }}
     >
       {children}

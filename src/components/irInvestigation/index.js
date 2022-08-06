@@ -12,6 +12,7 @@ import { Prompt } from "../modal";
 import s from "./style.module.scss";
 
 import Investigation from "./investigation";
+import Capa from "./capa";
 
 const Data = ({ label, value }) => {
   return (
@@ -146,7 +147,7 @@ const IrInvestigation = () => {
             _parameters.hods = _users
               .filter(
                 (u) =>
-                  u.role?.includes("hod") &&
+                  u.role?.includes(9) &&
                   u.department.toString() === user.department.toString()
               )
               .map((item) => ({
@@ -176,7 +177,7 @@ const IrInvestigation = () => {
             _parameters.hods = _users
               .filter(
                 (u) =>
-                  u.role?.includes("hod") &&
+                  u.role?.includes(9) &&
                   u.department.toString() === user.department.toString()
               )
               .map((item) => ({
@@ -191,8 +192,7 @@ const IrInvestigation = () => {
           } else {
             _parameters.hods = userDetails
               .filter(
-                (u) =>
-                  u.role.includes("hod") && u.department === user.department
+                (u) => u.role.includes(9) && u.department === user.department
               )
               .map((item) => ({
                 label: item.name,
@@ -239,10 +239,15 @@ const IrInvestigation = () => {
           to={
             paths.incidentDashboard.basePath +
             "/" +
-            paths.incidentDashboard.qualityDashboard
+            paths.incidentDashboard.qualityDashboard +
+            "?" +
+            new URLSearchParams({
+              view: user.role.includes(7) ? "all" : "assigned",
+              ...(user.role.includes(7) ? {} : { irInvestigator: user.id }),
+            })
           }
         >
-          Bank to IR Dashbaord
+          Back to IR Dashboard
         </Link>
       </header>
       <div className={s.summary}>
@@ -315,6 +320,10 @@ const IrInvestigation = () => {
             path:
               paths.incidentDashboard.irInvestigation.investigation.basePath,
           },
+          {
+            label: "CAPA",
+            path: paths.incidentDashboard.irInvestigation.capa,
+          },
         ]}
       />
       <Routes>
@@ -324,6 +333,10 @@ const IrInvestigation = () => {
             "/*"
           }
           element={<Investigation />}
+        />
+        <Route
+          path={paths.incidentDashboard.irInvestigation.capa + "/*"}
+          element={<Capa />}
         />
       </Routes>
     </div>

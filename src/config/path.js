@@ -21,10 +21,14 @@ export default {
         irDetails: "irDetails",
         irRca: "irRca",
       },
+      capa: "capa",
     },
   },
   irQueryDashboard: "/irQueryDashboard",
-  capaReport: "/capaReport",
+  // capaReport: "/capaReport",
+  capaDashboard: {
+    basePath: "/capaDashboard",
+  },
   reports: "/reports",
   irConfig: {
     basePath: "/irConfiguration",

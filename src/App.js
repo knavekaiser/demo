@@ -5,6 +5,7 @@ import { SiteContext } from "./SiteContext";
 import Login from "./components/login";
 import Dashboard from "./components/dashboard.js";
 import "./App.scss";
+import { getTenantId } from "./helpers";
 
 Array.prototype.swap = function (oldIndex, newIndex) {
   const a = this[oldIndex],
@@ -14,20 +15,21 @@ Array.prototype.swap = function (oldIndex, newIndex) {
   return this;
 };
 
+Number.prototype.pad = function (l) {
+  let zeros = "";
+  for (let i = 0; i < l; i++) zeros += "0";
+  return zeros.length >= `${this}`.length ? (zeros + this).slice(-l) : this;
+};
+
 function App() {
   const { user } = useContext(SiteContext);
   const navigate = useNavigate();
   const location = useLocation();
   useEffect(() => {
     if (!user && location.pathname !== "/login") {
-      navigate(
-        `/login${
-          sessionStorage.getItem("db-schema")
-            ? `?tenantId=${sessionStorage.getItem("db-schema")}`
-            : ""
-        }`,
-        { state: { lastLocation: location } }
-      );
+      navigate(`/login${getTenantId() ? `?tenantId=${getTenantId()}` : ""}`, {
+        state: { lastLocation: location },
+      });
     }
   }, []);
   return (

@@ -18,7 +18,8 @@ main {
     }
   }
   .myDashboard,
-  .qualityDashboard {
+  .qualityDashboard,
+  .capaDashboard {
     display: grid;
     .report {
       padding: 6px 0;
@@ -231,6 +232,38 @@ main {
       }
     }
   }
+  .capaDashboard {
+    grid-gap: 0.5rem;
+    .irs {
+      & > thead {
+        tr {
+          th:nth-child(2) {
+            margin-left: 1.5rem;
+          }
+        }
+      }
+      tr {
+        grid-template-columns: 1.75rem 12rem 10rem 10rem 11rem 10rem 10rem 4.5rem;
+        grid-row-gap: 0;
+        .expandBtn {
+          color: $primary-color;
+        }
+        .actionPlans {
+          grid-column: 2/-1;
+          border: none;
+          padding: 0;
+          table {
+            thead {
+              background: $primary-color;
+            }
+            tr {
+              grid-template-columns: 1fr 12rem 1fr 12rem 4.5rem;
+            }
+          }
+        }
+      }
+    }
+  }
   .qualityDashboard {
     grid-template-rows: min-content 1fr min-content;
     table {
@@ -414,6 +447,41 @@ main {
       margin-top: 1rem;
       display: flex;
       justify-content: center;
+    }
+  }
+}
+
+.capaMonitoringModal {
+  width: 100%;
+  max-width: 65rem;
+}
+.capaMonitoring {
+  padding: 1rem;
+  display: grid;
+  grid-gap: 10px;
+
+  .summary {
+    background: rgb(246, 244, 244);
+    grid-gap: 6px;
+    padding: 10px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    .data {
+      .value {
+        font-weight: bold;
+      }
+      &.richData {
+        & > .label {
+          display: block;
+          font-size: 13px;
+          color: $primary-color;
+          font-weight: 500;
+          margin-bottom: 4px;
+        }
+      }
+    }
+    &.capaMonitoring {
+      background: rgba($green, 0.125);
     }
   }
 }

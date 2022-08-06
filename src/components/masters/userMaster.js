@@ -28,7 +28,7 @@ export default function UserMaster() {
       { label: "Female", value: "female" },
       { label: "Other", value: "other" },
     ],
-    role: permissions.map((p) => ({ value: p.role, label: p.label })),
+    role: permissions.map((p) => ({ value: p.id, label: p.label })),
   });
   const [users, setUsers] = useState([]);
   const [hisUsers, setHisUsers] = useState([]);
@@ -102,7 +102,11 @@ export default function UserMaster() {
           setUsers(
             data._embedded.user.map((user) => ({
               ...user,
-              role: user.role?.split(",").filter((role) => role) || [],
+              role:
+                user.role
+                  ?.split(",")
+                  .map((role) => +role || "")
+                  .filter((role) => role) || [],
             }))
           );
         }
@@ -223,8 +227,8 @@ export default function UserMaster() {
                   (r) =>
                     r.value ===
                     user.role?.sort((a, b) =>
-                      permissions.findIndex((item) => item.role === a) >
-                      permissions.findIndex((item) => item.role === b)
+                      permissions.findIndex((item) => item.id === a) >
+                      permissions.findIndex((item) => item.id === b)
                         ? 1
                         : -1
                     )[0]
@@ -308,13 +312,17 @@ const UserForm = ({
     clearErrors,
   } = useForm();
 
-  const { post: postUser, patch: updateUser, loading } = useFetch(
-    defaultEndpoints.users + `/${edit?.id || ""}`
-  );
+  const {
+    post: postUser,
+    patch: updateUser,
+    loading,
+  } = useFetch(defaultEndpoints.users + `/${edit?.id || ""}`, {
+    validator: { pword: /^.+$/gi },
+  });
 
   useEffect(() => {
     reset({
-      role: ["incidentReporter"],
+      role: [2],
       ...edit,
       ...(edit?.dob && {
         dob: moment({ time: edit.dob, format: "YYYY-MM-DD" }),
@@ -355,13 +363,28 @@ const UserForm = ({
             }),
           role: data.role.join(","),
         })
-          .then(({ data }) => {
+          .then(({ data, error }) => {
             if (data.name) {
+              Prompt({
+                type: "success",
+                message: `User successfully ${edit ? "updated" : "added"}.`,
+              });
               onSuccess({
                 ...data,
-                role: data.role.split(",").filter((r) => r),
+                role: data.role
+                  .split(",")
+                  .map((role) => +role)
+                  .filter((r) => r),
               });
               reset();
+            } else if (data.cause) {
+              Prompt({
+                type: "error",
+                message:
+                  data.cause.cause?.message ||
+                  data.cause.message ||
+                  data.message,
+              });
             }
           })
           .catch((err) => Prompt({ type: "error", message: err.message }));
@@ -390,11 +413,27 @@ const UserForm = ({
         }}
         error={errors.name}
       />
-      <Input
-        {...register("username", {
+      <SearchField
+        data={users.map((user) => ({
+          label: user.username,
+          value: user.id,
+          data: user,
+        }))}
+        register={register}
+        name="username"
+        formOptions={{
           required: "Please enter a Username",
-        })}
-        placeholder="Enter"
+        }}
+        renderListItem={(item) => <>{item.label}</>}
+        watch={watch}
+        setValue={setValue}
+        onChange={(user) => {
+          if (typeof user === "string") {
+            setValue("username", user);
+          } else {
+            setEdit(user);
+          }
+        }}
         error={errors.username}
       />
       <Combobox
@@ -442,36 +481,7 @@ const UserForm = ({
         }}
         error={errors.employeeId}
       />
-      {
-        //   <MobileNumberInput
-        //   name="contact"
-        //   // required={!addFromHis}
-        //   register={register}
-        //   error={errors.contact}
-        //   clearErrors={clearErrors}
-        //   setValue={setValue}
-        //   watch={watch}
-        // />
-      }
       <SearchField
-        // url={defaultEndpoints.users + `?size=10000`}
-        // processData={(data, value) => {
-        //   if (data?._embedded?.user) {
-        //     return data._embedded.user
-        //       .filter((user) =>
-        //         new RegExp(value.replace("+", ""), "i").test(user.contact)
-        //       )
-        //       .map((user) => ({
-        //         value: user.contact,
-        //         label: user.contact,
-        //         data: {
-        //           ...user,
-        //           role: user.role?.split(",") || [],
-        //         },
-        //       }));
-        //   }
-        //   return [];
-        // }}
         data={users.map((user) => ({
           label: user.contact,
           value: user.contact,
@@ -605,16 +615,13 @@ const UserForm = ({
         options={
           irConfig.hodAcknowledgement
             ? role
-            : role.filter((role) => role.value !== "hod")
+            : role.filter((role) => role.value !== 9)
         }
         multiple={true}
         error={errors.role}
         clearErrors={clearErrors}
         onChange={({ value }) => {
-          if (
-            value === "incidentManager" &&
-            getValues("role").includes(value)
-          ) {
+          if (value === 7 && getValues("role").includes(value)) {
             setValue(
               "role",
               role?.map((role) => role.value)

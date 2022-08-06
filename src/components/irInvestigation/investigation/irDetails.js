@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useContext, useRef } from "react";
 import s from "./style.module.scss";
 import { Box } from "../../incidentReport";
 import { InvestigationContext } from "../InvestigationContext";
-import { SiteContext } from "../../../SiteContext";
+import { SiteContext, IrDashboardContext } from "../../../SiteContext";
 import {
   Select,
   Table,
@@ -31,11 +31,13 @@ import { BsPencilFill } from "react-icons/bs";
 import { useFetch } from "../../../hooks";
 import { wait } from "../../../helpers";
 import {
+  paths,
   endpoints as defaultEndpoints,
   permissions,
   riskColors,
 } from "../../../config";
 import { Prompt, Modal } from "../../modal";
+import { useNavigate } from "react-router-dom";
 import { useForm, FormProvider, useFormContext } from "react-hook-form";
 
 export const ConnectForm = ({ children }) => {
@@ -46,12 +48,13 @@ export const ConnectForm = ({ children }) => {
 const IrDetails = () => {
   const { user } = useContext(SiteContext);
   const { ir, setIr } = useContext(InvestigationContext);
+  const { irInvestigationDetails } = useContext(IrDashboardContext);
   const [parameters, setParameters] = useState({
     severity: [],
     likelihood: [],
     users: [],
     departments: [],
-    roles: permissions.map((p) => ({ value: p.role, label: p.label })),
+    roles: permissions.map((p) => ({ value: p.id, label: p.label })),
     risks: [],
     riskStatus: [],
   });
@@ -119,22 +122,106 @@ const IrDetails = () => {
     },
   ]);
   const [showSimilarIncidents, setShowSimilarIncidents] = useState(false);
+  const [events, setEvents] = useState([]);
+  const [notes, setNotes] = useState([]);
   const methods = useForm();
+  const navigate = useNavigate();
 
   const { post: saveIrDetail, put: updateIrDetail, savingIrDetail } = useFetch(
     defaultEndpoints.irInvestigation +
       (ir.irInvestigation?.length ? `/${ir.irInvestigation[0].id}` : "")
   );
+  const { post: addEvent, loading: addingEvent } = useFetch(
+    defaultEndpoints.investigationEvents
+  );
+  const {
+    patch: updateEvent,
+    remove: deleteEvent,
+    loading: updatingEvent,
+  } = useFetch(defaultEndpoints.investigationEvents + `/{ID}`);
+  const { post: addNote, loading: addingNote } = useFetch(
+    defaultEndpoints.investigationNotes
+  );
+  const {
+    put: updateNote,
+    remove: deleteNote,
+    loading: updatingNote,
+  } = useFetch(defaultEndpoints.investigationNotes + `/{ID}`);
 
   const submitMainForm = useCallback(
-    (values) => {
-      (ir.irInvestigation?.length ? updateIrDetail : saveIrDetail)({
-        ...(ir.irInvestigation.length ?? ir.irInvestigation[0]),
+    async (values) => {
+      const irDetail = ir.irInvestigation[0];
+      await Promise.all([
+        ...events
+          .filter((ev) => ev.__status === "pending")
+          .map((ev) => {
+            const edit = typeof ev.id === "number";
+            return (edit ? updateEvent : addEvent)(
+              {
+                ...ev,
+                ...(!edit && { irInvestigation: { id: irDetail.id } }),
+                irId: ir.id,
+                id: undefined,
+                __status: undefined,
+              },
+              { params: { "{ID}": ev.id } }
+            );
+          }),
+        ...events
+          .filter((ev) => ev.__status === "delete")
+          .map((ev) => deleteEvent(null, { params: { "{ID}": ev.id } })),
+
+        ...notes
+          .filter((note) => note.__status === "pending")
+          .map((note) => {
+            const edit = typeof note.id === "number";
+            return (edit ? updateNote : addNote)(
+              {
+                ...note,
+                irId: ir.id,
+                irInvestigation: { id: irDetail.id },
+                id: undefined,
+                __status: undefined,
+              },
+              { params: { "{ID}": note.id } }
+            );
+          }),
+        ...notes
+          .filter((note) => note.__status === "delete")
+          .map((note) => deleteNote(null, { params: { "{ID}": note.id } })),
+      ]);
+      updateIrDetail({
+        ...irDetail,
         ...values,
+        events: events
+          .filter((item) => item.__status !== "delete")
+          .map((ev) => ({
+            ...ev,
+            id: undefined,
+            __status: undefined,
+          })),
+        notes: notes
+          .filter((item) => item.__status !== "delete")
+          .map((note) => ({
+            ...note,
+            id: undefined,
+            __status: undefined,
+          })),
         incidentReport: { id: ir.id },
       }).then(async ({ data }) => {
         if (data.id) {
-          setIr((prev) => ({ ...prev, irInvestigation: [data] }));
+          setIr((prev) => ({
+            ...prev,
+            irInvestigation: [
+              {
+                ...data,
+                events:
+                  data.events?.sort((a, b) =>
+                    a.sequence > b.sequence ? 1 : -1
+                  ) || [],
+              },
+            ],
+          }));
           Prompt({
             type: "success",
             message: "Investigation detail has been successfully saved.",
@@ -142,7 +229,7 @@ const IrDetails = () => {
         }
       });
     },
-    [ir]
+    [ir, events, notes]
   );
 
   const { get: getSeverity } = useFetch(
@@ -203,7 +290,10 @@ const IrDetails = () => {
             label: user.name,
             value: user.id,
             department: user.department,
-            role: user.role.split(",").filter((item) => item),
+            role: user.role
+              .split(",")
+              .map((role) => +role)
+              .filter((item) => item),
           }));
         }
 
@@ -222,9 +312,15 @@ const IrDetails = () => {
     );
   }, []);
 
-  useEffect(() => {
+  useEffect(async () => {
     if (ir.irInvestigation?.length) {
       const investigation = ir.irInvestigation[0];
+      setEvents(
+        (investigation.events || []).sort((a, b) =>
+          a.sequence > b.sequence ? 1 : -1
+        )
+      );
+      setNotes(investigation.notes || []);
       methods.reset({
         ...investigation,
         riskSeverity: investigation.riskSeverity || "",
@@ -237,6 +333,11 @@ const IrDetails = () => {
         selfRep: investigation.selfRep.toString(),
         ipsgBreach: investigation.ipsgBreach.toString(),
       });
+    } else if (ir.irInvestigation && !ir.irInvestigation.length) {
+      const irDetail = await saveIrDetail({
+        incidentReport: { id: ir.id },
+      }).then(async ({ data }) => data);
+      setIr((prev) => ({ ...prev, irInvestigation: [irDetail] }));
     }
   }, [ir.irInvestigation]);
 
@@ -263,26 +364,27 @@ const IrDetails = () => {
           </a>
         </form>
         <Box collapsable label="TABLE OF EVENTS">
-          <Events
-            events={(ir.irInvestigation && ir.irInvestigation[0]?.events) || []}
-          />
+          <Events events={events} setEvents={setEvents} />
           <div className={s.legend}>
             <FaFlag className={s.problem} /> Potential problem areas
           </div>
         </Box>
-        <Box collapsable label="RISK ASSESSMENT">
-          <RiskAssessment
-            methods={methods}
-            investigationDetails={ir.irInvestigation && ir.irInvestigation[0]}
-            parameters={parameters}
-            submitMainForm={submitMainForm}
-          />
-        </Box>
+        {irInvestigationDetails.find((item) => item.id === 7)?.enable && (
+          <Box collapsable label="RISK ASSESSMENT">
+            <RiskAssessment
+              methods={methods}
+              investigationDetails={ir.irInvestigation && ir.irInvestigation[0]}
+              parameters={parameters}
+              submitMainForm={submitMainForm}
+            />
+          </Box>
+        )}
         <Box label="NOTES" collapsable>
           <Notes
             parameters={parameters}
             methods={methods}
-            notes={(ir.irInvestigation && ir.irInvestigation[0]?.notes) || []}
+            notes={notes}
+            setNotes={setNotes}
           />
         </Box>
         <Modal
@@ -301,7 +403,20 @@ const IrDetails = () => {
           <button
             className="btn secondary wd-100"
             type="button"
-            onClick={() => {}}
+            onClick={() =>
+              navigate(
+                paths.incidentDashboard.basePath +
+                  "/" +
+                  paths.incidentDashboard.qualityDashboard +
+                  "?" +
+                  new URLSearchParams({
+                    view: user.role.includes(7) ? "all" : "assigned",
+                    ...(user.role.includes(7)
+                      ? {}
+                      : { irInvestigator: user.id }),
+                  })
+              )
+            }
           >
             Close
           </button>
@@ -310,9 +425,7 @@ const IrDetails = () => {
             //   Save
             // </button>
           }
-          <button onClick={() => {}} className="btn wd-100">
-            Submit
-          </button>
+          <button className="btn wd-100">Submit</button>
         </form>
       </div>
     </FormProvider>
@@ -376,7 +489,7 @@ const RiskAssessment = ({
             />
             <Input
               label="Risk Category"
-              {...register("riskCateg")}
+              // {...register("riskCateg")}
               value={
                 parameters.riskStatus.find(
                   (item) =>
@@ -397,24 +510,27 @@ const RiskAssessment = ({
               }
               readOnly
             />
-            <section className={s.riskIncluded}>
-              <label>Risk inlcuded in Risk Register</label>
-              <Radio
-                register={register}
-                name="riskIncluded"
-                options={[
-                  { label: "Yes", value: true },
-                  { label: "No", value: false },
-                ]}
+
+            <div className={s.riskId}>
+              <section className={s.riskIncluded}>
+                <label>Risk inlcuded in Risk Register?</label>
+                <Radio
+                  register={register}
+                  name="riskIncluded"
+                  options={[
+                    { label: "Yes", value: true },
+                    { label: "No", value: false },
+                  ]}
+                />
+              </section>
+              <Input
+                label={<>Risk ID {riskIncluded === "true" && "*"}</>}
+                {...register("riskId", {
+                  required: riskIncluded === "true" ? "Enter risk ID" : false,
+                })}
+                error={errors.riskId}
               />
-            </section>
-            <Input
-              label={<>Risk ID {riskIncluded === "true" && "*"}</>}
-              {...register("riskId", {
-                required: riskIncluded === "true" ? "Enter risk ID" : false,
-              })}
-              error={errors.riskId}
-            />
+            </div>
           </div>
         );
       }}
@@ -422,24 +538,16 @@ const RiskAssessment = ({
   );
 };
 
-const Events = ({ events }) => {
+const Events = ({ events, setEvents }) => {
   const { ir, setIr } = useContext(InvestigationContext);
   const [edit, setEdit] = useState(null);
 
   const onSuccess = useCallback((newEv) => {
-    // setEvents((prev) => {
-    //   return prev.find((c) => c.id === newEv.id)
-    //     ? prev.map((c) => (c.id === newEv.id ? newEv : c))
-    //     : [...prev, newEv];
-    // });
     setEdit(null);
   }, []);
 
   const { remove: deleteEvent, put: updateEvent, loading } = useFetch(
     defaultEndpoints.investigationEvents + "/{ID}"
-  );
-  const { patch: updateSequence, loading: updatingSequence } = useFetch(
-    defaultEndpoints.investigationEvents + `/{ID}`
   );
 
   return (
@@ -449,69 +557,45 @@ const Events = ({ events }) => {
       sortable={{
         handle: ".handle",
         removeCloneOnHide: true,
-        disabled: updatingSequence,
         onEnd: (e) => {
           const itemEl = e.item;
           const { oldIndex, newIndex } = e;
           if (oldIndex !== newIndex) {
-            setIr((ir) => {
-              let events = [...ir.irInvestigation[0].events];
-              let newEvents = [...events];
+            let newEvents = [
+              ...events.filter((item) => item.__status !== "delete"),
+            ];
 
-              const targetItem = events.find((evt, i) => i === oldIndex - 1);
+            const targetItem = events.find((evt, i) => i === oldIndex - 1);
 
-              let targetIndex = events.findIndex(
-                (evt) => evt.id === targetItem.id
-              );
+            let targetIndex = events.findIndex(
+              (evt) => evt.id === targetItem.id
+            );
 
-              if (newIndex > oldIndex) {
-                // swap with next as long as targetIndex is smaller than newIndex
-                while (targetIndex < newIndex - 1) {
-                  newEvents = newEvents.swap(targetIndex, targetIndex + 1);
-                  targetIndex = newEvents.findIndex(
-                    (evt) => evt.id === targetItem.id
-                  );
-                }
-              } else if (newIndex < oldIndex) {
-                // swap with previous as long as targetIndex is greater than newIndex
-                while (targetIndex > newIndex - 1) {
-                  newEvents = newEvents.swap(targetIndex, targetIndex - 1);
-                  targetIndex = newEvents.findIndex(
-                    (evt) => evt.id === targetItem.id
-                  );
-                }
+            if (newIndex > oldIndex) {
+              // swap with next as long as targetIndex is smaller than newIndex
+              while (targetIndex < newIndex - 1) {
+                newEvents = newEvents.swap(targetIndex, targetIndex + 1);
+                targetIndex = newEvents.findIndex(
+                  (evt) => evt.id === targetItem.id
+                );
               }
+            } else if (newIndex < oldIndex) {
+              // swap with previous as long as targetIndex is greater than newIndex
+              while (targetIndex > newIndex - 1) {
+                newEvents = newEvents.swap(targetIndex, targetIndex - 1);
+                targetIndex = newEvents.findIndex(
+                  (evt) => evt.id === targetItem.id
+                );
+              }
+            }
 
-              newEvents = newEvents.map((item, i) => ({
-                ...item,
-                sequence: i + 1,
-              }));
+            newEvents = newEvents.map((item, i) => ({
+              ...item,
+              sequence: i + 1,
+              __status: "pending",
+            }));
 
-              Promise.all(
-                newEvents
-                  .filter(
-                    (evt, i) =>
-                      events.find((ev) => ev.id === evt.id).sequence !==
-                      evt.sequence
-                  )
-                  .map((evt) =>
-                    updateSequence(
-                      { sequence: evt.sequence },
-                      { params: { "{ID}": evt.id } }
-                    )
-                  )
-              );
-
-              return {
-                ...ir,
-                irInvestigation: [
-                  {
-                    ...ir.irInvestigation[0],
-                    events: newEvents,
-                  },
-                ],
-              };
-            });
+            setEvents(newEvents);
           }
         },
       }}
@@ -529,126 +613,86 @@ const Events = ({ events }) => {
             edit={edit}
             onSuccess={(newEvent) => {
               if (edit) {
-                setIr((prev) => ({
-                  ...prev,
-                  irInvestigation: [
-                    {
-                      ...prev.irInvestigation[0],
-                      events: (
-                        prev.irInvestigation[0].events || []
-                      ).map((item) =>
-                        item.id === newEvent.id ? newEvent : item
-                      ),
-                    },
-                  ],
-                }));
+                setEvents((prev) =>
+                  prev.map((item) =>
+                    item.id === newEvent.id ? newEvent : item
+                  )
+                );
+
                 setEdit(null);
               } else {
-                setIr((prev) => ({
-                  ...prev,
-                  irInvestigation: [
-                    {
-                      ...prev.irInvestigation[0],
-                      events: [
-                        ...(prev.irInvestigation[0].events || []).filter(
-                          (item) => item.id !== newEvent.id
-                        ),
-                        newEvent,
-                      ],
-                    },
-                  ],
-                }));
+                setEvents((prev) => [
+                  ...prev.filter((item) => item.id !== newEvent.id),
+                  newEvent,
+                ]);
               }
             }}
             clearForm={() => setEdit(null)}
           />
         </td>
       </tr>
-      {events.map((ev, i) => (
-        <tr key={i}>
-          <td className={`handle ${s.handle}`}>
-            <FaEllipsisV /> {ev.no}
-          </td>
-          <td className={s.dscr}>
-            <span className={`${s.flag} ${ev.problem ? s.problem : ""}`}>
-              <button
-                className="btn clear"
-                style={{ padding: 0, margin: 0 }}
-                disabled={loading}
-                onClick={() =>
-                  updateEvent(
-                    { ...ev, problem: !ev.problem },
-                    { params: { "{ID}": ev.id } }
-                  ).then(({ data }) => {
-                    if (!data?.id) {
-                      return Prompt({
-                        type: "error",
-                        message: "Something went wrong",
-                      });
-                    }
-                    setIr((prev) => ({
-                      ...prev,
-                      irInvestigation: [
-                        {
-                          ...prev.irInvestigation[0],
-                          events: (
-                            prev.irInvestigation[0].events || []
-                          ).map((item) => (item.id === data.id ? data : item)),
-                        },
-                      ],
-                    }));
-                  })
-                }
-              >
-                <FaFlag />
-              </button>
-            </span>
-            {ev.details}
-          </td>
-          <td>
-            <Moment format="DD/MM/YYYY hh:mm">{ev.dateTime}</Moment>
-          </td>
-          <TableActions
-            actions={[
-              {
-                icon: <BsPencilFill />,
-                label: "Edit",
-                callBack: () => setEdit(ev),
-              },
-              {
-                icon: <FaRegTrashAlt />,
-                label: "Delete",
-                callBack: () =>
-                  Prompt({
-                    type: "confirmation",
-                    message: `Are you sure you want to remove this event?`,
-                    callback: () => {
-                      deleteEvent(null, {
-                        params: { "{ID}": ev.id },
-                      }).then(({ res }) => {
-                        if (res.status === 204) {
-                          setIr((prev) => {
-                            return {
-                              ...prev,
-                              irInvestigation: [
-                                {
-                                  ...prev.irInvestigation[0],
-                                  events: prev.irInvestigation[0].events.filter(
-                                    (item) => item.id !== ev.id
-                                  ),
-                                },
-                              ],
-                            };
-                          });
-                        }
-                      });
-                    },
-                  }),
-              },
-            ]}
-          />
-        </tr>
-      ))}
+      {events
+        .filter((item) => item.__status !== "delete")
+        .map((ev, i) => (
+          <tr key={i}>
+            <td className={`handle ${s.handle}`}>
+              <FaEllipsisV /> {i + 1}
+            </td>
+            <td className={s.dscr}>
+              <span className={`${s.flag} ${ev.problem ? s.problem : ""}`}>
+                <button
+                  className="btn clear"
+                  style={{ padding: 0, margin: 0 }}
+                  disabled={loading}
+                  onClick={() => {
+                    setEvents((prev) =>
+                      prev.map((item) =>
+                        item.id === ev.id
+                          ? { ...ev, problem: !ev.problem }
+                          : item
+                      )
+                    );
+                  }}
+                >
+                  <FaFlag />
+                </button>
+              </span>
+              {ev.details}
+            </td>
+            <td>
+              <Moment format="DD/MM/YYYY hh:mm">{ev.dateTime}</Moment>
+            </td>
+            <TableActions
+              actions={[
+                {
+                  icon: <BsPencilFill />,
+                  label: "Edit",
+                  callBack: () => setEdit(ev),
+                },
+                {
+                  icon: <FaRegTrashAlt />,
+                  label: "Delete",
+                  callBack: () =>
+                    Prompt({
+                      type: "confirmation",
+                      message: `Are you sure you want to remove this event?`,
+                      callback: () => {
+                        setEvents((prev) =>
+                          typeof ev.id === "string"
+                            ? prev.filter((item) => item.id !== ev.id)
+                            : prev.map((item) =>
+                                item.id === ev.id
+                                  ? { ...item, __status: "delete" }
+                                  : item
+                              )
+                        );
+                      },
+                    }),
+                },
+              ]}
+            />
+          </tr>
+        ))}
     </Table>
   );
 };
@@ -662,9 +706,6 @@ const EventForm = ({ edit, onSuccess, clearForm }) => {
     formState: { errors },
   } = useForm();
 
-  const { post: saveEvent, patch: updateEvent, loading } = useFetch(
-    defaultEndpoints.investigationEvents + `/${edit?.id || ""}`
-  );
   const { post: saveIrDetail, loading: savingIrDetail } = useFetch(
     defaultEndpoints.irInvestigation
   );
@@ -682,44 +723,27 @@ const EventForm = ({ edit, onSuccess, clearForm }) => {
     <form
       onSubmit={handleSubmit(async (values) => {
         let irDetail = ir.irInvestigation[0];
-        if (!irDetail) {
-          irDetail = await saveIrDetail({ incidentReport: { id: ir.id } }).then(
-            async ({ data }) => data
-          );
-        }
-
-        if (!irDetail) {
-          return Prompt({
-            type: "error",
-            message: "Please save IR Investigation before saving Events.",
-          });
-        }
 
         const newSequence =
           irDetail.events?.sort((a, b) => (a.sequence > b.sequence ? 1 : -1))[
             irDetail.events.length - 1
           ]?.sequence + 1 || 1;
 
-        (edit ? updateEvent : saveEvent)({
+        onSuccess({
+          id: Math.random().toString(36),
           ...values,
           ...(!edit && {
             sequence: newSequence,
             irInvestigation: { id: irDetail.id },
           }),
           irId: ir.id,
-        })
-          .then(({ data }) => {
-            if (data) {
-              setIr((prev) => ({ ...prev, irInvestigation: [irDetail] }));
-              onSuccess(data);
-              reset();
-            }
-          })
-          .catch((err) => Prompt({ type: "error", message: err.message }));
+          __status: "pending",
+        });
+        return reset();
       })}
     >
-      <span />
       <Input
+        className={s.detail}
         {...register("details", { required: "Please enter Detail" })}
         error={errors.details}
       />
@@ -734,7 +758,7 @@ const EventForm = ({ edit, onSuccess, clearForm }) => {
         error={errors.dateTime}
       />
       <div className={s.btns}>
-        <button className="btn secondary" type="submit" disabled={loading}>
+        <button className="btn secondary" type="submit">
           {edit ? (
             <FaCheck />
           ) : (
@@ -757,26 +781,12 @@ const EventForm = ({ edit, onSuccess, clearForm }) => {
   );
 };
 
-const Notes = ({ notes, parameters }) => {
+const Notes = ({ notes, setNotes, parameters }) => {
   const { user } = useContext(SiteContext);
   const { ir, setIr } = useContext(InvestigationContext);
+  const { irInvestigationDetails } = useContext(IrDashboardContext);
   const [edit, setEdit] = useState(null);
-  const [investigationDetails, setInvestigationDetails] = useState([]);
 
-  const { get: getElements } = useFetch(
-    defaultEndpoints.irInvestigationDetails
-  );
-
-  const { remove: deleteNote } = useFetch(
-    defaultEndpoints.investigationNotes + "/{ID}"
-  );
-  useEffect(() => {
-    getElements().then(({ data }) => {
-      if (data?._embedded.irInvestigationDetails) {
-        setInvestigationDetails(data._embedded.irInvestigationDetails);
-      }
-    });
-  }, []);
   return (
     <div className={s.notesWrapper}>
       <ConnectForm>
@@ -792,6 +802,7 @@ const Notes = ({ notes, parameters }) => {
           const dept = watch("dept");
           const selfReporting = watch("selfRep");
           const name = watch("name");
+          const ipsgBreach = watch("ipsgBreach");
           if (selfReporting === "true" && name !== user.id) {
             setValue("dept", user.department);
             setValue("name", user.id);
@@ -808,56 +819,56 @@ const Notes = ({ notes, parameters }) => {
           }
           return (
             <>
-              <div className={s.selfReporting}>
-                <section className={s.radio}>
-                  <label>Self reporting</label>
-                  <Radio
-                    register={register}
-                    name="selfRep"
-                    options={[
-                      { label: "Yes", value: true },
-                      { label: "No", value: false },
-                    ]}
+              {irInvestigationDetails.find((item) => item.id === 8)?.enable && (
+                <div className={s.selfReporting}>
+                  <section className={s.radio}>
+                    <label>Self reporting</label>
+                    <Radio
+                      register={register}
+                      name="selfRep"
+                      options={[
+                        { label: "Yes", value: true },
+                        { label: "No", value: false },
+                      ]}
+                    />
+                  </section>
+                  <Select
+                    control={control}
+                    name="name"
+                    label="Name"
+                    options={parameters.users}
+                    readOnly={selfReporting === "true"}
+                    onChange={(option) => {
+                      setValue("dept", option.department);
+                      setValue(
+                        "designaion",
+                        option.role
+                          .map(
+                            (role) =>
+                              parameters.roles.find((r) => r.value === role)
+                                ?.label || role
+                          )
+                          .join(", ")
+                      );
+                    }}
                   />
-                </section>
-                <Select
-                  control={control}
-                  name="name"
-                  label="Name"
-                  options={parameters.users}
-                  readOnly={selfReporting === "true"}
-                  onChange={(option) => {
-                    setValue("dept", option.department);
-                    setValue(
-                      "designaion",
-                      option.role
-                        .map(
-                          (role) =>
-                            parameters.roles.find((r) => r.value === role)
-                              ?.label || role
-                        )
-                        .join(", ")
-                    );
-                  }}
-                />
-                <Input
-                  label="Department"
-                  {...register("dept")}
-                  value={
-                    parameters.departments.find(
-                      (dpt) => dpt.value.toString() === dept?.toString()
-                    )?.label || ""
-                  }
-                  readOnly
-                />
-                <Input
-                  label="Designation"
-                  {...register("designaion")}
-                  readOnly
-                />
-              </div>
-              {investigationDetails.find((item) => item.elements === 9)
-                ?.enable && (
+                  <Input
+                    label="Department"
+                    value={
+                      parameters.departments.find(
+                        (dpt) => dpt.value.toString() === dept?.toString()
+                      )?.label || ""
+                    }
+                    readOnly
+                  />
+                  <Input
+                    label="Designation"
+                    {...register("designaion")}
+                    readOnly
+                  />
+                </div>
+              )}
+              {irInvestigationDetails.find((item) => item.id === 9)?.enable && (
                 <div className={s.ipsg}>
                   <section className={s.radio}>
                     <label>IPSG Breach</label>
@@ -873,9 +884,15 @@ const Notes = ({ notes, parameters }) => {
                   <Combobox
                     label="Select"
                     name="ipsg"
+                    readOnly={ipsgBreach === "false"}
                     watch={watch}
                     register={register}
+                    formOptions={{
+                      required:
+                        ipsgBreach === "false" ? false : "Field is required",
+                    }}
                     setValue={setValue}
+                    error={errors.ipsg}
                     options={[
                       {
                         label: "IPSG 1 patient identification error",
@@ -904,75 +921,57 @@ const Notes = ({ notes, parameters }) => {
               key={edit ? "edit" : "add"}
               edit={edit}
               onSuccess={(newNote) => {
-                setIr((prev) => ({
-                  ...prev,
-                  irInvestigation: [
-                    {
-                      ...prev.irInvestigation[0],
-                      notes: [
-                        ...(prev.irInvestigation[0].notes || []).filter(
-                          (item) => item.id !== newNote.id
-                        ),
-                        newNote,
-                      ],
-                    },
-                  ],
-                }));
+                setNotes((prev) => [
+                  ...prev.filter((item) => item.id !== newNote.id),
+                  newNote,
+                ]);
                 setEdit(null);
               }}
               clearForm={() => setEdit(null)}
             />
           </td>
         </tr>
-        {notes.map((note) => (
-          <tr key={note.id}>
-            <td>{note.notes}</td>
-            <td>
-              <Moment format="DD/MM/YYYY hh:mm">{note.dateTime}</Moment>
-            </td>
-            <TableActions
-              actions={[
-                {
-                  icon: <BsPencilFill />,
-                  label: "Edit",
-                  callBack: () => {
-                    setEdit(note);
+        {notes
+          .filter((ev) => ev.__status !== "delete")
+          .map((note) => (
+            <tr key={note.id}>
+              <td>{note.notes}</td>
+              <td>
+                <Moment format="DD/MM/YYYY hh:mm">{note.dateTime}</Moment>
+              </td>
+              <TableActions
+                actions={[
+                  {
+                    icon: <BsPencilFill />,
+                    label: "Edit",
+                    callBack: () => {
+                      setEdit(note);
+                    },
                   },
-                },
-                {
-                  icon: <FaRegTrashAlt />,
-                  label: "Delete",
-                  callBack: () =>
-                    Prompt({
-                      type: "confirmation",
-                      message: `Are you sure you want to remove this note?`,
-                      callback: () => {
-                        deleteNote(null, {
-                          params: { "{ID}": note.id },
-                        }).then(({ res }) => {
-                          if (res.status === 204) {
-                            setIr((prev) => ({
-                              ...prev,
-                              irInvestigation: [
-                                {
-                                  ...prev.irInvestigation[0],
-                                  notes: [
-                                    ...prev.irInvestigation[0].notes.filter(
-                                      (item) => item.id !== note.id
-                                    ),
-                                  ],
-                                },
-                              ],
-                            }));
-                          }
-                        });
-                      },
-                    }),
-                },
-              ]}
-            />
-          </tr>
-        ))}
+                  {
+                    icon: <FaRegTrashAlt />,
+                    label: "Delete",
+                    callBack: () =>
+                      Prompt({
+                        type: "confirmation",
+                        message: `Are you sure you want to remove this note?`,
+                        callback: () => {
+                          setNotes((prev) =>
+                            typeof note.id === "string"
+                              ? prev.filter((item) => item.id !== note.id)
+                              : prev.map((item) =>
+                                  item.id === note.id
+                                    ? { ...item, __status: "delete" }
+                                    : item
+                                )
+                          );
+                        },
+                      }),
+                  },
+                ]}
+              />
+            </tr>
+          ))}
       </Table>
     </div>
   );
@@ -987,9 +986,6 @@ const NoteForm = ({ edit, onSuccess, clearForm }) => {
     formState: { errors },
   } = useForm();
 
-  const { post: saveNote, put: updateNote, loading } = useFetch(
-    defaultEndpoints.investigationNotes + `/${edit?.id || ""}`
-  );
   const { post: saveIrDetail, loading: savingIrDetail } = useFetch(
     defaultEndpoints.irInvestigation
   );
@@ -997,9 +993,10 @@ const NoteForm = ({ edit, onSuccess, clearForm }) => {
   useEffect(() => {
     reset({
       ...edit,
-      dateTime: edit
-        ? moment({ time: edit.dateTime, format: "YYYY-MM-DDThh:mm" })
-        : "",
+      dateTime: moment({
+        time: edit?.dateTime || new Date(),
+        format: "YYYY-MM-DDThh:mm",
+      }),
     });
   }, [edit]);
 
@@ -1007,33 +1004,28 @@ const NoteForm = ({ edit, onSuccess, clearForm }) => {
     <form
       onSubmit={handleSubmit(async (values) => {
         let irDetail = ir.irInvestigation[0];
-        if (!irDetail) {
-          irDetail = await saveIrDetail({ incidentReport: { id: ir.id } }).then(
-            async ({ data }) => data
-          );
-        }
-
-        if (!irDetail) {
-          return Prompt({
-            type: "error",
-            message: "Please save IR Investigation before saving notes.",
-          });
-        }
-
-        (edit ? updateNote : saveNote)({
-          ...edit,
+        onSuccess({
+          id: Math.random().toString(36),
           ...values,
           irId: ir.id,
           irInvestigation: { id: irDetail.id },
-        })
-          .then(({ data }) => {
-            if (data?.id) {
-              setIr((prev) => ({ ...prev, irInvestigation: [irDetail] }));
-              onSuccess(data);
-              reset();
-            }
-          })
-          .catch((err) => Prompt({ type: "error", message: err.message }));
+          __status: "pending",
+        });
+        return reset();
+
+        // (edit ? updateNote : saveNote)({
+        //   ...edit,
+        //   ...values,
+        //   irId: ir.id,
+        //   irInvestigation: { id: irDetail.id },
+        // })
+        //   .then(({ data }) => {
+        //     if (data?.id) {
+        //       onSuccess(data);
+        //       reset();
+        //     }
+        //   })
+        //   .catch((err) => Prompt({ type: "error", message: err.message }));
       })}
     >
       <Input

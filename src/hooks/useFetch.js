@@ -2,10 +2,27 @@ import { useState, useEffect, useCallback, useRef, useContext } from "react";
 import { SiteContext } from "../SiteContext";
 import { Prompt } from "../components/modal";
 import { endpoints as defaultEndpoints } from "../config";
+import { getTenantId } from "../helpers";
+
+const defaultRegex = /^[\-\+.,:@ a-z0-9]+$/gi;
+
+const badCharacters = (payload, defaultRegex, validator = {}) => {
+  let result = false;
+  const arr = Object.entries({ ...payload });
+  for (var i = 0; i < arr.length; i++) {
+    const [key, value] = arr[i];
+    if (!value || typeof value !== "string") continue;
+    if (!new RegExp(validator[key] || defaultRegex).test(value)) {
+      result = `${key} contains invalid characters. use Only A-Z 0-9 ,.-:+@`;
+      break;
+    }
+  }
+  return result;
+};
 
 export const useFetch = (
   url,
-  { his, headers: hookHeaders, defaultHeaders, noDbSchema } = {}
+  { his, headers: hookHeaders, defaultHeaders, noDbSchema, validator } = {}
 ) => {
   const { user, logout } = useContext(SiteContext);
   const [error, setError] = useState(false);
@@ -23,6 +40,16 @@ export const useFetch = (
 
   const onSubmit = useCallback(
     async (payload = {}, method, { headers, params, query } = {}) => {
+      const badInput = badCharacters(
+        { ...payload, ...params, ...query },
+        defaultRegex,
+        validator
+      );
+      if (badInput) {
+        throw new Error(badInput);
+        // return { error: badInput };
+      }
+
       let _url = url;
       if (params) {
         Object.entries(params).forEach(([key, value]) => {
@@ -34,16 +61,14 @@ export const useFetch = (
           query
         ).toString()}`;
       }
-      if (
-        noDbSchema !== true &&
-        !his &&
-        sessionStorage.getItem("db-schema") &&
-        !_url.startsWith(defaultEndpoints.apiUrl)
-      ) {
-        _url += `${
-          _url.includes("?") ? "" : "?"
-        }&tenantId=${sessionStorage.getItem("db-schema")}`;
-      }
+      // if (
+      //   noDbSchema !== true &&
+      //   !his &&
+      //   getTenantId() &&
+      //   !_url.startsWith(defaultEndpoints.apiUrl)
+      // ) {
+      //   _url += `${_url.includes("?") ? "" : "?"}&tenantId=${getTenantId()}`;
+      // }
       setLoading(true);
       const response = await fetch(_url, {
         method: method,
@@ -56,7 +81,6 @@ export const useFetch = (
               ? {
                   Authorization:
                     "Bearer " + sessionStorage.getItem("access-token"),
-                  // tenantId: sessionStorage.getItem("db-schema") || null,
                 }
               : {
                   SECURITY_TOKEN: sessionStorage.getItem("HIS-access-token"),

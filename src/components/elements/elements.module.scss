@@ -450,6 +450,14 @@
       }
     }
   }
+  &.readOnly {
+    pointer-events: none;
+    .field {
+      .displayValue {
+        background: #f5f4f4;
+      }
+    }
+  }
   .errMsg {
     color: red !important;
     font-size: 10pt;
@@ -495,6 +503,13 @@
       }
       &.hover {
         background: #eeeeee !important;
+      }
+      &.disabled {
+        cursor: default;
+        input {
+          cursor: default;
+        }
+        background: rgb(244, 244, 244);
       }
     }
     overflow-x: hidden;
@@ -569,7 +584,7 @@
     }
   }
   thead {
-    background: #647299;
+    background: #647299 !important;
     position: sticky;
     top: 0;
     z-index: 10;
@@ -647,8 +662,8 @@
     }
   }
   &:not(.virtual) {
-    tbody {
-      tr {
+    & > tbody {
+      & > tr {
         &:nth-child(even) {
           background: #f3f3f3;
         }

@@ -110,7 +110,9 @@ export const MyDashboard = () => {
   const [filters, setFilters] = useState({});
   const [focus, setFocus] = useState(null);
 
-  const { get: searchIrs, loading } = useFetch(defaultEndpoints.irQuerySearch);
+  const { get: searchIrs, loading } = useFetch(defaultEndpoints.irQuerySearch, {
+    validator: { irCode: /^.+$/gi },
+  });
 
   useEffect(() => {
     setDashboard("myDashboard");
@@ -137,122 +139,106 @@ export const MyDashboard = () => {
     _filters.userId = user.id;
 
     searchIrs(null, { query: _filters })
-      .then((data) => {
-        const _ir = [];
-        data?.data?.forEach((ir) => {
-          ir.reqInput.forEach((req) => {
-            const response = ir.responseIrInput.find(
-              (res) => res.reqId === req.id
-            );
-            _ir.push({
-              irCode: ir.sequence,
-              reportingDate: ir.reportingDate,
-              incident_Date_Time: ir.incident_Date_Time,
-              location: ir.location,
-              inciCateg: ir.inciCateg,
-              inciSubCat: ir.inciSubCat,
-              queryRaisedBy: req.queryRaisedBy,
-              queryDateTime: req.queryDateTime,
-              irId: ir.id,
-              reqId: req.id,
-              query: req.query,
-              typeofInci: ir.typeofInci,
-              ...(response && { response }),
-            });
-          });
-        });
-        setIncidents(_ir);
+      .then(({ data }) => {
+        setIncidents(
+          data.map((ir) => ({ ...ir, response: ir.responseIrInput }))
+        );
       })
       .catch((err) => Prompt({ type: "error", message: err.message }));
   }, [location.search]);
   return (
-    <div key="myDashboard" className={`${s.myDashboard} ${s.queryDashboard}`}>
-      <div className={s.reportCounts}>
-        <ReportCount
-          className="open"
-          label="OPEN IRS"
-          irs={[
-            { label: "My IRs", count: count.myIr },
-            ...((checkPermission({ roleId: "hod" }) && [
-              { label: "Department IRs", count: count.departmentIr },
-            ]) ||
-              []),
-          ]}
-        />
-        <ReportCount
-          className="pending"
-          label="PENDING"
-          irs={[
-            { label: "IR Query", count: 0 },
-            { label: "CAPA Actions", count: 5 },
-            { label: "IR Acknowledgement", count: 5 },
-          ]}
-        />
-        <ReportCount
-          className="closure"
-          label="IR CLOSURE"
-          irs={[
-            { label: "IR Closure", count: 0 },
-            { label: "Addendum", count: 5 },
-            { label: "CAPA Closure", count: 5 },
-          ]}
-        />
-      </div>
-      <Filters
-        onSubmit={(values) => {
-          const _filters = {};
-          for (var field in values) {
-            if (values[field]) {
-              if (values[field] === "self") {
-                _filters.userId = user.id;
+    <>
+      <header>
+        <h3>IR QUERY DASHBOARD</h3>
+      </header>
+      <div key="myDashboard" className={`${s.myDashboard} ${s.queryDashboard}`}>
+        <div className={s.reportCounts}>
+          <ReportCount
+            className="open"
+            label="OPEN IRS"
+            irs={[
+              { label: "My IRs", count: count.myIr },
+              ...((checkPermission({ roleId: 9 }) && [
+                { label: "Department IRs", count: count.departmentIr },
+              ]) ||
+                []),
+            ]}
+          />
+          <ReportCount
+            className="pending"
+            label="PENDING"
+            irs={[
+              { label: "IR Query", count: 0 },
+              { label: "CAPA Actions", count: 5 },
+              { label: "IR Acknowledgement", count: 5 },
+            ]}
+          />
+          <ReportCount
+            className="closure"
+            label="IR CLOSURE"
+            irs={[
+              { label: "IR Closure", count: 0 },
+              { label: "Addendum", count: 5 },
+              { label: "CAPA Closure", count: 5 },
+            ]}
+          />
+        </div>
+        <Filters
+          onSubmit={(values) => {
+            const _filters = {};
+            for (var field in values) {
+              if (values[field]) {
+                if (values[field] === "self") {
+                  _filters.userId = user.id;
+                }
+                if (values[field] === "department") {
+                  _filters.department = user.department;
+                }
+                _filters[field] = values[field]?.join?.(",") || values[field];
               }
-              if (values[field] === "department") {
-                _filters.department = user.department;
-              }
-              _filters[field] = values[field]?.join?.(",") || values[field];
             }
-          }
-          // delete _filters.irBy;
-          navigate({
-            pathname: location?.pathname,
-            search: `?${createSearchParams(_filters)}`,
-          });
-          // setFilters(_filters);
-        }}
-      />
-      <div className={s.report} />
-      <Table
-        className={s.irQueries}
-        columns={[
-          { label: "IR Code" },
-          { label: "Reporting Date & Time" },
-          { label: "Incident Date & Time" },
-          { label: "Incident Location" },
-          { label: "Category" },
-          { label: "Subcategory" },
-          { label: "Query raised by" },
-          { label: "Query Date Time" },
-          { label: "Actions" },
-        ]}
-        actions
-        loading={loading}
-      >
-        {incidents
-          .sort((a, b) =>
-            new Date(a.queryDateTime) > new Date(b.queryDateTime) ? -1 : 1
-          )
-          .map((inc, i) => (
-            <SingleIr
-              focus={focus}
-              setFocus={setFocus}
-              key={i}
-              ir={inc}
-              parameters={parameters}
-              setIncidents={setIncidents}
-            />
-          ))}
-      </Table>
-    </div>
+            // delete _filters.irBy;
+            navigate({
+              pathname: location?.pathname,
+              search: `?${createSearchParams(_filters)}`,
+            });
+            // setFilters(_filters);
+          }}
+        />
+        <div className={s.report} />
+        <Table
+          className={s.irQueries}
+          columns={[
+            { label: "IR Code" },
+            { label: "Reporting Date & Time" },
+            { label: "Incident Date & Time" },
+            { label: "Incident Location" },
+            { label: "Category" },
+            { label: "Subcategory" },
+            { label: "Query raised by" },
+            { label: "Query Date Time" },
+            { label: "Actions" },
+          ]}
+          actions
+          loading={loading}
+        >
+          {incidents
+            .sort((a, b) =>
+              new Date(a.queryDateTime) > new Date(b.queryDateTime) ? -1 : 1
+            )
+            .map((inc, i) => (
+              <SingleIr
+                focus={focus}
+                setFocus={setFocus}
+                key={i}
+                ir={inc}
+                parameters={parameters}
+                setIncidents={setIncidents}
+              />
+            ))}
+        </Table>
+      </div>
+    </>
   );
 };
 const ReportCount = ({ label, className, irs }) => {
@@ -283,7 +269,7 @@ const SingleIr = memo(
           //   setFocus && setFocus(ir.id);
           // }}
         >
-          <td className={s.sequence}>{ir.irCode}</td>
+          <td className={s.sequence}>{ir.sequence}</td>
           <td>
             <Moment format="DD/MM/YYYY hh:mm">{ir.reportingDate}</Moment>
           </td>
@@ -316,7 +302,7 @@ const SingleIr = memo(
             actions={[
               {
                 icon: <FaExternalLinkAlt />,
-                label: "Reponse",
+                label: "Response",
                 callBack: () => setShowResForm(true),
               },
             ]}
@@ -336,7 +322,7 @@ const SingleIr = memo(
             onSuccess={(newRes) => {
               setIncidents((prev) =>
                 prev.map((ir) =>
-                  ir.reqId === newRes.reqId
+                  ir.reqInputId === newRes.reqId
                     ? {
                         ...ir,
                         response: newRes,
@@ -372,14 +358,16 @@ const ResponseForm = ({ ir, parameters, setShowResForm, onSuccess }) => {
   });
   const uploads = watch("upload");
 
-  const { post: saveResponse } = useFetch(defaultEndpoints.responseInputs);
+  const { post: saveResponse } = useFetch(defaultEndpoints.responseInputs, {
+    validator: { upload: /^.+$/gi },
+  });
   const { post: upload, laoding: uploadingFiles } = useFetch(
     defaultEndpoints.uploadFiles
   );
   return (
     <div className={s.content}>
       <ul className={s.irDetail}>
-        <li>IR Code: {ir?.irCode}</li>
+        <li>IR Code: {ir?.sequence}</li>
         <li>
           Incident Date & Time:{" "}
           <Moment format="DD/MM/YYYY hh:mm">{ir?.incident_Date_Time}</Moment>
@@ -438,11 +426,15 @@ const ResponseForm = ({ ir, parameters, setShowResForm, onSuccess }) => {
 
           saveResponse({
             ...values,
-            reqId: ir.reqId,
-            incidentReport: { id: ir.irId },
+            reqId: ir.reqInputId,
+            incidentReport: { id: ir.id },
           })
             .then(({ data }) => {
               if (data?.id) {
+                Prompt({
+                  type: "success",
+                  message: "Response submitted successfully.",
+                });
                 return onSuccess(data);
               }
               Prompt({
@@ -500,9 +492,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
   const navigate = useNavigate();
   const { user, checkPermission, irTypes } = useContext(SiteContext);
   const { parameters } = useContext(IrDashboardContext);
-  const defaultView = user?.role?.includes?.("incidentManager")
-    ? "all"
-    : "assigned";
+  const defaultView = user?.role?.includes?.(7) ? "all" : "assigned";
   const {
     handleSubmit,
     register,

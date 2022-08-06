@@ -16,6 +16,7 @@ import { useFetch } from "../hooks";
 import { appConfig, endpoints as defaultEndpoints, paths } from "../config";
 // import hisEndpoints from "../config/hisEndpoints.js";
 import jwt_decode from "jwt-decode";
+import { getTenantId, setTenantId } from "../helpers";
 
 export default function Login() {
   const { user, setUser, setEndpoints, his, setHis } = useContext(SiteContext);
@@ -26,9 +27,7 @@ export default function Login() {
   const { get: getUserDetail } = useFetch(
     defaultEndpoints.searchUserByUsername
   );
-  const { get: getEndpoints } = useFetch(
-    defaultEndpoints.apiUrl + `?tenantId=${sessionStorage.getItem("db-schema")}`
-  );
+  const { get: getEndpoints } = useFetch(defaultEndpoints.apiUrl);
 
   const handleUser = useCallback(
     (user) => {
@@ -58,6 +57,7 @@ export default function Login() {
   useEffect(() => {
     const accessToken = sessionStorage.getItem("access-token");
     const hisAccessToken = sessionStorage.getItem("HIS-access-token");
+    // const tenantId = getTenantId();
     if (accessToken) {
       var decoded = jwt_decode(accessToken);
       if (decoded && new Date() > new Date(decoded.exp)) {
@@ -86,7 +86,10 @@ export default function Login() {
             }
             handleUser({
               ...user,
-              role: user.role.split(",").filter((role) => role),
+              role: user.role
+                .split(",")
+                .map((role) => +role)
+                .filter((role) => role),
             });
           }
         });
@@ -96,12 +99,9 @@ export default function Login() {
       navigate("/");
       return;
     }
-    if (new URLSearchParams(location.search).get("tenantId")) {
-      sessionStorage.setItem(
-        "db-schema",
-        new URLSearchParams(location.search).get("tenantId")
-      );
-    }
+    // if (new URLSearchParams(location.search).get("tenantId")) {
+    //   setTenantId(new URLSearchParams(location.search).get("tenantId"));
+    // }
   }, []);
   return (
     <div className={s.login} data-testid="login">
@@ -121,25 +121,23 @@ export default function Login() {
               let token = sessionStorage.getItem("access-token");
 
               if (!token) {
-                const resp = await fetch(
-                  `${defaultEndpoints.token}?tenantId=${sessionStorage.getItem(
-                    "db-schema"
-                  )}`,
-                  {
-                    method: "POST",
-                    headers: {
-                      Authorization:
-                        "Basic " +
-                        Buffer.from(`napier:my-secret-key`).toString("base64"),
-                      "Content-Type": "application/x-www-form-urlencoded",
-                    },
-                    body: new URLSearchParams({
-                      grant_type: "password",
-                      username: data.username,
-                      password: data.password,
-                    }).toString(),
-                  }
-                )
+                const resp = await fetch(`${defaultEndpoints.token}`, {
+                  method: "POST",
+                  headers: {
+                    Authorization:
+                      "Basic " +
+                      Buffer.from(`napier:my-secret-key`).toString("base64"),
+                    "Content-Type": "application/x-www-form-urlencoded",
+                  },
+                  body: new URLSearchParams({
+                    grant_type: "password",
+                    username: data.username,
+                    password: data.password,
+                    tenantId: new URLSearchParams(location.search).get(
+                      "tenantId"
+                    ),
+                  }).toString(),
+                })
                   .then((res) => res.json())
                   .catch((err) => {
                     Prompt({
@@ -147,6 +145,7 @@ export default function Login() {
                       message: err.message,
                     });
                     setLoading(false);
+                    return err;
                   });
 
                 if (resp?.access_token) {
@@ -154,7 +153,10 @@ export default function Login() {
                 } else {
                   return Prompt({
                     type: "error",
-                    message: resp.error_description || "Invalid Credentials",
+                    message:
+                      resp?.error_description ||
+                      resp?.message ||
+                      "Invalid Credentials",
                   });
                 }
               }
@@ -300,7 +302,10 @@ export default function Login() {
                     user?.id
                       ? {
                           ...user,
-                          role: user.role?.split(",").filter((role) => role),
+                          role: user.role
+                            ?.split(",")
+                            .map((item) => +item)
+                            .filter((role) => role),
                         }
                       : null
                   )
@@ -328,7 +333,10 @@ export default function Login() {
                   return user?.id
                     ? {
                         ...user,
-                        role: user.role?.split(",").filter((role) => role),
+                        role: user.role
+                          ?.split(",")
+                          .map((item) => +item)
+                          .filter((role) => role),
                       }
                     : null;
                 });

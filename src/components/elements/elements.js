@@ -326,8 +326,8 @@ export const uploadFiles = async ({ files, uploadFiles }) => {
   if (files?.length) {
     const formData = new FormData();
     const uploaded = [];
+    let newLinks = [];
     const newFiles = [];
-
     for (var _file of files) {
       if (typeof _file === "string" || _file.uploadFilePath) {
         uploaded.push(_file);
@@ -338,7 +338,7 @@ export const uploadFiles = async ({ files, uploadFiles }) => {
     }
 
     if (newFiles.length) {
-      const newLinks = await uploadFiles(formData)
+      newLinks = await uploadFiles(formData)
         .then(
           ({ data }) =>
             data?.map((item, i) => ({
@@ -349,9 +349,8 @@ export const uploadFiles = async ({ files, uploadFiles }) => {
         .catch((err) => {
           error = err;
         });
-
-      links = [...uploaded, ...newLinks];
     }
+    links = [...uploaded, ...newLinks];
   }
   return { links, error };
 };
@@ -432,6 +431,7 @@ export const CustomRadio = ({
   formOptions,
   className,
   selectedClassName,
+  error,
 }) => {
   const selected = watch?.(name);
   return (
@@ -450,7 +450,8 @@ export const CustomRadio = ({
             htmlFor={name + v}
             key={i}
             className={`${s.option} ${
-              selected?.includes && selected?.includes(v)
+              (Array.isArray(selected) && selected?.includes(v)) ||
+              selected === v
                 ? s.selected + " " + (selectedClassName || "")
                 : ""
             } ${disabled ? s.disabled : ""}`}
@@ -467,23 +468,23 @@ export const CustomRadio = ({
                 ""
               }
               onChange={(e) => {
+                const val = v || e.target.value;
+                onChange?.(val);
                 if (
-                  e.target.value === selected ||
-                  (selected?.includes && selected?.includes(e.target.value))
+                  val === selected ||
+                  (selected?.includes && selected?.includes(val))
                 ) {
                   if (multiple) {
                     setValue(
                       name,
-                      (selected || []).filter(
-                        (value) => value !== e.target.value
-                      )
+                      (selected || []).filter((value) => value !== val)
                     );
                   }
                 } else {
                   if (multiple) {
-                    setValue(name, [...selected, e.target.value]);
+                    setValue(name, [...selected, val]);
                   } else {
-                    setValue(name, e.target.value);
+                    setValue(name, val);
                   }
                 }
               }}
@@ -492,6 +493,7 @@ export const CustomRadio = ({
           </label>
         ))}
       </div>
+      {error && <span className={s.errMsg}>{error.message}</span>}
     </section>
   );
 };

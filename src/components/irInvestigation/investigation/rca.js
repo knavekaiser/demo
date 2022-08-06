@@ -54,7 +54,7 @@ const Rca = () => {
     likelihood: [],
     users: [],
     departments: [],
-    roles: permissions.map((p) => ({ value: p.role, label: p.label })),
+    roles: permissions.map((p) => ({ value: p.id, label: p.label })),
     risks: [],
     riskStatus: [],
   });
@@ -124,24 +124,139 @@ const Rca = () => {
   const [showSimilarIncidents, setShowSimilarIncidents] = useState(false);
   const methods = useForm();
 
-  const { post: saveIrDetail, put: updateIrDetail, savingIrDetail } = useFetch(
-    defaultEndpoints.irInvestigation +
-      (ir.irInvestigation?.length ? `/${ir.irInvestigation[0].id}` : "")
-  );
+  const [rcaRootcause, setRcaRootcause] = useState(ir.rcaRootcause || []);
+  const [rcaIdentified, setRcaIdentified] = useState(ir.rcaIdentified || []);
+  const [rcaTeam, setRcaTeam] = useState(ir.rcaTeam || []);
+
+  const {
+    post: saveRootCause,
+    put: updateRootCause,
+    remove: deleteRootCause,
+    loading: updatingRooCause,
+  } = useFetch(defaultEndpoints.rcaRootCauses + `/{ID}`, {
+    validator: { why: /^[\-\+.,:|@ a-z0-9]+$/gi },
+  });
+  const {
+    post: saveRcaIdentified,
+    put: updateRcaIdentified,
+    remove: deleteRcaIdentified,
+    loading: updatingRcaIdentified,
+  } = useFetch(defaultEndpoints.rcaIdentified + `/{ID}`);
+  const {
+    post: saveRcaTeam,
+    put: updateRcaTeam,
+    remove: deleteRcaTeam,
+    loading: updatingRcaTeam,
+  } = useFetch(defaultEndpoints.rcaTeam + `/{ID}`);
 
   const submitMainForm = useCallback(
     (values) => {
-      (ir.irInvestigation?.length ? updateIrDetail : saveIrDetail)({
-        ...(ir.irInvestigation.length ?? ir.irInvestigation[0]),
-        ...values,
-        incidentReport: { id: ir.id },
-      }).then(({ data }) => {
-        if (data.id) {
-          setIr((prev) => ({ ...prev, irInvestigation: [data] }));
-        }
-      });
+      Promise.all([
+        ...rcaRootcause
+          .filter((item) => ["delete", "edit", "add"].includes(item.action))
+          .map((item) => {
+            if (item.action === "delete") {
+              return deleteRootCause(null, { params: { "{ID}": item.id } });
+            }
+            if (item.action === "add") {
+              return saveRootCause(
+                {
+                  ...item,
+                  probStmt: values.problemStatement,
+                  rcaDate: values.rcaDate,
+                  incidentReport: { id: ir.id },
+                  id: undefined,
+                },
+                { params: { "{ID}": "" } }
+              );
+            }
+            if (item.action === "edit") {
+              return updateRootCause(
+                {
+                  ...item,
+                  probStmt: values.problemStatement,
+                  rcaDate: values.rcaDate,
+                  incidentReport: { id: ir.id },
+                  id: undefined,
+                },
+                { params: { "{ID}": item.id } }
+              );
+            }
+          }),
+        ...rcaIdentified
+          .filter((item) => ["delete", "edit", "add"].includes(item.action))
+          .map((item) => {
+            if (item.action === "delete") {
+              return deleteRcaIdentified(null, { params: { "{ID}": item.id } });
+            }
+            if (item.action === "add") {
+              return saveRcaIdentified(
+                { ...item, incidentReport: { id: ir.id }, id: undefined },
+                { params: { "{ID}": "" } }
+              );
+            }
+            if (item.action === "edit") {
+              return updateRcaIdentified(
+                { ...item, incidentReport: { id: ir.id }, id: undefined },
+                { params: { "{ID}": item.id } }
+              );
+            }
+          }),
+        ...rcaTeam
+          .filter((item) => ["delete", "edit", "add"].includes(item.action))
+          .map((item) => {
+            if (item.action === "delete") {
+              return deleteRcaTeam(null, { params: { "{ID}": item.id } });
+            }
+            if (item.action === "add") {
+              return saveRcaTeam(
+                { ...item, incidentReport: { id: ir.id }, id: undefined },
+                { params: { "{ID}": "" } }
+              );
+            }
+            if (item.action === "edit") {
+              return updateRcaTeam(
+                { ...item, incidentReport: { id: ir.id }, id: undefined },
+                { params: { "{ID}": item.id } }
+              );
+            }
+          }),
+      ])
+        .then((resps) => {
+          const _rcaRootcause = resps
+            .filter((item) => item?.data?.why)
+            .map((item) => item.data);
+          const _rcaIdentified = resps
+            .filter((item) => item?.data?.rcaCat && item.data.details)
+            .map((item) => item.data);
+          const _rcaTeam = resps
+            .filter((item) => item?.data?.designation)
+            .map((item) => item.data);
+          setIr((prev) => ({
+            ...prev,
+            rcaRootcause: [
+              ..._rcaRootcause,
+              ...rcaRootcause.filter((item) => !item.action),
+            ],
+            rcaIdentified: [
+              ..._rcaIdentified,
+              ...rcaIdentified.filter((item) => !item.action),
+            ],
+            rcaTeam: [..._rcaTeam, ...rcaTeam.filter((item) => !item.action)],
+          }));
+          Prompt({
+            type: "success",
+            message: "Updates have been saved.",
+          });
+        })
+        .catch((err) =>
+          Prompt({
+            type: "error",
+            message: err.message,
+          })
+        );
     },
-    [ir]
+    [ir, rcaRootcause, rcaIdentified, rcaTeam]
   );
 
   const { get: getUsers } = useFetch(defaultEndpoints.users + `?size=10000`);
@@ -159,7 +274,10 @@ const Rca = () => {
             label: user.name,
             value: user.id,
             department: user.department,
-            role: user.role.split(",").filter((item) => item),
+            role: user.role
+              .split(",")
+              .map((role) => +role)
+              .filter((item) => item),
           }));
         }
 
@@ -175,21 +293,17 @@ const Rca = () => {
   }, []);
 
   useEffect(() => {
-    if (ir.irInvestigation?.length) {
-      methods.reset({
-        ...ir.irInvestigation[0],
-        riskSeverity: ir.irInvestigation[0].riskSeverity || "",
-        riskLikeliHood: ir.irInvestigation[0].riskLikeliHood || "",
-        ipsg: ir.irInvestigation[0].ipsg || "",
-        name: ir.irInvestigation[0].name || "",
-        dept: ir.irInvestigation[0].dept || "",
-        prevSimilar: ir.irInvestigation[0].prevSimilar.toString(),
-        riskIncluded: ir.irInvestigation[0].riskIncluded.toString(),
-        selfRep: ir.irInvestigation[0].selfRep.toString(),
-        ipsgBreach: ir.irInvestigation[0].ipsgBreach.toString(),
-      });
+    setRcaRootcause(ir.rcaRootcause || []);
+    if (ir.rcaRootcause?.length) {
+      methods.setValue("problemStatement", ir.rcaRootcause[0].probStmt);
     }
-  }, [ir.irInvestigation]);
+  }, [ir.rcaRootcause]);
+  useEffect(() => {
+    setRcaIdentified(ir.rcaIdentified || []);
+  }, [ir.rcaIdentified]);
+  useEffect(() => {
+    setRcaTeam(ir.rcaTeam || []);
+  }, [ir.rcaTeam]);
 
   return (
     <FormProvider {...methods}>
@@ -198,8 +312,15 @@ const Rca = () => {
           <label>Date of conducting Root Cause Analysis:</label>
           <Input
             type="date"
-            value={moment({ time: new Date(), format: "YYYY-MM-DD" })}
-            readOnly
+            {...methods.register("rcaDate")}
+            value={moment({
+              time: new Date(
+                (ir.rcaRootcause?.length && ir.rcaRootcause[0].rcaDate) ||
+                  new Date()
+              ),
+              format: "YYYY-MM-DD",
+            })}
+            errors={methods.formState.errors.rcaDate}
           />
         </section>
         <Box collapsable label="POTENTIAL PROBLEM AREAS">
@@ -221,30 +342,17 @@ const Rca = () => {
         </Box>
         <Box collapsable label="ROOT CAUSE">
           <RootCause
-            methods={methods}
-            investigationDetails={ir.irInvestigation && ir.irInvestigation[0]}
-            parameters={parameters}
-            submitMainForm={submitMainForm}
+            rcaRootcause={rcaRootcause}
+            setRcaRootcause={setRcaRootcause}
+            rcaIdentified={rcaIdentified}
+            setRcaIdentified={setRcaIdentified}
           />
         </Box>
         <Box label="RCA TEAM MEMBERS" collapsable>
           <RcaTeamMembers
+            rcaTeam={rcaTeam}
+            setRcaTeam={setRcaTeam}
             parameters={parameters}
-            methods={methods}
-            members={[
-              {
-                id: 2,
-                userId: 15,
-                deptId: 1,
-                designaion: "Lab technician",
-              },
-              {
-                id: 3,
-                userId: 20,
-                deptId: 4,
-                designaion: "Section Incharge",
-              },
-            ]}
           />
         </Box>
         <Modal
@@ -261,741 +369,23 @@ const Rca = () => {
           onSubmit={methods.handleSubmit(submitMainForm)}
         >
           <button
-            className="btn secondary wd-100"
+            className="btn secondary ghost wd-100"
             type="button"
             onClick={() => {}}
           >
             Close
           </button>
           <button onClick={() => {}} className="btn secondary wd-100">
-            Save
+            Edit
           </button>
-          <button onClick={() => {}} className="btn wd-100">
-            Submit
+          <button onClick={() => {}} type="submit" className="btn wd-100">
+            Save
           </button>
         </form>
       </div>
     </FormProvider>
   );
 };
-const RootCause = ({
-  methods,
-  invitationDetails,
-  parameters,
-  submitMainForm,
-}) => {
-  const [risk, setRisk] = useState({});
-  const severity = methods.watch("riskSeverity");
-  const likelihood = methods.watch("riskLikeliHood");
-  useEffect(() => {
-    const selectedRisk = parameters.risks.find(
-      (r) => r.likelihood === likelihood && r.serverity === severity
-    );
-
-    if (selectedRisk) {
-      setRisk((prev) => ({ ...prev, riskDetail: selectedRisk }));
-      methods.setValue(
-        "riskCateg",
-        parameters.riskStatus.find(
-          (item) => item.value.toString() === selectedRisk.riskstatus.toString()
-        )?.label || ""
-      );
-    } else {
-      setRisk((prev) => ({ ...prev, riskDetail: null }));
-    }
-  }, [likelihood, severity, parameters.risks]);
-  return (
-    <div className={s.rootCause}>
-      <ConnectForm>
-        {({
-          register,
-          setValue,
-          watch,
-          getValues,
-          formState: { errors },
-          clearErrors,
-          control,
-        }) => {
-          return (
-            <>
-              <div className={s.problemStatement}>
-                <Input
-                  label="Problem Statement"
-                  {...register("problemStatement")}
-                />
-                <button className={`btn clear ${s.btn}`}>
-                  <FaUndo /> Root Causes of similar incidents
-                </button>
-              </div>
-              <CustomRadio
-                className={s.customRadio}
-                selectedClassName={s.selected}
-                name="type"
-                register={register}
-                setValue={setValue}
-                watch={watch}
-                options={[
-                  { label: "People", value: "people" },
-                  { label: "Environments", value: "environments" },
-                  { label: "Materals", value: "materals" },
-                  { label: "Methods", value: "methods" },
-                  { label: "Equipment", value: "equipment" },
-                ]}
-              />
-            </>
-          );
-        }}
-      </ConnectForm>
-      <AddCauseFrom onSuccess={() => {}} />
-      <Causes />
-      <IdentifiedRca
-        rcas={[
-          {
-            id: 2,
-            rootCause: "No policy for handling outsource work",
-            category: 3,
-            details: 'Facility policy "Maintenance & PPM" to be outdated',
-          },
-          {
-            id: 3,
-            rootCause: "New equipment brought without labeling critical",
-            category: 2,
-            details: "Equipment validation process to be checked",
-          },
-        ]}
-        parameters={parameters}
-      />
-    </div>
-  );
-};
-
-const AddCauseFrom = ({ onSuccess }) => {
-  const {
-    handleSubmit,
-    register,
-    unregister,
-    reset,
-    formState: { errors },
-    clearErrors,
-  } = useForm({ shouldUnregister: true });
-  const [whyIds, setWhyIds] = useState([Math.random().toString(32).substr(-8)]);
-
-  return (
-    <form
-      className={s.addCause}
-      onSubmit={handleSubmit((values) => {
-        //
-      })}
-    >
-      <Input
-        label="Cause"
-        {...register("cause", { required: "Field is required" })}
-        error={errors.cause}
-      />
-      {whyIds.map((id, i) => (
-        <Input
-          key={id}
-          label={i === 0 ? "Why's" : ""}
-          {...register(`why.${id}`)}
-          error={errors[`why.${id}`]}
-          icon={
-            i > 0 ? (
-              <FaTimes
-                onClick={() => {
-                  unregister(`why.${id}`);
-                  setWhyIds((prev) => prev.filter((_id) => _id !== id));
-                }}
-              />
-            ) : null
-          }
-        />
-      ))}
-      <button
-        type="button"
-        onClick={() =>
-          setWhyIds((prev) => [...prev, Math.random().toString(32).substr(-8)])
-        }
-        className={`btn clear ${s.addWhy}`}
-      >
-        <FaPlusCircle />
-      </button>
-      <button type="submit" className="btn secondary wd-100">
-        Save
-      </button>
-    </form>
-  );
-};
-
-const ProblemAreas = ({ events }) => {
-  const { ir, setIr } = useContext(InvestigationContext);
-  const [edit, setEdit] = useState(null);
-
-  const onSuccess = useCallback((newEv) => {
-    // setEvents((prev) => {
-    //   return prev.find((c) => c.id === newEv.id)
-    //     ? prev.map((c) => (c.id === newEv.id ? newEv : c))
-    //     : [...prev, newEv];
-    // });
-    setEdit(null);
-  }, []);
-
-  const { remove: deleteEvent, put: updateEvent, loading } = useFetch(
-    defaultEndpoints.investigationEvents + "/{ID}"
-  );
-  const { patch: updateSequence, loading: updatingSequence } = useFetch(
-    defaultEndpoints.investigationEvents + `/{ID}`
-  );
-
-  return (
-    <Table
-      className={s.problemAreas}
-      key={Math.random()}
-      columns={[{ label: "S.No." }, { label: "Details" }]}
-    >
-      {events.map((ev, i) => (
-        <tr key={i}>
-          <td>{ev.no}</td>
-          <td>{ev.details}</td>
-        </tr>
-      ))}
-    </Table>
-  );
-};
-
-const RcaTeamMembers = ({ members, parameters }) => {
-  const { ir, setIr } = useContext(InvestigationContext);
-  const [edit, setEdit] = useState(null);
-  const { remove: deleteNote } = useFetch(
-    defaultEndpoints.investigationNotes + "/{ID}"
-  );
-  return (
-    <Table
-      columns={[
-        { label: "Name" },
-        { label: "Department" },
-        { label: "Designation" },
-        { label: "Actions" },
-      ]}
-      className={s.rcaTeamMembers}
-    >
-      <tr>
-        <td className={s.inlineForm}>
-          <RcaTeamMemberForm
-            key={edit ? "edit" : "add"}
-            edit={edit}
-            parameters={parameters}
-            onSuccess={(newNote) => {
-              setIr((prev) => ({
-                ...prev,
-                irInvestigation: [
-                  {
-                    ...prev.irInvestigation[0],
-                    notes: [
-                      ...(prev.irInvestigation[0].notes || []).filter(
-                        (item) => item.id !== newNote.id
-                      ),
-                      newNote,
-                    ],
-                  },
-                ],
-              }));
-              setEdit(null);
-            }}
-            clearForm={() => setEdit(null)}
-          />
-        </td>
-      </tr>
-      {members.map((member) => (
-        <tr key={member.id}>
-          <td>
-            {parameters.users.find((user) => user.value === member.userId)
-              ?.label || member.userId}
-          </td>
-          <td>
-            {parameters.departments.find((user) => user.value === member.deptId)
-              ?.label || member.deptId}
-          </td>
-          <td>{member.designaion}</td>
-          <TableActions
-            actions={[
-              {
-                icon: <BsPencilFill />,
-                label: "Edit",
-                callBack: () => {
-                  setEdit(member);
-                },
-              },
-              {
-                icon: <FaRegTrashAlt />,
-                label: "Delete",
-                callBack: () =>
-                  Prompt({
-                    type: "confirmation",
-                    message: `Are you sure you want to remove this note?`,
-                    callback: () => {
-                      deleteNote(null, {
-                        params: { "{ID}": member.id },
-                      }).then(({ res }) => {
-                        if (res.status === 204) {
-                          setIr((prev) => ({
-                            ...prev,
-                            irInvestigation: [
-                              {
-                                ...prev.irInvestigation[0],
-                                notes: [
-                                  ...prev.irInvestigation[0].notes.filter(
-                                    (item) => item.id !== member.id
-                                  ),
-                                ],
-                              },
-                            ],
-                          }));
-                        }
-                      });
-                    },
-                  }),
-              },
-            ]}
-          />
-        </tr>
-      ))}
-    </Table>
-  );
-};
-const RcaTeamMemberForm = ({ edit, onSuccess, parameters, clearForm }) => {
-  const { ir, setIr } = useContext(InvestigationContext);
-  const {
-    handleSubmit,
-    register,
-    reset,
-    control,
-    formState: { errors },
-  } = useForm();
-
-  const { post: saveNote, put: updateNote, loading } = useFetch(
-    defaultEndpoints.investigationNotes + `/${edit?.id || ""}`
-  );
-  const { post: saveIrDetail, savingIrDetail } = useFetch(
-    defaultEndpoints.irInvestigation
-  );
-
-  useEffect(() => {
-    reset({
-      ...edit,
-      dateTime: edit
-        ? moment({ time: edit.dateTime, format: "YYYY-MM-DDThh:mm" })
-        : "",
-    });
-  }, [edit]);
-
-  return (
-    <form
-      onSubmit={handleSubmit(async (values) => {
-        let irDetail = ir.irInvestigation[0];
-        if (!irDetail) {
-          irDetail = await saveIrDetail({ incidentReport: { id: ir.id } }).then(
-            ({ data }) => {
-              setIr((prev) => ({ ...prev, irInvestigation: [data] }));
-              return data;
-            }
-          );
-        }
-
-        if (!irDetail) {
-          return Prompt({
-            type: "error",
-            message: "Please save IR Investigation before saving notes.",
-          });
-        }
-
-        (edit ? updateNote : saveNote)({
-          ...edit,
-          ...values,
-          irId: ir.id,
-          irInvestigation: { id: irDetail.id },
-        })
-          .then(({ data }) => {
-            if (data.id) {
-              onSuccess(data);
-              reset();
-            }
-          })
-          .catch((err) => Prompt({ type: "error", message: err.message }));
-      })}
-    >
-      <Select
-        options={parameters.users}
-        name="userId"
-        control={control}
-        formOptions={{ required: "Field is required" }}
-      />
-      <Select
-        options={parameters.departments}
-        name="deptId"
-        control={control}
-        formOptions={{ required: "Field is required" }}
-      />
-      <Input
-        {...register("designaion", { required: "Field is required" })}
-        error={errors.designaion}
-      />
-      <div className={s.btns}>
-        <button className="btn secondary" type="submit">
-          {edit ? (
-            <FaCheck />
-          ) : (
-            <>
-              <FaPlus /> Add
-            </>
-          )}
-        </button>
-        {edit && (
-          <button
-            type="button"
-            onClick={() => clearForm(null)}
-            className="btn secondary"
-          >
-            <IoClose />
-          </button>
-        )}
-      </div>
-    </form>
-  );
-};
-
-const Causes = ({}) => {
-  const [causes, setCauses] = useState({
-    People: {
-      Secretary: ["Heavy Workload", "Unavailable when", "Lab called"],
-      Escort: [],
-      Pholebotomist: [],
-      Dispather: ["Heavy Workload", "No tracing processes"],
-      // "Lab tech": [],
-      // asdgasPholebotomist: [],
-      // Dispaasasdfdther: ["Heavy Workload", "No tracing processes"],
-      // "Lab tasdfech": [],
-      // Pholeboasdftomist: [],
-      // Dispathasdfer: ["Heavy Workload", "No tracing processes"],
-      // "Lab teasdfch": [],
-      // Pholeboasdftomist: [],
-      // Dispathasdfer: ["Heavy Workload", "No tracing processes"],
-      // "Lab teasdfch": [],
-      // Pholeboadsftomist: [],
-      // Dispatasdfher: ["Heavy Workload", "No tracing processes"],
-      // "Lab teasdfch": [],
-      // Pholeboasdftomist: [],
-      // Dispathasdfer: ["Heavy Workload", "No tracing processes"],
-      // "Lab teasdfch": [],
-    },
-    Environment: {
-      Clocks: ["Inaccurate", "Don't agree"],
-      Rounding: [],
-    },
-    Materials: {
-      "Lab Supplies": [
-        // "Unavailable",
-        "Spoiled",
-      ],
-      Specimen: [
-        // "Unavailable", "Spoiled"
-      ],
-    },
-    Methods: {
-      "Too many people Involved": [],
-      "Handling in lab": [],
-      "Escort Stopped Other places": [],
-      "Unnecessary steps": [],
-      "Lab not following FIFO": [],
-    },
-    Equipment: {
-      Broken: [],
-      asdgasPholebotomist: [],
-      Dispaasasdfdther: ["Heavy Workload", "No tracing processes"],
-      // "Lab tasdfech": [],
-      // Pholeboasdftomist: [],
-      // Dispathasdfer: ["Heavy Workload", "No tracing processes"],
-      // "Lab teasdfch": [],
-      // Pholeboasdftomist: [],
-      // Dispathasdfer: ["Heavy Workload", "No tracing processes"],
-      // "Lab teasdfch": [],
-      // Pholeboadsftomist: [],
-      // Dispatasdfher: ["Heavy Workload", "No tracing processes"],
-      // "Lab teasdfch": [],
-      // Pholeboasdftomist: [],
-      // Dispathasdfer: ["Heavy Workload", "No tracing processes"],
-      // "Lab teasdfch": [],
-      // asdgasPhol23423ebotomist: [],
-      // Dispaasasd23423fdther: ["Heavy Workload", "No tracing processes"],
-      // "Lab tasdf23423ech": [],
-      // Pholeboasdf23423tomist: [],
-      // Dispathas23423dfer: ["Heavy Workload", "No tracing processes"],
-      // "Lab teas23423dfch": [],
-      // Pholeboas23423dftomist: [],
-      // Dispathasd23423fer: ["Heavy Workload", "No tracing processes"],
-      // "Lab teasd23423fch": [],
-      // Pholeboads23423ftomist: [],
-      // Dispatasdfh23423er: ["Heavy Workload", "No tracing processes"],
-      // "Lab teasd23423fch": [],
-      // Pholeboasd23423ftomist: [],
-      // Dispathasd23423fer: ["Heavy Workload", "No tracing processes"],
-      // "Lab teasd23423fch": [],
-      // "Needs to lo23423oked at": [],
-    },
-  });
-  const [showDiagram, setShowDiagram] = useState(false);
-  return (
-    <div className={s.causeBreakdown}>
-      <button
-        className={`btn clear ${s.btn}`}
-        onClick={() => setShowDiagram(true)}
-      >
-        <FaExternalLinkAlt /> Generate Fishbone Diagram
-      </button>
-      <ul className={s.wrapper}>
-        {Object.entries(causes).map(([key, value]) => (
-          <li key={key}>
-            <p className={s.type}>{key}</p>
-            <ul className={s.causes}>
-              {Object.entries(value).map(([key, value]) => (
-                <li key={key} className={s.cause}>
-                  <div className={s.causeLabel}>
-                    <p>{key}</p>{" "}
-                    <button className={`btn clear ${s.btn}`}>
-                      <FaPencilAlt />
-                    </button>
-                    <button className={`btn clear ${s.btn}`}>
-                      <FaRegTrashAlt />
-                    </button>
-                  </div>
-                  {value?.length > 0 && (
-                    <ul className={s.whys}>
-                      {value.map((item, i) => (
-                        <li key={i} className={s.why}>
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </li>
-        ))}
-      </ul>
-      <Modal
-        open={showDiagram}
-        setOpen={setShowDiagram}
-        head
-        label="Fishbone Diagram"
-      >
-        <FishboneDiagram data={causes} />
-      </Modal>
-    </div>
-  );
-};
-
-const IdentifiedRca = ({ rcas, parameters }) => {
-  const { ir, setIr } = useContext(InvestigationContext);
-  const [edit, setEdit] = useState(null);
-  const { remove: deleteNote } = useFetch(
-    defaultEndpoints.investigationNotes + "/{ID}"
-  );
-  return (
-    <div>
-      <p className={s.tableLable}>Identified Root Cause</p>
-      <Table
-        columns={[
-          { label: "Name" },
-          { label: "Department" },
-          { label: "Designation" },
-          { label: "Actions" },
-        ]}
-        className={s.rcaTeamMembers}
-      >
-        <tr>
-          <td className={s.inlineForm}>
-            <RcaTeamMemberForm
-              key={edit ? "edit" : "add"}
-              edit={edit}
-              parameters={parameters}
-              onSuccess={(newNote) => {
-                setIr((prev) => ({
-                  ...prev,
-                  irInvestigation: [
-                    {
-                      ...prev.irInvestigation[0],
-                      notes: [
-                        ...(prev.irInvestigation[0].notes || []).filter(
-                          (item) => item.id !== newNote.id
-                        ),
-                        newNote,
-                      ],
-                    },
-                  ],
-                }));
-                setEdit(null);
-              }}
-              clearForm={() => setEdit(null)}
-            />
-          </td>
-        </tr>
-        {rcas.map((member) => (
-          <tr key={member.id}>
-            <td>{member.rootCause}</td>
-            <td>
-              {parameters.category?.find(
-                (user) => user.value === member.category
-              )?.label || member.category}
-            </td>
-            <td>{member.details}</td>
-            <TableActions
-              actions={[
-                {
-                  icon: <BsPencilFill />,
-                  label: "Edit",
-                  callBack: () => {
-                    setEdit(member);
-                  },
-                },
-                {
-                  icon: <FaRegTrashAlt />,
-                  label: "Delete",
-                  callBack: () =>
-                    Prompt({
-                      type: "confirmation",
-                      message: `Are you sure you want to remove this note?`,
-                      callback: () => {
-                        deleteNote(null, {
-                          params: { "{ID}": member.id },
-                        }).then(({ res }) => {
-                          if (res.status === 204) {
-                            setIr((prev) => ({
-                              ...prev,
-                              irInvestigation: [
-                                {
-                                  ...prev.irInvestigation[0],
-                                  notes: [
-                                    ...prev.irInvestigation[0].notes.filter(
-                                      (item) => item.id !== member.id
-                                    ),
-                                  ],
-                                },
-                              ],
-                            }));
-                          }
-                        });
-                      },
-                    }),
-                },
-              ]}
-            />
-          </tr>
-        ))}
-      </Table>
-    </div>
-  );
-};
-const IdentifiedRcaForm = ({ edit, onSuccess, parameters, clearForm }) => {
-  const { ir, setIr } = useContext(InvestigationContext);
-  const {
-    handleSubmit,
-    register,
-    reset,
-    control,
-    formState: { errors },
-  } = useForm();
-
-  const { post: saveNote, put: updateNote, loading } = useFetch(
-    defaultEndpoints.investigationNotes + `/${edit?.id || ""}`
-  );
-  const { post: saveIrDetail, savingIrDetail } = useFetch(
-    defaultEndpoints.irInvestigation
-  );
-
-  useEffect(() => {
-    reset({
-      ...edit,
-      dateTime: edit
-        ? moment({ time: edit.dateTime, format: "YYYY-MM-DDThh:mm" })
-        : "",
-    });
-  }, [edit]);
-
-  return (
-    <form
-      onSubmit={handleSubmit(async (values) => {
-        let irDetail = ir.irInvestigation[0];
-        if (!irDetail) {
-          irDetail = await saveIrDetail({ incidentReport: { id: ir.id } }).then(
-            ({ data }) => {
-              setIr((prev) => ({ ...prev, irInvestigation: [data] }));
-              return data;
-            }
-          );
-        }
-
-        if (!irDetail) {
-          return Prompt({
-            type: "error",
-            message: "Please save IR Investigation before saving notes.",
-          });
-        }
-
-        (edit ? updateNote : saveNote)({
-          ...edit,
-          ...values,
-          irId: ir.id,
-          irInvestigation: { id: irDetail.id },
-        })
-          .then(({ data }) => {
-            if (data.id) {
-              onSuccess(data);
-              reset();
-            }
-          })
-          .catch((err) => Prompt({ type: "error", message: err.message }));
-      })}
-    >
-      <Select
-        options={parameters.users}
-        name="userId"
-        control={control}
-        formOptions={{ required: "Field is required" }}
-      />
-      <Select
-        options={parameters.departments}
-        name="deptId"
-        control={control}
-        formOptions={{ required: "Field is required" }}
-      />
-      <Input
-        {...register("designaion", { required: "Field is required" })}
-        error={errors.designaion}
-      />
-      <div className={s.btns}>
-        <button className="btn secondary" type="submit">
-          {edit ? (
-            <FaCheck />
-          ) : (
-            <>
-              <FaPlus /> Add
-            </>
-          )}
-        </button>
-        {edit && (
-          <button
-            type="button"
-            onClick={() => clearForm(null)}
-            className="btn secondary"
-          >
-            <IoClose />
-          </button>
-        )}
-      </div>
-    </form>
-  );
-};
-
 const SimilarIncidents = ({ similarIncidents }) => {
   const [activeTab, setActiveTab] = useState("details");
   const [ir, setIr] = useState(similarIncidents[0]);
@@ -1145,6 +535,679 @@ const SimilarIncidents = ({ similarIncidents }) => {
         )}
       </div>
     </div>
+  );
+};
+const ProblemAreas = ({ events }) => {
+  const { ir, setIr } = useContext(InvestigationContext);
+  const [edit, setEdit] = useState(null);
+
+  const onSuccess = useCallback((newEv) => {
+    // setEvents((prev) => {
+    //   return prev.find((c) => c.id === newEv.id)
+    //     ? prev.map((c) => (c.id === newEv.id ? newEv : c))
+    //     : [...prev, newEv];
+    // });
+    setEdit(null);
+  }, []);
+
+  const { remove: deleteEvent, put: updateEvent, loading } = useFetch(
+    defaultEndpoints.investigationEvents + "/{ID}"
+  );
+  const { patch: updateSequence, loading: updatingSequence } = useFetch(
+    defaultEndpoints.investigationEvents + `/{ID}`
+  );
+
+  return (
+    <Table
+      className={s.problemAreas}
+      key={Math.random()}
+      columns={[{ label: "S.No." }, { label: "Details" }]}
+    >
+      {events.map((ev, i) => (
+        <tr key={i}>
+          <td>{ev.no}</td>
+          <td>{ev.details}</td>
+        </tr>
+      ))}
+    </Table>
+  );
+};
+
+const RootCause = ({
+  rcaRootcause,
+  setRcaRootcause,
+  rcaIdentified,
+  setRcaIdentified,
+}) => {
+  const { ir } = useContext(InvestigationContext);
+  const [rcas, setRcas] = useState([]);
+  const [rootCauses, setRootCauses] = useState({
+    // Environment: {
+    //   Clocks: ["Inaccurate", "Don't agree"],
+    //   Rounding: [],
+  });
+
+  const [edit, setEdit] = useState(null);
+  const { get: getRcas } = useFetch(defaultEndpoints.rcas);
+
+  useEffect(() => {
+    const _rootCauses = {};
+    if (rcaRootcause && rcas.length) {
+      rcaRootcause
+        .filter((item) => item.action !== "delete")
+        .forEach((cause) => {
+          const causeCat = rcas.find((rca) => rca.id === cause.causeCat);
+          const cau = causeCat.rcaCauses.find((c) => c.id === cause.cause);
+          _rootCauses[causeCat.name] = {
+            ..._rootCauses[causeCat.name],
+            ...(cau && {
+              [cau.name]: {
+                ...cause,
+                id: cause.id,
+                whys: cause.why.split("|"),
+              },
+            }),
+          };
+        });
+      setRootCauses(_rootCauses);
+    }
+  }, [rcaRootcause, rcas]);
+  useEffect(() => {
+    getRcas().then(({ data }) => {
+      if (data?._embedded) {
+        setRcas(data._embedded.rca);
+      }
+    });
+  }, []);
+  return (
+    <div className={s.rootCause}>
+      <div className={s.problemStatement}>
+        <ConnectForm>
+          {({ register, formState: { errors } }) => {
+            return (
+              <Input
+                label="Problem Statement"
+                {...register("problemStatement", {
+                  required: "Field is required",
+                })}
+                error={errors.problemStatement}
+              />
+            );
+          }}
+        </ConnectForm>
+        <button className={`btn clear ${s.btn}`}>
+          <FaUndo /> Root Causes of similar incidents
+        </button>
+      </div>
+      <AddCauseFrom
+        edit={edit}
+        setEdit={setEdit}
+        rcaRootcause={rcaRootcause}
+        onSuccess={(data) => {
+          setRcaRootcause((prev) =>
+            edit
+              ? prev.map((item) =>
+                  item.id === data.id
+                    ? {
+                        ...data,
+                        action: typeof data.id === "string" ? "add" : "edit",
+                      }
+                    : item
+                )
+              : [{ ...data, action: "add" }, ...prev]
+          );
+          setEdit(null);
+        }}
+        rcas={rcas}
+      />
+      {rcaRootcause.length > 0 && (
+        <Causes
+          causes={rootCauses}
+          setRootCauses={setRcaRootcause}
+          setEdit={setEdit}
+        />
+      )}
+      <IdentifiedRca
+        rcaIdentified={rcaIdentified}
+        setRcaIdentified={setRcaIdentified}
+        rootCauses={rcas}
+      />
+    </div>
+  );
+};
+const AddCauseFrom = ({ edit, setEdit, rcaRootcause, onSuccess, rcas }) => {
+  const {
+    handleSubmit,
+    register,
+    unregister,
+    control,
+    reset,
+    setValue,
+    watch,
+    formState: { errors },
+    clearErrors,
+  } = useForm({ shouldUnregister: true });
+  const [whyIds, setWhyIds] = useState([Math.random().toString(32).substr(-8)]);
+  const type = watch("type");
+
+  useEffect(() => {
+    if (edit) {
+      const whys = edit.whys.reduce((p, c) => {
+        p[Math.random().toString(32).substr(-8)] = c;
+        return p;
+      }, {});
+      const values = {
+        type: edit?.causeCat || "",
+        cause: edit?.cause || "",
+      };
+
+      Object.entries(whys).forEach(([key, value]) => {
+        values[`why.${key}`] = value;
+      });
+
+      setWhyIds(Object.keys(whys));
+      reset(values);
+    }
+  }, [edit]);
+  return (
+    <form
+      onSubmit={handleSubmit((values) => {
+        onSuccess({
+          causeCat: type,
+          cause: values.cause,
+          why: Object.values(values.why)
+            .filter((item) => item)
+            .map((item) => item.trim())
+            .join("|"),
+          id: edit?.id || Math.random().toString(32).substr(-8),
+          action: edit?.id ? "edit" : "add",
+        });
+        reset({});
+        setWhyIds([Math.random().toString(32).substr(-8)]);
+      })}
+    >
+      <CustomRadio
+        className={s.customRadio}
+        selectedClassName={s.selected}
+        name="type"
+        formOptions={{ required: "Select cause category" }}
+        register={register}
+        setValue={setValue}
+        watch={watch}
+        onChange={(v) => {
+          setValue("cause", "");
+        }}
+        options={rcas.map((rca) => ({
+          label: rca.name,
+          value: rca.id,
+          causes: rca.rcaCauses,
+        }))}
+        error={errors.type}
+      />
+
+      <div className={s.addCause}>
+        <Select
+          label="Cause"
+          name="cause"
+          control={control}
+          formOptions={{ required: "Select a cause" }}
+          options={(rcas.find((rca) => rca.id === type)?.rcaCauses || []).map(
+            (cause) => ({
+              label: cause.name,
+              value: cause.id,
+              isDisabled: rcaRootcause.some((item) => item.cause === cause.id),
+            })
+          )}
+          error={errors.cause}
+        />
+        {whyIds.map((id, i) => (
+          <Input
+            key={id}
+            label={i === 0 ? "Why's" : ""}
+            {...register(`why.${id}`)}
+            error={errors[`why.${id}`]}
+            icon={
+              i > 0 ? (
+                <FaTimes
+                  onClick={() => {
+                    unregister(`why.${id}`);
+                    setWhyIds((prev) => prev.filter((_id) => _id !== id));
+                  }}
+                />
+              ) : null
+            }
+          />
+        ))}
+        <button
+          type="button"
+          onClick={() =>
+            setWhyIds((prev) => [
+              ...prev,
+              Math.random().toString(32).substr(-8),
+            ])
+          }
+          className={`btn clear ${s.addWhy}`}
+        >
+          <FaPlusCircle />
+        </button>
+        <button type="submit" className="btn secondary wd-100">
+          {edit ? "Update" : "Save"}
+        </button>
+        {edit && (
+          <button
+            type="button"
+            onClick={() => {
+              setWhyIds([Math.random().toString(32).substr(-8)]);
+              reset({});
+              setEdit(null);
+            }}
+            className="btn secondary wd-100"
+          >
+            Clear
+          </button>
+        )}
+      </div>
+    </form>
+  );
+};
+
+const Causes = ({ causes, setRootCauses, setEdit }) => {
+  const [showDiagram, setShowDiagram] = useState(false);
+  return (
+    <div className={s.causeBreakdown}>
+      <button
+        className={`btn clear ${s.btn}`}
+        onClick={() => setShowDiagram(true)}
+      >
+        <FaExternalLinkAlt /> Generate Fishbone Diagram
+      </button>
+      <ul className={s.wrapper}>
+        {Object.entries(causes).map(([key, cause]) => (
+          <li key={key}>
+            <p className={s.type}>{key}</p>
+            <ul className={s.causes}>
+              {Object.entries(cause).map(([key, { id, whys, ...rest }]) => (
+                <li key={key} className={s.cause}>
+                  <div className={s.causeLabel}>
+                    <p>{key}</p>{" "}
+                    <button
+                      className={`btn clear ${s.btn}`}
+                      onClick={() => setEdit({ ...rest, id, whys })}
+                    >
+                      <FaPencilAlt />
+                    </button>
+                    <button
+                      className={`btn clear ${s.btn}`}
+                      onClick={() =>
+                        Prompt({
+                          type: "confirmation",
+                          question: "Are you sure want you delete this cause?",
+                          callback: () => {
+                            setRootCauses((prev) =>
+                              typeof id === "string"
+                                ? prev.filter((item) => item.id !== id)
+                                : prev.map((item) =>
+                                    item.id === id
+                                      ? { ...item, action: "delete" }
+                                      : item
+                                  )
+                            );
+                          },
+                        })
+                      }
+                    >
+                      <FaRegTrashAlt />
+                    </button>
+                  </div>
+                  {whys?.length > 0 && (
+                    <ul className={s.whys}>
+                      {whys.map((why, i) => (
+                        <li key={i} className={s.why}>
+                          {why}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </li>
+        ))}
+      </ul>
+      <Modal
+        open={showDiagram}
+        setOpen={setShowDiagram}
+        head
+        label="Fishbone Diagram"
+      >
+        <FishboneDiagram data={causes} />
+      </Modal>
+    </div>
+  );
+};
+
+const IdentifiedRca = ({ rcaIdentified, setRcaIdentified, rootCauses }) => {
+  const { ir } = useContext(InvestigationContext);
+
+  const [edit, setEdit] = useState(null);
+  return (
+    <div>
+      <p className={s.tableLable}>Identified Root Cause</p>
+      <Table
+        columns={[
+          { label: "Root Cause" },
+          { label: "Category" },
+          { label: "Details" },
+          { label: "Actions" },
+        ]}
+        className={s.rcaTeamMembers}
+      >
+        <tr>
+          <td className={s.inlineForm}>
+            <IdentifiedRcaForm
+              key={edit ? "edit" : "add"}
+              edit={edit}
+              rootCauses={rootCauses}
+              onSuccess={(data) => {
+                setRcaIdentified((prev) =>
+                  edit
+                    ? prev.map((item) =>
+                        item.id === data.id
+                          ? {
+                              ...data,
+                              action:
+                                typeof data.id === "string" ? "add" : "edit",
+                            }
+                          : item
+                      )
+                    : [{ ...data, action: "add" }, ...prev]
+                );
+                setEdit(null);
+              }}
+              clearForm={() => setEdit(null)}
+            />
+          </td>
+        </tr>
+        {rcaIdentified
+          .filter((item) => item.action !== "delete")
+          .map((rca) => (
+            <tr key={rca.id}>
+              <td>{rca.rootCause}</td>
+              <td>
+                {rootCauses.find((rc) => rc.id === rca.rcaCat)?.name ||
+                  rca.rcaCat}
+              </td>
+              <td>{rca.details}</td>
+              <TableActions
+                actions={[
+                  {
+                    icon: <BsPencilFill />,
+                    label: "Edit",
+                    callBack: () => {
+                      setEdit(rca);
+                    },
+                  },
+                  {
+                    icon: <FaRegTrashAlt />,
+                    label: "Delete",
+                    callBack: () =>
+                      Prompt({
+                        type: "confirmation",
+                        message: `Are you sure you want to remove this root cause?`,
+                        callback: () => {
+                          setRcaIdentified((prev) =>
+                            prev
+                              .map((item) =>
+                                item.id === rca.id
+                                  ? typeof rca.id === "string"
+                                    ? null
+                                    : { ...rca, action: "delete" }
+                                  : item
+                              )
+                              .filter((item) => item)
+                          );
+                        },
+                      }),
+                  },
+                ]}
+              />
+            </tr>
+          ))}
+      </Table>
+    </div>
+  );
+};
+const IdentifiedRcaForm = ({ edit, rootCauses, onSuccess, clearForm }) => {
+  const { ir, setIr } = useContext(InvestigationContext);
+  const {
+    handleSubmit,
+    register,
+    reset,
+    control,
+    formState: { errors },
+  } = useForm();
+
+  useEffect(() => {
+    reset({ ...edit });
+  }, [edit]);
+  return (
+    <form
+      onSubmit={handleSubmit(async (values) => {
+        onSuccess({
+          ...values,
+          incidentReport: { id: ir.id },
+          id: edit?.id || Math.random().toString(32).substr(-8),
+        });
+        reset({
+          rootCause: "",
+          rcaCat: "",
+          details: "",
+        });
+      })}
+    >
+      <Input
+        {...register("rootCause", { required: "Field is required" })}
+        error={errors.rootCause}
+      />
+      <Select
+        options={rootCauses.map((rca) => ({ label: rca.name, value: rca.id }))}
+        name="rcaCat"
+        control={control}
+        formOptions={{ required: "Field is required" }}
+      />
+      <Input
+        {...register("details", { required: "Field is required" })}
+        error={errors.details}
+      />
+      <div className={s.btns}>
+        <button className="btn secondary" type="submit">
+          {edit ? (
+            <FaCheck />
+          ) : (
+            <>
+              <FaPlus /> Add
+            </>
+          )}
+        </button>
+        {edit && (
+          <button
+            type="button"
+            onClick={() => clearForm(null)}
+            className="btn secondary"
+          >
+            <IoClose />
+          </button>
+        )}
+      </div>
+    </form>
+  );
+};
+
+const RcaTeamMembers = ({ rcaTeam, setRcaTeam, parameters }) => {
+  const [edit, setEdit] = useState(null);
+  return (
+    <Table
+      columns={[
+        { label: "Name" },
+        { label: "Department" },
+        { label: "Designation" },
+        { label: "Actions" },
+      ]}
+      className={s.rcaTeamMembers}
+    >
+      <tr>
+        <td className={s.inlineForm}>
+          <RcaTeamMemberForm
+            key={edit ? "edit" : "add"}
+            edit={edit}
+            parameters={parameters}
+            onSuccess={(data) => {
+              setRcaTeam((prev) =>
+                edit
+                  ? prev.map((item) =>
+                      item.id === data.id
+                        ? {
+                            ...data,
+                            action:
+                              typeof data.id === "string" ? "add" : "edit",
+                          }
+                        : item
+                    )
+                  : [{ ...data, action: "add" }, ...prev]
+              );
+              setEdit(null);
+            }}
+            clearForm={() => setEdit(null)}
+          />
+        </td>
+      </tr>
+      {rcaTeam
+        .filter((item) => item.action !== "delete")
+        .map((member) => (
+          <tr key={member.id}>
+            <td>
+              {parameters.users.find((user) => user.value === member.userName)
+                ?.label || member.userName}
+            </td>
+            <td>
+              {parameters.departments.find((user) => user.value === member.dept)
+                ?.label || member.dept}
+            </td>
+            <td>{member.designation}</td>
+            <TableActions
+              actions={[
+                {
+                  icon: <BsPencilFill />,
+                  label: "Edit",
+                  callBack: () => {
+                    setEdit(member);
+                  },
+                },
+                {
+                  icon: <FaRegTrashAlt />,
+                  label: "Delete",
+                  callBack: () =>
+                    Prompt({
+                      type: "confirmation",
+                      message: `Are you sure you want to remove this note?`,
+                      callback: () => {
+                        setRcaTeam((prev) =>
+                          prev
+                            .map((item) =>
+                              item.id === member.id
+                                ? typeof member.id === "string"
+                                  ? null
+                                  : { ...member, action: "delete" }
+                                : item
+                            )
+                            .filter((item) => item)
+                        );
+                      },
+                    }),
+                },
+              ]}
+            />
+          </tr>
+        ))}
+    </Table>
+  );
+};
+const RcaTeamMemberForm = ({ edit, onSuccess, parameters, clearForm }) => {
+  const { ir, setIr } = useContext(InvestigationContext);
+  const {
+    handleSubmit,
+    register,
+    reset,
+    control,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm();
+
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    reset({ ...edit });
+  }, [edit]);
+
+  return (
+    <form
+      onSubmit={handleSubmit(async (values) => {
+        onSuccess({
+          ...values,
+          id: edit?.id || Math.random().toString(32).substr(-8),
+        });
+        reset({ userId: "", deptId: "", designation: "" });
+      })}
+    >
+      <Select
+        options={parameters.users}
+        name="userName"
+        control={control}
+        formOptions={{ required: "Field is required" }}
+        onChange={(user) => {
+          if (user.department) {
+            setValue("dept", user.department);
+          }
+          if (user.designation) {
+            setValue("designation", user.designation);
+          }
+          setUser(user);
+        }}
+      />
+      <Select
+        options={parameters.departments}
+        name="dept"
+        control={control}
+        formOptions={{ required: "Field is required" }}
+        readOnly={user?.department}
+      />
+      <Input
+        {...register("designation", { required: "Field is required" })}
+        error={errors.designation}
+        readOnly={user?.designation}
+      />
+      <div className={s.btns}>
+        <button className="btn secondary" type="submit">
+          {edit ? (
+            <FaCheck />
+          ) : (
+            <>
+              <FaPlus /> Add
+            </>
+          )}
+        </button>
+        {edit && (
+          <button
+            type="button"
+            onClick={() => clearForm(null)}
+            className="btn secondary"
+          >
+            <IoClose />
+          </button>
+        )}
+      </div>
+    </form>
   );
 };
 

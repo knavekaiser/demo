@@ -157,7 +157,7 @@ export default function IncidentReporting() {
             _parameters.hods = _users
               .filter(
                 (u) =>
-                  u.role?.includes("hod") &&
+                  u.role?.includes(9) &&
                   u.department.toString() === user.department.toString()
               )
               .map((item) => ({
@@ -187,7 +187,7 @@ export default function IncidentReporting() {
             _parameters.hods = _users
               .filter(
                 (u) =>
-                  u.role?.includes("hod") &&
+                  u.role?.includes(9) &&
                   u.department.toString() === user.department.toString()
               )
               .map((item) => ({
@@ -202,8 +202,7 @@ export default function IncidentReporting() {
           } else {
             _parameters.hods = userDetails
               .filter(
-                (u) =>
-                  u.role.includes("hod") && u.department === user.department
+                (u) => u.role.includes(9) && u.department === user.department
               )
               .map((item) => ({
                 label: item.name,
@@ -356,11 +355,10 @@ export default function IncidentReporting() {
           <div className={s.incidentDetail}>
             <Data
               label="Date of Incident"
-              value={
-                parameters?.locations?.find(
-                  (item) => item.value?.toString() === ir?.location?.toString()
-                )?.label || ir?.location
-              }
+              value={moment({
+                time: ir?.incident_Date_Time,
+                format: "DD/MM/YYYY hh:mm",
+              })}
             />
             <Data
               label="Location of Incident"
@@ -562,6 +560,7 @@ const AcknowledgeForm = ({ ir, onSuccess, closeForm }) => {
   const { handleSubmit, register, reset, setValue } = useForm();
 
   const { post: acknowledge, loading } = useFetch(defaultEndpoints.irHodAck);
+  const { get: getServerTime } = useFetch(defaultEndpoints.serverDateTime);
 
   useEffect(() => {
     setValue(
@@ -573,12 +572,15 @@ const AcknowledgeForm = ({ ir, onSuccess, closeForm }) => {
 
   return (
     <form
-      onSubmit={handleSubmit((values) => {
+      onSubmit={handleSubmit(async (values) => {
+        const serverTime = await getServerTime().then(({ data }) =>
+          data ? data.serverDate + "T" + data.serverTime : new Date()
+        );
         acknowledge({
           remarks: values.remark,
           responseBy: user.id,
           userId: user.id,
-          responseOn: values.responseTime,
+          responseOn: serverTime,
           incidentReport: {
             // irId: ir.id,
             id: ir.id,

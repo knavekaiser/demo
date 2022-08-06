@@ -88,6 +88,7 @@ export default function RiskAssessments() {
                   parameters={parameters}
                   key="edit"
                   edit={edit}
+                  risks={risks}
                   onSuccess={(newRisk) => {
                     setRisks((prev) => {
                       return prev.find((c) => c.id === newRisk.id)
@@ -104,6 +105,7 @@ export default function RiskAssessments() {
                 <RiskAssessmentForm
                   parameters={parameters}
                   key="add"
+                  risks={risks}
                   onSuccess={(newRisk) => {
                     setRisks((prev) => {
                       return prev.find((c) => c.id === newRisk.id)
@@ -196,7 +198,13 @@ export default function RiskAssessments() {
     </div>
   );
 }
-const RiskAssessmentForm = ({ edit, onSuccess, parameters, clearForm }) => {
+const RiskAssessmentForm = ({
+  edit,
+  onSuccess,
+  risks,
+  parameters,
+  clearForm,
+}) => {
   const { handleSubmit, reset, watch, setValue, register } = useForm({
     ...edit,
   });
@@ -211,6 +219,46 @@ const RiskAssessmentForm = ({ edit, onSuccess, parameters, clearForm }) => {
   return (
     <form
       onSubmit={handleSubmit((data) => {
+        if (
+          risks?.some(
+            (item) => item.riskscore === data.riskscore && item.id !== data.id
+          )
+        ) {
+          Prompt({
+            type: "information",
+            message: `Risk Score already selected.`,
+          });
+          return;
+        }
+        if (
+          risks?.some(
+            (item) => item.color === data.color && item.id !== data.id
+          )
+        ) {
+          Prompt({
+            type: "information",
+            message: `Color already exists.`,
+          });
+          return;
+        }
+        if (
+          risks?.some(
+            (item) =>
+              item.likelihood === data.likelihood &&
+              item.serverity === data.serverity &&
+              item.riskscore === data.riskscore &&
+              item.riskstatus === data.riskstatus &&
+              item.color === data.color &&
+              item.id !== data.id
+          )
+        ) {
+          Prompt({
+            type: "information",
+            message: `Can't add same risk twice`,
+          });
+          return;
+        }
+
         (edit ? updateRam : postRam)(data)
           .then(({ data }) => {
             if (data.id) {

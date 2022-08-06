@@ -33,6 +33,7 @@ export const Combobox = ({
   renderValue,
   required,
   value,
+  readOnly,
 }) => {
   const id = useRef(Math.random().toString(36).substr(-8));
   const container = useRef();
@@ -145,7 +146,7 @@ export const Combobox = ({
       data-testid="combobox-container"
       className={`${s.combobox} ${className || ""} ${open ? s.open : ""} ${
         !(Array.isArray(options) && options.length) ? s.noOptions : ""
-      } ${error ? s.err : ""}`}
+      } ${error ? s.err : ""} ${readOnly ? s.readOnly : ""}`}
     >
       {label && (
         <label data-testid="combobox-label">
@@ -162,9 +163,10 @@ export const Combobox = ({
         ref={container}
         tabIndex={0}
         onKeyDown={(e) => {
-          if ([32, 38, 40].includes(e.keyCode)) {
+          if ([32, 38, 40, 27].includes(e.keyCode)) {
             e.preventDefault();
             e.stopPropagation();
+
             if (e.keyCode === 27) {
               // escape key
               setOpen(false);
@@ -175,7 +177,10 @@ export const Combobox = ({
               return;
             }
             if (e.keyCode === 32 && options[hover]) {
-              select(options[hover]);
+              const option = options[hover];
+              if (!option.disabled) {
+                select(option);
+              }
             }
             if (e.keyCode === 38 || e.keyCode === 40) {
               const index = options?.findIndex(({ label, value }) => {
@@ -290,11 +295,14 @@ const ComboboxList = forwardRef(
         data-testid="combobox-options"
         onMouseMove={() => setHover(null)}
       >
-        {options?.map(({ label, value, ...rest }, i) => (
+        {options?.map(({ label, value, disabled, ...rest }, i) => (
           <li
             key={i}
             onClick={(e) => {
               e.stopPropagation();
+              if (disabled) {
+                return;
+              }
               select({ label, value, ...rest });
             }}
             className={`${
@@ -302,12 +310,13 @@ const ComboboxList = forwardRef(
               value === selected
                 ? s.selected
                 : ""
-            } ${hover === i && s.hover}`}
+            } ${hover === i && s.hover} ${disabled ? s.disabled : ""}`}
             data-testid={`combobox-${label}`}
           >
             {multiple && (
               <input
                 type="checkbox"
+                disabled={disabled}
                 checked={
                   (selected?.find && selected.find((item) => item === value)) ||
                   false

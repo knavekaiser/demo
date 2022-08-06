@@ -18,8 +18,11 @@ export default {
   personAffecteds: `${baseApiUrl}/personAffected`,
   personAffectedDetails: `${baseApiUrl}/personAffectedDetails`,
   rcaCauses: `${baseApiUrl}/rcaCauses`,
+
   userPermissions: `${baseApiUrl}/userPermission`,
   userPermission_updateByRole: `${baseApiUrl}/userPermission/search/updateByRole`,
+  rolePermissions: `${baseApiUrl}/rolePermission`,
+
   uploadFiles: `${baseApiUrl}/upload-multiple-files`,
   apiUrl: `${baseApiUrl}/apiurls`,
   token: `${baseApiUrl}/oauth/token`,
@@ -40,6 +43,8 @@ export default {
   countIrByUserId: `${baseApiUrl}/IncidentReport/search/countByUserId`,
   countIrByDepartment: `${baseApiUrl}/IncidentReport/search/countByDepartment`,
   countIrByTat: `${baseApiUrl}/irStatusDetails/search/countByDays`,
+  // countAnonymousIr: `${baseApiUrl}/IncidentReport/search/getAnonymousCount`,
+  countAnonymousIr: `${baseApiUrl}/getAnonymousCount`,
 
   typesOfIncident: `${baseApiUrl}/configTypeOfIncident`,
   configTat: `${baseApiUrl}/configAcceptableTAT`,
@@ -55,7 +60,8 @@ export default {
   formTemplates: `https://his19-3-1sit.napierhealthcare.com/napier-componentbuilder/componentbuilder/formData/search`,
   templateData: `${baseApiUrl}/templateData`,
 
-  irQuerySearch: `${baseApiUrl}/irQuerySearch`,
+  // irQuerySearch: `${baseApiUrl}/irQuerySearch`,
+  irQuerySearch: `${baseApiUrl}/irQuerySearchV2`,
 
   investigationEvents: `${baseApiUrl}/events`,
   investigationNotes: `${baseApiUrl}/notes`,
@@ -65,4 +71,12 @@ export default {
   requestInputs: `${baseApiUrl}/reqInput`,
   responseInputs: `${baseApiUrl}/responseIrInput`,
   irInvestigation: `${baseApiUrl}/irInvestigation`,
+
+  serverDateTime: `${baseApiUrl}/getServerDateTime`,
+
+  rcaRootCauses: `${baseApiUrl}/rcaRootcause`,
+  rcaIdentified: `${baseApiUrl}/rcaIdentified`,
+  rcaTeam: `${baseApiUrl}/rcaTeam`,
+  capaPlan: `${baseApiUrl}/capaPlan`,
+  capaMonitoringPlan: `${baseApiUrl}/capaMonitoringPlan`,
 };

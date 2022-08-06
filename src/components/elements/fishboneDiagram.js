@@ -39,13 +39,21 @@ const Branch = ({ problemArea, causes, top, lastBranch }) => {
             ? {
                 marginRight:
                   Object.keys(causes).length * 25 +
-                  Object.values(causes).reduce((p, a) => p + a.length, 0) * 25 -
+                  Object.values(causes).reduce(
+                    (p, { id, whys }) => p + whys.length,
+                    0
+                  ) *
+                    25 -
                   15,
               }
             : {
                 marginRight:
                   Object.keys(causes).length * 15 +
-                  Object.values(causes).reduce((p, a) => p + a.length, 0) * 15 -
+                  Object.values(causes).reduce(
+                    (p, { id, whys }) => p + whys.length,
+                    0
+                  ) *
+                    15 -
                   15,
               }
         }
@@ -54,12 +62,14 @@ const Branch = ({ problemArea, causes, top, lastBranch }) => {
       </span>
       {Object.keys(causes).length > 0 && (
         <ul className={s.people}>
-          {Object.entries(causes).map(([cause, whys], i, arr) => {
+          {Object.entries(causes).map(([cause, { id, whys }], i, arr) => {
             const prevWhys = top
-              ? arr.slice(i).reduce((p, [cause, whys]) => p + whys.length, 0)
+              ? arr
+                  .slice(i)
+                  .reduce((p, [cause, { id, whys }]) => p + whys.length, 0)
               : arr
                   .slice(0, i)
-                  .reduce((p, [cause, whys]) => p + whys.length, 0);
+                  .reduce((p, [cause, { id, whys }]) => p + whys.length, 0);
 
             const baseMargin = 1.4;
             const subMargin = 1.27;

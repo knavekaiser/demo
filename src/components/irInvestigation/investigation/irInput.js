@@ -26,6 +26,7 @@ import { useForm } from "react-hook-form";
 
 const IrInput = () => {
   const { ir, setIr } = useContext(InvestigationContext);
+  const [previous, setPrevious] = useState(null);
   const [recordInput, setRecordInput] = useState(false);
   const [requestInput, setRequestInput] = useState(false);
   const [inputs, setInputs] = useState([]);
@@ -159,6 +160,25 @@ const IrInput = () => {
   const [reqEdit, setReqEdit] = useState(null);
   const [recEdit, setRecEdit] = useState(null);
 
+  const selectPrevious = useCallback(() => {
+    const reqInputs = inputs
+      .filter((input) => input.__type === "reqInput")
+      .sort((a, b) =>
+        new Date(a.queryDateTime) > new Date(b.queryDateTime) ? 1 : -1
+      );
+    const editIndex = reqInputs.findIndex((item) => item.id === reqEdit?.id);
+
+    if (reqEdit) {
+      setPrevious(reqInputs[editIndex - 1]);
+    } else {
+      setPrevious(reqInputs[reqInputs.length - 1]);
+    }
+  }, [requestInput, reqEdit, inputs]);
+
+  useEffect(() => {
+    selectPrevious();
+  }, [requestInput]);
+
   return (
     <div className={s.irInput}>
       <div className={s.btns}>
@@ -199,7 +219,10 @@ const IrInput = () => {
         head
         label="RECORD INPUTS"
         open={recordInput}
-        setOpen={setRecordInput}
+        setOpen={() => {
+          setRecordInput();
+          setRecEdit(null);
+        }}
         className={s.recordInputModal}
       >
         <RecordInputForm
@@ -223,20 +246,16 @@ const IrInput = () => {
         head
         label="REQUEST FOR INPUT"
         open={requestInput}
-        setOpen={setRequestInput}
+        setOpen={() => {
+          setRequestInput(false);
+          setReqEdit(null);
+        }}
         className={s.requestInput}
       >
         <RequestInputForm
           edit={reqEdit}
           parameters={parameters}
-          previous={
-            inputs
-              .filter((input) => input.__type === "reqInput")
-              .sort((a, b) =>
-                new Date(a.queryDateTime) > new Date(b.queryDateTime) ? 1 : -1
-              )
-              .slice(-1)[0]
-          }
+          previous={previous}
           onSuccess={(newReqInput) => {
             setRequestInput(false);
             setIr((prev) => ({
@@ -298,7 +317,8 @@ const SingleInput = ({
         <TableActions
           actions={[
             { label: "View", icon: <ImEye />, callBack: () => setView(true) },
-            ...(!input.dateTime
+            ...(input.__type === "recordInput" ||
+            (input.__type === "reqInput" && !input.response)
               ? [
                   {
                     icon: <BsPencilFill />,
@@ -455,7 +475,7 @@ const RequestInputForm = ({ edit, onSuccess, previous, parameters }) => {
   } = useFetch(defaultEndpoints.requestInputs + "/" + (edit?.id || ""));
 
   useEffect(() => {
-    if (irInfo?.includes("copyPrev") && previous) {
+    if (!edit?.copyPrev && irInfo?.includes("copyPrev") && previous) {
       setValue("copyPrev", previous.description);
     }
   }, [irInfo]);
@@ -468,7 +488,7 @@ const RequestInputForm = ({ edit, onSuccess, previous, parameters }) => {
       user: edit?.queryToUserId,
       irInformation: edit?.irInfo || [],
       query: edit?.query,
-      copyPrev: edit?.copcopyPrev,
+      copyPrev: edit?.copyPrev,
       description: edit?.description || ir.inciDescription,
       deptInv:
         edit?.deptInv ||
@@ -503,6 +523,10 @@ const RequestInputForm = ({ edit, onSuccess, previous, parameters }) => {
         })
           .then(({ data }) => {
             if (data.id) {
+              Prompt({
+                type: "success",
+                message: `Request submitted successfully.`,
+              });
               return onSuccess(data);
             }
             Prompt({ type: "error", message: data.message });
@@ -636,9 +660,13 @@ const RecordInputForm = ({ edit, parameters, onSuccess }) => {
 
   const uploads = watch("upload");
 
-  const { post: saveInput, put: updateInput, loading } = useFetch(
-    defaultEndpoints.recordInputs + "/" + (edit?.id || "")
-  );
+  const {
+    post: saveInput,
+    put: updateInput,
+    loading,
+  } = useFetch(defaultEndpoints.recordInputs + "/" + (edit?.id || ""), {
+    validator: { upload: /^.+$/gi },
+  });
   const { post: upload, laoding: uploadingFiles } = useFetch(
     defaultEndpoints.uploadFiles
   );
@@ -697,6 +725,10 @@ const RecordInputForm = ({ edit, parameters, onSuccess }) => {
         })
           .then(({ data }) => {
             if (data?.id) {
+              Prompt({
+                type: "success",
+                message: `Record submitted successfully.`,
+              });
               return onSuccess(data);
             }
             Prompt({
@@ -910,7 +942,10 @@ const EvidenceForm = ({
 
   const uploads = watch("upload");
   const { post: postEvidence, put: updateEvidence, loading } = useFetch(
-    defaultEndpoints.evidences + `/${edit?.id || ""}`
+    defaultEndpoints.evidences + `/${edit?.id || ""}`,
+    {
+      validator: { upload: /^.+$/gi },
+    }
   );
   const { post: upload, laoding: uploadingFiles } = useFetch(
     defaultEndpoints.uploadFiles
