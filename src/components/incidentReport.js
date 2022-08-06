@@ -695,7 +695,7 @@ export default function IncidentReporting() {
                     },
                   }}
                   name="typeofInci"
-                  options={irTypes}
+                  options={irTypes || []}
                   error={methods.formState.errors.typeofInci}
                 />
                 <button className={`clear ${s.info}`}>

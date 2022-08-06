@@ -97,7 +97,7 @@ export default function UserMaster() {
         setParameters((prev) => ({ ...prev, ..._parameters }));
         return getUsers(null, { query: { size: 10000 } });
       })
-      .then((data) => {
+      .then(({ data }) => {
         if (data._embedded?.user) {
           setUsers(
             data._embedded.user.map((user) => ({

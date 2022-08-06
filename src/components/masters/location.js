@@ -38,7 +38,7 @@ export default function Location() {
 
   useEffect(() => {
     getLocationTypes()
-      .then((data) => {
+      .then(({ data }) => {
         if (data.twoFieldMasterDetails) {
           setLocationTypes(
             data.twoFieldMasterDetails
@@ -51,7 +51,7 @@ export default function Location() {
           return getLocations();
         }
       })
-      .then((data) => {
+      .then(({ data }) => {
         if (data._embedded?.location) {
           setLocations(data._embedded.location);
         }
@@ -190,7 +190,7 @@ const LocationForm = ({
         }
 
         (edit ? updateLocation : postLocation)(data)
-          .then((data) => {
+          .then(({ data }) => {
             if (data.name) {
               onSuccess(data);
               reset();

@@ -19,7 +19,7 @@ export default function Rcas() {
 
   useEffect(() => {
     getRca()
-      .then((data) => {
+      .then(({ data }) => {
         if (data._embedded?.rca) {
           setRcas(data._embedded.rca);
           setSelected(data._embedded.rca[0]?.id);
@@ -167,7 +167,7 @@ const RcaForm = ({ edit, onSuccess, clearForm, rcas }) => {
           return;
         }
         (edit ? updateRca : postRca)(data)
-          .then((data) => {
+          .then(({ data }) => {
             if (data.name) {
               onSuccess(data);
               reset();
@@ -358,7 +358,7 @@ const RcaCauseForm = ({ edit, rcaId, onSuccess, clearForm, rcaCauses }) => {
           return;
         }
         (edit ? updateRcaCause : postRcaCause)({ ...data, rca: { id: rcaId } })
-          .then((data) => {
+          .then(({ data }) => {
             if (data.name) {
               onSuccess(data);
               reset();

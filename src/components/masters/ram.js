@@ -55,7 +55,7 @@ export default function RiskAssessments() {
         setParameters(_parameters);
         return getRams();
       })
-      .then((data) => {
+      .then(({ data }) => {
         if (data._embedded?.riskAssement) {
           setRisks(data._embedded.riskAssement);
         }
@@ -260,7 +260,7 @@ const RiskAssessmentForm = ({
         }
 
         (edit ? updateRam : postRam)(data)
-          .then((data) => {
+          .then(({ data }) => {
             if (data.id) {
               onSuccess(data);
               reset();

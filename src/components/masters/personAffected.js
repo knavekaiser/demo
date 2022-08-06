@@ -42,7 +42,7 @@ export default function PersonAffected() {
 
   useEffect(() => {
     getPersonAffecteds()
-      .then((data) => {
+      .then(({ data }) => {
         if (data._embedded?.personAffected) {
           setPersonAffecteds(data._embedded.personAffected);
           setSelected(data._embedded.personAffected[0]?.pa_id);
@@ -244,7 +244,7 @@ const PersonAffectedForm = ({
           return;
         }
         (edit ? updatePersonAffected : postPersonAffected)(data)
-          .then((data) => {
+          .then(({ data }) => {
             if (data.name) {
               onSuccess(data);
               reset();
@@ -515,7 +515,7 @@ const PersonAffectedDetailForm = ({
           ...data,
           personAffected: { pa_id: personAffectedId },
         })
-          .then((data) => {
+          .then(({ data }) => {
             if (data.name) {
               onSuccess(data);
               reset();

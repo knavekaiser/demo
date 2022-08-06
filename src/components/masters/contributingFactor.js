@@ -27,7 +27,7 @@ export default function ContributingFactor() {
 
   useEffect(() => {
     getContributingFactors()
-      .then((data) => {
+      .then(({ data }) => {
         if (data._embedded?.contributingFactors) {
           setContributingFactors(data._embedded.contributingFactors);
           setSelected(data._embedded.contributingFactors[0]?.cf_id);
@@ -204,7 +204,7 @@ const ContributingFactorForm = ({
           return;
         }
         (edit ? updateContributingFactor : postContributingFactor)(data)
-          .then((data) => {
+          .then(({ data }) => {
             if (data.name) {
               onSuccess(data);
               reset();
@@ -405,7 +405,7 @@ const ContributingFactorDetailForm = ({
           ...data,
           contributingFactors: { cf_id: contributingFactorId },
         })
-          .then((data) => {
+          .then(({ data }) => {
             if (data.name) {
               onSuccess(data);
               reset();

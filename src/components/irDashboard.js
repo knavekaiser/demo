@@ -762,9 +762,8 @@ const SingleIr = memo(
               ir.inciSubCat}
           </td>
           <td>
-            {irTypes.find(({ value }) => value === ir.typeofInci)?.label || [
-              ir.typeofInci,
-            ]}
+            {irTypes.find(({ value }) => value === ir.typeofInci)?.label ||
+              ir.typeofInci}
           </td>
           <td>
             {parameters?.users?.find(({ value }) => value === ir.userId)

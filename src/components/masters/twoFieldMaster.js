@@ -34,7 +34,7 @@ export default function TwoFieldMasters() {
 
   useEffect(() => {
     getTwoFieldMasters()
-      .then((data) => {
+      .then(({ data }) => {
         if (data._embedded?.twoFieldMaster) {
           setTwoFieldMasters(data._embedded.twoFieldMaster);
           setSelected(data._embedded.twoFieldMaster[0]?.id);
@@ -197,7 +197,7 @@ const TwoFieldMasterForm = ({
           ...data,
           name: data.name.trim(),
         })
-          .then((data) => {
+          .then(({ data }) => {
             if (data.name) {
               onSuccess(data);
               reset();
@@ -415,7 +415,7 @@ const TwoFieldMasterDetailForm = ({
           ...data,
           twoFieldMaster: { id: twoFieldMasterId },
         })
-          .then((data) => {
+          .then(({ data }) => {
             if (data.name) {
               onSuccess(data);
               reset();
