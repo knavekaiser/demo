@@ -16,7 +16,6 @@ import { useFetch } from "../hooks";
 import { appConfig, endpoints as defaultEndpoints, paths } from "../config";
 // import hisEndpoints from "../config/hisEndpoints.js";
 import jwt_decode from "jwt-decode";
-import { getTenantId, setTenantId } from "../helpers";
 
 export default function Login() {
   const { user, setUser, setEndpoints, his, setHis } = useContext(SiteContext);
@@ -57,7 +56,6 @@ export default function Login() {
   useEffect(() => {
     const accessToken = sessionStorage.getItem("access-token");
     const hisAccessToken = sessionStorage.getItem("HIS-access-token");
-    // const tenantId = getTenantId();
     if (accessToken) {
       var decoded = jwt_decode(accessToken);
       if (decoded && new Date() > new Date(decoded.exp)) {
@@ -99,9 +97,6 @@ export default function Login() {
       navigate("/");
       return;
     }
-    // if (new URLSearchParams(location.search).get("tenantId")) {
-    //   setTenantId(new URLSearchParams(location.search).get("tenantId"));
-    // }
   }, []);
   return (
     <div className={s.login} data-testid="login">

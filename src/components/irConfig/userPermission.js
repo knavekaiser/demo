@@ -16,7 +16,7 @@ export default function UserPermission() {
   const permissionRef = useRef(null);
   const { user, setRoles, setPermissions } = useContext(SiteContext);
   const { irConfig } = useContext(IrDashboardContext);
-  const [userPermission, setUserPermission] = useState(null);
+  const [userPermission, setUserPermission] = useState([]);
   const [updates, setUpdates] = useState([]);
 
   const { get: getRolePermission } = useFetch(defaultEndpoints.rolePermissions);

@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useRef, useContext } from "react";
 import { SiteContext } from "../SiteContext";
 import { Prompt } from "../components/modal";
 import { endpoints as defaultEndpoints } from "../config";
-import { getTenantId } from "../helpers";
 
 const defaultRegex = /^[\-\+.,:@ a-z0-9]+$/gi;
 
@@ -61,14 +60,6 @@ export const useFetch = (
           query
         ).toString()}`;
       }
-      // if (
-      //   noDbSchema !== true &&
-      //   !his &&
-      //   getTenantId() &&
-      //   !_url.startsWith(defaultEndpoints.apiUrl)
-      // ) {
-      //   _url += `${_url.includes("?") ? "" : "?"}&tenantId=${getTenantId()}`;
-      // }
       setLoading(true);
       const response = await fetch(_url, {
         method: method,

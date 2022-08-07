@@ -13,7 +13,7 @@ import {
   Chip,
   Tabs,
   MobileNumberInput,
-} from "./elements";
+} from "./";
 import { TableActions, Table } from "./Table";
 import { BrowserRouter } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -184,22 +184,22 @@ describe("Table Actions", () => {
     );
   });
 });
-// test("Moment", () => {
-//   const component = render(
-//     <Moment format="DD/MM/YYYY ddd hh:mm">
-//       {new Date("2021-05-12 13:45")}
-//     </Moment>
-//   );
-//   const time = screen.getByTestId("moment");
-//   expect(time.textContent).toBe("12/05/2021 Wed 01:45");
-// });
-// test("Invalid Date", () => {
-//   const component = render(
-//     <Moment format="DD/MM/YYYY ddd hh:mm">{"1agdasdgsd33"}</Moment>
-//   );
-//   const time = screen.getByTestId("moment");
-//   expect(time.textContent).toBe("1agdasdgsd33");
-// });
+test("Moment", () => {
+  const component = render(
+    <Moment format="DD/MM/YYYY ddd hh:mm">
+      {new Date("2021-05-12 13:45")}
+    </Moment>
+  );
+  const time = screen.getByTestId("moment");
+  expect(time.textContent).toBe("12/05/2021 Wed 13:45");
+});
+test("Invalid Date", () => {
+  const component = render(
+    <Moment format="DD/MM/YYYY ddd hh:mm">{"1agdasdgsd33"}</Moment>
+  );
+  const time = screen.getByTestId("moment");
+  expect(time.textContent).toBe("1agdasdgsd33");
+});
 test("Chip", () => {
   const component = render(<Chip label="test chip" remove={jest.fn()} />);
   const button = document.querySelector("button.clear");

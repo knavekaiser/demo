@@ -51,9 +51,16 @@ export const decrypt = (text) => {
   return decrypted;
 };
 
-export const getTenantId = () => {
-  return decrypt(sessionStorage.getItem("db-schema"));
+Array.prototype.swap = function (oldIndex, newIndex) {
+  const a = this[oldIndex],
+    b = this[newIndex];
+  this[newIndex] = a;
+  this[oldIndex] = b;
+  return this;
 };
-export const setTenantId = (id) => {
-  sessionStorage.setItem("db-schema", encrypt(id));
+
+Number.prototype.pad = function (l) {
+  let zeros = "";
+  for (let i = 0; i < l; i++) zeros += "0";
+  return zeros.length >= `${this}`.length ? (zeros + this).slice(-l) : this;
 };

@@ -7,7 +7,14 @@ const customRender = (ui, { providerProps, ...renderOptions }) => {
   return render(
     <BrowserRouter>
       <SiteContext.Provider value={providerProps}>
-        <IrDashboardContext.Provider value={{ count: {}, dataElements: [] }}>
+        <IrDashboardContext.Provider
+          value={{
+            count: {},
+            irDashboardDataElements: [],
+            capaDashboardDataElements: [],
+            irScreenDetails: [],
+          }}
+        >
           {ui}
         </IrDashboardContext.Provider>
       </SiteContext.Provider>

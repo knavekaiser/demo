@@ -23,6 +23,9 @@ const customRender = async (ui) => {
         <IrDashboardContext.Provider
           value={{
             irConfig: { hodAcknowledgement: true },
+            irInvestigationDetails: [],
+            setIrInvestigationDetails: jest.fn(),
+            irScreenDetails: [],
           }}
         >
           {ui}
@@ -114,10 +117,10 @@ describe("User Permission", () => {
       await fireEvent.click(input);
     });
 
-    // const save = document.querySelector(`button.btn.w-100`);
-    // await act(async () => {
-    //   await fireEvent.click(save);
-    // });
+    const save = document.querySelector(`button.btn.wd-100`);
+    await act(async () => {
+      await fireEvent.click(save);
+    });
   });
 
   test("Save update fail", async () => {
@@ -126,9 +129,9 @@ describe("User Permission", () => {
       await fireEvent.click(input);
     });
 
-    // const save = document.querySelector(`button.btn.w-100`);
-    // await act(async () => {
-    //   await fireEvent.click(save);
-    // });
+    const save = document.querySelector(`button.btn.wd-100`);
+    await act(async () => {
+      await fireEvent.click(save);
+    });
   });
 });

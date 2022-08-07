@@ -17,6 +17,7 @@ const customRender = async (ui, { providerProps, ...renderOptions }) => {
           <IrDashboardContext.Provider
             value={{
               count: {},
+              irScreenDetails: [],
             }}
           >
             {ui}

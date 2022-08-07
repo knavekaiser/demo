@@ -5,21 +5,6 @@ import { SiteContext } from "./SiteContext";
 import Login from "./components/login";
 import Dashboard from "./components/dashboard.js";
 import "./App.scss";
-import { getTenantId } from "./helpers";
-
-Array.prototype.swap = function (oldIndex, newIndex) {
-  const a = this[oldIndex],
-    b = this[newIndex];
-  this[newIndex] = a;
-  this[oldIndex] = b;
-  return this;
-};
-
-Number.prototype.pad = function (l) {
-  let zeros = "";
-  for (let i = 0; i < l; i++) zeros += "0";
-  return zeros.length >= `${this}`.length ? (zeros + this).slice(-l) : this;
-};
 
 function App() {
   const { user } = useContext(SiteContext);
@@ -27,7 +12,7 @@ function App() {
   const location = useLocation();
   useEffect(() => {
     if (!user && location.pathname !== "/login") {
-      navigate(`/login${getTenantId() ? `?tenantId=${getTenantId()}` : ""}`, {
+      navigate(`/login`, {
         state: { lastLocation: location },
       });
     }
