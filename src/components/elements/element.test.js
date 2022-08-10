@@ -13,6 +13,7 @@ import {
   Chip,
   Tabs,
   MobileNumberInput,
+  FishboneDiagram,
 } from "./";
 import { TableActions, Table } from "./Table";
 import { BrowserRouter } from "react-router-dom";
@@ -20,25 +21,25 @@ import { useForm } from "react-hook-form";
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-test("input", () => {
+test("input", async () => {
   render(<Input type="text" placeholder="input-placeholder" />);
-  const input = screen.getByPlaceholderText("input-placeholder");
+  const input = await screen.getByPlaceholderText("input-placeholder");
   expect(input.placeholder).toBe("input-placeholder");
 });
-test("FileInput", () => {
+test("FileInput", async () => {
   render(<FileInput label="Files" />);
-  const fileInput = screen.getByTestId("fileInput");
+  const fileInput = await screen.getByTestId("fileInput");
   expect(fileInput.textContent).toBe("Files 0 files selectedItem select");
 
   const input = document.querySelector("input");
   fireEvent.click(input);
 });
-test("Textarea", () => {
+test("Textarea", async () => {
   render(<Textarea type="text" placeholder="textarea" />);
-  const textarea = screen.getByPlaceholderText("textarea");
+  const textarea = await screen.getByPlaceholderText("textarea");
   expect(textarea.placeholder).toBe("textarea");
 });
-test("Radio", () => {
+test("Radio", async () => {
   render(
     <Radio
       name="typeofInci"
@@ -56,12 +57,12 @@ test("Radio", () => {
       ]}
     />
   );
-  const container = screen.getByTestId("radioInput");
+  const container = await screen.getByTestId("radioInput");
   expect(container.textContent).toBe(
     "Option 1Hint for option 1Option 2Hint for option 2"
   );
 });
-test("CustomRadio", () => {
+test("CustomRadio", async () => {
   render(
     <CustomRadio
       label="Custom Radio"
@@ -77,22 +78,22 @@ test("CustomRadio", () => {
       ]}
     />
   );
-  const container = screen.getByTestId("customRadioInput");
+  const container = await screen.getByTestId("customRadioInput");
   expect(container.textContent).toBe("Custom Radio Option 1Option 2");
 });
-test("Switch", () => {
+test("Switch", async () => {
   render(<SwitchInput label="Switch" />);
-  const input = screen.getByTestId("switchInput");
+  const input = await screen.getByTestId("switchInput");
   expect(input.textContent).toBe("Switch YesNo");
 });
-test("Toggle", () => {
+test("Toggle", async () => {
   render(<Toggle label="Switch" />);
-  const input = screen.getByTestId("toggleInput");
+  const input = await screen.getByTestId("toggleInput");
   expect(input.textContent).toBe("");
 });
-test("Checkbox", () => {
+test("Checkbox", async () => {
   render(<Checkbox label="Switch" />);
-  const time = screen.getByTestId("checkbox-input");
+  const time = await screen.getByTestId("checkbox-input");
   expect(time.textContent).toBe("Switch");
 });
 describe("Table Actions", () => {
@@ -131,7 +132,7 @@ describe("Table Actions", () => {
         </table>
       )
     );
-    const container = screen.getByTestId("tableActions");
+    const container = await screen.getByTestId("tableActions");
     expect(container.textContent).toBe("Icon 1Icon 2");
   });
   test("4 actions", async () => {
@@ -154,7 +155,7 @@ describe("Table Actions", () => {
         </table>
       )
     );
-    const gearBtn = screen.getByTestId("gear-btn");
+    const gearBtn = await screen.getByTestId("gear-btn");
     fireEvent.click(gearBtn);
 
     const opt1 = document.querySelector(".modal button");
@@ -184,20 +185,20 @@ describe("Table Actions", () => {
     );
   });
 });
-test("Moment", () => {
+test("Moment", async () => {
   const component = render(
     <Moment format="DD/MM/YYYY ddd hh:mm">
       {new Date("2021-05-12 13:45")}
     </Moment>
   );
-  const time = screen.getByTestId("moment");
+  const time = await screen.getByTestId("moment");
   expect(time.textContent).toBe("12/05/2021 Wed 13:45");
 });
-test("Invalid Date", () => {
+test("Invalid Date", async () => {
   const component = render(
     <Moment format="DD/MM/YYYY ddd hh:mm">{"1agdasdgsd33"}</Moment>
   );
-  const time = screen.getByTestId("moment");
+  const time = await screen.getByTestId("moment");
   expect(time.textContent).toBe("1agdasdgsd33");
 });
 test("Chip", () => {
@@ -218,6 +219,60 @@ test("Tabs", () => {
   );
   const a = document.querySelector("a");
   fireEvent.click(a);
+});
+test("Fishbone Diagram", () => {
+  const component = render(
+    <FishboneDiagram
+      data={{
+        Equipment: {
+          Broken: {
+            causeCat: 14,
+            cause: 17,
+            why: "asdgasd|asdgasdg|asdg",
+            id: "t0258g0o",
+            action: "add",
+            whys: ["asdgasd", "asdgasdg", "asdg"],
+          },
+        },
+        Environment: {
+          Clocks: {
+            causeCat: 4,
+            cause: 6,
+            why: "asdgasdg",
+            id: "5h05voug",
+            action: "add",
+            whys: ["asdgasdg"],
+          },
+        },
+        People: {
+          Escort: {
+            causeCat: 3,
+            cause: 4,
+            why: "sd asdg|asdg asdg asdg",
+            id: "08a9hfio",
+            action: "add",
+            whys: ["sd asdg", "asdg asdg asdg"],
+          },
+          Pholebotomist: {
+            causeCat: 3,
+            cause: 5,
+            why: "asdg asdg",
+            id: "fluo69fp",
+            action: "add",
+            whys: ["asdg asdg"],
+          },
+          Secretary: {
+            causeCat: 3,
+            cause: 3,
+            why: "asdg asdg|asd gasd gsdg|asdg asdgsdg sdg",
+            id: "5gov9c9o",
+            action: "add",
+            whys: ["asdg asdg", "asd gasd gsdg", "asdg asdgsdg sdg"],
+          },
+        },
+      }}
+    />
+  );
 });
 
 const Form = () => {
@@ -261,7 +316,7 @@ describe("Form", () => {
   test("Plain render", async () => {
     const container = document.querySelector("section");
 
-    const arrow = screen.getByTestId("combobox-btn");
+    const arrow = await screen.getByTestId("combobox-btn");
     await act(async () => {
       await fireEvent.click(arrow);
     });

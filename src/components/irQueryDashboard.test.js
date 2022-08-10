@@ -1,5 +1,5 @@
 import ReactDOM from "react-dom";
-import IrDashboard, { MyDashboard, QualityDashboard } from "./irDashboard";
+import IrQueryDashboard from "./IrQueryDashboard";
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import { SiteContext, IrDashboardContext } from "../SiteContext";
@@ -381,6 +381,155 @@ const irData = {
       },
     ],
   },
+  data: [
+    {
+      id: 12816,
+      incident_Date_Time: "2022-04-28T13:47:00.000+05:30",
+      status: "11",
+      department: "2",
+      userDept: "",
+      userId: 15,
+      irInvestigator: 332,
+      capturedBy: null,
+      reportingDate: "2022-04-28T13:48:23.152+05:30",
+      ReqInputId: 10019,
+      deptId: 1,
+      irInfo: null,
+      copyPrev: null,
+      description: "TEST UAT",
+      deptInv: null,
+      personAff: null,
+      subcateg: null,
+      queryDateTime: "2022-05-09T09:22:41.774+05:30",
+      query: null,
+      queryRaisedBy: 0,
+      sequence: "375 /2022 CONFIG CODE",
+      responseIrInput: {
+        id: 10015,
+        reqId: 10019,
+        response: "asdgasdgasd",
+        upload: "",
+        responseBy: 15,
+        responseOn: "2022-05-09T16:01:14.185+05:30",
+        deptId: 2,
+        fileName: null,
+      },
+      location: 7,
+      locationDetailsEntry: "",
+      patientYesOrNo: null,
+      patientname: "",
+      complaIntegerDatetime: null,
+      complaIntegerIdEntry: null,
+      typeofInci: 7,
+      inciCateg: 1,
+      inciSubCat: 17,
+      template: null,
+      personAffected: null,
+      inciDescription: "TEST UAT",
+      deptsLookupMultiselect: "101,103",
+      contribFactorYesOrNo: null,
+      preventability: null,
+      incidentReportedDept: null,
+      headofDepart: null,
+      contribFactor: null,
+      reqInputId: 10019,
+    },
+    {
+      id: 12813,
+      incident_Date_Time: "2021-11-02T18:39:00.000+05:30",
+      status: "11",
+      department: null,
+      userDept: "",
+      userId: null,
+      irInvestigator: null,
+      capturedBy: null,
+      reportingDate: "2022-04-27T21:35:52.909+05:30",
+      ReqInputId: 20020,
+      deptId: 2,
+      irInfo: null,
+      copyPrev: null,
+      description: "DescriptionAK",
+      deptInv: null,
+      personAff: null,
+      subcateg: null,
+      queryDateTime: "2022-05-09T13:04:35.020+05:30",
+      query: "test query",
+      queryRaisedBy: 0,
+      sequence: "373 /2022 CONFIG CODE",
+      responseIrInput: {
+        id: 10031,
+        reqId: 20020,
+        response: "reposenassdf",
+        upload: "",
+        responseBy: 15,
+        responseOn: "2022-07-02T19:52:22.415+05:30",
+        deptId: 2,
+        fileName: "",
+      },
+      location: 3,
+      locationDetailsEntry: "Location Details AK",
+      patientYesOrNo: true,
+      patientname: "EMR210000000690",
+      complaIntegerDatetime: "2021-11-02T18:39:00.000+05:30",
+      complaIntegerIdEntry: "001",
+      typeofInci: 1,
+      inciCateg: 2,
+      inciSubCat: 2,
+      template: null,
+      personAffected: null,
+      inciDescription: "DescriptionAK",
+      deptsLookupMultiselect: "102",
+      contribFactorYesOrNo: null,
+      preventability: 1,
+      incidentReportedDept: null,
+      headofDepart: null,
+      contribFactor: null,
+      reqInputId: 20020,
+    },
+    {
+      id: 12775,
+      incident_Date_Time: "2022-04-18T19:37:00.000+05:30",
+      status: "11",
+      department: "2",
+      userDept: "",
+      userId: 15,
+      irInvestigator: null,
+      capturedBy: null,
+      reportingDate: "2022-04-23T18:38:07.312+05:30",
+      ReqInputId: 20026,
+      deptId: 6,
+      irInfo: null,
+      copyPrev: null,
+      description: "Test description",
+      deptInv: "",
+      personAff: "",
+      subcateg: null,
+      queryDateTime: "2022-05-30T15:14:02.274+05:30",
+      query: "Test query",
+      queryRaisedBy: 15,
+      sequence: "376 /2022 CONFIG CODE",
+      responseIrInput: null,
+      location: 29,
+      locationDetailsEntry: "",
+      patientYesOrNo: false,
+      patientname: "",
+      complaIntegerDatetime: null,
+      complaIntegerIdEntry: "",
+      typeofInci: 2,
+      inciCateg: 3,
+      inciSubCat: 8,
+      template: null,
+      personAffected: null,
+      inciDescription: "Test description",
+      deptsLookupMultiselect: "1,6,7",
+      contribFactorYesOrNo: null,
+      preventability: null,
+      incidentReportedDept: null,
+      headofDepart: 15,
+      contribFactor: null,
+      reqInputId: 20026,
+    },
+  ],
 };
 const singleIr = {
   id: 61,
@@ -502,152 +651,21 @@ describe("IR Dashboard", () => {
       checkPermission: () => true,
     };
     setMockFetch(irData);
-    await customRender(<IrDashboard />, { providerProps });
+    await customRender(<IrQueryDashboard />, { providerProps });
   });
 
-  test("Render", () => {});
-});
-
-describe("My Dashboard", () => {
-  beforeAll(() => {
-    ReactDOM.createPortal = jest.fn((element, node) => {
-      return element;
-    });
-  });
-  beforeEach(async () => {
-    let portal = document.querySelector("#portal");
-    if (!portal) {
-      portal = document.createElement("div");
-      portal.id = "portal";
-      document.body.appendChild(portal);
-    }
-
-    let prompt = document.querySelector("#prompt");
-    if (!prompt) {
-      const prompt = document.createElement("div");
-      prompt.id = "prompt";
-      document.body.appendChild(prompt);
-    }
-
-    const providerProps = {
-      irTypes: [],
-      user: { id: 10, name: "Test User" },
-      endpoints: {
-        locations: "http://endpoints.com/locations",
-        users: "http://endpoints.com/users",
-        departments: "http://endpoints.com/departments",
-        searchIrs: "http://endpoints.com/searchIrs",
-      },
-      checkPermission: () => true,
-    };
-    setMockFetch(irData);
-    await customRender(<MyDashboard />, { providerProps });
-  });
-
-  test("Search", async () => {
-    const input = document.querySelector(`input[name="sequence"]`);
+  test("Render", async () => {
+    const clearBtn = document.querySelector("form button[type='button']");
     await act(async () => {
-      await userEvent.type(input, "123");
+      await fireEvent.click(clearBtn);
     });
 
-    const submitBtn = await screen.getByText("Search");
+    const irCodeInput = document.querySelector("form input");
+    userEvent.type(irCodeInput, "22");
+
+    const searchBtn = document.querySelector("form button");
     await act(async () => {
-      await fireEvent.click(submitBtn);
+      await fireEvent.click(searchBtn);
     });
-  });
-});
-
-describe("Quality Dashboard", () => {
-  beforeAll(() => {
-    ReactDOM.createPortal = jest.fn((element, node) => {
-      return element;
-    });
-  });
-  beforeEach(async () => {
-    let portal = document.querySelector("#portal");
-    if (!portal) {
-      portal = document.createElement("div");
-      portal.id = "portal";
-      document.body.appendChild(portal);
-    }
-
-    let prompt = document.querySelector("#prompt");
-    if (!prompt) {
-      const prompt = document.createElement("div");
-      prompt.id = "prompt";
-      document.body.appendChild(prompt);
-    }
-
-    const providerProps = {
-      irTypes: [],
-      user: { id: 10, name: "Test User" },
-      endpoints: {
-        locations: "http://endpoints.com/locations",
-        users: "http://endpoints.com/users",
-        departments: "http://endpoints.com/departments",
-        searchIrs: "http://endpoints.com/searchIrs",
-      },
-      checkPermission: () => true,
-    };
-    setMockFetch(irData);
-    await customRender(<QualityDashboard />, { providerProps });
-  });
-
-  test("Search", async () => {
-    const input = document.querySelector(`input[name="sequence"]`);
-    await act(async () => {
-      await userEvent.type(input, "123");
-    });
-
-    setMockFetch(irData);
-
-    const submitBtn = await screen.getByText("Search");
-    await act(async () => {
-      await fireEvent.click(submitBtn);
-    });
-
-    // const actionButton = document.querySelector("table td button");
-    // await act(async () => {
-    //   await fireEvent.click(actionButton);
-    // });
-    //
-    // let reAssignBtn = document.querySelector(".modal.actionModal div button");
-    // await act(async () => {
-    //   await fireEvent.click(reAssignBtn);
-    // });
-    //
-    // const comboInput = document.querySelector(".modal form input");
-    // await act(async () => {
-    //   await fireEvent.click(comboInput);
-    // });
-    //
-    // const optionOne = document.querySelector(".modal .options li");
-    // await act(async () => {
-    //   await fireEvent.click(optionOne);
-    // });
-    //
-    // setMockFetch(singleIr);
-    //
-    // const assignBtn = document.querySelector(
-    //   `.modal form .btns button:last-child`
-    // );
-    // expect(assignBtn.textContent).toBe("Re-Assign");
-    // await act(async () => {
-    //   await fireEvent.click(assignBtn);
-    // });
-    //
-    // await act(async () => {
-    //   await fireEvent.click(actionButton);
-    // });
-    //
-    // reAssignBtn = document.querySelector(".modal.actionModal div button");
-    // await act(async () => {
-    //   await fireEvent.click(reAssignBtn);
-    // });
-    //
-    // const closeBtn = document.querySelector(`.modal form .btns button`);
-    // await act(async () => {
-    //   await fireEvent.click(closeBtn);
-    // });
   });
 });

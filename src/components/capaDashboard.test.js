@@ -1,5 +1,5 @@
 import ReactDOM from "react-dom";
-import IrDashboard, { MyDashboard, QualityDashboard } from "./irDashboard";
+import CapaDashboard from "./capaDashboard";
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import { SiteContext, IrDashboardContext } from "../SiteContext";
@@ -460,7 +460,7 @@ const singleIr = {
   headofDepart: 6,
 };
 
-describe("IR Dashboard", () => {
+describe("Capa dashboard", () => {
   beforeAll(() => {
     ReactDOM.createPortal = jest.fn((element, node) => {
       return element;
@@ -502,152 +502,27 @@ describe("IR Dashboard", () => {
       checkPermission: () => true,
     };
     setMockFetch(irData);
-    await customRender(<IrDashboard />, { providerProps });
+    await customRender(<CapaDashboard />, { providerProps });
   });
 
-  test("Render", () => {});
-});
-
-describe("My Dashboard", () => {
-  beforeAll(() => {
-    ReactDOM.createPortal = jest.fn((element, node) => {
-      return element;
-    });
-  });
-  beforeEach(async () => {
-    let portal = document.querySelector("#portal");
-    if (!portal) {
-      portal = document.createElement("div");
-      portal.id = "portal";
-      document.body.appendChild(portal);
-    }
-
-    let prompt = document.querySelector("#prompt");
-    if (!prompt) {
-      const prompt = document.createElement("div");
-      prompt.id = "prompt";
-      document.body.appendChild(prompt);
-    }
-
-    const providerProps = {
-      irTypes: [],
-      user: { id: 10, name: "Test User" },
-      endpoints: {
-        locations: "http://endpoints.com/locations",
-        users: "http://endpoints.com/users",
-        departments: "http://endpoints.com/departments",
-        searchIrs: "http://endpoints.com/searchIrs",
-      },
-      checkPermission: () => true,
-    };
-    setMockFetch(irData);
-    await customRender(<MyDashboard />, { providerProps });
-  });
-
-  test("Search", async () => {
-    const input = document.querySelector(`input[name="sequence"]`);
+  test("Render", async () => {
+    const expandBtn = document.querySelector("tbody tr td button.btn.clear");
     await act(async () => {
-      await userEvent.type(input, "123");
+      await fireEvent.click(expandBtn);
     });
 
-    const submitBtn = await screen.getByText("Search");
+    const clearBtn = await screen.getByText("Clear");
     await act(async () => {
-      await fireEvent.click(submitBtn);
+      await fireEvent.click(clearBtn);
     });
   });
-});
 
-describe("Quality Dashboard", () => {
-  beforeAll(() => {
-    ReactDOM.createPortal = jest.fn((element, node) => {
-      return element;
-    });
-  });
-  beforeEach(async () => {
-    let portal = document.querySelector("#portal");
-    if (!portal) {
-      portal = document.createElement("div");
-      portal.id = "portal";
-      document.body.appendChild(portal);
-    }
+  test("Render fail", async () => {
+    setMockFailFetch();
 
-    let prompt = document.querySelector("#prompt");
-    if (!prompt) {
-      const prompt = document.createElement("div");
-      prompt.id = "prompt";
-      document.body.appendChild(prompt);
-    }
-
-    const providerProps = {
-      irTypes: [],
-      user: { id: 10, name: "Test User" },
-      endpoints: {
-        locations: "http://endpoints.com/locations",
-        users: "http://endpoints.com/users",
-        departments: "http://endpoints.com/departments",
-        searchIrs: "http://endpoints.com/searchIrs",
-      },
-      checkPermission: () => true,
-    };
-    setMockFetch(irData);
-    await customRender(<QualityDashboard />, { providerProps });
-  });
-
-  test("Search", async () => {
-    const input = document.querySelector(`input[name="sequence"]`);
+    const expandBtn = document.querySelector("tbody tr td button.btn.clear");
     await act(async () => {
-      await userEvent.type(input, "123");
+      await fireEvent.click(expandBtn);
     });
-
-    setMockFetch(irData);
-
-    const submitBtn = await screen.getByText("Search");
-    await act(async () => {
-      await fireEvent.click(submitBtn);
-    });
-
-    // const actionButton = document.querySelector("table td button");
-    // await act(async () => {
-    //   await fireEvent.click(actionButton);
-    // });
-    //
-    // let reAssignBtn = document.querySelector(".modal.actionModal div button");
-    // await act(async () => {
-    //   await fireEvent.click(reAssignBtn);
-    // });
-    //
-    // const comboInput = document.querySelector(".modal form input");
-    // await act(async () => {
-    //   await fireEvent.click(comboInput);
-    // });
-    //
-    // const optionOne = document.querySelector(".modal .options li");
-    // await act(async () => {
-    //   await fireEvent.click(optionOne);
-    // });
-    //
-    // setMockFetch(singleIr);
-    //
-    // const assignBtn = document.querySelector(
-    //   `.modal form .btns button:last-child`
-    // );
-    // expect(assignBtn.textContent).toBe("Re-Assign");
-    // await act(async () => {
-    //   await fireEvent.click(assignBtn);
-    // });
-    //
-    // await act(async () => {
-    //   await fireEvent.click(actionButton);
-    // });
-    //
-    // reAssignBtn = document.querySelector(".modal.actionModal div button");
-    // await act(async () => {
-    //   await fireEvent.click(reAssignBtn);
-    // });
-    //
-    // const closeBtn = document.querySelector(`.modal form .btns button`);
-    // await act(async () => {
-    //   await fireEvent.click(closeBtn);
-    // });
   });
 });

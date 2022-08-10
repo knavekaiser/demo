@@ -49,7 +49,7 @@ const providerProps = {
 
 test("Dashboard", async () => {
   await customRender(<Masters />, { providerProps });
-  const comp = screen.getByTestId("masters");
+  const comp = await screen.getByTestId("masters");
   expect(comp.textContent).toMatch("404");
 });
 
@@ -114,7 +114,7 @@ const testParent = ({
       });
     });
     test("Renders All Parents", async () => {
-      const categories = screen.getByTestId(testId);
+      const categories = await screen.getByTestId(testId);
       expect(categories.textContent).toMatch(allRenderTextMatch);
     });
 
@@ -197,7 +197,7 @@ const testParent = ({
       });
 
       setMockFetch({});
-      let modal_yes = screen.getByText("Yes");
+      let modal_yes = await screen.getByText("Yes");
       await act(async () => {
         await fireEvent.click(modal_yes);
       });
@@ -207,7 +207,7 @@ const testParent = ({
       });
 
       setMockFetch({}, 204);
-      modal_yes = screen.getByText("Yes");
+      modal_yes = await screen.getByText("Yes");
       await act(async () => {
         await fireEvent.click(modal_yes);
       });
@@ -292,7 +292,7 @@ const testChild = ({ testId, name, ui, data }) => {
       });
 
       setMockFetch({});
-      let modal_yes = screen.getByText("Yes");
+      let modal_yes = await screen.getByText("Yes");
       await act(async () => {
         await fireEvent.click(modal_yes);
       });
@@ -302,7 +302,7 @@ const testChild = ({ testId, name, ui, data }) => {
       });
 
       setMockFetch({}, 204);
-      modal_yes = screen.getByText("Yes");
+      modal_yes = await screen.getByText("Yes");
       await act(async () => {
         await fireEvent.click(modal_yes);
       });
@@ -558,7 +558,7 @@ describe("Reportable test", () => {
       await fireEvent.click(dltBtn);
     });
 
-    let modal_yes = screen.getByText("Yes");
+    let modal_yes = await screen.getByText("Yes");
 
     setMockFetch({}, 409);
     await act(async () => {
@@ -569,7 +569,7 @@ describe("Reportable test", () => {
       await fireEvent.click(dltBtn);
     });
 
-    modal_yes = screen.getByText("Yes");
+    modal_yes = await screen.getByText("Yes");
 
     setMockFetch({}, 204);
     await act(async () => {
@@ -1129,10 +1129,10 @@ describe("IR Code Configuration", () => {
   });
 
   test("Render", async () => {
-    const comp = screen.getByTestId("irCodeConfig");
+    const comp = await screen.getByTestId("irCodeConfig");
     expect(comp.textContent).toMatch("IR CODE CONFIGURATION");
 
-    const saveBtn = screen.getByText("Save");
+    const saveBtn = await screen.getByText("Save");
     setMockFailFetch();
     await act(async () => {
       await fireEvent.click(saveBtn);

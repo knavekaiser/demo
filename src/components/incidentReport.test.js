@@ -69,7 +69,7 @@ describe("Incident Report Form", () => {
   });
 
   test("Context test", async () => {
-    const comp = screen.getByTestId("incidentReportingForm");
+    const comp = await screen.getByTestId("incidentReportingForm");
     expect(comp.textContent).toMatch(
       "There is a blame free reporting culture. No punitive measure will be taken against any staff reporting any incident"
     );
@@ -85,7 +85,7 @@ describe("Incident Report Form", () => {
   });
 
   test("Reset form", async () => {
-    const resetBtn = screen.getByText("Clear");
+    const resetBtn = await screen.getByText("Clear");
     await act(async () => {
       await fireEvent.click(resetBtn);
     });

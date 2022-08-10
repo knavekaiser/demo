@@ -3,7 +3,7 @@ import { Modal, Prompt } from "./modal";
 import { render, screen, fireEvent, act } from "@testing-library/react";
 
 const testPrompt = (prompt) => {
-  return () => {
+  return async () => {
     render(
       <div>
         <div id="prompt" />
@@ -17,21 +17,21 @@ const testPrompt = (prompt) => {
         </button>
       </div>
     );
-    const btn = screen.getByTestId("prompt-test-btn");
+    const btn = await screen.getByTestId("prompt-test-btn");
     fireEvent.click(btn);
     expect(btn.textContent).toEqual("Open Prompt");
 
-    const _prompt = screen.getByTestId("prompt");
+    const _prompt = await screen.getByTestId("prompt");
     expect(_prompt.textContent).toMatch(prompt.message);
 
     if (prompt.name === "Confirm - Yes") {
-      const yes = screen.getByText("Yes");
+      const yes = await screen.getByText("Yes");
       fireEvent.click(yes);
     } else if (prompt.name === "Confirm - No") {
-      const no = screen.getByText("No");
+      const no = await screen.getByText("No");
       fireEvent.click(no);
     } else {
-      const ok = screen.getByText("Ok");
+      const ok = await screen.getByText("Ok");
       fireEvent.click(ok);
     }
   };
@@ -87,13 +87,13 @@ describe("Modal", () => {
       return element;
     });
   });
-  it("Open", () => {
+  it("Open", async () => {
     render(
       <Modal open={true} head={true} setOpen={handleOpen}>
         <p>This is a test modal!</p>
       </Modal>
     );
-    const modal = screen.getByText("This is a test modal!");
+    const modal = await screen.getByText("This is a test modal!");
     expect(modal.textContent).toBe("This is a test modal!");
 
     const backdrop = document.querySelector(`.modalBackdrop`);
