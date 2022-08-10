@@ -88,9 +88,7 @@ const IrInvestigation = () => {
           const _parameters = {};
           const userDetails = (usersWithRoles?._embedded?.user || []).map(
             (user) => {
-              user.role = Array.isArray(user.role)
-                ? user.role
-                : user.role?.split(",") || [];
+              user.role = [...user.role];
               return user;
             }
           );
@@ -250,60 +248,62 @@ const IrInvestigation = () => {
           Back to IR Dashboard
         </Link>
       </header>
-      <div className={s.summary}>
-        <Data label="IR Code" value={ir?.sequence} />
-        <Data
-          label="Incident Date & Time"
-          value={moment({
-            time: ir?.incident_Date_Time,
-            format: "DD/MM/YYYY hh:mm",
-          })}
-        />
-        <Data
-          label="Location"
-          value={
-            parameters?.locations?.find(
-              (item) => item.value?.toString() === ir?.location?.toString()
-            )?.label || ir?.location
-          }
-        />
-        <Data
-          label="Reporting Department"
-          value={
-            parameters?.departments?.find(
-              (dept) => dept.value.toString() === ir?.department?.toString()
-            )?.label || ir?.department
-          }
-        />
-        <Data
-          label="Incident Type"
-          value={
-            irTypes?.find(
-              (item) => item.value?.toString() === ir?.typeofInci?.toString()
-            )?.label || ir?.typeofInci
-          }
-        />
-        <Data
-          label="Category"
-          value={
-            parameters?.categories?.find(
-              (item) => item.id?.toString() === ir?.inciCateg?.toString()
-            )?.name || ir?.inciCateg
-          }
-        />
-        <Data
-          label="Sub Category"
-          value={
-            parameters?.categories
-              ?.find(
-                (item) => item.id?.toString() === ir?.inciCateg?.toString()
-              )
-              ?.subCategorys?.find(
-                (item) => item.id?.toString() === ir?.inciSubCat?.toString()
-              )?.name || ir?.inciSubCat
-          }
-        />
-      </div>
+      {
+        //   <div className={s.summary}>
+        //   <Data label="IR Code" value={ir?.sequence} />
+        //   <Data
+        //     label="Incident Date & Time"
+        //     value={moment({
+        //       time: ir?.incident_Date_Time,
+        //       format: "DD/MM/YYYY hh:mm",
+        //     })}
+        //   />
+        //   <Data
+        //     label="Location"
+        //     value={
+        //       parameters?.locations?.find(
+        //         (item) => item.value?.toString() === ir?.location?.toString()
+        //       )?.label || ir?.location
+        //     }
+        //   />
+        //   <Data
+        //     label="Reporting Department"
+        //     value={
+        //       parameters?.departments?.find(
+        //         (dept) => dept.value.toString() === ir?.department?.toString()
+        //       )?.label || ir?.department
+        //     }
+        //   />
+        //   <Data
+        //     label="Incident Type"
+        //     value={
+        //       irTypes?.find(
+        //         (item) => item.value?.toString() === ir?.typeofInci?.toString()
+        //       )?.label || ir?.typeofInci
+        //     }
+        //   />
+        //   <Data
+        //     label="Category"
+        //     value={
+        //       parameters?.categories?.find(
+        //         (item) => item.id?.toString() === ir?.inciCateg?.toString()
+        //       )?.name || ir?.inciCateg
+        //     }
+        //   />
+        //   <Data
+        //     label="Sub Category"
+        //     value={
+        //       parameters?.categories
+        //         ?.find(
+        //           (item) => item.id?.toString() === ir?.inciCateg?.toString()
+        //         )
+        //         ?.subCategorys?.find(
+        //           (item) => item.id?.toString() === ir?.inciSubCat?.toString()
+        //         )?.name || ir?.inciSubCat
+        //     }
+        //   />
+        // </div>
+      }
       <Tabs
         secondary
         tabs={[
@@ -338,6 +338,7 @@ const IrInvestigation = () => {
           path={paths.incidentDashboard.irInvestigation.capa + "/*"}
           element={<Capa />}
         />
+        <Route path="/" element={<h3>Fallback</h3>} />
       </Routes>
     </div>
   );

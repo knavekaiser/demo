@@ -11,7 +11,6 @@ import { irStatus } from "./config";
 import { useFetch } from "./hooks";
 import { Prompt } from "./components/modal";
 import defaultEndpoints from "./config/endpoints";
-import { getTenantId } from "./helpers";
 import jwt_decode from "jwt-decode";
 
 export const SiteContext = createContext();
@@ -83,7 +82,7 @@ export const Provider = ({ children }) => {
 
   useEffect(() => {
     if (!permissions && user) {
-      fetch(defaultEndpoints.rolePermissions + `?tenantId=${getTenantId()}`, {
+      fetch(defaultEndpoints.rolePermissions, {
         headers: {
           Authorization: "Bearer " + sessionStorage.getItem("access-token"),
         },
@@ -290,11 +289,7 @@ export const IrDashboardContextProvider = ({ children }) => {
     const users = await getUsers().then(({ data }) =>
       (data?._embedded?.user || []).map((user) => ({
         ...user,
-        role:
-          user.role
-            ?.split(",")
-            .map((r) => +r)
-            .filter((r) => r) || [],
+        role: [...user.role].map((r) => +r).filter((r) => r) || [],
       }))
     );
 
@@ -386,11 +381,8 @@ export const IrDashboardContextProvider = ({ children }) => {
                   ...(dashboard === "myDashboard" && {
                     userId: user.id,
                   }),
-                  tenantId: getTenantId(),
                 }).toString()}`
-              : `${defaultEndpoints.countIrByStatus}?status=${
-                  status.id
-                }&tenantId=${getTenantId()}`,
+              : `${defaultEndpoints.countIrByStatus}?status=${status.id}`,
             {
               headers: {
                 Authorization:

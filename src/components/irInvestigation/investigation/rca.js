@@ -121,7 +121,6 @@ const Rca = () => {
       incident_date_time: "2022-01-07T20:23",
     },
   ]);
-  const [showSimilarIncidents, setShowSimilarIncidents] = useState(false);
   const methods = useForm();
 
   const [rcaRootcause, setRcaRootcause] = useState(ir.rcaRootcause || []);
@@ -268,16 +267,13 @@ const Rca = () => {
     Promise.all([getUsers(), getDepartments()]).then(
       ([{ data: users }, { data: departments }]) => {
         const _parameters = {};
-
         if (users?._embedded.user) {
           _parameters.users = users._embedded.user.map((user) => ({
             label: user.name,
             value: user.id,
             department: user.department,
-            role: user.role
-              .split(",")
-              .map((role) => +role)
-              .filter((item) => item),
+            designation: user.designation,
+            role: [...user.role].map((role) => +role).filter((item) => item),
           }));
         }
 
@@ -355,15 +351,6 @@ const Rca = () => {
             parameters={parameters}
           />
         </Box>
-        <Modal
-          head
-          label="RECORD INPUTS"
-          open={showSimilarIncidents}
-          setOpen={setShowSimilarIncidents}
-          className={s.similarIncidentsModal}
-        >
-          <SimilarIncidents similarIncidents={similarIncidents} />
-        </Modal>
         <form
           className={s.btns}
           onSubmit={methods.handleSubmit(submitMainForm)}
@@ -384,157 +371,6 @@ const Rca = () => {
         </form>
       </div>
     </FormProvider>
-  );
-};
-const SimilarIncidents = ({ similarIncidents }) => {
-  const [activeTab, setActiveTab] = useState("details");
-  const [ir, setIr] = useState(similarIncidents[0]);
-  const [search, setSearch] = useState("");
-  const [irs, setIrs] = useState([
-    {
-      id: "1",
-      sequence: "IR1/2/25",
-      rootCause: "Policy to be updated",
-      actionPlan: "Policy to be updated",
-      category: "Medicine",
-      status: "Accepted",
-      actionTaken: "Policy approved in medication review.",
-      details:
-        "Meical administration policy does not inlcude medication transportation",
-      dateTime: "2021-08-01T15:03",
-    },
-    {
-      id: "2",
-      sequence: "IR1/2/25",
-      rootCause: "Policy to be updated",
-      actionPlan: "Policy to be updated",
-      category: "Medicine",
-      status: "Accepted",
-      actionTaken: "Policy approved in medication review.",
-      details:
-        "Meical administration policy does not inlcude medication transportation",
-      dateTime: "2021-08-01T15:03",
-    },
-  ]);
-  return (
-    <div className={s.similarIncidents}>
-      <Tabs
-        secondary
-        tabs={[
-          { label: "INCIDENT DETAILS", value: "details" },
-          { label: "SUMMARY", value: "summary" },
-        ]}
-        activeTab={activeTab}
-        onChange={(tab) => {
-          setActiveTab(tab.value);
-        }}
-      />
-      <div className={`${s.incidents} ${s[activeTab]}`}>
-        {activeTab === "details" && (
-          <>
-            <div className={s.sidebar}>
-              <Input
-                label="Add similar incident"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-              <ul>
-                {similarIncidents.map((ir) => (
-                  <li key={ir.id}>
-                    <div className={s.detail}>
-                      <p className={s.sequence}>{ir.sequence}</p>
-                      <p>{ir.location}</p>
-                      <p>
-                        <Moment format="DD/MM/YYYY hh:mm">
-                          {ir.incident_date_time}
-                        </Moment>
-                      </p>
-                    </div>
-                    <button className="btn clear" onClick={() => {}}>
-                      <FaRegTrashAlt />
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className={s.irView}>
-              {ir ? "Preview IR" : "No IR selected"}
-            </div>
-          </>
-        )}
-        {activeTab === "summary" && (
-          <>
-            <section className={s.location}>
-              <h4>Summary</h4>
-              <section>
-                <span className={s.label}>Location: </span>
-                <p>
-                  Nursing Station : 3 | Pediatric ward : 1 | Surgical ward : 1
-                </p>
-              </section>
-              <section>
-                <span className={s.label}>Incident Type: </span>
-                <p>Near Miss : 3 | No Harm : 1 | Adverse : 1</p>
-              </section>
-            </section>
-            <section>
-              <h4>Root Cause Analysis - Category</h4>
-              <Section label="Policy not available">
-                <Table
-                  className={s.policy}
-                  columns={[
-                    { label: "IR Code" },
-                    { label: "Incident Date & Time" },
-                    { label: "Root Cause" },
-                    { label: "Details" },
-                  ]}
-                >
-                  {irs.map((ir) => (
-                    <tr key={ir.id}>
-                      <td>{ir.sequence}</td>
-                      <td>
-                        <Moment format="DD/MM/YYYY hh:mm">{ir.dateTime}</Moment>
-                      </td>
-                      <td>{ir.rootCause}</td>
-                      <td>{ir.details}</td>
-                    </tr>
-                  ))}
-                </Table>
-              </Section>
-            </section>
-            <section>
-              <h4>Correct & Preventative Action plans</h4>
-              <Table
-                className={s.actionPlan}
-                columns={[
-                  { label: "IR Code" },
-                  { label: "Incident Date & Time" },
-                  { label: "Action Plan" },
-                  { label: "Details" },
-                  { label: "Category" },
-                  { label: "Status" },
-                  { label: "Action Taken" },
-                ]}
-              >
-                {irs.map((ir) => (
-                  <tr key={ir.id}>
-                    <td>{ir.sequence}</td>
-                    <td>
-                      <Moment format="DD/MM/YYYY hh:mm">{ir.dateTime}</Moment>
-                    </td>
-                    <td>{ir.actionPlan}</td>
-                    <td>{ir.details}</td>
-                    <td>{ir.category}</td>
-                    <td>{ir.status}</td>
-                    <td>{ir.actionTaken}</td>
-                  </tr>
-                ))}
-              </Table>
-            </section>
-          </>
-        )}
-      </div>
-    </div>
   );
 };
 const ProblemAreas = ({ events }) => {
@@ -627,6 +463,7 @@ const RootCause = ({
             return (
               <Input
                 label="Problem Statement"
+                data-testid="problemStatement"
                 {...register("problemStatement", {
                   required: "Field is required",
                 })}
@@ -712,6 +549,7 @@ const AddCauseFrom = ({ edit, setEdit, rcaRootcause, onSuccess, rcas }) => {
   return (
     <form
       onSubmit={handleSubmit((values) => {
+        console.log(values);
         onSuccess({
           causeCat: type,
           cause: values.cause,
@@ -725,6 +563,7 @@ const AddCauseFrom = ({ edit, setEdit, rcaRootcause, onSuccess, rcas }) => {
         reset({});
         setWhyIds([Math.random().toString(32).substr(-8)]);
       })}
+      data-testid="addCauseForm"
     >
       <CustomRadio
         className={s.customRadio}
@@ -814,7 +653,7 @@ const AddCauseFrom = ({ edit, setEdit, rcaRootcause, onSuccess, rcas }) => {
 const Causes = ({ causes, setRootCauses, setEdit }) => {
   const [showDiagram, setShowDiagram] = useState(false);
   return (
-    <div className={s.causeBreakdown}>
+    <div className={s.causeBreakdown} data-testid="causeBreakdown">
       <button
         className={`btn clear ${s.btn}`}
         onClick={() => setShowDiagram(true)}
@@ -1004,6 +843,7 @@ const IdentifiedRcaForm = ({ edit, rootCauses, onSuccess, clearForm }) => {
           details: "",
         });
       })}
+      data-testid="identifiedRootCause"
     >
       <Input
         {...register("rootCause", { required: "Field is required" })}
@@ -1159,6 +999,7 @@ const RcaTeamMemberForm = ({ edit, onSuccess, parameters, clearForm }) => {
         });
         reset({ userId: "", deptId: "", designation: "" });
       })}
+      data-testid="irTeamMemberForm"
     >
       <Select
         options={parameters.users}
@@ -1208,21 +1049,6 @@ const RcaTeamMemberForm = ({ edit, onSuccess, parameters, clearForm }) => {
         )}
       </div>
     </form>
-  );
-};
-
-const Section = ({ label, children }) => {
-  const [open, setOpen] = useState(true);
-  return (
-    <section className={s.collapsableSection}>
-      <button
-        className={`btn clear ${s.header}`}
-        onClick={() => setOpen(!open)}
-      >
-        {open ? <FaMinusCircle /> : <FaPlusCircle />} {label}
-      </button>
-      {open && <div className={s.content}>{children}</div>}
-    </section>
   );
 };
 

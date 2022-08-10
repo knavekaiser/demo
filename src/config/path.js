@@ -1,6 +1,7 @@
 import { moment } from "../components/elements";
 
 export default {
+  login: "/login",
   incidentReport: "/incidentReport",
   irPreview: "/irPreview",
   incidentDashboard: {

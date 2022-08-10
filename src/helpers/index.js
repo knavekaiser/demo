@@ -19,41 +19,16 @@ export const countDays = (start, end, exclude = []) => {
   return days.length;
 };
 
-export const wait = (ms) => {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => resolve(), ms);
-  });
+Array.prototype.swap = function (oldIndex, newIndex) {
+  const a = this[oldIndex],
+    b = this[newIndex];
+  this[newIndex] = a;
+  this[oldIndex] = b;
+  return this;
 };
 
-export const encrypt = (data) => {
-  let cipher = createCipheriv(
-    "aes-256-cbc",
-    Buffer.from(appConfig.aes_key),
-    appConfig.iv_key
-  );
-  return Buffer.concat([cipher.update(data), cipher.final()]).toString("hex");
-};
-export const decrypt = (text) => {
-  let decrypted;
-  try {
-    let decipher = createDecipheriv(
-      "aes-256-cbc",
-      Buffer.from(appConfig.aes_key),
-      appConfig.iv_key
-    );
-    decrypted = Buffer.concat([
-      decipher.update(Buffer.from(text, "hex")),
-      decipher.final(),
-    ]).toString();
-  } catch (err) {
-    // do nothing
-  }
-  return decrypted;
-};
-
-export const getTenantId = () => {
-  return decrypt(sessionStorage.getItem("db-schema"));
-};
-export const setTenantId = (id) => {
-  sessionStorage.setItem("db-schema", encrypt(id));
+Number.prototype.pad = function (l) {
+  let zeros = "";
+  for (let i = 0; i < l; i++) zeros += "0";
+  return zeros.length >= `${this}`.length ? (zeros + this).slice(-l) : this;
 };

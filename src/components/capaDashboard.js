@@ -219,6 +219,72 @@ export const MyDashboard = () => {
                 headofDepart: null,
                 contribFactor: null,
               },
+              {
+                id: 21,
+                actionPlans: [
+                  {
+                    id: 1,
+                    action: "This are some actions",
+                    responsibility: "Thomas",
+                    status: "Accepted",
+                    deadline: "2022-02-16T16:18:00.000+05:30",
+                  },
+                  {
+                    id: 2,
+                    action: "This are some more actions",
+                    responsibility: "Ameem",
+                    status: "Accepted",
+                    deadline: "2022-02-16T16:18:00.000+05:30",
+                  },
+                ],
+                sequence: "050 /07/2022 NAP H",
+                status: "11",
+                department: "1",
+                userDept: "",
+                userId: 15,
+                irInvestigator: null,
+                capturedBy: null,
+                reportingDate: "2022-02-16T16:18:57.563+05:30",
+                irStatusDetails: [
+                  {
+                    id: 22896,
+                    status: 11,
+                    dateTime: "2022-06-22T13:13:09.597+05:30",
+                    userid: 15,
+                  },
+                  {
+                    id: 2,
+                    status: 2,
+                    dateTime: "2022-02-16T16:21:37.889+05:30",
+                    userid: 15,
+                  },
+                ],
+                templateData: [],
+                irHodAck: [],
+                reqInput: [],
+                recordInput: [],
+                responseIrInput: [],
+                irInvestigation: [],
+                location: 1,
+                incident_Date_Time: "2022-02-10T04:17:00.000+05:30",
+                locationDetailsEntry: "first room",
+                patientYesOrNo: null,
+                patientname: "",
+                complaIntegerDatetime: null,
+                complaIntegerIdEntry: null,
+                typeofInci: 4,
+                inciCateg: 1,
+                inciSubCat: 1,
+                template: null,
+                personAffected: null,
+                inciDescription: "dvfsdfsdf",
+                deptsLookupMultiselect: "102",
+                contribFactorYesOrNo: null,
+                preventability: 1,
+                incidentReportedDept: null,
+                headofDepart: null,
+                contribFactor: null,
+              },
             ]);
           }
         })
@@ -251,12 +317,6 @@ export const MyDashboard = () => {
           const _filters = {};
           for (var field in values) {
             if (values[field]) {
-              if (values[field] === "self") {
-                _filters.userId = user.id;
-              }
-              if (values[field] === "department") {
-                _filters.department = user.department;
-              }
               _filters[field] = values[field]?.join?.(",") || values[field];
             }
           }
@@ -322,50 +382,6 @@ const SingleIr = memo(
     const { irTypes } = useContext(SiteContext);
     const [showPlans, setShowPlans] = useState(false);
     const [showCapaMonitoring, setShowCapaMonitoring] = useState(true);
-    const [timeline, setTimeline] = useState({});
-    const [totalTat, setTotalTat] = useState(0);
-    useEffect(() => {
-      let status = {};
-      ir.irStatusDetails.forEach((detail) => {
-        if (detail.status === 10) {
-          return;
-        }
-        if (Array.isArray(status[detail.status])) {
-          status[detail.status].push(detail);
-        } else {
-          status[detail.status] = [detail];
-        }
-      });
-      Object.entries(status).forEach(([sts, detail]) => {
-        status[sts] = detail.sort((a, b) =>
-          new Date(a.dateTime) < new Date(b.dateTime) ? 1 : -1
-        );
-      });
-      setTimeline(status);
-    }, [ir.irStatusDetails]);
-    useEffect(() => {
-      if (Object.keys(timeline).length) {
-        const startDate = new Date(Object.values(timeline)[0][0].dateTime);
-        const endDate = new Date(
-          Object.values(timeline)[Object.values(timeline).length - 1][
-            Object.values(timeline)[Object.values(timeline).length - 1].length -
-              1
-          ].dateTime
-        );
-
-        setTotalTat(
-          countDays(
-            startDate,
-            endDate,
-            (tatConfig &&
-              (ir.typeofInci === 8
-                ? tatConfig.sentinelExcludeWeek
-                : tatConfig.excludeWeek)) ||
-              []
-          )
-        );
-      }
-    }, [timeline]);
     return (
       <tr
         className={`${ir.typeofInci === 8 ? s.sentinel : ""} ${
@@ -383,26 +399,12 @@ const SingleIr = memo(
         </td>
         <td className={s.irCode}>
           <span className={s.icons}>
-            {ir.typeofInci === 8
-              ? totalTat > tatConfig.acceptableTatSentinel && (
-                  <span
-                    className={s.icon}
-                    style={{ color: "rgb(230, 163, 16)", fontSize: "1.15em" }}
-                  >
-                    <WiTime9 />
-                  </span>
-                )
-              : totalTat > tatConfig.acceptableTAT && (
-                  <span
-                    className={s.icon}
-                    style={{
-                      color: "rgb(230, 163, 16)",
-                      fontSize: "1.15rem",
-                    }}
-                  >
-                    <WiTime9 />
-                  </span>
-                )}
+            <span
+              className={s.icon}
+              style={{ color: "rgb(230, 163, 16)", fontSize: "1.15em" }}
+            >
+              <WiTime9 />
+            </span>
           </span>
           {ir.sequence}
         </td>
@@ -456,19 +458,21 @@ const SingleIr = memo(
                       },
                     ]}
                   />
-                  <Modal
-                    head
-                    label="CAPA MONITORING"
-                    open={showCapaMonitoring}
-                    setOpen={setShowCapaMonitoring}
-                    className={s.capaMonitoringModal}
-                  >
-                    <CapaMonitoringModal
-                      ir={ir}
-                      plan={plan}
-                      parameters={parameters}
-                    />
-                  </Modal>
+                  {
+                    //   <Modal
+                    //   head
+                    //   label="CAPA MONITORING"
+                    //   open={showCapaMonitoring}
+                    //   setOpen={setShowCapaMonitoring}
+                    //   className={s.capaMonitoringModal}
+                    // >
+                    //   <CapaMonitoringModal
+                    //     ir={ir}
+                    //     plan={plan}
+                    //     parameters={parameters}
+                    //   />
+                    // </Modal>
+                  }
                 </tr>
               ))}
             </Table>
@@ -515,22 +519,9 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
       fromIncidentDateTime: "",
       toIncidentDateTime: "",
       ..._filters,
-      typeofInci: _filters.typeofInci?.split(",").map((c) => +c) || "",
-      irInvestigator: _filters.irInvestigator?.split(",").map((c) => +c) || "",
-      status: _filters.status?.split(",").map((c) => +c) || "",
-      InciCateg: _filters.InciCateg?.split(",").map((c) => +c) || "",
+      // status: _filters.status?.split(",").map((c) => +c) || "",
     });
   }, [location.search]);
-  const view = watch("view");
-  useEffect(() => {
-    if (qualityDashboard) {
-      if (view === "all") {
-        setValue("irInvestigator", "");
-      } else if (view === "assigned") {
-        setValue("irInvestigator", user.id);
-      }
-    }
-  }, [view]);
   return (
     <form className={s.filters} onSubmit={handleSubmit(onSubmit)}>
       <Input label="IR Code" {...register("sequence")} />
@@ -654,107 +645,107 @@ const Data = ({ label, value }) => {
     </section>
   );
 };
-const CapaMonitoringModal = ({ ir, plan, parameters }) => {
-  const { irTypes } = useContext(SiteContext);
-  const [activeTab, setActiveTab] = useState("capaInfo");
-  return (
-    <div className={s.capaMonitoring}>
-      <Tabs
-        secondary
-        tabs={[
-          { label: "CAPA INFO", value: "capaInfo" },
-          { label: "HISTORY OF COMMENTS", value: "history" },
-        ]}
-        activeTab={activeTab}
-        onChange={(tab) => {
-          setActiveTab(tab.value);
-        }}
-      />
-
-      {activeTab === "capaInfo" && (
-        <>
-          <div className={s.summary}>
-            <Data label="IR Code" value={ir?.sequence} />
-            <Data
-              label="Incident Date & Time"
-              value={moment({
-                time: ir?.incident_Date_Time,
-                format: "DD/MM/YYYY hh:mm",
-              })}
-            />
-            <Data
-              label="Incident Type"
-              value={
-                irTypes?.find(
-                  (item) =>
-                    item.value?.toString() === ir?.typeofInci?.toString()
-                )?.label || ir?.typeofInci
-              }
-            />
-            <Data
-              label="Category"
-              value={
-                parameters?.categories?.find(
-                  (item) => item.id?.toString() === ir?.inciCateg?.toString()
-                )?.name || ir?.inciCateg
-              }
-            />
-            <Data
-              label="Sub Category"
-              value={
-                parameters?.categories
-                  ?.find(
-                    (item) => item.id?.toString() === ir?.inciCateg?.toString()
-                  )
-                  ?.subCategorys?.find(
-                    (item) => item.id?.toString() === ir?.inciSubCat?.toString()
-                  )?.name || ir?.inciSubCat
-              }
-            />
-            <Data
-              label="Location"
-              value={
-                parameters?.locations?.find(
-                  (item) => item.value?.toString() === ir?.location?.toString()
-                )?.label || ir?.location
-              }
-            />
-          </div>
-          <h4>CAPA Monitoring Plan</h4>
-          <div className={`${s.summary} ${s.capaMonitoring}`}>
-            <Data label="Methodology" value={plan.methodology} />
-            <Data label="Title" value={plan.title} />
-            <Data label="Frequency" value={plan.frequency} />
-            <Data
-              label="Start date for CAPA monitoring"
-              value={
-                plan.capaStartDate
-                  ? moment({ time: plan.capaStartDate, format: "DD-MM-YYYY" })
-                  : "NA"
-              }
-            />
-            <Data
-              label="End date for CAPA monitoring"
-              value={
-                plan.capaStartDate
-                  ? moment({ time: plan.capaEndDate, format: "DD-MM-YYYY" })
-                  : "NA"
-              }
-            />
-            <Data label="Tool used" value={plan.toolUsed} />
-            <Data label="Sample size" value={plan.sampleSize} />
-            <Data
-              label="Deadline"
-              value={moment({ time: plan.deadline, format: "DD-MM-YYYY" })}
-            />
-            <Data label="Details" value={plan.details} />
-          </div>
-
-          <form>form inputs</form>
-        </>
-      )}
-    </div>
-  );
-};
+// const CapaMonitoringModal = ({ ir, plan, parameters }) => {
+//   const { irTypes } = useContext(SiteContext);
+//   const [activeTab, setActiveTab] = useState("capaInfo");
+//   return (
+//     <div className={s.capaMonitoring}>
+//       <Tabs
+//         secondary
+//         tabs={[
+//           { label: "CAPA INFO", value: "capaInfo" },
+//           { label: "HISTORY OF COMMENTS", value: "history" },
+//         ]}
+//         activeTab={activeTab}
+//         onChange={(tab) => {
+//           setActiveTab(tab.value);
+//         }}
+//       />
+//
+//       {activeTab === "capaInfo" && (
+//         <>
+//           <div className={s.summary}>
+//             <Data label="IR Code" value={ir?.sequence} />
+//             <Data
+//               label="Incident Date & Time"
+//               value={moment({
+//                 time: ir?.incident_Date_Time,
+//                 format: "DD/MM/YYYY hh:mm",
+//               })}
+//             />
+//             <Data
+//               label="Incident Type"
+//               value={
+//                 irTypes?.find(
+//                   (item) =>
+//                     item.value?.toString() === ir?.typeofInci?.toString()
+//                 )?.label || ir?.typeofInci
+//               }
+//             />
+//             <Data
+//               label="Category"
+//               value={
+//                 parameters?.categories?.find(
+//                   (item) => item.id?.toString() === ir?.inciCateg?.toString()
+//                 )?.name || ir?.inciCateg
+//               }
+//             />
+//             <Data
+//               label="Sub Category"
+//               value={
+//                 parameters?.categories
+//                   ?.find(
+//                     (item) => item.id?.toString() === ir?.inciCateg?.toString()
+//                   )
+//                   ?.subCategorys?.find(
+//                     (item) => item.id?.toString() === ir?.inciSubCat?.toString()
+//                   )?.name || ir?.inciSubCat
+//               }
+//             />
+//             <Data
+//               label="Location"
+//               value={
+//                 parameters?.locations?.find(
+//                   (item) => item.value?.toString() === ir?.location?.toString()
+//                 )?.label || ir?.location
+//               }
+//             />
+//           </div>
+//           <h4>CAPA Monitoring Plan</h4>
+//           <div className={`${s.summary} ${s.capaMonitoring}`}>
+//             <Data label="Methodology" value={plan.methodology} />
+//             <Data label="Title" value={plan.title} />
+//             <Data label="Frequency" value={plan.frequency} />
+//             <Data
+//               label="Start date for CAPA monitoring"
+//               value={
+//                 plan.capaStartDate
+//                   ? moment({ time: plan.capaStartDate, format: "DD-MM-YYYY" })
+//                   : "NA"
+//               }
+//             />
+//             <Data
+//               label="End date for CAPA monitoring"
+//               value={
+//                 plan.capaStartDate
+//                   ? moment({ time: plan.capaEndDate, format: "DD-MM-YYYY" })
+//                   : "NA"
+//               }
+//             />
+//             <Data label="Tool used" value={plan.toolUsed} />
+//             <Data label="Sample size" value={plan.sampleSize} />
+//             <Data
+//               label="Deadline"
+//               value={moment({ time: plan.deadline, format: "DD-MM-YYYY" })}
+//             />
+//             <Data label="Details" value={plan.details} />
+//           </div>
+//
+//           <form>form inputs</form>
+//         </>
+//       )}
+//     </div>
+//   );
+// };
 
 export default CapaDashboard;
