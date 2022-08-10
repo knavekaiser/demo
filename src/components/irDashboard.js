@@ -275,6 +275,7 @@ function IrDashboard() {
             }
           />
         ))}
+        <Route path="/" element={<h3>Fallback</h3>} />
       </Routes>
       <Routes>
         <Route
@@ -293,7 +294,7 @@ function IrDashboard() {
             element={<IrInvestigation />}
           />
         )}
-        <Route path={"/*"} element={<h1>Fallback</h1>} />
+        <Route path="/" element={<h1>Fallback</h1>} />
       </Routes>
     </div>
   );
@@ -408,9 +409,8 @@ export const MyDashboard = () => {
           icon: <FaExternalLinkAlt />,
           label: "Acknowledge IR",
           callBack: () => {
-            navigate(paths.irPreview, {
+            navigate(paths.irPreview + "/" + inc.id, {
               state: {
-                ir: inc,
                 focus: inc.id,
                 from: location?.pathname,
               },
@@ -1167,7 +1167,12 @@ export const QualityDashboard = () => {
 
   const getActions = useCallback((inc) => {
     const permissions = [];
-
+    console.log(
+      checkPermission({ roleId: [7, 4], permission: [61, 69] }) &&
+        [2, 3].includes(+inc.status),
+      checkPermission({ roleId: [7, 4], permission: [61, 69] }),
+      [2, 3].includes(+inc.status)
+    );
     if (
       checkPermission({ roleId: [7, 4], permission: [61, 69] }) &&
       [2, 3].includes(+inc.status)

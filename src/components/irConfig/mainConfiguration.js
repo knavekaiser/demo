@@ -408,8 +408,7 @@ const SentinelEventNotification = () => {
       if (data?._embedded?.user) {
         setUsers(
           data._embedded?.user.map((user) => {
-            user.role = user.role
-              .split(",")
+            user.role = [...user.role]
               .map((role) => +role)
               .filter((role) => role);
             user.value = user.id;

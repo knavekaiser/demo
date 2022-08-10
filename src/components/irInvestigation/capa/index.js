@@ -107,10 +107,7 @@ const Capa = () => {
             value: user.id,
             department: user.department,
             designation: user.designation,
-            role: user.role
-              .split(",")
-              .map((role) => +role)
-              .filter((item) => item),
+            role: [...user.role].map((role) => +role).filter((item) => item),
           }));
         }
 
@@ -258,7 +255,6 @@ const Capa = () => {
           }),
       ])
         .then((resps) => {
-          console.log(resps);
           const _rcaTeam = resps
             .filter((item) => item?.data?.designation)
             .map((item) => item.data);
@@ -1050,6 +1046,7 @@ const RcaTeamMemberForm = ({ edit, onSuccess, parameters, clearForm }) => {
         });
         reset({ userId: "", deptId: "", designation: "" });
       })}
+      data-testid="irTeamMemberForm"
     >
       <Select
         options={parameters.users}

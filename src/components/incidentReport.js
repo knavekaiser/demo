@@ -288,12 +288,7 @@ export default function IncidentReporting() {
           const _parameters = {};
           const userDetails = (usersWithRoles?._embedded?.user || []).map(
             (user) => {
-              user.role = Array.isArray(user.role)
-                ? user.role
-                : user.role
-                    ?.split(",")
-                    .map((r) => +r)
-                    .filter((r) => r) || [];
+              user.role = [...user.role];
               return user;
             }
           );
