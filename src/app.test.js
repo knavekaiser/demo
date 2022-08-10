@@ -394,7 +394,7 @@ describe("App tests", () => {
 
   test("No User", async () => {
     await customRender(<App />);
-    const comp = screen.getByTestId("app");
+    const comp = await screen.getByTestId("app");
     expect(comp.textContent).toMatch("Sign In");
   });
 
@@ -402,10 +402,10 @@ describe("App tests", () => {
     await customRender(<App />, {
       user: { id: 10, name: "Test User", role: ["irAdmin"], department: 1 },
     });
-    const comp = screen.getByTestId("app");
+    const comp = await screen.getByTestId("app");
     expect(comp.textContent).toMatch("Logged in as: Test User");
 
-    const logoutBtn = screen.getByTestId("logout");
+    const logoutBtn = await screen.getByTestId("logout");
     await act(async () => {
       await fireEvent.click(logoutBtn);
     });
