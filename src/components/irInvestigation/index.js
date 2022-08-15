@@ -88,9 +88,7 @@ const IrInvestigation = () => {
           const _parameters = {};
           const userDetails = (usersWithRoles?._embedded?.user || []).map(
             (user) => {
-              user.role = Array.isArray(user.role)
-                ? user.role
-                : user.role?.split(",") || [];
+              user.role = [...user.role];
               return user;
             }
           );
@@ -338,6 +336,7 @@ const IrInvestigation = () => {
           path={paths.incidentDashboard.irInvestigation.capa + "/*"}
           element={<Capa />}
         />
+        <Route path="/" element={<h3>Fallback</h3>} />
       </Routes>
     </div>
   );

@@ -15,7 +15,11 @@ import { Prompt, Modal } from "./modal";
 import { useForm, FormProvider, useFormContext } from "react-hook-form";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useHisFetch, useFetch } from "../hooks";
-import { endpoints as defaultEndpoints, preventability } from "../config";
+import {
+  endpoints as defaultEndpoints,
+  preventability,
+  paths,
+} from "../config";
 import s from "./incidentReporting.module.scss";
 
 const Data = ({ label, value, children }) => (
@@ -30,7 +34,7 @@ const Data = ({ label, value, children }) => (
   </section>
 );
 
-export default function IncidentReporting() {
+export default function IrPreview() {
   const { user, endpoints, irTypes } = useContext(SiteContext);
   const location = useLocation();
   const navigate = useNavigate();
@@ -38,7 +42,7 @@ export default function IncidentReporting() {
   const [parameters, setParameters] = useState(null);
   const [showAcknowledgeForm, setShowAcknowledgeForm] = useState(false);
 
-  // const { get: getIr } = useFetch(defaultEndpoints.incidentReport + "/{ID}");
+  const { get: getIr } = useFetch(defaultEndpoints.incidentReport + "/{ID}");
   const { get: getLocations } = useFetch(
     endpoints?.locations.url || defaultEndpoints.locations,
     { his: endpoints?.locations.url }
@@ -98,9 +102,7 @@ export default function IncidentReporting() {
           const _parameters = {};
           const userDetails = (usersWithRoles?._embedded?.user || []).map(
             (user) => {
-              user.role = Array.isArray(user.role)
-                ? user.role
-                : user.role?.split(",") || [];
+              user.role = [...user.role];
               return user;
             }
           );
@@ -241,14 +243,22 @@ export default function IncidentReporting() {
     };
   }, []);
 
-  useEffect(() => {
-    if (location.state?.ir) {
-      const { ir, readOnly } = location.state;
-      const statusDetail = ir?.irHodAck[0];
-      if (statusDetail) {
-        ir.acknowledgeDetail = statusDetail;
-      }
-      setIr(ir);
+  useEffect(async () => {
+    const id = location.pathname
+      .replace(paths.irPreview + "/", "")
+      .replace(/\/.+/g, "")
+      .replace(/\?.+/g, "");
+
+    if (id) {
+      getIr(null, { params: { "{ID}": id } }).then(({ data: ir }) => {
+        if (ir) {
+          const statusDetail = ir.irHodAck[0];
+          if (statusDetail) {
+            ir.acknowledgeDetail = statusDetail;
+          }
+          setIr(ir);
+        }
+      });
     }
   }, [location]);
   return (
@@ -581,10 +591,7 @@ const AcknowledgeForm = ({ ir, onSuccess, closeForm }) => {
           responseBy: user.id,
           userId: user.id,
           responseOn: serverTime,
-          incidentReport: {
-            // irId: ir.id,
-            id: ir.id,
-          },
+          incidentReport: { id: ir.id },
         })
           .then(({ data }) => {
             if (data?.id) {
@@ -622,7 +629,7 @@ const AcknowledgeForm = ({ ir, onSuccess, closeForm }) => {
         >
           Clear
         </button>
-        <button className="btn wd-100" disabled={!ir || !user}>
+        <button className="btn wd-100" type="submit" disabled={!ir || !user}>
           Acknowledge
         </button>
       </section>

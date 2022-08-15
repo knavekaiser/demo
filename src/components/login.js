@@ -84,10 +84,7 @@ export default function Login() {
             }
             handleUser({
               ...user,
-              role: user.role
-                .split(",")
-                .map((role) => +role)
-                .filter((role) => role),
+              role: [...user.role].map((role) => +role).filter((role) => role),
             });
           }
         });
@@ -297,8 +294,7 @@ export default function Login() {
                     user?.id
                       ? {
                           ...user,
-                          role: user.role
-                            ?.split(",")
+                          role: [...user.role]
                             .map((item) => +item)
                             .filter((role) => role),
                         }
@@ -328,8 +324,7 @@ export default function Login() {
                   return user?.id
                     ? {
                         ...user,
-                        role: user.role
-                          ?.split(",")
+                        role: [...user.role]
                           .map((item) => +item)
                           .filter((role) => role),
                       }

@@ -40,7 +40,7 @@ export const useFetch = (
   const onSubmit = useCallback(
     async (payload = {}, method, { headers, params, query } = {}) => {
       const badInput = badCharacters(
-        { ...payload, ...params, ...query },
+        { ...payload, ...query },
         defaultRegex,
         validator
       );

@@ -102,11 +102,9 @@ export default function UserMaster() {
           setUsers(
             data._embedded.user.map((user) => ({
               ...user,
-              role:
-                user.role
-                  ?.split(",")
-                  .map((role) => +role || "")
-                  .filter((role) => role) || [],
+              role: [...(user.role || [])]
+                .map((role) => +role)
+                .filter((role) => role),
             }))
           );
         }
@@ -312,13 +310,12 @@ const UserForm = ({
     clearErrors,
   } = useForm();
 
-  const {
-    post: postUser,
-    patch: updateUser,
-    loading,
-  } = useFetch(defaultEndpoints.users + `/${edit?.id || ""}`, {
-    validator: { pword: /^.+$/gi },
-  });
+  const { post: postUser, patch: updateUser, loading } = useFetch(
+    defaultEndpoints.users + `/${edit?.id || ""}`,
+    {
+      validator: { pword: /^.+$/gi },
+    }
+  );
 
   useEffect(() => {
     reset({
@@ -371,10 +368,7 @@ const UserForm = ({
               });
               onSuccess({
                 ...data,
-                role: data.role
-                  .split(",")
-                  .map((role) => +role)
-                  .filter((r) => r),
+                role: [...data.role].map((role) => +role).filter((r) => r),
               });
               reset();
             } else if (data.cause) {

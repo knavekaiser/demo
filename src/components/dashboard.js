@@ -305,7 +305,7 @@ function Dashboard() {
       <main>
         <Routes>
           <Route path={paths.incidentReport} element={<IncidentReport />} />
-          <Route path={paths.irPreview} element={<IrPreview />} />
+          <Route path={paths.irPreview + "/*"} element={<IrPreview />} />
           <Route path={paths.irQueryDashboard} element={<IrQueryDashboard />} />
           <Route
             path={paths.incidentDashboard.basePath + "/*"}
@@ -321,7 +321,6 @@ function Dashboard() {
             index
             element={<Masters />}
           />
-          <Route path="/:other" render={({ match }) => <h1>test</h1>} />
           <Route path="/*" element={<IncidentReport />} />
         </Routes>
       </main>
