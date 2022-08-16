@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useContext, useEffect, Fragment } from "react";
 import {
   Link,
   Routes,
@@ -230,10 +230,10 @@ function Dashboard() {
           )}
           {checkPermission({ roleId: 1, permission: 46 }) && (
             <Accordion
-              label=<span className={s.label}>
+              label={<span className={s.label}>
                 <IrConfigIcon className={s.icon} />{" "}
                 <span className={s.text}>IR Configuration</span>
-              </span>
+              </span>}
               basePath={paths.irConfig.basePath}
               startPath={
                 paths.irConfig.basePath + "/" + paths.irConfig.mainConfig
@@ -261,10 +261,10 @@ function Dashboard() {
           )}
           {checkPermission({ roleId: 1, permission: 33 }) && (
             <Accordion
-              label=<span className={s.label}>
+              label={<span className={s.label}>
                 <MastersIcon className={s.icon} />{" "}
                 <span className={s.text}>Masters</span>
-              </span>
+              </span>}
               basePath={paths.masters.basePath}
               className={`${s.sidebarItem} ${
                 location.pathname.startsWith(paths.masters.basePath)
@@ -566,10 +566,10 @@ const SidebarItem_IrDashboard = () => {
   }, [count]);
   return (
     <Accordion
-      label=<span className={s.label}>
+      label={<span className={s.label}>
         <IncidentDashboardIcon className={s.icon} />{" "}
         <span className={s.text}>Incident Dashboard</span>
-      </span>
+      </span>}
       basePath={paths.incidentDashboard.basePath}
       className={`${s.sidebarItem} ${
         location.pathname.startsWith(paths.incidentDashboard.basePath)
@@ -672,10 +672,10 @@ const SidebarItem_CapaDashboard = () => {
   }, [count]);
   return (
     <Accordion
-      label=<span className={s.label}>
+      label={<span className={s.label}>
         <CapaIcon className={s.icon} />{" "}
         <span className={s.text}>CAPA Dashboard</span>
-      </span>
+      </span>}
       basePath={paths.capaDashboard.basePath}
       className={`${s.sidebarItem} ${
         location.pathname.startsWith(paths.capaDashboard.basePath)
