@@ -1,14 +1,26 @@
 import ReactDOM from "react-dom";
 import IrDashboard, { MyDashboard, QualityDashboard } from "./irDashboard";
 import { render, screen, fireEvent, act } from "@testing-library/react";
-import { BrowserRouter } from "react-router-dom";
+import { MemoryRouter } from "react-router-dom";
 import { SiteContext, IrDashboardContext } from "../SiteContext";
 import userEvent from "@testing-library/user-event";
+import * as router from "react-router";
 
-const customRender = async (ui, { providerProps, ...renderOptions }) => {
+const defaultRenderState = {
+  search: {
+    status: 1,
+    typeofInci: "test",
+    InciCateg: "category",
+  },
+};
+
+const customRender = async (
+  ui,
+  { renderState = defaultRenderState, providerProps, ...renderOptions }
+) => {
   return await act(async () => {
     await render(
-      <BrowserRouter>
+      <MemoryRouter initialEntries={[renderState]}>
         <SiteContext.Provider value={providerProps}>
           <IrDashboardContext.Provider
             value={{
@@ -68,7 +80,7 @@ const customRender = async (ui, { providerProps, ...renderOptions }) => {
             {ui}
           </IrDashboardContext.Provider>
         </SiteContext.Provider>
-      </BrowserRouter>,
+      </MemoryRouter>,
       renderOptions
     );
   });
@@ -555,15 +567,41 @@ describe("My Dashboard", () => {
       await fireEvent.click(submitBtn);
     });
   });
+
+  test("show tat details popup", async () => {
+    const tatCount = document.querySelector(".tat-count");
+    fireEvent.click(tatCount);
+    await act(async () => {
+      expect(screen.getByTestId("tatDetails")).toBeInTheDocument();
+    });
+    const tatCloseBtn = document.querySelector(".tat-close-btn");
+    fireEvent.click(tatCloseBtn);
+    await act(async () => {
+      expect(screen.queryByTestId("tatDetails")).toBeFalsy();
+    });
+  });
 });
 
 describe("Quality Dashboard", () => {
+  const navigate = jest.fn();
+  const providerProps = {
+    irTypes: [],
+    user: { id: 10, name: "Test User" },
+    endpoints: {
+      locations: "http://endpoints.com/locations",
+      users: "http://endpoints.com/users",
+      departments: "http://endpoints.com/departments",
+      searchIrs: "http://endpoints.com/searchIrs",
+    },
+    checkPermission: () => true,
+  };
   beforeAll(() => {
     ReactDOM.createPortal = jest.fn((element, node) => {
       return element;
     });
   });
   beforeEach(async () => {
+    jest.spyOn(router, "useNavigate").mockImplementation(() => navigate);
     let portal = document.querySelector("#portal");
     if (!portal) {
       portal = document.createElement("div");
@@ -577,23 +615,11 @@ describe("Quality Dashboard", () => {
       prompt.id = "prompt";
       document.body.appendChild(prompt);
     }
-
-    const providerProps = {
-      irTypes: [],
-      user: { id: 10, name: "Test User" },
-      endpoints: {
-        locations: "http://endpoints.com/locations",
-        users: "http://endpoints.com/users",
-        departments: "http://endpoints.com/departments",
-        searchIrs: "http://endpoints.com/searchIrs",
-      },
-      checkPermission: () => true,
-    };
     setMockFetch(irData);
-    await customRender(<QualityDashboard />, { providerProps });
   });
 
   test("Search", async () => {
+    await customRender(<QualityDashboard />, { providerProps });
     const input = document.querySelector(`input[name="sequence"]`);
     await act(async () => {
       await userEvent.type(input, "123");
@@ -605,49 +631,28 @@ describe("Quality Dashboard", () => {
     await act(async () => {
       await fireEvent.click(submitBtn);
     });
+  });
 
-    // const actionButton = document.querySelector("table td button");
-    // await act(async () => {
-    //   await fireEvent.click(actionButton);
-    // });
-    //
-    // let reAssignBtn = document.querySelector(".modal.actionModal div button");
-    // await act(async () => {
-    //   await fireEvent.click(reAssignBtn);
-    // });
-    //
-    // const comboInput = document.querySelector(".modal form input");
-    // await act(async () => {
-    //   await fireEvent.click(comboInput);
-    // });
-    //
-    // const optionOne = document.querySelector(".modal .options li");
-    // await act(async () => {
-    //   await fireEvent.click(optionOne);
-    // });
-    //
-    // setMockFetch(singleIr);
-    //
-    // const assignBtn = document.querySelector(
-    //   `.modal form .btns button:last-child`
-    // );
-    // expect(assignBtn.textContent).toBe("Re-Assign");
-    // await act(async () => {
-    //   await fireEvent.click(assignBtn);
-    // });
-    //
-    // await act(async () => {
-    //   await fireEvent.click(actionButton);
-    // });
-    //
-    // reAssignBtn = document.querySelector(".modal.actionModal div button");
-    // await act(async () => {
-    //   await fireEvent.click(reAssignBtn);
-    // });
-    //
-    // const closeBtn = document.querySelector(`.modal form .btns button`);
-    // await act(async () => {
-    //   await fireEvent.click(closeBtn);
-    // });
+  test("click view all", async () => {
+    await customRender(<QualityDashboard />, { providerProps });
+    const radio = document.querySelector(`input[name='view']`);
+    fireEvent.change(radio, { target: { value: "all" } });
+    expect(radio.value).toBe("all");
+  });
+
+  test("filter clear", async () => {
+    await customRender(<QualityDashboard />, { providerProps });
+    const clearBtn = document.querySelector(`.filter-clear`);
+    fireEvent.click(clearBtn);
+    await act(async () => {
+      expect(navigate).toHaveBeenCalled();
+    });
+  });
+
+  test("without query params", async () => {
+    await customRender(<QualityDashboard />, {
+      renderState: {},
+      providerProps,
+    });
   });
 });

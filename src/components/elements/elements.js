@@ -36,7 +36,7 @@ export const Input = forwardRef(
         className={`${s.input} ${className || ""} ${error ? s.err : ""}`}
       >
         {label && (
-          <label>
+          <label htmlFor={rest.id || _id.current}>
             {label}
             {rest.required && "*"}
           </label>
@@ -791,7 +791,6 @@ export const Tabs = ({
   tertiary,
 }) => {
   const location = useLocation();
-
   return (
     <div
       className={`${s.tabs} ${s[className]} ${secondary ? s.secondary : ""} ${

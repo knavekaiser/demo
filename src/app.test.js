@@ -7,7 +7,13 @@ import {
   IrDashboardContextProvider,
 } from "./SiteContext";
 import { BrowserRouter } from "react-router-dom";
-import { render, screen, act, fireEvent } from "@testing-library/react";
+import {
+  render,
+  screen,
+  act,
+  fireEvent,
+  waitFor,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import reportWebVitals from "./reportWebVitals";
@@ -18,7 +24,7 @@ const customRender = async (ui, providerProps) => {
       <BrowserRouter>
         <SiteContext.Provider
           value={{
-            user: null, //{ id: 10, name: "Test User", role: [1] },
+            user: null, // { id: 10, name: "Test User", role: [1] },
             checkPermission: () => true,
             setUser: jest.fn(),
             setRole: jest.fn(),
@@ -327,8 +333,16 @@ test("Site Context Provider", () => {
     </BrowserRouter>
   );
 });
+
 test("IR Dashboard Context Provider", async () => {
   setMockFetch(mockData);
+  await customRender(<IrDashboardContextProvider />, {
+    user: { id: 10, name: "Test User", role: ["irAdmin"] },
+  });
+});
+
+test("IR Dashboard Context Provider - Fail", async () => {
+  setMockFailFetch();
   await customRender(<IrDashboardContextProvider />, {
     user: { id: 10, name: "Test User", role: ["irAdmin"] },
   });

@@ -42,7 +42,10 @@ const providerProps = {
   setRole: jest.fn(),
   endpoints: {
     locations: "http://endpoints.com/locations",
-    users: "http://endpoints.com/users",
+    users: {
+      url: "http://endpoints.com/users",
+      key1: "userDetails",
+    },
     departments: "http://endpoints.com/departments",
   },
 };
@@ -943,6 +946,11 @@ const userData = {
       },
     ],
   },
+  userDetails: [
+    {
+      userId: "Vishnu Reddy",
+    },
+  ],
 };
 testParent({
   testId: "users",
@@ -976,17 +984,22 @@ describe("User Master more", () => {
       prompt.id = "prompt";
       document.body.appendChild(prompt);
     }
-    await renderWithData(<User />, userData);
   });
 
   test("Add from HIS", async () => {
+    await renderWithData(<User />, userData);
     const input = document.querySelector(`header .btn.secondary`);
     await act(async () => {
       await userEvent.click(input);
     });
+    const yesBtn = document.querySelector(`.prompt .actions .yes`);
+    await act(async () => {
+      await userEvent.click(yesBtn);
+    });
   });
 
   test("Search for user success", async () => {
+    await renderWithData(<User />, userData);
     const input = document.querySelector("table input");
 
     setMockFetch(userData);
@@ -1001,7 +1014,9 @@ describe("User Master more", () => {
       await userEvent.click(optionOne);
     });
   });
+
   test("Search for user fail", async () => {
+    await renderWithData(<User />, userData);
     const input = document.querySelector("table input");
 
     setMockFailFetch();
@@ -1018,6 +1033,7 @@ describe("User Master more", () => {
   });
 
   test("Search for email fail", async () => {
+    await renderWithData(<User />, userData);
     const input = document.querySelector(`input[name="email"]`);
 
     await act(async () => {
@@ -1032,6 +1048,7 @@ describe("User Master more", () => {
   });
 
   test("Search for email success", async () => {
+    await renderWithData(<User />, userData);
     const input = document.querySelector(`input[name="email"]`);
 
     setMockFetch(userData);
@@ -1048,6 +1065,7 @@ describe("User Master more", () => {
   });
 
   test("Search for contact", async () => {
+    await renderWithData(<User />, userData);
     const input = document.querySelector(`input[name="contact"]`);
 
     setMockFetch(userData);
@@ -1064,6 +1082,7 @@ describe("User Master more", () => {
   });
 
   test("Search for role", async () => {
+    await renderWithData(<User />, userData);
     const input = document.querySelector(`input[name="role"]`);
 
     await act(async () => {
@@ -1084,6 +1103,74 @@ describe("User Master more", () => {
 
     await act(async () => {
       await userEvent.click(h3);
+    });
+  });
+  test("without user data", async () => {
+    await renderWithData(<User />, {
+      ...userData,
+      userDetails: [],
+    });
+
+    const input = document.querySelector(`header .btn.secondary`);
+    await act(async () => {
+      await userEvent.click(input);
+    });
+    const yesBtn = document.querySelector(`.prompt .actions .yes`);
+    await act(async () => {
+      await userEvent.click(yesBtn);
+    });
+  });
+
+  test("on Success Add User", async () => {
+    await renderWithData(<User />, {
+      ...userData,
+      name: "test",
+      role: "admin, user",
+    });
+
+    fireEvent.input(document.querySelector('[name="name"]'), {
+      target: {
+        value: "test",
+      },
+    });
+    fireEvent.input(document.querySelector('[name="username"]'), {
+      target: {
+        value: "test",
+      },
+    });
+    fireEvent.input(document.querySelector('[name="gender"]'), {
+      target: {
+        value: "male",
+      },
+    });
+    fireEvent.input(document.querySelector('[name="employeeId"]'), {
+      target: {
+        value: "123",
+      },
+    });
+    fireEvent.input(document.querySelector('[name="contact"]'), {
+      target: {
+        value: "7373578095",
+      },
+    });
+    fireEvent.input(document.querySelector('[name="email"]'), {
+      target: {
+        value: "email@gmail.com",
+      },
+    });
+    fireEvent.input(document.querySelector('[name="department"]'), {
+      target: {
+        value: "etest",
+      },
+    });
+    fireEvent.input(document.querySelector('[name="role"]'), {
+      target: {
+        value: 7,
+      },
+    });
+    const input = document.querySelector(`form button[type='submit']`);
+    await act(async () => {
+      await fireEvent.click(input);
     });
   });
 });

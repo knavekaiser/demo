@@ -84,11 +84,18 @@ test("CustomRadio", async () => {
 test("Switch", async () => {
   render(<SwitchInput label="Switch" />);
   const input = await screen.getByTestId("switchInput");
+  const switchBtn = input.querySelector(".btns");
+  await fireEvent.keyDown(switchBtn, { keyCode: 32 });
+  await fireEvent.keyDown(switchBtn, { keyCode: 39 });
+  await fireEvent.keyDown(switchBtn, { keyCode: 37 });
   expect(input.textContent).toBe("Switch YesNo");
 });
 test("Toggle", async () => {
   render(<Toggle label="Switch" />);
   const input = await screen.getByTestId("toggleInput");
+  await fireEvent.keyDown(input, { keyCode: 32 });
+  await fireEvent.keyDown(input, { keyCode: 39 });
+  await fireEvent.keyDown(input, { keyCode: 37 });
   expect(input.textContent).toBe("");
 });
 test("Checkbox", async () => {

@@ -3,36 +3,9 @@ import ReactDOM from "react-dom";
 import "./index.scss";
 import App from "./App";
 import { BrowserRouter } from "react-router-dom";
-import { FaSkull } from "react-icons/fa";
 import { Provider, IrDashboardContextProvider } from "./SiteContext";
 import reportWebVitals from "./reportWebVitals";
-
-class ErrorBoundary extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false, reported: false };
-  }
-  static getDerivedStateFromError(error) {
-    return { hasError: true };
-  }
-  componentDidCatch(error, errorInfo) {
-    //
-  }
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="deathPage">
-          <div className="content">
-            <FaSkull />
-            <h2>Oops.</h2>
-            <a href="/">RELOAD</a>
-          </div>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
+import ErrorBoundary from "./components/errorBoundary";
 
 ReactDOM.render(
   <React.StrictMode>

@@ -358,7 +358,7 @@ const UserForm = ({
             !data.pword && {
               pword: undefined,
             }),
-          role: data.role.join(","),
+          role: Array.isArray(data.role) ? data.role.join(",") : data.role,
         })
           .then(({ data, error }) => {
             if (data.name) {

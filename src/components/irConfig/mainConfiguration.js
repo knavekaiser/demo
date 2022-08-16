@@ -1536,7 +1536,7 @@ const IrInvestigationDetails = () => {
       </div>
       <div className={s.btns}>
         <button
-          className="btn wd-100"
+          className="btn wd-100 ir-investigation-save"
           disabled={!update.length}
           onClick={() => {
             Promise.all(

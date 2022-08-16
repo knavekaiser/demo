@@ -778,7 +778,10 @@ const SingleIr = memo(
           <td>
             {irStatus.find((item) => item.id === +ir.status)?.name || ir.status}
           </td>
-          <td className={s.tat} onClick={() => setShowTatDetails(true)}>
+          <td
+            className={`${s.tat} tat-count`}
+            onClick={() => setShowTatDetails(true)}
+          >
             {ir.status !== "1" && totalTat}
           </td>
           {actions && <TableActions actions={actions} />}
@@ -812,7 +815,7 @@ const TatDetails = ({
   const { irTypes } = useContext(SiteContext);
   const { tatConfig } = useContext(IrDashboardContext);
   return (
-    <div className={s.content}>
+    <div className={s.content} data-testid="tatDetails">
       <ul className={s.irDetail}>
         <li>IR Code: {ir?.sequence}</li>
         <li>
@@ -911,7 +914,7 @@ const TatDetails = ({
       </Table>
       <section className={s.btns}>
         <button
-          className={`btn secondary wd-100`}
+          className={`btn secondary wd-100 tat-close-btn`}
           onClick={() => setShowTatDetails(false)}
         >
           Close
@@ -1115,7 +1118,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
         </button>
         <button
           type="button"
-          className={`btn clear ${s.clear}`}
+          className={`btn clear ${s.clear} filter-clear`}
           onClick={() => {
             reset({
               irBy: "self",

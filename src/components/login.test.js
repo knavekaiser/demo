@@ -2,7 +2,13 @@ import ReactDOM from "react-dom";
 import Login from "./login";
 import { Provider, SiteContext } from "../SiteContext";
 import { BrowserRouter } from "react-router-dom";
-import { render, screen, act, fireEvent } from "@testing-library/react";
+import {
+  render,
+  screen,
+  act,
+  fireEvent,
+  waitFor,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 const customRender = async (ui, { providerProps, ...renderOptions }) => {
@@ -25,6 +31,13 @@ const setMockFetch = (data, status) => {
 const setMockFailFetch = () => {
   jest.spyOn(global, "fetch").mockResolvedValue();
 };
+
+const mockedUsedNavigate = jest.fn();
+
+jest.mock("react-router-dom", () => ({
+  ...jest.requireActual("react-router-dom"),
+  useNavigate: () => mockedUsedNavigate,
+}));
 
 function changeJSDOMURL(search, url = "http://localhost:3001") {
   const newURL = new URL(url);
@@ -71,6 +84,7 @@ describe("Login with his", () => {
           },
         ],
       },
+      role: "",
     });
     changeJSDOMURL({ tenantId: "kims" });
 
@@ -85,6 +99,10 @@ describe("Login with his", () => {
         setEndpoints: jest.fn(),
       },
     });
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   test("Plain render", async () => {
@@ -131,11 +149,293 @@ describe("Login with his", () => {
 
     const loginBtn = await screen.findByText("Sign in");
     await act(async () => {
-      await fireEvent.click(loginBtn);
+      await waitFor(() => {
+        fireEvent.click(loginBtn);
+      });
     });
   });
 
   test("Login with his", async () => {
+    const usernameInput = document.querySelector(`input[type="text"]`);
+    userEvent.type(usernameInput, "name");
+
+    const passwordInput = document.querySelector(`input[type="password"]`);
+    userEvent.type(passwordInput, "1234");
+
+    setMockFetch({
+      _embedded: {
+        user: [
+          {
+            id: 1,
+            name: "name",
+            role: "1",
+            department: 3,
+          },
+          {
+            id: 2,
+            name: "name2",
+            role: "2",
+            department: 5,
+          },
+        ],
+        apiurls: [
+          {
+            id: 2,
+            action: "locations",
+            url:
+              "https://his_21_3_to_gar_qa.napierhealthcare.com:9652/napier-his-web/Integration/userMasterService/getAllLocations",
+            key1: null,
+            key2: null,
+            key3: null,
+          },
+          {
+            id: 3,
+            action: "departments",
+            url:
+              "https://his_21_3_to_gar_qa.napierhealthcare.com:9652/napier-his-web/Integration/userMasterService/getAllDepartments",
+            key1: "dataBean",
+            key2: null,
+            key3: null,
+          },
+          {
+            id: 5,
+            action: "users",
+            url:
+              "https://his_21_3_to_gar_qa.napierhealthcare.com:9652/napier-his-web/Integration/userMasterService/getUserDeatils",
+            key1: "userViewList",
+            key2: "fullName",
+            key3: null,
+          },
+          {
+            id: 6,
+            action: "getSalt",
+            url:
+              "https://his_21_3_to_gar_qa.napierhealthcare.com:9652/napier-his-web/Integration/userMasterService/getUserDeatils",
+            key1: "userViewList",
+            key2: "fullName",
+            key3: null,
+          },
+          {
+            id: 7,
+            action: "tenantValidation",
+            url:
+              "https://his_21_3_to_gar_qa.napierhealthcare.com:9652/napier-his-web/Integration/userMasterService/getUserDeatils",
+            key1: "userViewList",
+            key2: "fullName",
+            key3: null,
+          },
+        ],
+      },
+      tokenID: "24234234234",
+      userViewList: [
+        {
+          userId: "name",
+          gender: "Male",
+          department: {
+            code: "3241",
+            description: "OP",
+          },
+        },
+      ],
+      id: 1,
+      name: "name",
+      role: "1",
+      department: 3,
+    });
+    sessionStorage.setItem(
+      "access-token",
+      "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzY2hlbWEiOiJraW1zIiwidXNlcl9uYW1lIjoieWFzaHRlY2giLCJzY29wZSI6WyJyZWFkIiwid3JpdGUiXSwiZXhwIjoxNjYwMDM0NTYzLCJhdXRob3JpdGllcyI6WyJST0xFX1NZU1RFTUFETUlOIl0sImp0aSI6ImNuQzBGenRiRjhxYllRdFhUQkhiOVBFQTFsYyIsImNsaWVudF9pZCI6Im5hcGllciJ9.ts28utjI5v8k5D23IeypFtXXVKq-06OckULJ_jIVhQuzo6C_i1eWcgi_uXIwOqqG6yTs1-q8CZyII00GDYS-AgA45QUO1UaiNyKWDXwLoph5yZmvFEWQT7P0_QInTpSoqCwIewtXFfSmdq8JsYUgZiEOGEoP-iV354iXd2D5DjAIBt4LUivB8GPUhzk8UK8XM7GEeEcQk0-KtomUEZoPMXmfnxv1CvpUZzet7zfhcEay4lYeMhXcC2qzL7XGlRFfUMdtG--65Bx72OFFi9WXFKCFQRN7QMAuu_7ZIqgd9R1BuY3Odzsip_pT_P-kbI0DkvqqE-Zl1Z3za-OdHUyDpQ"
+    );
+    const loginBtn = await screen.findByText("Sign in");
+    await act(async () => {
+      await waitFor(() => {
+        fireEvent.click(loginBtn);
+      });
+    });
+  });
+
+  test("Login with his - tenantValidation", async () => {
+    const usernameInput = document.querySelector(`input[type="text"]`);
+    userEvent.type(usernameInput, "name");
+
+    const passwordInput = document.querySelector(`input[type="password"]`);
+    userEvent.type(passwordInput, "1234");
+
+    setMockFetch({
+      _embedded: {
+        user: [
+          {
+            id: 1,
+            name: "name",
+            role: "1",
+            department: 3,
+          },
+          {
+            id: 2,
+            name: "name2",
+            role: "2",
+            department: 5,
+          },
+        ],
+        apiurls: [
+          {
+            id: 2,
+            action: "locations",
+            url:
+              "https://his_21_3_to_gar_qa.napierhealthcare.com:9652/napier-his-web/Integration/userMasterService/getAllLocations",
+            key1: null,
+            key2: null,
+            key3: null,
+          },
+          {
+            id: 3,
+            action: "departments",
+            url:
+              "https://his_21_3_to_gar_qa.napierhealthcare.com:9652/napier-his-web/Integration/userMasterService/getAllDepartments",
+            key1: "dataBean",
+            key2: null,
+            key3: null,
+          },
+          {
+            id: 5,
+            action: "users",
+            url:
+              "https://his_21_3_to_gar_qa.napierhealthcare.com:9652/napier-his-web/Integration/userMasterService/getUserDeatils",
+            key1: "userViewList",
+            key2: "fullName",
+            key3: null,
+          },
+          {
+            id: 7,
+            action: "tenantValidation",
+            url:
+              "https://his_21_3_to_gar_qa.napierhealthcare.com:9652/napier-his-web/Integration/userMasterService/getUserDeatils",
+            key1: "userViewList",
+            key2: "fullName",
+            key3: null,
+          },
+        ],
+      },
+      tokenID: "24234234234",
+      userViewList: [
+        {
+          userId: "name",
+          gender: "Male",
+          department: {
+            code: "3241",
+            description: "OP",
+          },
+        },
+      ],
+      id: 1,
+      name: "name",
+      role: "1",
+      department: 3,
+    });
+    sessionStorage.setItem(
+      "access-token",
+      "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzY2hlbWEiOiJraW1zIiwidXNlcl9uYW1lIjoieWFzaHRlY2giLCJzY29wZSI6WyJyZWFkIiwid3JpdGUiXSwiZXhwIjoxNjYwMDM0NTYzLCJhdXRob3JpdGllcyI6WyJST0xFX1NZU1RFTUFETUlOIl0sImp0aSI6ImNuQzBGenRiRjhxYllRdFhUQkhiOVBFQTFsYyIsImNsaWVudF9pZCI6Im5hcGllciJ9.ts28utjI5v8k5D23IeypFtXXVKq-06OckULJ_jIVhQuzo6C_i1eWcgi_uXIwOqqG6yTs1-q8CZyII00GDYS-AgA45QUO1UaiNyKWDXwLoph5yZmvFEWQT7P0_QInTpSoqCwIewtXFfSmdq8JsYUgZiEOGEoP-iV354iXd2D5DjAIBt4LUivB8GPUhzk8UK8XM7GEeEcQk0-KtomUEZoPMXmfnxv1CvpUZzet7zfhcEay4lYeMhXcC2qzL7XGlRFfUMdtG--65Bx72OFFi9WXFKCFQRN7QMAuu_7ZIqgd9R1BuY3Odzsip_pT_P-kbI0DkvqqE-Zl1Z3za-OdHUyDpQ"
+    );
+    const loginBtn = await screen.findByText("Sign in");
+    await act(async () => {
+      await waitFor(() => {
+        fireEvent.click(loginBtn);
+      });
+    });
+  });
+
+  test("Login with his - tenantValidation", async () => {
+    const usernameInput = document.querySelector(`input[type="text"]`);
+    userEvent.type(usernameInput, "name");
+
+    const passwordInput = document.querySelector(`input[type="password"]`);
+    userEvent.type(passwordInput, "1234");
+
+    setMockFetch({
+      _embedded: {
+        user: [
+          {
+            id: 1,
+            name: "name",
+            role: "1",
+            department: 3,
+          },
+          {
+            id: 2,
+            name: "name2",
+            role: "2",
+            department: 5,
+          },
+        ],
+        apiurls: [
+          {
+            id: 2,
+            action: "locations",
+            url:
+              "https://his_21_3_to_gar_qa.napierhealthcare.com:9652/napier-his-web/Integration/userMasterService/getAllLocations",
+            key1: null,
+            key2: null,
+            key3: null,
+          },
+          {
+            id: 3,
+            action: "departments",
+            url:
+              "https://his_21_3_to_gar_qa.napierhealthcare.com:9652/napier-his-web/Integration/userMasterService/getAllDepartments",
+            key1: "dataBean",
+            key2: null,
+            key3: null,
+          },
+          {
+            id: 5,
+            action: "users",
+            url:
+              "https://his_21_3_to_gar_qa.napierhealthcare.com:9652/napier-his-web/Integration/userMasterService/getUserDeatils",
+            key1: "userViewList",
+            key2: "fullName",
+            key3: null,
+          },
+          {
+            id: 5,
+            action: "login",
+            url:
+              "https://his_21_3_to_gar_qa.napierhealthcare.com:9652/napier-his-web/Integration/userMasterService/getUserDeatils",
+            key1: "userViewList",
+            key2: "fullName",
+            key3: null,
+          },
+        ],
+      },
+      tokenID: "24234234234",
+      userViewList: [
+        {
+          userId: "name",
+          gender: "Male",
+          department: {
+            code: "3241",
+            description: "OP",
+          },
+        },
+      ],
+      id: 1,
+      name: "name",
+      role: "1",
+      department: 3,
+      authenticate: true,
+    });
+    sessionStorage.setItem(
+      "access-token",
+      "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzY2hlbWEiOiJraW1zIiwidXNlcl9uYW1lIjoieWFzaHRlY2giLCJzY29wZSI6WyJyZWFkIiwid3JpdGUiXSwiZXhwIjoxNjYwMDM0NTYzLCJhdXRob3JpdGllcyI6WyJST0xFX1NZU1RFTUFETUlOIl0sImp0aSI6ImNuQzBGenRiRjhxYllRdFhUQkhiOVBFQTFsYyIsImNsaWVudF9pZCI6Im5hcGllciJ9.ts28utjI5v8k5D23IeypFtXXVKq-06OckULJ_jIVhQuzo6C_i1eWcgi_uXIwOqqG6yTs1-q8CZyII00GDYS-AgA45QUO1UaiNyKWDXwLoph5yZmvFEWQT7P0_QInTpSoqCwIewtXFfSmdq8JsYUgZiEOGEoP-iV354iXd2D5DjAIBt4LUivB8GPUhzk8UK8XM7GEeEcQk0-KtomUEZoPMXmfnxv1CvpUZzet7zfhcEay4lYeMhXcC2qzL7XGlRFfUMdtG--65Bx72OFFi9WXFKCFQRN7QMAuu_7ZIqgd9R1BuY3Odzsip_pT_P-kbI0DkvqqE-Zl1Z3za-OdHUyDpQ"
+    );
+    const loginBtn = await screen.findByText("Sign in");
+    await act(async () => {
+      await waitFor(() => {
+        fireEvent.click(loginBtn);
+      });
+    });
+  });
+
+  test("Login with his - no api url", async () => {
     const usernameInput = document.querySelector(`input[type="text"]`);
     userEvent.type(usernameInput, "name");
 
@@ -159,10 +459,15 @@ describe("Login with his", () => {
       role: "1",
       department: 3,
     });
-
+    sessionStorage.setItem(
+      "access-token",
+      "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzY2hlbWEiOiJraW1zIiwidXNlcl9uYW1lIjoieWFzaHRlY2giLCJzY29wZSI6WyJyZWFkIiwid3JpdGUiXSwiZXhwIjoxNjYwMDM0NTYzLCJhdXRob3JpdGllcyI6WyJST0xFX1NZU1RFTUFETUlOIl0sImp0aSI6ImNuQzBGenRiRjhxYllRdFhUQkhiOVBFQTFsYyIsImNsaWVudF9pZCI6Im5hcGllciJ9.ts28utjI5v8k5D23IeypFtXXVKq-06OckULJ_jIVhQuzo6C_i1eWcgi_uXIwOqqG6yTs1-q8CZyII00GDYS-AgA45QUO1UaiNyKWDXwLoph5yZmvFEWQT7P0_QInTpSoqCwIewtXFfSmdq8JsYUgZiEOGEoP-iV354iXd2D5DjAIBt4LUivB8GPUhzk8UK8XM7GEeEcQk0-KtomUEZoPMXmfnxv1CvpUZzet7zfhcEay4lYeMhXcC2qzL7XGlRFfUMdtG--65Bx72OFFi9WXFKCFQRN7QMAuu_7ZIqgd9R1BuY3Odzsip_pT_P-kbI0DkvqqE-Zl1Z3za-OdHUyDpQ"
+    );
     const loginBtn = await screen.findByText("Sign in");
     await act(async () => {
-      await fireEvent.click(loginBtn);
+      await waitFor(() => {
+        fireEvent.click(loginBtn);
+      });
     });
   });
 

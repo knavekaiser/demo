@@ -18,6 +18,7 @@ const customRender = async (ui) => {
           checkPermission: () => true,
           setUser: jest.fn(),
           setRole: jest.fn(),
+          setPermissions: jest.fn(),
         }}
       >
         <IrDashboardContext.Provider
@@ -97,7 +98,13 @@ const customRender = async (ui) => {
               },
             ],
             setIrInvestigationDetails: jest.fn(),
-            irScreenDetails: [],
+            irScreenDetails: [
+              {
+                id: "1",
+                optionDescrp: "test",
+              },
+            ],
+            setIrScreenDetails: jest.fn(),
           }}
         >
           {ui}
@@ -184,17 +191,17 @@ describe("Main Configuration", () => {
   });
 
   test("Main Render", async () => {
-    const comp = await screen.getByTestId("mainConfig");
+    const comp = screen.getByTestId("mainConfig");
     expect(comp.textContent).toMatch("INCIDENT REPORTING");
 
-    const thanksCheckbox = await screen.getByText(
+    const thanksCheckbox = screen.getByText(
       "Send thank you notification for Self-Reporting IR"
     );
     await act(async () => {
       await fireEvent.click(thanksCheckbox);
     });
 
-    const allToggle = await screen.getAllByTestId("toggleInput");
+    const allToggle = screen.getAllByTestId("toggleInput");
     await act(async () => {
       await fireEvent.click(allToggle[0]);
     });
@@ -214,7 +221,7 @@ describe("Main Configuration", () => {
       await fireEvent.click(allToggle[5]);
     });
 
-    const allSaves = await screen.getAllByText("Save");
+    const allSaves = screen.getAllByText("Save");
     await act(async () => {
       await fireEvent.click(allSaves[0]);
     });
@@ -239,6 +246,43 @@ describe("Main Configuration", () => {
     await act(async () => {
       await fireEvent.click(allSaves[7]);
     });
+  });
+
+  test("checkbox 3 change event", async () => {
+    const ele = screen.getByLabelText("Same Sub-category");
+    await act(async () => {
+      await fireEvent.click(ele);
+    });
+  });
+
+  test("checkbox change event", async () => {
+    const ele = screen.getByLabelText(
+      "Send thank you notification for Self-Reporting IR"
+    );
+    await act(async () => {
+      await fireEvent.change(ele);
+    });
+  });
+
+  test("save button click event", async () => {
+    const ele = document.querySelector(".ir-investigation-save");
+    await act(async () => {
+      await fireEvent.click(ele);
+    });
+  });
+
+  test("IrInvestigationDetails", async () => {
+    const irInvestigationDetail = document.querySelector(
+      ".irInvestigationDetail"
+    );
+    const toggleInputs = irInvestigationDetail.querySelectorAll(
+      'input[type="checkbox"]'
+    );
+    for (let i = 0; i < 9; i++) {
+      await act(async () => {
+        await fireEvent.change(toggleInputs[i]);
+      });
+    }
   });
 });
 
@@ -275,6 +319,36 @@ describe("User Permission", () => {
             id: 123,
             role: "hod",
             permission: "Acknowledge IRs,View Departments IRs",
+          },
+        ],
+        rolePermission: [
+          {
+            id: 47,
+            role: {
+              id: 9,
+              permission: ",Acknowledge IR,View Departments IR",
+              role: "hod",
+              user: null,
+            },
+            permission: {
+              id: 36,
+              permission: "Acknowledge IR",
+            },
+            enable: false,
+          },
+          {
+            id: 48,
+            role: {
+              id: 9,
+              permission: ",Acknowledge IR,View Departments IR",
+              role: "hod",
+              user: null,
+            },
+            permission: {
+              id: 37,
+              permission: "View Departments IR",
+            },
+            enable: true,
           },
         ],
       },

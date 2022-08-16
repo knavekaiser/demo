@@ -482,6 +482,10 @@ export default function IncidentReporting() {
       });
     }
   }, [incidentDateTime, irScreenDetails]);
+
+  if (!user) {
+    return <p>Please log in</p>;
+  }
   return (
     <div className={s.container} data-testid="incidentReportingForm">
       <header>
@@ -672,7 +676,12 @@ export default function IncidentReporting() {
                   />
                 </>
               )}
-              <button style={{ display: "none" }}>submit</button>
+              <button
+                style={{ display: "none" }}
+                className="incident-details-submit"
+              >
+                submit
+              </button>
             </form>
           </Box>
           <Box label="TYPE OF INCIDENT *" collapsable={true}>
@@ -888,7 +897,7 @@ export default function IncidentReporting() {
               onClick={() => {
                 methods.setValue("status", 2);
               }}
-              className="btn wd-100"
+              className="btn wd-100 ir-form-submit"
               disabled={loading || uploadingFiles || readOnly}
             >
               Submit

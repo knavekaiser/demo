@@ -1,6 +1,13 @@
 import ReactDOM from "react-dom";
 import IrQueryDashboard from "./IrQueryDashboard";
-import { render, screen, fireEvent, act } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  act,
+  waitFor,
+  getByTestId,
+} from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import { SiteContext, IrDashboardContext } from "../SiteContext";
 import userEvent from "@testing-library/user-event";
@@ -667,5 +674,21 @@ describe("IR Dashboard", () => {
     await act(async () => {
       await fireEvent.click(searchBtn);
     });
+  });
+
+  test("render with only data", async () => {
+    setMockFetch(irData.data);
+    const clearBtn = document.querySelector("form button[type='button']");
+    await act(async () => {
+      await fireEvent.click(clearBtn);
+    });
+
+    const irCodeInput = document.querySelector("form input");
+    userEvent.type(irCodeInput, "22");
+    const clrBtn = document.querySelectorAll("button.clear[title='Response']");
+    // await act(async () => {
+    //   await fireEvent.click(clrBtn[1]);
+    //   expect(screen.getByText('Please provide inputs on this incident.')).toBeInTheDocument();
+    // });
   });
 });
