@@ -2,6 +2,7 @@ import Dashboard, { Accordion } from "./dashboard";
 import { SiteContext, IrDashboardContext, Provider } from "../SiteContext";
 import { BrowserRouter } from "react-router-dom";
 import { render, screen, fireEvent, act } from "@testing-library/react";
+import { Fragment, useContext, useEffect } from "react";
 
 const irDashboardDataElements = [
   {
@@ -170,6 +171,18 @@ const customRender = (ui, { providerProps, ...renderOptions }) => {
   );
 };
 
+const UpdateContext = ({ui}) => {
+  const { setUser } = useContext(
+    SiteContext
+  );
+  useEffect(()=>{
+    setUser({ id: 10, name: "Test User", role: [2, 4, 7, 9, 1] });
+  }, []);
+  return (
+      <Fragment>{ui}</Fragment>
+  )
+}
+
 const customRenderStaticProvider = (ui, { ...renderOptions }) => {
   return render(
     <BrowserRouter>
@@ -183,7 +196,7 @@ const customRenderStaticProvider = (ui, { ...renderOptions }) => {
             checkDataElements: () => true,
           }}
         >
-          {ui}
+          <UpdateContext ui={ui}/>
         </IrDashboardContext.Provider>
       </Provider>
     </BrowserRouter>,
@@ -198,9 +211,9 @@ test("Dashboard", async () => {
     setUser: jest.fn(),
     setRole: jest.fn(),
     endpoints: {
-      locations: "http://endpoints.com/locations",
-      users: "http://endpoints.com/users",
-      departments: "http://endpoints.com/departments",
+      locations: "http:endpoints.com/locations",
+      users: "http:endpoints.com/users",
+      departments: "http:endpoints.com/departments",
     },
   };
   customRender(<Dashboard />, { providerProps });
@@ -224,20 +237,20 @@ test("Dashboard", async () => {
 
 test("Dashboard - Static provider", async () => {
   customRenderStaticProvider(<Dashboard />, {});
-  // const comp = screen.getByTestId("dashboard");
-  // expect(comp.textContent).toMatch(
-  //   "There is a blame free reporting culture. No punitive measure will be taken against any staff reporting any incident"
-  // );
+  const comp = screen.getByTestId("dashboard");
+  expect(comp.textContent).toMatch(
+    "There is a blame free reporting culture. No punitive measure will be taken against any staff reporting any incident"
+  );
 
-  // const btn = document.querySelector("button.clear");
-  // await act(async () => {
-  //   await fireEvent.click(btn);
-  // });
+  const btn = document.querySelector("button.clear");
+  await act(async () => {
+    await fireEvent.click(btn);
+  });
 
-  // const logoutBtn = document.querySelector(
-  //   `div[data-testid="dashboard"] div div div button:last-child`
-  // );
-  // await act(async () => {
-  //   await fireEvent.click(logoutBtn);
-  // });
+  const logoutBtn = document.querySelector(
+    `div[data-testid="dashboard"] div div div button:last-child`
+  );
+  await act(async () => {
+    await fireEvent.click(logoutBtn);
+  });
 });
