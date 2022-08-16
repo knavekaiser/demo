@@ -1,14 +1,32 @@
 import ReactDOM from "react-dom";
 import IrPreview from "./irPreview";
-import { render, screen, fireEvent, act } from "@testing-library/react";
-import { BrowserRouter } from "react-router-dom";
+import {
+  render,
+  screen,
+  fireEvent,
+  act,
+  waitFor,
+} from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { SiteContext, IrDashboardContext } from "../SiteContext";
 import userEvent from "@testing-library/user-event";
 
-const customRender = async (ui, { providerProps, ...renderOptions }) => {
+const customRender = async (
+  ui,
+  { providerProps, routerState = {}, ...renderOptions }
+) => {
   return await act(async () => {
     await render(
-      <BrowserRouter>
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: "/irPreview/1",
+            search: "",
+            hash: "",
+            state: routerState,
+          },
+        ]}
+      >
         <SiteContext.Provider value={providerProps}>
           <IrDashboardContext.Provider
             value={{
@@ -19,7 +37,7 @@ const customRender = async (ui, { providerProps, ...renderOptions }) => {
             {ui}
           </IrDashboardContext.Provider>
         </SiteContext.Provider>
-      </BrowserRouter>,
+      </MemoryRouter>,
       renderOptions
     );
   });
@@ -76,6 +94,7 @@ describe("Incident Preview With Data", () => {
           {
             id: 5,
             name: "some location",
+            status: true,
           },
           {
             id: 7,
@@ -90,6 +109,35 @@ describe("Incident Preview With Data", () => {
           {
             id: 4,
             name: "Some other department",
+          },
+        ],
+        category: [
+          {
+            id: 1,
+            name: "Cat 1",
+            subCategorys: [
+              {
+                id: 1,
+                name: "Sub Cat 1",
+                reportable: [{ id: 2, description: "sdfasdf" }],
+              },
+              {
+                id: 3,
+                name: "Other",
+                reportable: [],
+              },
+            ],
+          },
+          {
+            id: 2,
+            name: "Cat 2",
+            subCategorys: [
+              {
+                id: 1,
+                name: "Other",
+                reportable: [],
+              },
+            ],
           },
         ],
       },
@@ -161,17 +209,67 @@ describe("Incident Preview With Data", () => {
       headofDepart: 15,
       actionTakens: [],
       contribFactor: null,
+      userViewList: [
+        {
+          userName: "John",
+        },
+      ],
+      patients: [
+        {
+          uhid: 1,
+          name: "test",
+        },
+      ],
     });
 
     const providerProps = {
       user: { id: 10, name: "Test User", department: 3 },
       endpoints: {
         locations: "http://endpoints.com/locations",
-        users: "http://endpoints.com/users",
+        users: {
+          id: 5,
+          action: "users",
+          url: "http://endpoints.com/users",
+          key1: "userViewList",
+          key2: "fullName",
+          key3: null,
+        },
         departments: "http://endpoints.com/departments",
       },
+      irTypes: [{ label: "test", value: "test" }],
     };
-    await customRender(<IrPreview />, { providerProps });
+
+    const routerState = {
+      ir: {
+        sequence: "2164 /08/2022 NAP H",
+        irHodAck: [],
+        deptsLookupMultiselect: "",
+        upload: [],
+        notification: [
+          {
+            id: 3,
+            name: 6,
+            dept: 1,
+            notificationDateTime: "2022-02-16T16:23:00.000+05:30",
+          },
+        ],
+        witness: [
+          {
+            witnessName: "test",
+            witnessDept: "dept",
+          },
+        ],
+        actionTaken: [
+          {
+            immedActionTaken: "test",
+            accessTakenBy: "test",
+            accessDateTime: new Date(),
+          },
+        ],
+      },
+      from: "login",
+    };
+    await customRender(<IrPreview />, { providerProps, routerState });
   });
 
   test("Render Preview", async () => {
@@ -180,9 +278,14 @@ describe("Incident Preview With Data", () => {
   });
 
   test("Acknowledge", async () => {
-    const ackBtn = await screen.getByText("Acknowledge");
+    const ackBtn = screen.getByText("Acknowledge");
     await act(async () => {
       await fireEvent.click(ackBtn);
+    });
+
+    const closeBtn = screen.getByText("Close");
+    await act(async () => {
+      await fireEvent.click(closeBtn);
     });
 
     const textarea = document.querySelector("#portal .modal form textarea");
@@ -205,6 +308,60 @@ describe("Incident Preview With Data", () => {
     );
     await act(async () => {
       await fireEvent.click(submitBtn);
+    });
+    setMockFetch({
+      serverDate: "2022-08-09",
+      serverTime: "17:07:42.621512",
+      remarks: "ir is approved",
+      responseBy: "15",
+      userId: 15,
+      responseOn: "2022-08-02T18:37:15.239+05:30",
+    });
+    await act(async () => {
+      await fireEvent.click(submitBtn);
+    });
+  });
+
+  test("AcknowledgeForm clear", async () => {
+    const ackBtn = screen.getByText("Acknowledge");
+    await act(async () => {
+      await fireEvent.click(ackBtn);
+    });
+    const form = screen.getByTestId("AcknowledgeForm");
+    const clearBtn = form.querySelector('button[type="button"]');
+    await act(async () => {
+      await fireEvent.click(clearBtn);
+    });
+  });
+  test("Back to Dashboard", async () => {
+    const ackBtn = screen.getByText("Acknowledge");
+    await act(async () => {
+      await fireEvent.click(ackBtn);
+    });
+
+    const textarea = document.querySelector("#portal .modal form textarea");
+    await act(async () => {
+      await userEvent.type(textarea, "Some note");
+    });
+
+    setMockFetch({
+      serverDate: "2022-08-09",
+      serverTime: "17:07:42.621512",
+      remarks: "ir is approved",
+      responseBy: "15",
+      userId: 15,
+      responseOn: "2022-08-02T18:37:15.239+05:30",
+    });
+
+    const submitBtn = document.querySelector(
+      "#portal .modal form button[type='submit']"
+    );
+    await act(async () => {
+      await fireEvent.click(submitBtn);
+    });
+    const backBtn = screen.getByText("Back to Dashboard");
+    await act(async () => {
+      await fireEvent.click(backBtn);
     });
   });
 });
@@ -246,5 +403,109 @@ describe("Incident Preview Without Data", () => {
   test("Render Preview", async () => {
     const summary = document.querySelector("div div section");
     expect(summary.textContent).toBe("IR Code: -");
+  });
+
+  test("Box collapse", async () => {
+    const collapseBtn = document.querySelector("[data-testid='box'] button");
+    await fireEvent.click(collapseBtn);
+  });
+
+  test("change fetch mock", async () => {
+    setMockFetch({
+      sequence: "2164 /08/2022 NAP H",
+      irHodAck: [
+        {
+          id: 1,
+          remarks: "remarks",
+          responseBy: "responseBy",
+          userId: 1,
+          responseOn: "2017-01-23T00:00:00.000+05:30",
+        },
+        {
+          id: 20091,
+          remarks: "remarks",
+          responseBy: "responseBy",
+          userId: 1,
+          responseOn: "2017-01-23T00:00:00.000+05:30",
+        },
+      ],
+      deptsLookupMultiselect: "",
+      upload: [],
+      notification: [
+        {
+          id: 3,
+          name: 6,
+          dept: 1,
+          notificationDateTime: "2022-02-16T16:23:00.000+05:30",
+        },
+      ],
+      witness: [
+        {
+          witnessName: "test",
+          witnessDept: "dept",
+        },
+      ],
+      actionTaken: [
+        {
+          immedActionTaken: "test",
+          accessTakenBy: "test",
+          accessDateTime: new Date(),
+        },
+      ],
+    });
+    const providerProps = {
+      user: { id: 10, name: "Test User", department: 3 },
+      endpoints: {
+        locations: "http://endpoints.com/locations",
+        users: "http://endpoints.com/users",
+        departments: "http://endpoints.com/departments",
+      },
+    };
+    const routerState = {
+      ir: {
+        sequence: "2164 /08/2022 NAP H",
+        irHodAck: [
+          {
+            id: 1,
+            remarks: "remarks",
+            responseBy: "responseBy",
+            userId: 1,
+            responseOn: "2017-01-23T00:00:00.000+05:30",
+          },
+          {
+            id: 20091,
+            remarks: "remarks",
+            responseBy: "responseBy",
+            userId: 1,
+            responseOn: "2017-01-23T00:00:00.000+05:30",
+          },
+        ],
+        deptsLookupMultiselect: "",
+        upload: [],
+        notification: [
+          {
+            id: 3,
+            name: 6,
+            dept: 1,
+            notificationDateTime: "2022-02-16T16:23:00.000+05:30",
+          },
+        ],
+        witness: [
+          {
+            witnessName: "test",
+            witnessDept: "dept",
+          },
+        ],
+        actionTaken: [
+          {
+            immedActionTaken: "test",
+            accessTakenBy: "test",
+            accessDateTime: new Date(),
+          },
+        ],
+      },
+      from: "login",
+    };
+    await customRender(<IrPreview />, { providerProps, routerState });
   });
 });

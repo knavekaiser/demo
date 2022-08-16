@@ -25,13 +25,10 @@ export const Provider = ({ children }) => {
   const checkPermission = useCallback(
     ({ roleId, permission }) => {
       let roleMatch = false;
-      if (!user) {
-        return false;
-      }
       if (Array.isArray(roleId)) {
-        roleMatch = user.role.some((ur) => roleId.includes(ur));
+        roleMatch = user?.role.some((ur) => roleId.includes(ur));
       } else {
-        roleMatch = user.role.includes(roleId);
+        roleMatch = user?.role.includes(roleId);
       }
       if (roleMatch && !permission) {
         return true;

@@ -605,6 +605,7 @@ const AcknowledgeForm = ({ ir, onSuccess, closeForm }) => {
           })
           .catch((err) => Prompt({ type: "error", message: err.message }));
       })}
+      data-testid="AcknowledgeForm"
     >
       <Textarea
         label="Remarks"
