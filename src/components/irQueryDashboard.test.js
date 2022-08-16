@@ -686,9 +686,11 @@ describe("IR Dashboard", () => {
     const irCodeInput = document.querySelector("form input");
     userEvent.type(irCodeInput, "22");
     const clrBtn = document.querySelectorAll("button.clear[title='Response']");
-    // await act(async () => {
-    //   await fireEvent.click(clrBtn[1]);
-    //   expect(screen.getByText('Please provide inputs on this incident.')).toBeInTheDocument();
-    // });
+    await act(async () => {
+      await fireEvent.click(clrBtn[1]);
+      expect(
+        screen.getByText("Please provide inputs on this incident.")
+      ).toBeInTheDocument();
+    });
   });
 });

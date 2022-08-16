@@ -278,7 +278,7 @@ const SingleIr = memo(
           </td>
           <td>
             {parameters?.locations?.find(
-              (item) => item.id.toString() === ir.location.toString()
+              (item) => item.id?.toString() === ir.location?.toString()
             )?.name || ir.location}
           </td>
           <td>
