@@ -26,9 +26,9 @@ export const Provider = ({ children }) => {
     ({ roleId, permission }) => {
       let roleMatch = false;
       if (Array.isArray(roleId)) {
-        roleMatch = user.role.some((ur) => roleId.includes(ur));
+        roleMatch = user?.role.some((ur) => roleId.includes(ur));
       } else {
-        roleMatch = user.role.includes(roleId);
+        roleMatch = user?.role.includes(roleId);
       }
       if (roleMatch && !permission) {
         return true;
@@ -69,14 +69,14 @@ export const Provider = ({ children }) => {
     setPermissions(null);
     setHis(false);
     setEndpoints(null);
-    sessionStorage.removeItem("HIS-access-token");
-    sessionStorage.removeItem("access-token");
-    sessionStorage.removeItem("tenant-id");
-    sessionStorage.removeItem("tenant-timezone");
     let decoded = null;
     try {
       decoded = jwt_decode(sessionStorage.getItem("access-token"));
     } catch (err) {}
+    sessionStorage.removeItem("HIS-access-token");
+    sessionStorage.removeItem("access-token");
+    sessionStorage.removeItem("tenant-id");
+    sessionStorage.removeItem("tenant-timezone");
     navigate(`/login${decoded?.schema ? "?tenantId=" + decoded.schema : ""}`);
   }, [user, endpoints]);
 
@@ -289,7 +289,7 @@ export const IrDashboardContextProvider = ({ children }) => {
     const users = await getUsers().then(({ data }) =>
       (data?._embedded?.user || []).map((user) => ({
         ...user,
-        role: [...user.role].map((r) => +r).filter((r) => r) || [],
+        role: [...user.role].map((r) => +r).filter((r) => r),
       }))
     );
 
