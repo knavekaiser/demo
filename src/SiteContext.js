@@ -129,6 +129,27 @@ export const Provider = ({ children }) => {
         .catch((err) => Prompt({ type: "error", message: err.message }));
     }
   }, [permissions, user]);
+
+  useEffect(() => {
+    const idleTime = 1000 * 60 * 10;
+    const timerFunction = () => {
+      logout();
+    };
+    let timer;
+    const evtHandler = () => {
+      clearTimeout(timer);
+      timer = setTimeout(timerFunction, idleTime);
+    };
+    if (user) {
+      timer = setTimeout(timerFunction, idleTime);
+      document.addEventListener("click", evtHandler);
+    }
+
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener("click", evtHandler);
+    };
+  }, [logout]);
   return (
     <SiteContext.Provider
       value={{
@@ -155,7 +176,7 @@ export const IrDashboardContext = createContext();
 export const IrDashboardContextProvider = ({ children }) => {
   const parametersFetched = useRef(false);
 
-  const { user, setIrTypes } = useContext(SiteContext);
+  const { user, endpoints, setIrTypes } = useContext(SiteContext);
   const [parameters, setParameters] = useState({});
   const [dashboard, setDashboard] = useState("myDashboard");
   const [count, setCount] = useState({});
@@ -180,7 +201,14 @@ export const IrDashboardContextProvider = ({ children }) => {
   const { get: getCountStatusDetailByState } = useFetch(
     `${defaultEndpoints.countStateDetailByStatus}?status=3`
   );
-  const { get: getLocations } = useFetch(defaultEndpoints.locations);
+  const { get: getLocations } = useFetch(
+    endpoints?.locations.url || defaultEndpoints.locations,
+    { his: endpoints?.locations.url }
+  );
+  const { get: getDepartments } = useFetch(
+    endpoints?.departments?.url || defaultEndpoints.departments,
+    { his: endpoints?.departments?.url }
+  );
   const { get: getCategories } = useFetch(defaultEndpoints.categories);
 
   const { get: getIrCountCurrentMonth } = useFetch(
@@ -322,6 +350,7 @@ export const IrDashboardContextProvider = ({ children }) => {
     if (user && !parametersFetched.current) {
       Promise.all([
         getLocations(),
+        getDepartments(),
         getCategories(),
         getIrInvestigationDetails(),
         getIrScreenDetails(),
@@ -329,6 +358,7 @@ export const IrDashboardContextProvider = ({ children }) => {
         .then(
           async ([
             { data: location },
+            { data: departments },
             { data: category },
             { data: irInvestigationDetails },
             { data: irScreens },
@@ -343,9 +373,39 @@ export const IrDashboardContextProvider = ({ children }) => {
             }
 
             const _parameters = { ...parameters };
-            if (location?._embedded.location) {
+
+            if (Array.isArray(location)) {
+              _parameters.locations = location
+                .filter((item) => +item.status)
+                .map((item) => ({
+                  name: item.locationName,
+                  id: item.locationID,
+                }));
+            } else if (location?._embedded?.location) {
               _parameters.locations = location._embedded.location;
             }
+
+            if (Array.isArray(departments?.[endpoints?.departments.key1])) {
+              _parameters.departments = departments[
+                endpoints?.departments.key1
+              ].map(({ departmentId, departmentName }) => ({
+                id: departmentId.toString(),
+                name: departmentName,
+              }));
+            } else if (Array.isArray(departments)) {
+              _parameters.departments = departments.map((dept) => ({
+                name: dept.description,
+                id: dept.code,
+              }));
+            } else if (departments?._embedded?.department) {
+              _parameters.departments = departments._embedded.department.map(
+                (item) => ({
+                  name: item.name,
+                  id: item.id,
+                })
+              );
+            }
+
             if (category?._embedded.category) {
               _parameters.categories = category._embedded.category;
             }

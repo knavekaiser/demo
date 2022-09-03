@@ -239,11 +239,9 @@ export default function IncidentReporting() {
         preventability: edit.preventability?.toString() || "",
         typeofInci: edit.typeofInci?.toString() || "",
         upload: edit.upload,
-        deptsLookupMultiselect:
-          edit.deptsLookupMultiselect
-            ?.split(",")
-            .filter((item) => item)
-            .map((item) => +item) || [],
+        deptsLookupMultiselect: [...(edit.deptsLookupMultiselect || "")]
+          .map((item) => +item)
+          .filter((item) => item),
       };
       methods.reset(_edit);
     } else {
@@ -293,8 +291,8 @@ export default function IncidentReporting() {
             }
           );
 
-          if (Array.isArray(location.data)) {
-            _parameters.locations = location.data
+          if (Array.isArray(location)) {
+            _parameters.locations = location
               .filter((item) => +item.status)
               .map((item) => ({
                 label: item.locationName,
@@ -672,7 +670,12 @@ export default function IncidentReporting() {
                   />
                 </>
               )}
-              <button style={{ display: "none" }}>submit</button>
+              <button
+                style={{ display: "none" }}
+                className="incident-details-submit"
+              >
+                submit
+              </button>
             </form>
           </Box>
           <Box label="TYPE OF INCIDENT *" collapsable={true}>
@@ -888,7 +891,7 @@ export default function IncidentReporting() {
               onClick={() => {
                 methods.setValue("status", 2);
               }}
-              className="btn wd-100"
+              className="btn wd-100 ir-form-submit"
               disabled={loading || uploadingFiles || readOnly}
             >
               Submit
