@@ -112,7 +112,7 @@ export default function Login() {
               setLoading(true);
               let token = sessionStorage.getItem("access-token");
 
-              if (!token) {
+              if (!token && !his) {
                 const resp = await fetch(`${defaultEndpoints.token}`, {
                   method: "POST",
                   headers: {

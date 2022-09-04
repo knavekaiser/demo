@@ -122,8 +122,6 @@ export const useFetch = (
           ) ||
           ["invalid_token"].includes(response.error)
         ) {
-          sessionStorage.removeItem("access-token");
-          sessionStorage.removeItem("HIS-access-token");
           Prompt({
             type: "error",
             message: `${
