@@ -52,18 +52,23 @@ export const Provider = ({ children }) => {
 
   const logout = useCallback(() => {
     if (his) {
-      // (async () => {
-      //   await fetch(endpoints.logout.url, {
-      //     method: "POST",
-      //     headers: { "Content-Type": "application/json" },
-      //     body: JSON.stringify({
-      //       userName: user.name,
-      //       clientRefId: "Napier123",
-      //       appContext: "",
-      //       securityToken: sessionStorage.getItem("HIS-access-token"),
-      //     }),
-      //   });
-      // })();
+      (async () => {
+        await fetch(endpoints.logout.url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userName: user.name,
+            SECURITY_TOKEN: sessionStorage.getItem("HIS-access-token"),
+            FACILITY_ID: 1,
+            CLIENT_REF_ID: "Napier123",
+            "x-auth-token": sessionStorage.getItem("HIS-access-token"),
+            "x-tenantid": sessionStorage.getItem("tenant-id"),
+            "x-timezone": sessionStorage.getItem("tenant-timezone"),
+          }),
+        });
+
+        await fetch(`${endpoints.discardSession.url}?userId=${user.name}`);
+      })();
     }
     setUser(null);
     setPermissions(null);
