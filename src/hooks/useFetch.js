@@ -70,8 +70,10 @@ export const useFetch = (
           ...(defaultHeaders !== false &&
             (!his
               ? {
-                  Authorization:
-                    "Bearer " + sessionStorage.getItem("access-token"),
+                  ...(sessionStorage.getItem("access-token") && {
+                    Authorization:
+                      "Bearer " + sessionStorage.getItem("access-token"),
+                  }),
                 }
               : {
                   SECURITY_TOKEN: sessionStorage.getItem("HIS-access-token"),
