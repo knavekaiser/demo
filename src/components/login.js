@@ -251,6 +251,7 @@ export default function Login() {
                             authenticationType: 1,
                             authPassword: "",
                             isLDAPEnable: "Y",
+                            overrideSession: true,
                           }
                         : {
                             username: data.username,
