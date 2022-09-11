@@ -14,7 +14,6 @@ import bcrypt from "bcryptjs";
 import s from "./login.module.scss";
 import { useFetch } from "../hooks";
 import { appConfig, endpoints as defaultEndpoints, paths } from "../config";
-// import hisEndpoints from "../config/hisEndpoints.js";
 import jwt_decode from "jwt-decode";
 
 export default function Login() {
@@ -103,7 +102,10 @@ export default function Login() {
         <form
           onSubmit={handleSubmit(async (data) => {
             try {
-              if (!new URLSearchParams(location.search).get("tenantId")) {
+              const tenantId = new URLSearchParams(location.search).get(
+                "tenantId"
+              );
+              if (!tenantId) {
                 return Prompt({
                   type: "error",
                   message: "No Tenant ID found",
@@ -113,23 +115,31 @@ export default function Login() {
               let token = sessionStorage.getItem("access-token");
 
               if (!token) {
-                const resp = await fetch(`${defaultEndpoints.token}`, {
-                  method: "POST",
-                  headers: {
-                    Authorization:
-                      "Basic " +
-                      Buffer.from(`napier:my-secret-key`).toString("base64"),
-                    "Content-Type": "application/x-www-form-urlencoded",
-                  },
-                  body: new URLSearchParams({
-                    grant_type: "password",
-                    username: data.username,
-                    password: data.password,
-                    tenantId: new URLSearchParams(location.search).get(
-                      "tenantId"
-                    ),
-                  }).toString(),
-                })
+                const resp = await fetch(
+                  `${
+                    his ? defaultEndpoints.hisToken : defaultEndpoints.token
+                  }?tenantId=${tenantId}`,
+                  {
+                    method: "POST",
+                    headers: {
+                      Authorization:
+                        "Basic " +
+                        Buffer.from(`napier:my-secret-key`).toString("base64"),
+                      // "Content-Type": "application/x-www-form-urlencoded",
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                      username: data.username,
+                      password: data.password,
+                    }),
+                    // body: new URLSearchParams({
+                    //   grant_type: "password",
+                    //   username: data.username,
+                    //   password: data.password,
+                    //   tenantId,
+                    // }).toString(),
+                  }
+                )
                   .then((res) => res.json())
                   .catch((err) => {
                     Prompt({
@@ -140,8 +150,8 @@ export default function Login() {
                     return err;
                   });
 
-                if (resp?.access_token) {
-                  sessionStorage.setItem("access-token", resp?.access_token);
+                if (resp?.token) {
+                  sessionStorage.setItem("access-token", resp.token);
                 } else {
                   return Prompt({
                     type: "error",

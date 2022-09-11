@@ -25,7 +25,10 @@ export default {
 
   uploadFiles: `${baseApiUrl}/upload-multiple-files`,
   apiUrl: `${baseApiUrl}/apiurls`,
-  token: `${baseApiUrl}/oauth/token`,
+  // token: `${baseApiUrl}/oauth/token`,
+  token: `${baseApiUrl}/authenticate`,
+  refreshToken: `${baseApiUrl}/refreshtoken`,
+  hisToken: `${baseApiUrl}/authenticate/his`,
 
   incidentReport: `${baseApiUrl}/IncidentReport`,
   searchIrs: `${baseApiUrl}/IncidentReport/search/byDetails`,
