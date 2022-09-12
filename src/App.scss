@@ -117,6 +117,25 @@ button {
   }
 }
 
+.spinner {
+  height: 1rem;
+  width: 1rem;
+  border: 2px solid;
+  border-color: inherit;
+  border-radius: 50%;
+  position: relative;
+  animation: spinner 0.5s alternate ease-in-out infinite;
+}
+
+@keyframes spinner {
+  0% {
+    transform: scale(0.5);
+  }
+  100% {
+    transform: scale(1.1);
+  }
+}
+
 .flex {
   display: flex !important;
   grid-gap: 0.5rem;

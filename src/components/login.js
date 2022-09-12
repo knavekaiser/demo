@@ -383,7 +383,9 @@ export default function Login() {
             })}
             error={errors.password}
           />
-          <button className="btn wd-100">Sign in</button>
+          <button className="btn wd-100" disabled={loading}>
+            {loading ? <span className="spinner" /> : "Sign in"}
+          </button>
         </form>
       </div>
     </div>
