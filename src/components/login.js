@@ -153,6 +153,7 @@ export default function Login() {
                 if (resp?.token) {
                   sessionStorage.setItem("access-token", resp.token);
                 } else {
+                  setLoading(false);
                   return Prompt({
                     type: "error",
                     message:
@@ -235,6 +236,7 @@ export default function Login() {
                         }
                       })
                       .catch((err) => {
+                        setLoading(false);
                         return Prompt({
                           type: "error",
                           message: "Could not validate Tenant.",
@@ -353,6 +355,7 @@ export default function Login() {
                 }
               }
             } catch (err) {
+              setLoading(false);
               Prompt({
                 type: "error",
                 message: err.message,
