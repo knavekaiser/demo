@@ -219,7 +219,7 @@ const PersonAffectedForm = ({
     post: postPersonAffected,
     put: updatePersonAffected,
     loading,
-  } = useFetch(defaultEndpoints.personAffecteds + `/${edit?.id || ""}`);
+  } = useFetch(defaultEndpoints.personAffecteds + `/${edit?.pa_id || ""}`);
 
   useEffect(() => {
     reset({ show: true, ...edit });
@@ -259,9 +259,6 @@ const PersonAffectedForm = ({
         })}
         error={errors.name}
       />
-      {
-        // <Toggle name="show" register={register} required={true} watch={watch} />
-      }
       <div className={s.btns}>
         <button className="btn secondary" type="submit" disabled={loading}>
           {edit ? (

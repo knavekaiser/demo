@@ -333,27 +333,6 @@ export const MyDashboard = () => {
               });
             },
           },
-          // {
-          //   icon: <FaRegTrashAlt />,
-          //   label: "Delete",
-          //   callBack: () => {
-          //     Prompt({
-          //       type: "confirmation",
-          //       message: `Are you sure you want to remove this incident?`,
-          //       callback: () => {
-          //         deleteIr(null, {
-          //           params: { "{ID}": inc.id },
-          //         }).then(({ res }) => {
-          //           if (res.status === 204) {
-          //             setIncidents((prev) =>
-          //               prev.filter((ir) => ir.id !== inc.id)
-          //             );
-          //           }
-          //         });
-          //       },
-          //     });
-          //   },
-          // },
           ...((checkPermission({ roleId: [4, 7], permission: [89, 91] }) && [
             {
               icon: <FaRegTrashAlt />,
@@ -1167,12 +1146,6 @@ export const QualityDashboard = () => {
 
   const getActions = useCallback((inc) => {
     const permissions = [];
-    console.log(
-      checkPermission({ roleId: [7, 4], permission: [61, 69] }) &&
-        [2, 3].includes(+inc.status),
-      checkPermission({ roleId: [7, 4], permission: [61, 69] }),
-      [2, 3].includes(+inc.status)
-    );
     if (
       checkPermission({ roleId: [7, 4], permission: [61, 69] }) &&
       [2, 3].includes(+inc.status)

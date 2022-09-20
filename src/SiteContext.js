@@ -94,7 +94,7 @@ export const Provider = ({ children }) => {
       })
         .then((res) => res.json())
         .then((data) => {
-          if (data?._embedded.rolePermission) {
+          if (data?._embedded?.rolePermission) {
             const permissions = data._embedded.rolePermission
               .filter(({ role: { id: roleId } }) => user.role.includes(roleId))
               .reduce((p, c) => {

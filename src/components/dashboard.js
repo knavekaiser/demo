@@ -104,6 +104,9 @@ function Dashboard() {
   const location = useLocation();
   const navigate = useNavigate();
   const [collaped, setCollapsed] = useState(false);
+  if (!user) {
+    return <p>Please log in</p>;
+  }
   return (
     <div className={s.container} data-testid="dashboard">
       <div className={s.navbar}>
@@ -123,7 +126,7 @@ function Dashboard() {
           <span>
             Logged in as:{" "}
             <span style={{ fontWeight: "600", color: "#3450a3" }}>
-              {user.name}
+              {user?.name}
             </span>
           </span>
           <div className={s.actions}>

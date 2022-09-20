@@ -669,7 +669,7 @@ const NotifyForm = ({
         name="dept"
         control={control}
         formOptions={{
-          required: "Select a Person",
+          required: "Select a Department",
         }}
       />
       <Input {...register("design")} placeholder="Enter" />

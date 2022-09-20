@@ -41,10 +41,6 @@ export default function ContributingFactor() {
         <h3>CONTRIBUTING FACTORS</h3>
       </header>
       <div className={`${s.content} ${s.parent_child}`}>
-        {
-          //   <Box label="CONTRIBUTING FACTORS">
-          // </Box>
-        }
         <div className={`${s.parent} ${s.contributingFactors}`}>
           <div className={s.head}>
             <Input
@@ -55,11 +51,7 @@ export default function ContributingFactor() {
           </div>
           <Table
             loading={loading}
-            columns={[
-              { label: "Contributing Factor" },
-              // { label: "Show" },
-              { label: "Action" },
-            ]}
+            columns={[{ label: "Contributing Factor" }, { label: "Action" }]}
           >
             <tr>
               <td className={s.inlineForm}>
@@ -102,14 +94,6 @@ export default function ContributingFactor() {
                       {contributingFactor.name}
                     </span>
                   </td>
-                  {
-                    //   <td>
-                    //   <Toggle
-                    //     readOnly={true}
-                    //     defaultValue={contributingFactor.show}
-                    //   />
-                    // </td>
-                  }
                   <TableActions
                     actions={[
                       {
@@ -221,9 +205,6 @@ const ContributingFactorForm = ({
         })}
         error={errors.name}
       />
-      {
-        // <Toggle name="show" watch={watch} register={register} required={true} />
-      }
       <div className={s.btns}>
         <button className="btn secondary" type="submit" disabled={loading}>
           {edit ? (

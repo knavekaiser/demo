@@ -95,6 +95,10 @@ export const useFetch = (
         signal: controller.current.signal,
       })
         .then(async (res) => {
+          if (res.status === 401) {
+            logout();
+            return { data: {} };
+          }
           try {
             const data = await res.json();
             return {
@@ -114,7 +118,7 @@ export const useFetch = (
             return {};
           }
           setError(err);
-          return { error: err };
+          return { error: err, data: {} };
         });
 
       if (response?.errorMessage || response?.error) {

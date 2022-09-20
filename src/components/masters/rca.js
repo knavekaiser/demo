@@ -33,10 +33,6 @@ export default function Rcas() {
         <h3>ROOT CAUSE MASTER</h3>
       </header>
       <div className={`${s.content} ${s.parent_child}`}>
-        {
-          //   <Box label="RCA">
-          // </Box>
-        }
         <div className={`${s.parent} ${s.rca}`}>
           {
             //   <div className={s.head}>

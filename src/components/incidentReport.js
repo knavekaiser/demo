@@ -31,7 +31,6 @@ const defaultFormValues = {
   action: "",
   status: "",
   department: "",
-  userDept: "",
   reportingDate: "",
   location: "",
   sequence: "",
@@ -307,7 +306,11 @@ export default function IncidentReporting() {
               }));
           }
 
-          if (Array.isArray(departments?.[endpoints?.departments.key1])) {
+          if (
+            Array.isArray(
+              departments && departments[endpoints?.departments.key1]
+            )
+          ) {
             _parameters.departments = departments[
               endpoints?.departments.key1
             ].map(({ departmentId, departmentName }) => ({
@@ -328,7 +331,7 @@ export default function IncidentReporting() {
             );
           }
 
-          if (users?.[endpoints?.users.key1]?.join || users?.join) {
+          if ((users && users[endpoints?.users.key1]?.join) || users?.join) {
             const dataField = endpoints.users.key1;
             const nameField = endpoints.users.key2;
             const hisUser = users[dataField] || users;
@@ -402,7 +405,10 @@ export default function IncidentReporting() {
               value: patient.uhid,
               label: patient.name,
             }));
-          } else if (Array.isArray(patients?.[endpoints?.patients.key1])) {
+          } else if (
+            patients &&
+            Array.isArray(patients[endpoints?.patients.key1])
+          ) {
             _parameters.patients = patients[endpoints?.patients.key1].map(
               (patient) => ({
                 value: patient.uhid,

@@ -716,7 +716,7 @@ const ReportableInlineForm = ({
   const [reportTo, setReportTo] = useState([]);
 
   const { get: getReportTo, loading } = useFetch(
-    defaultEndpoints.twoFieldMaster + "/10"
+    defaultEndpoints.twoFieldMasters + "/10"
   );
 
   const { post: addReportable } = useFetch(defaultEndpoints.reportables);

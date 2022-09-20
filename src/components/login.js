@@ -59,7 +59,7 @@ export default function Login() {
       var decoded = jwt_decode(accessToken);
       if (decoded && new Date() > new Date(decoded.exp)) {
         getUserDetail(null, {
-          query: { username: decoded.user_name },
+          query: { username: decoded.sub },
         }).then(async ({ data: user }) => {
           if (user) {
             if (hisAccessToken) {
@@ -83,7 +83,9 @@ export default function Login() {
             }
             handleUser({
               ...user,
-              role: [...user.role].map((role) => +role).filter((role) => role),
+              role: [...(user.role || [])]
+                .map((role) => +role)
+                .filter((role) => role),
             });
           }
         });
