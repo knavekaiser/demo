@@ -285,7 +285,7 @@ export default function IncidentReporting() {
           const _parameters = {};
           const userDetails = (usersWithRoles?._embedded?.user || []).map(
             (user) => {
-              user.role = [...user.role];
+              user.role = [...user.role].map((i) => +i).filter((i) => i);
               return user;
             }
           );
