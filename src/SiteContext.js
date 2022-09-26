@@ -135,26 +135,26 @@ export const Provider = ({ children }) => {
     }
   }, [permissions, user]);
 
-  useEffect(() => {
-    const idleTime = 1000 * 60 * 10;
-    const timerFunction = () => {
-      logout();
-    };
-    let timer;
-    const evtHandler = () => {
-      clearTimeout(timer);
-      timer = setTimeout(timerFunction, idleTime);
-    };
-    if (user) {
-      timer = setTimeout(timerFunction, idleTime);
-      document.addEventListener("click", evtHandler);
-    }
-
-    return () => {
-      clearTimeout(timer);
-      document.removeEventListener("click", evtHandler);
-    };
-  }, [logout]);
+  // useEffect(() => {
+  //   const idleTime = 1000 * 60 * 10;
+  //   const timerFunction = () => {
+  //     logout();
+  //   };
+  //   let timer;
+  //   const evtHandler = () => {
+  //     clearTimeout(timer);
+  //     timer = setTimeout(timerFunction, idleTime);
+  //   };
+  //   if (user) {
+  //     timer = setTimeout(timerFunction, idleTime);
+  //     document.addEventListener("click", evtHandler);
+  //   }
+  //
+  //   return () => {
+  //     clearTimeout(timer);
+  //     document.removeEventListener("click", evtHandler);
+  //   };
+  // }, [logout]);
   return (
     <SiteContext.Provider
       value={{

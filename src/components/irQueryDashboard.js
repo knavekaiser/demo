@@ -548,7 +548,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
     <form className={s.filters} onSubmit={handleSubmit(onSubmit)}>
       <Input label="IR Code" {...register("irCode")} />
       <section className={s.pair}>
-        <label>Qurey Date Range</label>
+        <label>Query Date Range</label>
         <Input
           type="date"
           placeholder="From"

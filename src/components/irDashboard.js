@@ -409,17 +409,22 @@ export const MyDashboard = () => {
   useEffect(() => {
     const _filters = paramsToObject(new URLSearchParams(location.search));
     if (_filters.fromIncidentDateTime) {
-      _filters.fromIncidentDateTime =
-        _filters.fromIncidentDateTime + " 00:00:00";
+      _filters.fromIncidentDateTime = _filters.fromIncidentDateTime;
     }
     if (_filters.toIncidentDateTime) {
-      _filters.toIncidentDateTime = _filters.toIncidentDateTime + " 23:59:59";
+      _filters.toIncidentDateTime = moment({
+        time: new Date(_filters.toIncidentDateTime).later("0 0 0 1"),
+        format: "YYYY-MM-DD",
+      });
     }
     if (_filters.fromreportingDate) {
-      _filters.fromreportingDate = _filters.fromreportingDate + " 00:00:00";
+      _filters.fromreportingDate = _filters.fromreportingDate;
     }
     if (_filters.toreportingDate) {
-      _filters.toreportingDate = _filters.toreportingDate + " 23:59:59";
+      _filters.toreportingDate = moment({
+        time: new Date(_filters.toreportingDate).later("0 0 0 1"),
+        format: "YYYY-MM-DD",
+      });
     }
 
     if (_filters.irBy !== "department") {
@@ -698,7 +703,7 @@ const SingleIr = memo(
                       <WiTime9 />
                     </span>
                   )
-                : totalTat > tatConfig.acceptableTAT && (
+                : totalTat > tatConfig?.acceptableTAT && (
                     <span
                       className={s.icon}
                       style={{
@@ -1311,17 +1316,22 @@ export const QualityDashboard = () => {
   useEffect(() => {
     const _filters = paramsToObject(new URLSearchParams(location.search));
     if (_filters.fromIncidentDateTime) {
-      _filters.fromIncidentDateTime =
-        _filters.fromIncidentDateTime + " 00:00:00";
+      _filters.fromIncidentDateTime = _filters.fromIncidentDateTime;
     }
     if (_filters.toIncidentDateTime) {
-      _filters.toIncidentDateTime = _filters.toIncidentDateTime + " 23:59:59";
+      _filters.toIncidentDateTime = moment({
+        time: new Date(_filters.toIncidentDateTime).later("0 0 0 1"),
+        format: "YYYY-MM-DD",
+      });
     }
     if (_filters.fromreportingDate) {
-      _filters.fromreportingDate = _filters.fromreportingDate + " 00:00:00";
+      _filters.fromreportingDate = _filters.fromreportingDate;
     }
     if (_filters.toreportingDate) {
-      _filters.toreportingDate = _filters.toreportingDate + " 23:59:59";
+      _filters.toreportingDate = moment({
+        time: new Date(_filters.toreportingDate).later("0 0 0 1"),
+        format: "YYYY-MM-DD",
+      });
     }
     if (Object.entries(_filters).length) {
       searchIrs(null, {
