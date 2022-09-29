@@ -36,7 +36,7 @@ export const Input = forwardRef(
         className={`${s.input} ${className || ""} ${error ? s.err : ""}`}
       >
         {label && (
-          <label>
+          <label htmlFor={rest.id || _id.current}>
             {label}
             {rest.required && "*"}
           </label>

@@ -69,10 +69,6 @@ export default function Categories() {
         <h3>CATEGORY & SUBCATEGORY MASTER</h3>
       </header>
       <div className={`${s.content} ${s.parent_child}`}>
-        {
-          //   <Box label="CATEGORY DETAILS">
-          // </Box>
-        }
         <div className={s.parent}>
           <div className={s.head}>
             <Input
@@ -376,7 +372,9 @@ const SingleSubCategory = ({
 }) => {
   const [addReporable, setAddReportable] = useState(false);
 
-  const { remove: deleteSubCategory } = useFetch(defaultEndpoints.categories);
+  const { remove: deleteSubCategory } = useFetch(
+    defaultEndpoints.subCategories + "/{ID}"
+  );
 
   return (
     <tr>
