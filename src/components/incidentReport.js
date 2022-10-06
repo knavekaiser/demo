@@ -559,7 +559,7 @@ export default function IncidentReporting() {
                           : new Date())
                       ) {
                         return edit?.reportingDate
-                          ? "Incident date can't not be leter than reporting date"
+                          ? "Incident Date/time cannot be later than the reporting date/time"
                           : "Can not select date from future";
                       }
                     } else {

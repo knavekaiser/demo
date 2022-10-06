@@ -166,18 +166,20 @@ function Dashboard() {
               </Link>
             </li>
           )}
-          <li
-            className={`${s.sidebarItem} ${
-              location.pathname.startsWith(paths.irPreview) ? s.active : ""
-            }`}
-          >
-            <Link to={paths.irPreview}>
-              <span className={s.label}>
-                <IncidentReportIcon className={s.icon} />{" "}
-                <span className={s.text}>IR Inputs/Queries</span>
-              </span>
-            </Link>
-          </li>
+          {
+            //   <li
+            //   className={`${s.sidebarItem} ${
+            //     location.pathname.startsWith(paths.irPreview) ? s.active : ""
+            //   }`}
+            // >
+            //   <Link to={paths.irPreview}>
+            //     <span className={s.label}>
+            //       <IncidentReportIcon className={s.icon} />{" "}
+            //       <span className={s.text}>IR Inputs/Queries</span>
+            //     </span>
+            //   </Link>
+            // </li>
+          }
           {checkPermission({ roleId: [7, 4, 2] }) && (
             <SidebarItem_IrDashboard />
           )}
