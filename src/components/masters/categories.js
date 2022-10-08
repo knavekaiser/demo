@@ -28,6 +28,8 @@ export default function Categories() {
   const [filter, setFilter] = useState(null);
   const [edit, setEdit] = useState(null);
 
+  // custom hook is used to obfuscate some boilerplate code, like headers
+  // and error handlers
   const { get: getCategories, loading } = useFetch(defaultEndpoints.categories);
   const { remove: deleteCategory } = useFetch(
     defaultEndpoints.categories + "/" + "{ID}"

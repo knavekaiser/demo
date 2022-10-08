@@ -103,6 +103,11 @@ export default function Login() {
         <img src="/asset/logo.jpg" />
         <form
           onSubmit={handleSubmit(async (data) => {
+            // here are steps for authenticating a user
+            // 1. get tenantId from the url
+            // 2. check for token in session storage
+            //    a. if a session is found, get user detail from the list of users
+            //    b. if not, call first party token api to get the token
             try {
               const tenantId = new URLSearchParams(location.search).get(
                 "tenantId"
@@ -169,6 +174,7 @@ export default function Login() {
               if (his) {
                 let hisToken = sessionStorage.getItem("HIS-access-token");
 
+                // get list of his apis from api url table
                 const endpoints = await getEndpoints()
                   .then(({ data }) => {
                     const _urls = {};

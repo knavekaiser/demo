@@ -16,12 +16,16 @@ import jwt_decode from "jwt-decode";
 export const SiteContext = createContext();
 export const Provider = ({ children }) => {
   const [user, setUser] = useState(null);
+  // permissions includes all the permisions given to the user
   const [permissions, setPermissions] = useState(null);
   const [endpoints, setEndpoints] = useState(null);
   const [his, setHis] = useState(false);
   const [irTypes, setIrTypes] = useState([]);
   const navigate = useNavigate();
 
+  // This function is called to check whether the user has
+  // permission to view a particular ui element
+  // this function takes roleId and permissionId as arguments
   const checkPermission = useCallback(
     ({ roleId, permission }) => {
       let roleMatch = false;

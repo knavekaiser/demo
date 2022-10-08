@@ -147,6 +147,9 @@ export const TableActions = ({ actions }) => {
   );
 };
 
+// VirtualTable is used for vitualization of long list of item
+// for best performance. It uses user's scroll position to render
+// only certain items in the viewport.
 export const VirtualTable = ({
   loading,
   className,

@@ -19,6 +19,7 @@ const badCharacters = (payload, defaultRegex, validator = {}) => {
   return result;
 };
 
+// This custom hook is used throughout the app to make api calls
 export const useFetch = (
   url,
   { his, headers: hookHeaders, defaultHeaders, noDbSchema, validator } = {}
