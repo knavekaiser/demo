@@ -19,8 +19,8 @@ export default {
   personAffectedDetails: `${baseApiUrl}/person-affected-details`,
   rcaCauses: `${baseApiUrl}/rca-causes`,
 
-  userPermissions: `${baseApiUrl}/userPermission`,
-  userPermission_updateByRole: `${baseApiUrl}/userPermission/search/updateByRole`,
+  userPermissions: `${baseApiUrl}/userpermission`,
+  userPermission_updateByRole: `${baseApiUrl}/userpermission/search/updatebyrole`,
   rolePermissions: `${baseApiUrl}/rolepermission`,
 
   uploadFiles: `${baseApiUrl}/upload-multiple-files`,
@@ -34,13 +34,13 @@ export default {
   sequence: `${baseApiUrl}/sequence`,
 
   countStateDetailByStatus: `${baseApiUrl}/ir-statusdetailscount/search/countbystatus`,
-  countIrByStatusAndUserId: `${baseApiUrl}/countbystatusanduserid`,
-  countIrByStatus: `${baseApiUrl}/countbystatus`,
+  countIrByStatusAndUserId: `${baseApiUrl}/incidentreport/countbystatusanduserid`,
+  countIrByStatus: `${baseApiUrl}/incidentreport/countbystatus`,
 
   countIrCurrentMonth: `${baseApiUrl}/incidentreport/search/count-currentmonth`,
   countIrByType: `${baseApiUrl}/incidentreport/search/countby-typeofinci`,
   countIrByPatientComplaint: `${baseApiUrl}/incidentreport/search/countby-ispatient`,
-  countIrByUserId: `${baseApiUrl}/incidentreport/search/countByUserId`,
+  countIrByUserId: `${baseApiUrl}/incidentreport/countbyuserid`,
   countIrByDepartment: `${baseApiUrl}/incidentreport/search/countby-department`,
   countIrByTat: `${baseApiUrl}/ir-statusdetails/search/countbydays`,
   countAnonymousIr: `${baseApiUrl}/getanonymouscount`,
@@ -59,12 +59,12 @@ export default {
   formTemplates: `https://his19-3-1sit.napierhealthcare.com/napier-componentbuilder/componentbuilder/formData/search`,
   templateData: `${baseApiUrl}/template-data`,
 
-  irQuerySearch: `${baseApiUrl}/irQuerySearchV2`,
+  irQuerySearch: `${baseApiUrl}/irquerysearchv2`,
 
   investigationEvents: `${baseApiUrl}/events`,
   investigationNotes: `${baseApiUrl}/notes`,
   evidences: `${baseApiUrl}/input-evidences`,
-  evidenceSearch: `${baseApiUrl}/input-evidences/search/findByIrId`,
+  evidenceSearch: `${baseApiUrl}/input-evidences/search/findByirid`,
   recordInputs: `${baseApiUrl}/record-input`,
   requestInputs: `${baseApiUrl}/req-input`,
   responseInputs: `${baseApiUrl}/response-ir-input`,
