@@ -43,7 +43,7 @@ export default {
   countIrByUserId: `${baseApiUrl}/incidentreport/countbyuserid`,
   countIrByDepartment: `${baseApiUrl}/incidentreport/search/countby-department`,
   countIrByTat: `${baseApiUrl}/ir-statusdetails/search/countbydays`,
-  countAnonymousIr: `${baseApiUrl}/getanonymouscount`,
+  countAnonymousIr: `${baseApiUrl}/incidentreport/getanonymouscount`,
 
   typesOfIncident: `${baseApiUrl}/configtype-of-incident`,
   configTat: `${baseApiUrl}/config-acceptabletat`,
@@ -59,7 +59,7 @@ export default {
   formTemplates: `https://his19-3-1sit.napierhealthcare.com/napier-componentbuilder/componentbuilder/formData/search`,
   templateData: `${baseApiUrl}/template-data`,
 
-  irQuerySearch: `${baseApiUrl}/irquerysearchv2`,
+  irQuerySearch: `${baseApiUrl}/incidentreport/ir-querysearch`,
 
   investigationEvents: `${baseApiUrl}/events`,
   investigationNotes: `${baseApiUrl}/notes`,
