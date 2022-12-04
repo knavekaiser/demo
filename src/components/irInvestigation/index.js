@@ -4,8 +4,8 @@ import {
   InvestigationContext,
   InvestigationProvider,
 } from "./InvestigationContext";
-import { Link, useLocation, Routes, Route } from "react-router-dom";
-import { Tabs, Moment, moment } from "../elements";
+import { Link, Routes, Route } from "react-router-dom";
+import { Tabs, moment } from "../elements";
 import { paths, endpoints as defaultEndpoints } from "../../config";
 import { useFetch } from "../../hooks";
 import { Prompt } from "../modal";
@@ -25,9 +25,8 @@ const Data = ({ label, value }) => {
 
 const IrInvestigation = () => {
   const { user, endpoints, irTypes } = useContext(SiteContext);
-  const { ir, setIr } = useContext(InvestigationContext);
+  const { ir } = useContext(InvestigationContext);
   const [parameters, setParameters] = useState({});
-  const location = useLocation();
 
   const { get: getLocations } = useFetch(
     endpoints?.locations.url || defaultEndpoints.locations,
@@ -248,62 +247,60 @@ const IrInvestigation = () => {
           Back to IR Dashboard
         </Link>
       </header>
-      {
-        //   <div className={s.summary}>
-        //   <Data label="IR Code" value={ir?.sequence} />
-        //   <Data
-        //     label="Incident Date & Time"
-        //     value={moment({
-        //       time: ir?.incident_Date_Time,
-        //       format: "DD/MM/YYYY hh:mm",
-        //     })}
-        //   />
-        //   <Data
-        //     label="Location"
-        //     value={
-        //       parameters?.locations?.find(
-        //         (item) => item.value?.toString() === ir?.location?.toString()
-        //       )?.label || ir?.location
-        //     }
-        //   />
-        //   <Data
-        //     label="Reporting Department"
-        //     value={
-        //       parameters?.departments?.find(
-        //         (dept) => dept.value.toString() === ir?.department?.toString()
-        //       )?.label || ir?.department
-        //     }
-        //   />
-        //   <Data
-        //     label="Incident Type"
-        //     value={
-        //       irTypes?.find(
-        //         (item) => item.value?.toString() === ir?.typeofInci?.toString()
-        //       )?.label || ir?.typeofInci
-        //     }
-        //   />
-        //   <Data
-        //     label="Category"
-        //     value={
-        //       parameters?.categories?.find(
-        //         (item) => item.id?.toString() === ir?.inciCateg?.toString()
-        //       )?.name || ir?.inciCateg
-        //     }
-        //   />
-        //   <Data
-        //     label="Sub Category"
-        //     value={
-        //       parameters?.categories
-        //         ?.find(
-        //           (item) => item.id?.toString() === ir?.inciCateg?.toString()
-        //         )
-        //         ?.subCategorys?.find(
-        //           (item) => item.id?.toString() === ir?.inciSubCat?.toString()
-        //         )?.name || ir?.inciSubCat
-        //     }
-        //   />
-        // </div>
-      }
+      <div className={s.summary}>
+        <Data label="IR Code" value={ir?.sequence} />
+        <Data
+          label="Incident Date & Time"
+          value={moment({
+            time: ir?.incident_Date_Time,
+            format: "DD/MM/YYYY hh:mm",
+          })}
+        />
+        <Data
+          label="Location"
+          value={
+            parameters?.locations?.find(
+              (item) => item.value?.toString() === ir?.location?.toString()
+            )?.label || ir?.location
+          }
+        />
+        <Data
+          label="Reporting Department"
+          value={
+            parameters?.departments?.find(
+              (dept) => dept.value.toString() === ir?.department?.toString()
+            )?.label || ir?.department
+          }
+        />
+        <Data
+          label="Incident Type"
+          value={
+            irTypes?.find(
+              (item) => item.value?.toString() === ir?.typeofInci?.toString()
+            )?.label || ir?.typeofInci
+          }
+        />
+        <Data
+          label="Category"
+          value={
+            parameters?.categories?.find(
+              (item) => item.id?.toString() === ir?.inciCateg?.toString()
+            )?.name || ir?.inciCateg
+          }
+        />
+        <Data
+          label="Sub Category"
+          value={
+            parameters?.categories
+              ?.find(
+                (item) => item.id?.toString() === ir?.inciCateg?.toString()
+              )
+              ?.subCategorys?.find(
+                (item) => item.id?.toString() === ir?.inciSubCat?.toString()
+              )?.name || ir?.inciSubCat
+          }
+        />
+      </div>
       <Tabs
         secondary
         tabs={[
@@ -317,8 +314,8 @@ const IrInvestigation = () => {
           },
           {
             label: "IR INVESTIGATION",
-            path:
-              paths.incidentDashboard.irInvestigation.investigation.basePath,
+            path: paths.incidentDashboard.irInvestigation.investigation
+              .basePath,
           },
           {
             label: "CAPA",

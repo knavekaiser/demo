@@ -3,18 +3,11 @@ import React, {
   useEffect,
   useRef,
   useLayoutEffect,
-  useCallback,
   forwardRef,
 } from "react";
 import { IoIosClose } from "react-icons/io";
-import {
-  FaUpload,
-  FaSortDown,
-  FaSearch,
-  FaCircleNotch,
-  FaRegTrashAlt,
-} from "react-icons/fa";
-import { BsFillGearFill, BsFillExclamationTriangleFill } from "react-icons/bs";
+import { FaUpload, FaSearch, FaRegTrashAlt } from "react-icons/fa";
+import { BsFillExclamationTriangleFill } from "react-icons/bs";
 import { GoCalendar } from "react-icons/go";
 import { Link, useLocation, createSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -58,13 +51,6 @@ export const Input = forwardRef(
                 <GoCalendar />
               </label>
             )}
-            {
-              //   error && (
-              //   <span className={s.errIcon}>
-              //     <BsFillExclamationTriangleFill />
-              //   </span>
-              // )
-            }
             {icon && icon}
           </span>
           {error && <span className={s.errMsg}>{error.message}</span>}
@@ -88,7 +74,6 @@ export const SearchField = ({
   error,
   renderField,
   clearErrors,
-  ...rest
 }) => {
   const [data, setData] = useState([]);
   const value = watch(name);

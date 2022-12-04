@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useContext, useRef } from "react";
+import { useEffect, useState, useCallback, useContext } from "react";
 import s from "./style.module.scss";
 import { Box } from "../../incidentReport";
 import { SiteContext } from "../../../SiteContext";
@@ -10,40 +10,17 @@ import {
   Combobox,
   Input,
   Textarea,
-  FileInput,
-  Radio,
-  Tabs,
   Moment,
   moment,
-  CustomRadio,
-  FishboneDiagram,
   Toggle,
 } from "../../elements";
-import { ImEye } from "react-icons/im";
-import {
-  FaRegTrashAlt,
-  FaCheck,
-  FaPlus,
-  FaPlusCircle,
-  FaPencilAlt,
-  FaFlag,
-  FaMinusCircle,
-  FaEllipsisV,
-  FaUndo,
-  FaExternalLinkAlt,
-  FaTimes,
-  FaHeartbeat,
-} from "react-icons/fa";
+import { FaRegTrashAlt, FaCheck, FaPlus, FaHeartbeat } from "react-icons/fa";
 import { IoClose } from "react-icons/io5";
 import { BsPencilFill } from "react-icons/bs";
 import { useFetch } from "../../../hooks";
-import {
-  endpoints as defaultEndpoints,
-  permissions,
-  riskColors,
-} from "../../../config";
+import { endpoints as defaultEndpoints, permissions } from "../../../config";
 import { Prompt, Modal } from "../../modal";
-import { useForm, FormProvider } from "react-hook-form";
+import { useForm } from "react-hook-form";
 
 const Capa = () => {
   const { ir, setIr } = useContext(InvestigationContext);
@@ -55,9 +32,16 @@ const Capa = () => {
   const [requestInput, setRequestInput] = useState(false);
   const { handleSubmit } = useForm();
 
-  const { post: saveIrDetail, put: updateIrDetail, savingIrDetail } = useFetch(
+  const {
+    post: saveIrDetail,
+    put: updateIrDetail,
+    savingIrDetail,
+  } = useFetch(
     defaultEndpoints.irInvestigation +
-      (ir.irInvestigation?.length ? `/${ir.irInvestigation[0].id}` : "")
+      (ir.irInvestigation?.length ? `/${ir.irInvestigation[0].id}` : ""),
+    {
+      validator: { sequence: /^.+$/gi },
+    }
   );
 
   const { get: getUsers } = useFetch(defaultEndpoints.users + `?size=10000`);
@@ -118,15 +102,17 @@ const Capa = () => {
         }
 
         if (capaPlanCategories?.twoFieldMasterDetails) {
-          _parameters.capaPlanCategories = capaPlanCategories.twoFieldMasterDetails.filter(
-            (item) => item.showToggle
-          );
+          _parameters.capaPlanCategories =
+            capaPlanCategories.twoFieldMasterDetails.filter(
+              (item) => item.showToggle
+            );
         }
 
         if (methodologies?.twoFieldMasterDetails) {
-          _parameters.methodologies = methodologies.twoFieldMasterDetails.filter(
-            (item) => item.showToggle
-          );
+          _parameters.methodologies =
+            methodologies.twoFieldMasterDetails.filter(
+              (item) => item.showToggle
+            );
         }
 
         if (frequencies?.twoFieldMasterDetails) {
@@ -142,9 +128,10 @@ const Capa = () => {
         }
 
         if (capaPlanStatus?.twoFieldMasterDetails) {
-          _parameters.capaPlanStatus = capaPlanStatus.twoFieldMasterDetails.filter(
-            (item) => item.showToggle
-          );
+          _parameters.capaPlanStatus =
+            capaPlanStatus.twoFieldMasterDetails.filter(
+              (item) => item.showToggle
+            );
         }
 
         setParameters((prev) => ({ ...prev, ..._parameters }));
@@ -213,6 +200,7 @@ const Capa = () => {
               {
                 ...item,
                 incidentReport: { id: ir.id },
+                ir_id: ir.id,
                 id: undefined,
                 capaMonitoringPlan: undefined,
                 capaMonitoring: undefined,
@@ -224,26 +212,25 @@ const Capa = () => {
               if (resp.data?.id) {
                 if (item.capaMonitoringPlan?.length) {
                   const _capaMonitoringPlan = item.capaMonitoringPlan[0];
-                  const {
-                    data: monitoringPlan,
-                  } = await (_capaMonitoringPlan.action === "add"
-                    ? saveCapaMonitoringPlan
-                    : updateCapaMonitoringPlan)(
-                    {
-                      ..._capaMonitoringPlan,
-                      id: undefined,
-                      incidentReport: { id: ir.id },
-                      capaPlan: { id: resp.data.id },
-                    },
-                    {
-                      params: {
-                        "{ID}":
-                          _capaMonitoringPlan.action === "add"
-                            ? ""
-                            : _capaMonitoringPlan.id,
+                  const { data: monitoringPlan } =
+                    await (_capaMonitoringPlan.action === "add"
+                      ? saveCapaMonitoringPlan
+                      : updateCapaMonitoringPlan)(
+                      {
+                        ..._capaMonitoringPlan,
+                        id: undefined,
+                        incidentReport: { id: ir.id },
+                        capaPlan: { id: resp.data.id },
                       },
-                    }
-                  );
+                      {
+                        params: {
+                          "{ID}":
+                            _capaMonitoringPlan.action === "add"
+                              ? ""
+                              : _capaMonitoringPlan.id,
+                        },
+                      }
+                    );
 
                   if (monitoringPlan?.id) {
                     resp.data.capaMonitoringPlan = [monitoringPlan];
@@ -358,9 +345,11 @@ const ProblemAreas = ({ events }) => {
     setEdit(null);
   }, []);
 
-  const { remove: deleteEvent, put: updateEvent, loading } = useFetch(
-    defaultEndpoints.investigationEvents + "/{ID}"
-  );
+  const {
+    remove: deleteEvent,
+    put: updateEvent,
+    loading,
+  } = useFetch(defaultEndpoints.investigationEvents + "/{ID}");
   const { patch: updateSequence, loading: updatingSequence } = useFetch(
     defaultEndpoints.investigationEvents + `/{ID}`
   );
@@ -525,7 +514,11 @@ const PreventiveActionPlans = ({ capaPlan, setCapaPlan, parameters }) => {
               <td>
                 <Moment format="DD/MM/YYYY">{plan.deadline}</Moment>
               </td>
-              <td>{plan.status}</td>
+              <td>
+                {parameters.capaPlanStatus?.find(
+                  (item) => item.id === plan.status
+                )?.name || plan.status}
+              </td>
               <TableActions
                 actions={[
                   {

@@ -10,7 +10,7 @@ import s from "./elements.module.scss";
 
 import { FaSortDown, FaSearch } from "react-icons/fa";
 import { Modal } from "../modal";
-import { Input, Chip } from "./elements";
+import { Chip } from "./elements";
 import { Controller } from "react-hook-form";
 
 import ReactSelect, { components } from "react-select";
@@ -41,7 +41,7 @@ export const Combobox = ({
   const [open, setOpen] = useState(false);
   const [style, setStyle] = useState({});
   const [hover, setHover] = useState(
-    options?.findIndex(({ label, value }) => {
+    options?.findIndex(({ value }) => {
       return (
         value === selected ||
         (selected?.some && selected.some((s) => s === value))
@@ -93,7 +93,7 @@ export const Combobox = ({
         return;
       }
       if (e.keyCode === 38 || e.keyCode === 40) {
-        const index = options?.findIndex(({ label, value }) => {
+        const index = options?.findIndex(({ value }) => {
           return (
             value === selected ||
             (selected?.some && selected.some((s) => s === value))
@@ -138,8 +138,8 @@ export const Combobox = ({
       return () => {
         document.removeEventListener("click", clickHandler);
       };
-      clickHandlerAdded.current = true;
     }
+    clickHandlerAdded.current = true;
   }, [open]);
   return (
     <section
@@ -245,7 +245,6 @@ export const Combobox = ({
         open={open}
         className={s.comboboxModal}
         backdropClass={s.comboboxBackdrop}
-        open={open}
         setOpen={setOpen}
         onBackdropClick={() => setOpen(false)}
         clickThroughBackdrop={true}
@@ -271,23 +270,7 @@ export const Combobox = ({
 };
 
 const ComboboxList = forwardRef(
-  (
-    {
-      options,
-      hover,
-      setHover,
-      select,
-      selected,
-      setValue,
-      multiple,
-      name,
-      open,
-      setOpen,
-      clearErrors,
-      item,
-    },
-    ref
-  ) => {
+  ({ options, hover, setHover, select, selected, multiple, item }, ref) => {
     return (
       <ul
         ref={ref}
@@ -361,10 +344,7 @@ export const Select = ({
       control={control}
       name={name}
       rules={formOptions}
-      render={({
-        field: { onChange, onBlur, value, name, ref },
-        fieldState: { invalid, isTouched, isDirty, error },
-      }) => (
+      render={({ field: { onChange, value, ref }, fieldState: { error } }) => (
         <section className={`${s.select}`}>
           {label && <label>{label}</label>}
           <div className={s.field}>

@@ -301,9 +301,8 @@ function IrDashboard() {
 }
 export const MyDashboard = () => {
   const { user, checkPermission } = useContext(SiteContext);
-  const { parameters, count, dashboard, setDashboard, irConfig } = useContext(
-    IrDashboardContext
-  );
+  const { parameters, count, dashboard, setDashboard, irConfig } =
+    useContext(IrDashboardContext);
   const location = useLocation();
   const navigate = useNavigate();
   const [incidents, setIncidents] = useState([]);
@@ -1126,13 +1125,8 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
 
 export const QualityDashboard = () => {
   const { user, checkPermission, irTypes } = useContext(SiteContext);
-  const {
-    parameters,
-    setDashboard,
-    updateUsers,
-    tatConfig,
-    irConfig,
-  } = useContext(IrDashboardContext);
+  const { parameters, setDashboard, updateUsers, tatConfig, irConfig } =
+    useContext(IrDashboardContext);
   const printRef = useRef();
   const location = useLocation();
   const navigate = useNavigate();
@@ -1214,6 +1208,19 @@ export const QualityDashboard = () => {
       icon: <FaCrosshairs />,
       label: "IR Investigation",
       callBack: () => {
+        if (inc.status.toString() === "5") {
+          return navigate({
+            pathname: `${
+              paths.incidentDashboard.basePath
+            }/${paths.incidentDashboard.irInvestigation.basePath.replace(
+              ":irId",
+              inc.id
+            )}/${
+              paths.incidentDashboard.irInvestigation.investigation.basePath
+            }`,
+          });
+        }
+
         if (inc.status.toString() !== "4") {
           return Prompt({
             type: "confirmation",
@@ -1294,11 +1301,77 @@ export const QualityDashboard = () => {
       permissions.push(investigationAction);
     }
 
-    permissions.push({
-      icon: <FaRegStar />,
-      label: "CAPA",
-      callBack: () => {},
-    });
+    if (["4", "5"].includes(inc.status)) {
+      permissions.push({
+        icon: <FaRegStar />,
+        label: "CAPA",
+        callBack: () => {
+          if (inc.status.toString() !== "5") {
+            return Prompt({
+              type: "confirmation",
+              message:
+                "IR status will be updated as CAPA planning. Do you wish to start CAPA planning?",
+              callback: async () => {
+                updateStatus(
+                  {
+                    ...inc,
+                    irInvestigator: user.id,
+                    status: 5,
+                    irStatusDetails: [
+                      ...(inc.irStatusDetails || []).map((evt) => ({
+                        ...evt,
+                        id: undefined,
+                      })),
+                      {
+                        userid: user.id,
+                        status: 5,
+                        dateTime: new Date().toISOString(),
+                      },
+                    ],
+                    actionTakens: undefined,
+                    _links: undefined,
+                  },
+                  { params: { "{ID}": inc.id } }
+                )
+                  .then(({ data: result }) => {
+                    if (!result?.id) {
+                      return Prompt({
+                        type: "error",
+                        message:
+                          result.message ||
+                          "Count not update IR status. Please try again",
+                      });
+                    }
+                    navigate({
+                      pathname: `${
+                        paths.incidentDashboard.basePath
+                      }/${paths.incidentDashboard.irInvestigation.basePath.replace(
+                        ":irId",
+                        inc.id
+                      )}/${paths.incidentDashboard.irInvestigation.capa}`,
+                    });
+                  })
+                  .catch((err) => {
+                    Prompt({
+                      type: "error",
+                      message: err.message,
+                    });
+                  });
+              },
+            });
+          }
+
+          navigate({
+            pathname: `${
+              paths.incidentDashboard.basePath
+            }/${paths.incidentDashboard.irInvestigation.basePath.replace(
+              ":irId",
+              inc.id
+            )}/${paths.incidentDashboard.irInvestigation.capa}`,
+          });
+        },
+      });
+    }
 
     permissions.push({
       icon: <svg />,

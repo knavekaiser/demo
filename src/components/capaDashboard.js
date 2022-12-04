@@ -1,73 +1,28 @@
-import React, {
-  useState,
-  useEffect,
-  useContext,
-  Component,
-  useRef,
-  Fragment,
-  useCallback,
-  useMemo,
-  memo,
-} from "react";
+import React, { useState, useEffect, useContext, memo } from "react";
+import { SiteContext, IrDashboardContext } from "../SiteContext";
 import {
-  SiteContext,
-  IrDashboardContext,
-  IrDashboardContextProvider,
-} from "../SiteContext";
-import {
-  FaInfoCircle,
-  FaRegTrashAlt,
-  FaPlus,
-  FaEye,
   FaExternalLinkAlt,
-  FaRegStickyNote,
-  FaRegCheckSquare,
-  FaAdjust,
-  FaCrosshairs,
-  FaRegUser,
-  FaUser,
-  FaRegStar,
-  FaRegTimesCircle,
-  FaRegFileAlt,
-  FaFlag,
-  FaUpload,
-  FaPrint,
-  FaRegCheckCircle,
-  FaCircle,
   FaPlusSquare,
   FaMinusSquare,
   FaHeartbeat,
 } from "react-icons/fa";
 import { BiSearch } from "react-icons/bi";
-import { AiOutlinePlus } from "react-icons/ai";
 import { WiTime9 } from "react-icons/wi";
-import { BsPencilFill, BsFillExclamationTriangleFill } from "react-icons/bs";
-import { FiCheckSquare } from "react-icons/fi";
 import {
   Checkbox,
-  Select,
-  Tabs,
   Input,
   Combobox,
   Table,
-  VirtualTable,
   TableActions,
   Moment,
   moment,
 } from "./elements";
-import {
-  useNavigate,
-  useLocation,
-  createSearchParams,
-  Routes,
-  Route,
-} from "react-router-dom";
+import { useNavigate, useLocation, createSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { Modal, Prompt } from "./modal";
-import { irStatus, endpoints as defaultEndpoints, paths } from "../config";
+import { Prompt } from "./modal";
+import { endpoints as defaultEndpoints } from "../config";
 import s from "./irDashboard.module.scss";
 import { useFetch } from "../hooks";
-import { countDays } from "../helpers";
 
 function paramsToObject(entries) {
   const result = {};
@@ -96,9 +51,8 @@ function CapaDashboard() {
 }
 export const MyDashboard = () => {
   const { user, checkPermission } = useContext(SiteContext);
-  const { parameters, count, dashboard, setDashboard, irConfig } = useContext(
-    IrDashboardContext
-  );
+  const { parameters, count, dashboard, setDashboard, irConfig } =
+    useContext(IrDashboardContext);
   const location = useLocation();
   const navigate = useNavigate();
   const [incidents, setIncidents] = useState([]);
@@ -482,7 +436,7 @@ const SingleIr = memo(
     );
   }
 );
-const Filters = ({ onSubmit, qualityDashboard }) => {
+const Filters = ({ onSubmit }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, checkPermission, irTypes } = useContext(SiteContext);
@@ -636,116 +590,5 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
     </form>
   );
 };
-
-const Data = ({ label, value }) => {
-  return (
-    <section className={s.data}>
-      <span className={s.label}>{label}</span>:{" "}
-      <span className={s.value}>{value}</span>
-    </section>
-  );
-};
-// const CapaMonitoringModal = ({ ir, plan, parameters }) => {
-//   const { irTypes } = useContext(SiteContext);
-//   const [activeTab, setActiveTab] = useState("capaInfo");
-//   return (
-//     <div className={s.capaMonitoring}>
-//       <Tabs
-//         secondary
-//         tabs={[
-//           { label: "CAPA INFO", value: "capaInfo" },
-//           { label: "HISTORY OF COMMENTS", value: "history" },
-//         ]}
-//         activeTab={activeTab}
-//         onChange={(tab) => {
-//           setActiveTab(tab.value);
-//         }}
-//       />
-//
-//       {activeTab === "capaInfo" && (
-//         <>
-//           <div className={s.summary}>
-//             <Data label="IR Code" value={ir?.sequence} />
-//             <Data
-//               label="Incident Date & Time"
-//               value={moment({
-//                 time: ir?.incident_Date_Time,
-//                 format: "DD/MM/YYYY hh:mm",
-//               })}
-//             />
-//             <Data
-//               label="Incident Type"
-//               value={
-//                 irTypes?.find(
-//                   (item) =>
-//                     item.value?.toString() === ir?.typeofInci?.toString()
-//                 )?.label || ir?.typeofInci
-//               }
-//             />
-//             <Data
-//               label="Category"
-//               value={
-//                 parameters?.categories?.find(
-//                   (item) => item.id?.toString() === ir?.inciCateg?.toString()
-//                 )?.name || ir?.inciCateg
-//               }
-//             />
-//             <Data
-//               label="Sub Category"
-//               value={
-//                 parameters?.categories
-//                   ?.find(
-//                     (item) => item.id?.toString() === ir?.inciCateg?.toString()
-//                   )
-//                   ?.subCategorys?.find(
-//                     (item) => item.id?.toString() === ir?.inciSubCat?.toString()
-//                   )?.name || ir?.inciSubCat
-//               }
-//             />
-//             <Data
-//               label="Location"
-//               value={
-//                 parameters?.locations?.find(
-//                   (item) => item.value?.toString() === ir?.location?.toString()
-//                 )?.label || ir?.location
-//               }
-//             />
-//           </div>
-//           <h4>CAPA Monitoring Plan</h4>
-//           <div className={`${s.summary} ${s.capaMonitoring}`}>
-//             <Data label="Methodology" value={plan.methodology} />
-//             <Data label="Title" value={plan.title} />
-//             <Data label="Frequency" value={plan.frequency} />
-//             <Data
-//               label="Start date for CAPA monitoring"
-//               value={
-//                 plan.capaStartDate
-//                   ? moment({ time: plan.capaStartDate, format: "DD-MM-YYYY" })
-//                   : "NA"
-//               }
-//             />
-//             <Data
-//               label="End date for CAPA monitoring"
-//               value={
-//                 plan.capaStartDate
-//                   ? moment({ time: plan.capaEndDate, format: "DD-MM-YYYY" })
-//                   : "NA"
-//               }
-//             />
-//             <Data label="Tool used" value={plan.toolUsed} />
-//             <Data label="Sample size" value={plan.sampleSize} />
-//             <Data
-//               label="Deadline"
-//               value={moment({ time: plan.deadline, format: "DD-MM-YYYY" })}
-//             />
-//             <Data label="Details" value={plan.details} />
-//           </div>
-//
-//           <form>form inputs</form>
-//         </>
-//       )}
-//     </div>
-//   );
-// };
 
 export default CapaDashboard;

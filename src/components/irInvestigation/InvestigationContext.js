@@ -1,14 +1,7 @@
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  useCallback,
-  useRef,
-} from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import { SiteContext } from "../../SiteContext";
-import { irStatus, endpoints as defaultEndpoints } from "../../config";
+import { endpoints as defaultEndpoints } from "../../config";
 import { useFetch } from "../../hooks";
 import { Prompt } from "../../components/modal";
 
@@ -19,8 +12,11 @@ export const InvestigationProvider = ({ children }) => {
 
   const params = useParams();
 
-  const { get: getIr, put: update, loading } = useFetch(
-    defaultEndpoints.incidentReport + "/" + params.irId
+  const { get: getIr, put: update } = useFetch(
+    defaultEndpoints.incidentReport + "/" + params.irId,
+    {
+      validator: { sequence: /^.+$/gi },
+    }
   );
 
   useEffect(() => {
@@ -31,7 +27,6 @@ export const InvestigationProvider = ({ children }) => {
         _links: undefined,
         status: 4,
         irStatusDetails: [
-          // ...ir.irStatusDetails,
           {
             status: 4,
             dateTime: new Date().toISOString(),

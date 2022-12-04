@@ -6,13 +6,11 @@ import { BiChevronsDown } from "react-icons/bi";
 import { BsPencilFill } from "react-icons/bs";
 import {
   Input,
-  SearchField,
   Select,
   FileInput,
   Textarea,
   SwitchInput,
   Radio,
-  Chip,
   Table,
   TableActions,
   moment,
@@ -22,7 +20,7 @@ import {
 import { Prompt, Modal } from "./modal";
 import { useForm, FormProvider, useFormContext } from "react-hook-form";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useHisFetch, useFetch } from "../hooks";
+import { useFetch } from "../hooks";
 import { endpoints as defaultEndpoints, preventability } from "../config";
 import s from "./incidentReporting.module.scss";
 
@@ -82,7 +80,11 @@ export default function IncidentReporting() {
   const { post: upload, laoding: uploadingFiles } = useFetch(
     defaultEndpoints.uploadFiles
   );
-  const { post: postIr, put: updateIr, loading } = useFetch(
+  const {
+    post: postIr,
+    put: updateIr,
+    loading,
+  } = useFetch(
     `${defaultEndpoints.incidentReport}${edit ? `/${edit.id}` : ""}`
   );
 
@@ -352,15 +354,6 @@ export default function IncidentReporting() {
                 return null;
               })
               .filter((user) => user);
-
-            // if (_users.length < hisUser.length) {
-            //   Prompt({
-            //     type: "information",
-            //     message: `${
-            //       hisUser.length - _users.length
-            //     } users does not have id. Please sync in the User Master.`,
-            //   });
-            // }
 
             _parameters.users = _users.map((item) => ({
               label: item[nameField],
@@ -1518,10 +1511,10 @@ const NotificationForm = ({
     clearErrors,
   } = useForm();
   const dept = watch("dept");
-  useEffect(() => reset({ notificationDateTime: "", ...edit }), [
-    edit,
-    detailValues,
-  ]);
+  useEffect(
+    () => reset({ notificationDateTime: "", ...edit }),
+    [edit, detailValues]
+  );
   return (
     <form
       onSubmit={handleSubmit((data) => {
@@ -1596,7 +1589,6 @@ export const Box = ({ label, children, className, collapsable }) => {
         {collapsable && (
           <button
             type="button"
-            style
             className="clear"
             style={open ? { transform: `rotate(180deg)` } : {}}
             onClick={() => setOpen(!open)}
