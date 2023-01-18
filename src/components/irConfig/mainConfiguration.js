@@ -1,7 +1,6 @@
-import { useState, useEffect, useRef, useCallback, useContext } from "react";
+import { useState, useEffect, useRef, useContext } from "react";
 import { IrDashboardContext } from "../../SiteContext";
 import {
-  FaInfoCircle,
   FaPlus,
   FaRegTrashAlt,
   FaUndo,
@@ -9,12 +8,8 @@ import {
   FaStopCircle,
   FaCheck,
 } from "react-icons/fa";
-import { Routes, Route } from "react-router-dom";
 import { BsPencilFill } from "react-icons/bs";
-import { BiSearch } from "react-icons/bi";
 import { Box } from "../incidentReport";
-import { TiTick } from "react-icons/ti";
-import { IoIosClose } from "react-icons/io";
 import { IoClose } from "react-icons/io5";
 import {
   Checkbox,
@@ -27,18 +22,16 @@ import {
   TableActions,
   Toggle,
 } from "../elements";
-import { Modal, Prompt } from "../modal";
+import { Prompt } from "../modal";
 import { useForm } from "react-hook-form";
-import { endpoints as defaultEndpoints, paths } from "../../config";
+import { endpoints as defaultEndpoints } from "../../config";
 import { useFetch } from "../../hooks";
 import s from "./config.module.scss";
 
 const IrScreen = () => {
   const { handleSubmit, register, setValue, watch } = useForm();
-  const {
-    irScreenDetails: screens,
-    setIrScreenDetails: setScreens,
-  } = useContext(IrDashboardContext);
+  const { irScreenDetails: screens, setIrScreenDetails: setScreens } =
+    useContext(IrDashboardContext);
   const screenRef = useRef([]);
   const [update, setUpdate] = useState([]);
 
@@ -285,9 +278,11 @@ const IncidentReportForm = ({
     formState: { errors },
   } = useForm({ ...edit });
 
-  const { post: postType, put: updateType, loading } = useFetch(
-    defaultEndpoints.typesOfIncident + `/${edit?.id || ""}`
-  );
+  const {
+    post: postType,
+    put: updateType,
+    loading,
+  } = useFetch(defaultEndpoints.typesOfIncident + `/${edit?.id || ""}`);
 
   useEffect(() => {
     reset({ ...edit });
@@ -626,9 +621,11 @@ const NotifyForm = ({
   clearForm,
 }) => {
   const { handleSubmit, register, watch, control, setValue, reset } = useForm();
-  const { post: addNotification, put: updateNotification, loading } = useFetch(
-    defaultEndpoints.sentinelNotifications
-  );
+  const {
+    post: addNotification,
+    put: updateNotification,
+    loading,
+  } = useFetch(defaultEndpoints.sentinelNotifications);
   useEffect(() => reset({ ...edit }), [edit]);
   return (
     <form

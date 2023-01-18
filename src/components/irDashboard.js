@@ -4,24 +4,14 @@ import React, {
   useContext,
   Component,
   useRef,
-  Fragment,
   useCallback,
-  useMemo,
   memo,
 } from "react";
+import { SiteContext, IrDashboardContext } from "../SiteContext";
 import {
-  SiteContext,
-  IrDashboardContext,
-  IrDashboardContextProvider,
-} from "../SiteContext";
-import {
-  FaInfoCircle,
   FaRegTrashAlt,
-  FaPlus,
   FaEye,
   FaExternalLinkAlt,
-  FaRegStickyNote,
-  FaRegCheckSquare,
   FaAdjust,
   FaCrosshairs,
   FaRegUser,
@@ -36,15 +26,14 @@ import {
   FaCircle,
 } from "react-icons/fa";
 import { BiSearch } from "react-icons/bi";
-import { AiOutlinePlus } from "react-icons/ai";
 import { WiTime9 } from "react-icons/wi";
 import { BsPencilFill, BsFillExclamationTriangleFill } from "react-icons/bs";
 import { FiCheckSquare } from "react-icons/fi";
 import {
   Radio,
-  Select,
   Tabs,
   Input,
+  DateInput,
   Combobox,
   Table,
   VirtualTable,
@@ -306,7 +295,6 @@ export const MyDashboard = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [incidents, setIncidents] = useState([]);
-  const [filters, setFilters] = useState({});
   const [focus, setFocus] = useState(null);
 
   const { get: searchIrs, loading } = useFetch(defaultEndpoints.searchIrs, {
@@ -908,15 +896,14 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
   const { user, checkPermission, irTypes } = useContext(SiteContext);
   const { parameters, irConfig } = useContext(IrDashboardContext);
   const defaultView = user?.role?.includes?.(7) ? "all" : "assigned";
-  const { handleSubmit, register, watch, reset, setValue, getValues } = useForm(
-    {
+  const { control, handleSubmit, register, watch, reset, setValue, getValues } =
+    useForm({
       defaultValues: {
         irBy: "self",
         status: "",
         view: user?.role?.includes?.(7) ? "all" : "assigned",
       },
-    }
-  );
+    });
   const [categories, setCategories] = useState([]);
   const fromIncidentDateTime = watch("fromIncidentDateTime");
   const fromreportingDate = watch("fromreportingDate");
@@ -970,16 +957,16 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
       />
       <section className={s.pair}>
         <label>Incident Date Range</label>
-        <Input
-          type="date"
+        <DateInput
+          control={control}
+          name="fromIncidentDateTime"
           placeholder="From"
-          {...register("fromIncidentDateTime")}
           max={moment({ format: "YYYY-MM-DD", time: new Date() })}
         />
-        <Input
-          type="date"
+        <DateInput
+          control={control}
+          name="toIncidentDateTime"
           placeholder="To"
-          {...register("toIncidentDateTime")}
           min={moment({
             format: "YYYY-MM-DD",
             time: new Date(fromIncidentDateTime),
@@ -989,16 +976,17 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
       </section>
       <section className={s.pair}>
         <label>Reporting Date Range</label>
-        <Input
-          type="date"
+        <DateInput
+          control={control}
+          name="fromreportingDate"
           placeholder="From"
-          {...register("fromreportingDate")}
+          {...register("")}
           max={moment({ format: "YYYY-MM-DD", time: new Date() })}
         />
-        <Input
-          type="date"
+        <DateInput
+          control={control}
+          name="toreportingDate"
           placeholder="To"
-          {...register("toreportingDate")}
           min={moment({
             format: "YYYY-MM-DD",
             time: new Date(fromreportingDate),

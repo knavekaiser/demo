@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useContext, useRef } from "react";
+import { useEffect, useState, useCallback, useContext } from "react";
 import s from "./style.module.scss";
 import { Box } from "../../incidentReport";
 import { InvestigationContext } from "../InvestigationContext";
@@ -6,27 +6,18 @@ import {
   Select,
   Table,
   TableActions,
-  Combobox,
   Input,
-  Textarea,
-  FileInput,
-  Radio,
-  Tabs,
-  Moment,
+  DateInput,
   moment,
   CustomRadio,
   FishboneDiagram,
 } from "../../elements";
-import { ImEye } from "react-icons/im";
 import {
   FaRegTrashAlt,
   FaCheck,
   FaPlus,
   FaPlusCircle,
   FaPencilAlt,
-  FaFlag,
-  FaMinusCircle,
-  FaEllipsisV,
   FaUndo,
   FaExternalLinkAlt,
   FaTimes,
@@ -34,11 +25,7 @@ import {
 import { IoClose } from "react-icons/io5";
 import { BsPencilFill } from "react-icons/bs";
 import { useFetch } from "../../../hooks";
-import {
-  endpoints as defaultEndpoints,
-  permissions,
-  riskColors,
-} from "../../../config";
+import { endpoints as defaultEndpoints, permissions } from "../../../config";
 import { Prompt, Modal } from "../../modal";
 import { useForm, FormProvider, useFormContext } from "react-hook-form";
 
@@ -306,9 +293,9 @@ const Rca = () => {
       <div className={s.rca}>
         <section className={s.rcaDate}>
           <label>Date of conducting Root Cause Analysis:</label>
-          <Input
-            type="date"
-            {...methods.register("rcaDate")}
+          <DateInput
+            control={methods.control}
+            name="rcaDate"
             value={moment({
               time: new Date(
                 (ir.rcaRootcause?.length && ir.rcaRootcause[0].rcaDate) ||
@@ -316,7 +303,6 @@ const Rca = () => {
               ),
               format: "YYYY-MM-DD",
             })}
-            errors={methods.formState.errors.rcaDate}
           />
         </section>
         <Box collapsable label="POTENTIAL PROBLEM AREAS">
@@ -386,9 +372,11 @@ const ProblemAreas = ({ events }) => {
     setEdit(null);
   }, []);
 
-  const { remove: deleteEvent, put: updateEvent, loading } = useFetch(
-    defaultEndpoints.investigationEvents + "/{ID}"
-  );
+  const {
+    remove: deleteEvent,
+    put: updateEvent,
+    loading,
+  } = useFetch(defaultEndpoints.investigationEvents + "/{ID}");
   const { patch: updateSequence, loading: updatingSequence } = useFetch(
     defaultEndpoints.investigationEvents + `/{ID}`
   );

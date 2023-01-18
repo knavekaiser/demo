@@ -5,6 +5,7 @@ import { BsPencilFill } from "react-icons/bs";
 import { IoClose } from "react-icons/io5";
 import {
   Input,
+  DateInput,
   SearchField,
   MobileNumberInput,
   Combobox,
@@ -297,9 +298,9 @@ const UserForm = ({
   users,
   role,
 }) => {
-  const { endpoints } = useContext(SiteContext);
   const { irConfig } = useContext(IrDashboardContext);
   const {
+    control,
     handleSubmit,
     register,
     reset,
@@ -310,12 +311,13 @@ const UserForm = ({
     clearErrors,
   } = useForm();
 
-  const { post: postUser, patch: updateUser, loading } = useFetch(
-    defaultEndpoints.users + `/${edit?.id || ""}`,
-    {
-      validator: { pword: /^.+$/gi },
-    }
-  );
+  const {
+    post: postUser,
+    patch: updateUser,
+    loading,
+  } = useFetch(defaultEndpoints.users + `/${edit?.id || ""}`, {
+    validator: { pword: /^.+$/gi },
+  });
 
   useEffect(() => {
     reset({
@@ -446,12 +448,7 @@ const UserForm = ({
         error={errors.gender}
         clearErrors={clearErrors}
       />
-      <Input
-        {...register("dob")}
-        type="date"
-        className={s.dobInput}
-        error={errors.dob}
-      />
+      <DateInput control={control} name="dob" className={s.dobInput} />
       <SearchField
         data={users.map((user) => ({
           label: user.employeeId,

@@ -1,11 +1,18 @@
 import React, { useState, useEffect, useContext, useCallback } from "react";
 import { SiteContext, IrDashboardContext } from "../SiteContext";
-import { FaInfoCircle, FaRegTrashAlt, FaPlus, FaCheck } from "react-icons/fa";
+import {
+  FaInfoCircle,
+  FaRegTrashAlt,
+  FaPlus,
+  FaCheck,
+  FaSearch,
+} from "react-icons/fa";
 import { IoClose } from "react-icons/io5";
 import { BiChevronsDown } from "react-icons/bi";
 import { BsPencilFill } from "react-icons/bs";
 import {
   Input,
+  DateInput,
   Select,
   FileInput,
   Textarea,
@@ -16,13 +23,23 @@ import {
   moment,
   Moment,
   uploadFiles,
+  Checkbox,
+  Toggle,
+  SearchField,
+  Combobox,
+  MobileNumberInput,
 } from "./elements";
 import { Prompt, Modal } from "./modal";
 import { useForm, FormProvider, useFormContext } from "react-hook-form";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useFetch } from "../hooks";
-import { endpoints as defaultEndpoints, preventability } from "../config";
+import {
+  endpoints as defaultEndpoints,
+  endpoints,
+  preventability,
+} from "../config";
 import s from "./incidentReporting.module.scss";
+import { ComponentRender } from "component-builder-renderer";
 
 const defaultFormValues = {
   id: "",
@@ -42,11 +59,11 @@ const defaultFormValues = {
   typeofInci: "",
   inciCateg: "",
   inciSubCat: "",
-  personAffected: "",
+  personAffected: {},
   inciDescription: "",
   deptsLookupMultiselect: "",
   contribFactorYesOrNo: "",
-  contribFactor: "",
+  contribFactor: {},
   preventability: "",
   incidentNotification: "",
   incidentReportedDept: "",
@@ -106,7 +123,9 @@ export default function IncidentReporting() {
             fileName: item.name || item.fileName,
           }));
         }
-        (edit ? updateIr : postIr)({
+        data.contribFactor = JSON.stringify(data.contribFactor)(
+          edit ? updateIr : postIr
+        )({
           ...data,
           actionTakens: undefined,
           deptsLookupMultiselect:
@@ -196,6 +215,8 @@ export default function IncidentReporting() {
   const actions = methods.watch("actionTaken");
   const notifications = methods.watch("notification");
   const department = methods.watch("department");
+  const contributingFactor = methods.watch("contribFactor");
+  const personAffected = methods.watch("personAffected");
 
   const { get: getLocations } = useFetch(
     endpoints?.locations.url || defaultEndpoints.locations,
@@ -541,8 +562,10 @@ export default function IncidentReporting() {
               className={s.boxContent}
               onSubmit={methods.handleSubmit(submitForm)}
             >
-              <Input
-                {...methods.register("incident_Date_Time", {
+              <DateInput
+                control={methods.control}
+                name="incident_Date_Time"
+                formOptions={{
                   validate: (v) => {
                     if (v) {
                       if (
@@ -559,8 +582,7 @@ export default function IncidentReporting() {
                       return "Please select Incident Date";
                     }
                   },
-                })}
-                error={methods.formState.errors.incident_Date_Time}
+                }}
                 max={moment({ time: new Date(), format: "YYYY-MM-DDThh:mm" })}
                 label="Incident Date & Time *"
                 type="datetime-local"
@@ -626,8 +648,10 @@ export default function IncidentReporting() {
                       required: "Please enter Patient Name",
                     }}
                   />
-                  <Input
-                    {...methods.register("complaIntegerDatetime", {
+                  <DateInput
+                    control={methods.control}
+                    name="complaIntegerDatetime"
+                    formOptions={{
                       validate: (v) => {
                         if (v) {
                           return (
@@ -642,8 +666,7 @@ export default function IncidentReporting() {
                           return "Please select Complaint Date & Time";
                         }
                       },
-                    })}
-                    error={methods.formState.errors.complaIntegerDatetime}
+                    }}
                     label="Complaint Date & Time *"
                     type="datetime-local"
                     max={moment({
@@ -706,7 +729,7 @@ export default function IncidentReporting() {
             <IncidentCategory />
           </Box>
           <Box label="PERSON AFFECTED" collapsable={true}>
-            <div className={s.placeholder}>Placeholder</div>
+            <PersonAffected value={personAffected} parameters={parameters} />
           </Box>
           <Box label="INCIDENT DESCRIPTION" collapsable={true}>
             <form
@@ -744,13 +767,14 @@ export default function IncidentReporting() {
           </Box>
           {irScreenDetails.find((el) => el.id === 3)?.enableDisable && (
             <Box label="CONTRIBUTING FACTORS" collapsable={true}>
-              <div className={s.contributingFactor}>
-                <div className={s.placeholder}>Placeholder</div>
-                <input
-                  style={{ display: "none" }}
-                  {...methods.register("status")}
-                />
-              </div>
+              <ContributingFactor value={contributingFactor} />
+
+              {
+                //   <input
+                //   style={{ display: "none" }}
+                //   {...methods.register("status")}
+                // />
+              }
             </Box>
           )}
           {irScreenDetails.find((el) => el.id === 2)?.enableDisable && (
@@ -902,7 +926,7 @@ export default function IncidentReporting() {
   );
 }
 
-export const IncidentCategory = ({}) => {
+const IncidentCategory = () => {
   const [categories, setCategories] = useState([]);
   const [showCategoryTable, setShowCategoryTable] = useState(false);
   const [rows, setRows] = useState([]);
@@ -932,17 +956,8 @@ export const IncidentCategory = ({}) => {
   }, []);
   return (
     <ConnectForm>
-      {({
-        register,
-        setValue,
-        watch,
-        getValues,
-        formState: { errors },
-        clearErrors,
-        control,
-      }) => {
+      {({ setValue, watch, getValues, control }) => {
         const cat = watch("inciCateg");
-        const subCat = watch("inciSubCat");
         return (
           <div
             className={s.incidentCategory}
@@ -1093,7 +1108,1373 @@ export const IncidentCategory = ({}) => {
                 </section>
               </div>
             </Modal>
-            <div className={s.placeholder}>Placeholder</div>
+            <div className="customComponent">
+              <ComponentRender
+                renderData={[
+                  {
+                    title: "Score - Multi Select ",
+                    template:
+                      "componentBuilder/components/MultiSelectScoreCombo.html",
+                    icon: "fa fa-th-list",
+                    settings: {
+                      icon: true,
+                      inputType: "select",
+                      inputMask: "",
+                      key: "select",
+                      isModelNeeded: true,
+                      isScoreModelNeeded: true,
+                      properties: {
+                        label: "Select",
+                        name: "select105235",
+                        id: "select105235",
+                        value: "",
+                        labelSize: "",
+                        labelColor: "",
+                        defaultValue: false,
+                        readonly: false,
+                        disabled: false,
+                        click: false,
+                        show: true,
+                        inline: false,
+                        model: "select105235",
+                        scoreModel: "select105235-score",
+                        scoreIdentificationLabel: "",
+                        icon: true,
+                        hidden: true,
+                        hideLabel: false,
+                        hideScore: false,
+                        bootstrapClass: "",
+                        scoreType: "sum",
+                        multiple: true,
+                        options: [
+                          {
+                            key: 1,
+                            value: "option 1",
+                            score: "1",
+                            $$hashKey: "object:132",
+                          },
+                          {
+                            key: 2,
+                            value: "option 2",
+                            score: "2",
+                            $$hashKey: "object:133",
+                          },
+                          {
+                            key: 3,
+                            value: "option 3",
+                            score: "3",
+                            $$hashKey: "object:134",
+                          },
+                          {
+                            key: 4,
+                            value: "option 4",
+                            score: "4",
+                            $$hashKey: "object:135",
+                          },
+                        ],
+                      },
+                      labelStyles: {
+                        color: "",
+                        fontSize: "",
+                        fontWeight: "",
+                        backgroundColor: "",
+                        marginLeft: "",
+                        marginRight: "",
+                        marginTop: "",
+                        marginBottom: "",
+                        wordWrap: "break-word",
+                      },
+                      listStyles: {
+                        color: "",
+                        backgroundColor: "",
+                        customCss: "",
+                        customClass: "",
+                        marginLeft: "",
+                        marginRight: "",
+                        marginTop: "",
+                        marginBottom: "",
+                        paddingLeft: "",
+                        paddingRight: "",
+                        paddingTop: "",
+                        paddingBottom: "",
+                        borderColor: "",
+                        display: "",
+                        width: "80%",
+                        float: "left",
+                        height: 100,
+                      },
+                      styles: {
+                        marginLeft: "",
+                        marginRight: "",
+                        marginTop: "",
+                        marginBottom: "",
+                        paddingLeft: "",
+                        paddingRight: "",
+                        paddingTop: "",
+                        paddingBottom: "",
+                      },
+                      scoreStyles: {
+                        width: "19%",
+                        marginLeft: "",
+                        marginRight: "",
+                        marginTop: "",
+                        marginBottom: "",
+                        display: "inline",
+                      },
+                      comboStyles: {
+                        paddingLeft: "",
+                        paddingRight: "",
+                        paddingTop: "",
+                        paddingBottom: "",
+                        height: 60,
+                      },
+                      validations: {
+                        required: false,
+                        requiredCharacter: "*",
+                      },
+                      others: {
+                        errorColor: "",
+                        customCss: "",
+                        customClass: "",
+                        bootstrapGridClass: "",
+                      },
+                      conditional: {
+                        show: null,
+                        when: null,
+                        eq: "",
+                      },
+                      type: "MultiSelectScoreCombo",
+                    },
+                    configurations: [
+                      {
+                        show: true,
+                        title: "Display",
+                        template:
+                          "componentBuilder/components/MultiSelectScoreCombo/settings.html",
+                        $$hashKey: "object:95",
+                      },
+                      {
+                        title: "Styles - Label",
+                        template:
+                          "componentBuilder/components/MultiSelectScoreCombo/labelStyles.html",
+                        $$hashKey: "object:96",
+                      },
+                      {
+                        title: "Styles - List",
+                        template:
+                          "componentBuilder/components/MultiSelectScoreCombo/listStyles.html",
+                        $$hashKey: "object:97",
+                      },
+                      {
+                        title: "Styles - Score",
+                        template:
+                          "componentBuilder/components/MultiSelectScoreCombo/stylesScore.html",
+                        $$hashKey: "object:98",
+                      },
+                      {
+                        title: "Validations",
+                        template:
+                          "componentBuilder/components/MultiSelectScoreCombo/validations.html",
+                        $$hashKey: "object:99",
+                      },
+                      {
+                        title: "Conditions",
+                        template:
+                          "componentBuilder/components/common/conditional.html",
+                        $$hashKey: "object:100",
+                      },
+                    ],
+                    componentId: "component-82202",
+                  },
+                  {
+                    title: "Check Box",
+                    template: "componentBuilder/components/checkBox.html",
+                    icon: "fa fa-check-square-o",
+                    settings: {
+                      icon: true,
+                      inputType: "checkbox",
+                      inputMask: "",
+                      key: "checkBox",
+                      isModelNeeded: true,
+                      properties: {
+                        label: "Option",
+                        name: "checkBox108310",
+                        id: "checkBox108310",
+                        labelSize: "",
+                        labelColor: "",
+                        defaultValue: false,
+                        readonly: false,
+                        disabled: false,
+                        model: "checkBox108310",
+                        hidden: true,
+                        hideLabel: false,
+                        identificationLabel: "",
+                        bootstrapClass: "",
+                        checkedAction: "",
+                        unCheckedAction: "",
+                      },
+                      styles: {
+                        textAlign: "",
+                        fontStyle: "",
+                        fontSize: "",
+                        fontFamily: "",
+                        fontWeight: "",
+                        color: "",
+                        backgroundColor: "",
+                        customCss: "",
+                        customClass: "",
+                        marginLeft: "",
+                        marginRight: 5,
+                        marginTop: "",
+                        marginBottom: "",
+                        paddingLeft: "",
+                        paddingRight: "",
+                        paddingTop: "",
+                        paddingBottom: "",
+                        display: "",
+                        width: "",
+                        float: "left",
+                      },
+                      others: {
+                        bootstrapGridClass: "",
+                      },
+                      validations: {
+                        required: false,
+                      },
+                      conditional: {
+                        show: null,
+                        when: null,
+                        eq: "",
+                      },
+                      type: "checkBox",
+                    },
+                    configurations: [
+                      {
+                        show: true,
+                        title: "Display",
+                        template:
+                          "componentBuilder/components/checkBox/settings.html",
+                        $$hashKey: "object:152",
+                      },
+                      {
+                        title: "Styles",
+                        template:
+                          "componentBuilder/components/checkBox/styles.html",
+                        $$hashKey: "object:153",
+                      },
+                      {
+                        title: "Validations",
+                        template:
+                          "componentBuilder/components/checkBox/validations.html",
+                        $$hashKey: "object:154",
+                      },
+                      {
+                        title: "Conditions",
+                        template:
+                          "componentBuilder/components/common/conditional.html",
+                        $$hashKey: "object:155",
+                      },
+                    ],
+                    componentId: "component-18997",
+                  },
+                  {
+                    title: "Date & Time",
+                    template: "componentBuilder/components/datetime.html",
+                    icon: "fa fa-calendar-minus-o",
+                    settings: {
+                      icon: true,
+                      tableView: true,
+                      inputType: "text",
+                      inputMask: "",
+                      key: "datetime",
+                      isModelNeeded: true,
+                      properties: {
+                        label: "DateTime",
+                        labelSize: "",
+                        labelColor: "",
+                        placeholder: "Enter text",
+                        name: "datetime14941",
+                        id: "datetime14941",
+                        model: "datetime14941",
+                        defaultValue: "",
+                        readonly: false,
+                        disabled: false,
+                        hidden: false,
+                        hideLabel: false,
+                        bootstrapClass: "",
+                        format: "MM/dd/yyyy HH:mm",
+                        identificationLabel: "",
+                      },
+                      styles: {
+                        color: "",
+                        backgroundColor: "",
+                        borderColor: "",
+                        fontSize: "",
+                        marginLeft: "",
+                        marginRight: 5,
+                        marginTop: "",
+                        marginBottom: "",
+                        paddingLeft: "",
+                        paddingRight: "",
+                        paddingTop: "",
+                        paddingBottom: "",
+                      },
+                      divStyles: {
+                        color: "",
+                        backgroundColor: "",
+                        customCss: "",
+                        customClass: "",
+                        marginLeft: "",
+                        marginRight: "",
+                        marginTop: "",
+                        marginBottom: "",
+                        paddingLeft: "",
+                        paddingRight: "",
+                        paddingTop: "",
+                        paddingBottom: "",
+                        borderColor: "",
+                        display: "",
+                        width: "",
+                      },
+                      labelStyles: {
+                        color: "",
+                        fontSize: "",
+                        fontWeight: "",
+                        wordWrap: "break-word",
+                      },
+                      validations: {
+                        required: false,
+                        minDate: "",
+                        maxDate: "",
+                        pattern: "",
+                        requiredCharacter: "*",
+                      },
+                      others: {
+                        errorColor: "",
+                        customCss: "",
+                        customClass: "",
+                        bootstrapGridClass: "",
+                      },
+                      conditional: {
+                        show: null,
+                        when: null,
+                        eq: "",
+                      },
+                      special: {
+                        isOpen: "",
+                      },
+                      type: "datetime",
+                    },
+                    configurations: [
+                      {
+                        show: true,
+                        title: "Display",
+                        template:
+                          "componentBuilder/components/datetime/settings.html",
+                        $$hashKey: "object:198",
+                      },
+                      {
+                        title: "Styles",
+                        template:
+                          "componentBuilder/components/datetime/styles.html",
+                        $$hashKey: "object:199",
+                      },
+                      {
+                        title: "Validations",
+                        template:
+                          "componentBuilder/components/datetime/validations.html",
+                        $$hashKey: "object:200",
+                      },
+                      {
+                        title: "Conditions",
+                        template:
+                          "componentBuilder/components/common/conditional.html",
+                        $$hashKey: "object:201",
+                      },
+                    ],
+                    componentId: "component-97665",
+                  },
+                  {
+                    title: "Multi Check",
+                    template:
+                      "componentBuilder/components/multiSelectCheckbox.html",
+                    icon: "fa fa-check-square-o",
+                    settings: {
+                      icon: true,
+                      inputType: "checkbox",
+                      inputMask: "",
+                      key: "multiSelectCheckbox",
+                      isModelNeeded: true,
+                      properties: {
+                        label: "Check Box Text",
+                        name: "multiSelectCheckbox97934",
+                        id: "multiSelectCheckbox97934",
+                        value: "",
+                        labelSize: "",
+                        labelColor: "",
+                        defaultValue: false,
+                        readonly: false,
+                        disabled: false,
+                        click: false,
+                        show: true,
+                        inline: false,
+                        model: "multiSelectCheckbox97934",
+                        icon: true,
+                        hidden: false,
+                        hideLabel: false,
+                        bootstrapClass: "",
+                        others: false,
+                        isOthersMandatory: false,
+                        identificationLabel: "",
+                        options: [
+                          {
+                            key: 1,
+                            value: "option 1",
+                            $$hashKey: "object:300",
+                          },
+                          {
+                            key: 2,
+                            value: "option 2",
+                            $$hashKey: "object:301",
+                          },
+                          {
+                            key: 3,
+                            value: "option 3",
+                            $$hashKey: "object:302",
+                          },
+                          {
+                            key: 4,
+                            value: "option 4",
+                            $$hashKey: "object:303",
+                          },
+                        ],
+                      },
+                      labelStyles: {
+                        lableColor: "",
+                        labelSize: "",
+                      },
+                      styles: {
+                        textAlign: "",
+                        fontStyle: "",
+                        fontSize: "",
+                        fontFamily: "",
+                        fontWeight: "",
+                        color: "",
+                        backgroundColor: "",
+                        customCss: "",
+                        customClass: "",
+                        marginLeft: "",
+                        marginRight: "",
+                        marginTop: "",
+                        marginBottom: "",
+                        paddingLeft: "",
+                        paddingRight: "",
+                        paddingTop: "",
+                        paddingBottom: "",
+                        display: "",
+                        width: "",
+                        float: "left",
+                        bootstrapGridClass: "",
+                        wordWrap: "break-word",
+                      },
+                      othersStyles: {
+                        width: 100,
+                        marginLeft: 10,
+                        marginRight: "",
+                        marginTop: "",
+                        marginBottom: "",
+                        display: "inline",
+                      },
+                      validations: {
+                        required: false,
+                      },
+                      others: {
+                        errorColor: "",
+                        customCss: "",
+                        customClass: "",
+                        bootstrapGridClass: "",
+                      },
+                      conditional: {
+                        show: null,
+                        when: null,
+                        eq: "",
+                      },
+                      type: "multiSelectCheckbox",
+                    },
+                    configurations: [
+                      {
+                        show: true,
+                        title: "Display",
+                        template:
+                          "componentBuilder/components/multiSelectCheckbox/settings.html",
+                        $$hashKey: "object:259",
+                      },
+                      {
+                        title: "Styles-Label",
+                        template:
+                          "componentBuilder/components/multiSelectCheckbox/stylesLabel.html",
+                        $$hashKey: "object:260",
+                      },
+                      {
+                        title: "Styles-checkbox",
+                        template:
+                          "componentBuilder/components/multiSelectCheckbox/styles.html",
+                        $$hashKey: "object:261",
+                      },
+                      {
+                        title: "Styles-others",
+                        template:
+                          "componentBuilder/components/multiSelectCheckbox/othersStyles.html",
+                        $$hashKey: "object:262",
+                      },
+                      {
+                        title: "Conditions",
+                        template:
+                          "componentBuilder/components/common/conditional.html",
+                        $$hashKey: "object:263",
+                      },
+                    ],
+                    componentId: "component-109055",
+                  },
+                  {
+                    title: "Radio Button",
+                    template: "componentBuilder/components/radioButton.html",
+                    icon: "fa fa-circle-o",
+                    settings: {
+                      icon: true,
+                      inputType: "radio",
+                      inputMask: "",
+                      key: "radioButton",
+                      isModelNeeded: true,
+                      properties: {
+                        label: "Radio Text",
+                        name: "radioButton42381",
+                        id: "radioButton42381",
+                        value: "",
+                        color: "",
+                        defaultValue: false,
+                        readonly: false,
+                        disabled: false,
+                        click: false,
+                        show: true,
+                        inline: false,
+                        model: "radioButton42381",
+                        identificationLabel: "",
+                        icon: true,
+                        hidden: false,
+                        hideLabel: false,
+                        bootstrapClass: "",
+                        options: [
+                          {
+                            key: 1,
+                            value: "option 1",
+                            $$hashKey: "object:370",
+                          },
+                          {
+                            key: 2,
+                            value: "option 2",
+                            $$hashKey: "object:371",
+                          },
+                          {
+                            key: 3,
+                            value: "option 3",
+                            $$hashKey: "object:372",
+                          },
+                          {
+                            key: 4,
+                            value: "option 4",
+                            $$hashKey: "object:373",
+                          },
+                        ],
+                      },
+                      styles: {
+                        textAlign: "",
+                        fontStyle: "",
+                        fontSize: "",
+                        fontFamily: "",
+                        fontWeight: "",
+                        color: "",
+                        backgroundColor: "",
+                        customCss: "",
+                        customClass: "",
+                        marginLeft: "",
+                        marginRight: "",
+                        marginTop: "",
+                        marginBottom: "",
+                        paddingLeft: "",
+                        paddingRight: "",
+                        paddingTop: "",
+                        paddingBottom: "",
+                        display: "",
+                        width: "",
+                        float: "left",
+                        bootstrapGridClass: "",
+                      },
+                      labelStyles: {
+                        color: "",
+                        fontSize: "",
+                        fontWeight: "",
+                        wordWrap: "break-word",
+                      },
+                      validations: {
+                        required: false,
+                        requiredCharacter: "*",
+                      },
+                      others: {
+                        errorColor: "",
+                        customCss: "",
+                        customClass: "radio",
+                        bootstrapGridClass: "",
+                      },
+                      conditional: {
+                        show: null,
+                        when: null,
+                        eq: "",
+                      },
+                      type: "radioButton",
+                    },
+                    configurations: [
+                      {
+                        show: true,
+                        title: "Display",
+                        template:
+                          "componentBuilder/components/radioButton/settings.html",
+                        $$hashKey: "object:343",
+                      },
+                      {
+                        title: "Styles",
+                        template:
+                          "componentBuilder/components/radioButton/styles.html",
+                        $$hashKey: "object:344",
+                      },
+                      {
+                        title: "Validations",
+                        template:
+                          "componentBuilder/components/radioButton/validations.html",
+                        $$hashKey: "object:345",
+                      },
+                      {
+                        title: "Conditions",
+                        template:
+                          "componentBuilder/components/common/conditional.html",
+                        $$hashKey: "object:346",
+                      },
+                    ],
+                    componentId: "component-47367",
+                  },
+                  {
+                    title: "Text Area",
+                    template: "componentBuilder/components/textarea.html",
+                    icon: "fa fa-square-o",
+                    settings: {
+                      input: true,
+                      tableView: true,
+                      inputType: "textarea",
+                      label: "text area",
+                      isModelNeeded: true,
+                      key: "TextArea",
+                      properties: {
+                        label: "Text",
+                        labelSize: "",
+                        labelColor: "",
+                        placeholder: "Enter text",
+                        name: "TextArea42244",
+                        id: "TextArea42244",
+                        rows: "",
+                        model: "TextArea42244",
+                        defaultValue: "",
+                        readonly: false,
+                        disabled: false,
+                        hidden: false,
+                        hideLabel: false,
+                        isMicNeeded: false,
+                        bootstrapClass: "",
+                        identificationLabel: "",
+                      },
+                      styles: {
+                        color: "",
+                        backgroundColor: "",
+                        borderColor: "",
+                        marginLeft: "",
+                        marginRight: "",
+                        marginTop: "",
+                        marginBottom: "",
+                        paddingLeft: "",
+                        paddingRight: "",
+                        paddingTop: "",
+                        paddingBottom: "",
+                        height: "",
+                      },
+                      labelStyles: {
+                        color: "",
+                        fontSize: "",
+                        fontWeight: "",
+                        wordWrap: "break-word",
+                      },
+                      divStyles: {
+                        color: "black",
+                        backgroundColor: "",
+                        customCss: "",
+                        customClass: "",
+                        marginLeft: "",
+                        marginRight: "",
+                        marginTop: "",
+                        marginBottom: "",
+                        paddingLeft: "",
+                        paddingRight: "",
+                        paddingTop: "",
+                        paddingBottom: "",
+                        borderColor: "",
+                        display: "",
+                        width: "",
+                        height: "100",
+                      },
+                      validations: {
+                        required: false,
+                        maxLength: "",
+                        minLength: "",
+                        pattern: "",
+                        requiredCharacter: "*",
+                      },
+                      others: {
+                        errorColor: "",
+                        customCss: "",
+                        customClass: "",
+                        bootstrapGridClass: "",
+                      },
+                      conditional: {
+                        show: null,
+                        when: null,
+                        eq: "",
+                      },
+                      type: "textarea",
+                    },
+                    configurations: [
+                      {
+                        show: true,
+                        title: "Display",
+                        template:
+                          "componentBuilder/components/textarea/settings.html",
+                        $$hashKey: "object:408",
+                      },
+                      {
+                        title: "Styles",
+                        template:
+                          "componentBuilder/components/textarea/styles.html",
+                        $$hashKey: "object:409",
+                      },
+                      {
+                        title: "Validations",
+                        template:
+                          "componentBuilder/components/textarea/validations.html",
+                        $$hashKey: "object:410",
+                      },
+                      {
+                        title: "Conditions",
+                        template:
+                          "componentBuilder/components/common/conditional.html",
+                        $$hashKey: "object:411",
+                      },
+                    ],
+                    componentId: "component-91053",
+                  },
+                  {
+                    title: "Signature",
+                    template:
+                      "componentBuilder/components/signature/signature.html",
+                    icon: "fa fa-pencil",
+                    settings: {
+                      icon: true,
+                      inputType: "signature",
+                      inputMask: "",
+                      key: "signature",
+                      isModelNeeded: true,
+                      properties: {
+                        label: "Signature",
+                        name: "signature101559",
+                        id: "signature101559",
+                        value: "",
+                        labelSize: "",
+                        labelColor: "",
+                        defaultValue: false,
+                        readonly: false,
+                        disabled: false,
+                        click: false,
+                        show: true,
+                        inline: false,
+                        model: "signature101559",
+                        icon: true,
+                        hidden: false,
+                        hideLabel: false,
+                        bootstrapClass: "",
+                      },
+                      labelStyles: {
+                        textAlign: "left",
+                        fontStyle: "",
+                        fontSize: "",
+                        fontFamily: "",
+                        fontWeight: "",
+                        textDecoration: "",
+                        textTransform: "",
+                        color: "",
+                        wordWrap: "break-word",
+                      },
+                      divStyles: {
+                        color: "",
+                        backgroundColor: "",
+                        customCss: "",
+                        customClass: "",
+                        marginLeft: "",
+                        marginRight: 5,
+                        marginTop: "",
+                        marginBottom: "",
+                        paddingLeft: "",
+                        paddingRight: "",
+                        paddingTop: "",
+                        paddingBottom: "",
+                        borderColor: "",
+                        display: "",
+                        height: 220,
+                        width: 800,
+                      },
+                      validations: {
+                        required: false,
+                      },
+                      others: {
+                        errorColor: "",
+                        customCss: "",
+                        customClass: "",
+                        bootstrapGridClass: "",
+                      },
+                      conditional: {
+                        show: null,
+                        when: null,
+                        eq: "",
+                      },
+                      type: "signature",
+                    },
+                    configurations: [
+                      {
+                        show: true,
+                        title: "Display",
+                        template:
+                          "componentBuilder/components/signature/settings.html",
+                        $$hashKey: "object:631",
+                      },
+                      {
+                        title: "Styles",
+                        template:
+                          "componentBuilder/components/signature/styles.html",
+                        $$hashKey: "object:632",
+                      },
+                      {
+                        title: "Validations",
+                        template:
+                          "componentBuilder/components/signature/validations.html",
+                        $$hashKey: "object:633",
+                      },
+                      {
+                        title: "Conditions",
+                        template:
+                          "componentBuilder/components/common/conditional.html",
+                        $$hashKey: "object:634",
+                      },
+                    ],
+                    componentId: "component-38282",
+                  },
+                ]}
+                sendFormData={(data) => {
+                  // console.log("get data", data);
+                }}
+                serviceUrl={"serviceUrl"}
+                bindData={{ TextField86509: "text" }}
+                noOfColumns="col-md-12"
+                refId="form1"
+                onChange={(value) => {
+                  console.log(value);
+                }}
+              />
+            </div>
+          </div>
+        );
+      }}
+    </ConnectForm>
+  );
+};
+
+const PersonAffected = ({ value, parameters = {} }) => {
+  const [userTypes, setUserTypes] = useState([
+    { label: "Patient", value: "patient" },
+    { label: "Staff", value: "staff" },
+    { label: "Visitor", value: "visitor" },
+    { label: "Contractor", value: "contractor" },
+    { label: "Others", value: "others" },
+  ]);
+  const [selected, setSelected] = useState([]);
+  return (
+    <div className={s.personAffected}>
+      <div className={s.userTypes}>
+        {userTypes.map((item) => (
+          <Checkbox
+            key={item.value}
+            label={item.label}
+            onChange={(e) => {
+              if (!e.target.checked) {
+                setSelected((prev) =>
+                  prev.filter((i) => i.value !== item.value)
+                );
+              } else {
+                setSelected((prev) => [...prev, item]);
+              }
+            }}
+          />
+        ))}
+      </div>
+      {selected.map((item) => {
+        const fields = [];
+        let label = "Details";
+        if (item.value === "patient") {
+          label = "Patient " + label;
+          fields.push({
+            type: "searchField",
+            label: "Patient Name",
+            name: "name",
+            data: parameters?.users,
+            renderListItem: (item) => <>{item.label}</>,
+          });
+        } else if (item.value === "staff") {
+          label = "Staff " + label;
+          fields.push({
+            type: "searchField",
+            label: "Staff Name",
+            name: "name",
+            data: parameters?.users,
+            renderListItem: (item) => <>{item.label}</>,
+          });
+        } else if (item.value === "visitor") {
+          label = "Visitor " + label;
+          fields.push({
+            type: "searchField",
+            label: "Visitor Name",
+            name: "name",
+            data: parameters?.users,
+            renderListItem: (item) => <>{item.label}</>,
+          });
+        } else if (item.value === "contractor") {
+          label = "Contractor " + label;
+          fields.push({
+            type: "searchField",
+            label: "Contaractor Name",
+            name: "name",
+            data: parameters?.users,
+            renderListItem: (item) => <>{item.label}</>,
+          });
+        } else if (item.value === "others") {
+          fields.push({
+            type: "searchField",
+            label: "Name",
+            name: "name",
+            data: parameters?.users,
+            renderListItem: (item) => <>{item.label}</>,
+          });
+        }
+        fields.push({
+          label: "Age",
+          type: "input",
+          inputType: "number",
+          name: "age",
+        });
+        fields.push({
+          label: "Gender",
+          type: "combobox",
+          name: "gender",
+          options: [
+            { label: "Male", value: "male" },
+            { label: "Female", value: "female" },
+            { label: "Other", value: "other" },
+          ],
+        });
+        if (["patient", "client"].includes(item.value)) {
+          fields.push({
+            type: "searchField",
+            label: "Location",
+            name: "location",
+            data: parameters?.location,
+            renderListItem: (item) => <>{item.label}</>,
+          });
+          fields.push({
+            label: "UHID Number",
+            type: "input",
+            inputType: "number",
+            name: "uhidNumber",
+          });
+          fields.push({
+            label: "Doctor Name",
+            type: "input",
+            name: "doctorName",
+          });
+        }
+        if (item.value === "staff") {
+          fields.push({
+            label: "Employee ID",
+            type: "input",
+            inputType: "number",
+            name: "employeeId",
+          });
+          fields.push({
+            type: "searchField",
+            label: "Department",
+            name: "department",
+            data: parameters?.departments,
+            renderListItem: (item) => <>{item.label}</>,
+          });
+        }
+        if (item.value === "visitor") {
+          fields.push({
+            label: "Reason for Visit",
+            type: "input",
+            name: "reasonForVisit",
+          });
+        }
+        if (item.value === "contractor") {
+          fields.push({
+            label: "Organization",
+            type: "input",
+            name: "organization",
+          });
+        }
+        fields.push({
+          label: "Injury Reported",
+          type: "toggle",
+          name: "injuryReported",
+        });
+        fields.push({
+          label: "Mobile Number",
+          type: "mobileNumber",
+          name: "mobileNo",
+        });
+        fields.push({
+          label: "Action",
+        });
+        let style = {
+          gridTemplateColumns: `${fields
+            .map((item) => {
+              if (item.type === "toggle") {
+                return "4rem";
+              }
+              if (item.name === "age") {
+                return "4rem";
+              }
+              return item.type ? "1fr" : "";
+            })
+            .join(" ")} 5rem`,
+        };
+        return (
+          <PersonAffectedTable
+            label={label}
+            key={item.value}
+            userType={item.value}
+            fields={fields}
+            value={value}
+            style={style}
+          />
+        );
+      })}
+    </div>
+  );
+};
+const PersonAffectedTable = ({
+  label,
+  value,
+  userType,
+  fields,
+  parameters,
+  style,
+}) => {
+  const [users, setUsers] = useState([]);
+  const [edit, setEdit] = useState(null);
+  return (
+    <div className={s.personAffectedTable}>
+      <label>{label}</label>
+      <Table
+        columns={fields.map((field) => ({
+          label: field.label,
+        }))}
+        actions={true}
+        tHeadStyle={style}
+      >
+        <tr style={style}>
+          <td className={s.inlineForm}>
+            <PersonAffectedForm
+              style={style}
+              {...(edit && { edit })}
+              setEdit={setEdit}
+              key={edit ? "edit" : "add"}
+              onSuccess={(newUser) => {
+                setUsers((prev) => {
+                  return prev.find((c) => c.id === newUser.id)
+                    ? prev.map((c) => (c.id === newUser.id ? newUser : c))
+                    : [...prev, newUser];
+                });
+                setEdit(null);
+              }}
+              fields={fields}
+              clearForm={() => {
+                setEdit(null);
+              }}
+            />
+          </td>
+        </tr>
+        {users.map((user, i) => (
+          <tr key={i} style={style}>
+            {fields.map((field) => (
+              <td key={field.name}>{user[field.name]}</td>
+            ))}
+            <TableActions
+              actions={[
+                {
+                  icon: <BsPencilFill />,
+                  label: "Edit",
+                  callBack: () =>
+                    setEdit({
+                      ...user,
+                      department: user.department?.toString(),
+                    }),
+                },
+                {
+                  icon: <FaRegTrashAlt />,
+                  label: "Delete",
+                  callBack: () =>
+                    Prompt({
+                      type: "confirmation",
+                      message: `Are you sure you want to remove ${user.name}?`,
+                      callback: () => {
+                        // deleteUser(null, {
+                        //   params: { "{ID}": user.id },
+                        // }).then(({ res }) => {
+                        //   if (res.status === 204) {
+                        //     setUsers((prev) =>
+                        //       prev.filter((c) => c.id !== user.id)
+                        //     );
+                        //   }
+                        // });
+                      },
+                    }),
+                },
+              ]}
+            />
+          </tr>
+        ))}
+      </Table>
+    </div>
+  );
+};
+const PersonAffectedForm = ({
+  edit,
+  setEdit,
+  parameters,
+  onSuccess,
+  fields,
+  style,
+}) => {
+  const {
+    handleSubmit,
+    register,
+    reset,
+    watch,
+    setValue,
+    formState: { errors },
+    clearErrors,
+  } = useForm();
+
+  useEffect(() => {
+    reset({
+      ...edit,
+    });
+  }, [edit]);
+  return (
+    <form
+      autoComplete="off"
+      className={s.personAffectedForm}
+      onSubmit={handleSubmit((data) => {
+        console.log(data);
+      })}
+      style={style}
+    >
+      {fields.map((field) => {
+        const inputType = field.inputType;
+        delete field.inputType;
+        delete field.label;
+        if (field.type === "searchField") {
+          return (
+            <SearchField
+              {...field}
+              key={field.name}
+              register={register}
+              watch={watch}
+              setValue={setValue}
+              error={errors[field.name]}
+              onChange={(user) => {
+                console.log(user);
+                // if (typeof user === "string") {
+                //   setValue(field.name, user);
+                // } else {
+                //   setEdit(user);
+                // }
+              }}
+            />
+          );
+        } else if (field.type === "combobox") {
+          return (
+            <Combobox
+              {...field}
+              key={field.name}
+              register={register}
+              setValue={setValue}
+              watch={watch}
+              error={errors[field.name]}
+              clearErrors={clearErrors}
+            />
+          );
+        } else if (field.type === "input") {
+          return (
+            <Input
+              {...field}
+              key={field.name}
+              type={inputType}
+              {...register(field.name, field.formOptions)}
+              error={errors[field.name]}
+            />
+          );
+        } else if (field.type === "toggle") {
+          return (
+            <Toggle
+              key={field.name}
+              setValue={setValue}
+              register={register}
+              watch={watch}
+              {...field}
+            />
+          );
+        } else if (field.type === "mobileNumber") {
+          return (
+            <MobileNumberInput
+              key={field.name}
+              register={register}
+              error={errors[field.name]}
+              clearErrors={clearErrors}
+              setValue={setValue}
+              watch={watch}
+              {...field}
+              icon={<FaSearch />}
+            />
+          );
+        } else {
+          return null;
+        }
+      })}
+      <div className={s.btns}>
+        <button className="btn secondary" type="submit">
+          {edit ? (
+            <FaCheck />
+          ) : (
+            <>
+              <FaPlus /> Add
+            </>
+          )}
+        </button>
+        {edit && (
+          <button
+            type="button"
+            onClick={() => {
+              reset();
+            }}
+            className="btn secondary"
+          >
+            <IoClose />
+          </button>
+        )}
+      </div>
+    </form>
+  );
+};
+
+const ContributingFactor = ({ value }) => {
+  const [selected, setSelected] = useState([]);
+  const [fields, setFields] = useState([]);
+  const { get: getTwoFieldMasters, loading } = useFetch(
+    endpoints.twoFieldMasters
+  );
+  useEffect(() => {
+    getTwoFieldMasters()
+      .then(({ data }) => {
+        if (data?._embedded?.twoFieldMaster) {
+          setFields(
+            data._embedded.twoFieldMaster
+              .filter(
+                (item) =>
+                  item.name.startsWith("CF: ") &&
+                  item.twoFieldMasterDetails.length
+              )
+              .map((item) => ({ ...item, name: item.name.replace("CF: ", "") }))
+          );
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }, []);
+  if (loading) {
+    return <div className={s.placeholder}>Loading...</div>;
+  }
+  return (
+    <ConnectForm>
+      {({ setValue }) => {
+        return (
+          <div className={s.contributingFactor}>
+            <div className={s.sidebar}>
+              <ul>
+                {fields.map((item) => (
+                  <li key={item.id}>
+                    <Checkbox
+                      onChange={(e) => {
+                        if (!e.target.checked) {
+                          setSelected((prev) =>
+                            prev.filter((i) => i.id !== item.id)
+                          );
+                        } else {
+                          setSelected((prev) => [...prev, item]);
+                        }
+                      }}
+                      label={item.name}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className={s.content}>
+              <ul className={s.parent}>
+                {selected.map((item) => (
+                  <li key={item.id}>
+                    <label className={s.parentName}>{item.name}</label>
+                    <ul className={s.children}>
+                      {item.twoFieldMasterDetails.map((i) => (
+                        <li key={i.id}>
+                          <Checkbox
+                            label={i.name}
+                            onChange={(e) => {
+                              setValue("contribFactor", {
+                                ...value,
+                              });
+                            }}
+                          />
+                        </li>
+                      ))}
+                    </ul>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         );
       }}
@@ -1238,9 +2619,11 @@ const ActionTakenForm = ({
           required: "Action Taken By",
         }}
       />
-      <Input
+      <DateInput
         type="datetime-local"
-        {...register("accessDateTime", {
+        control={control}
+        name={"accessDateTime"}
+        formOptions={{
           validate: (v) => {
             if (v) {
               return (
@@ -1249,9 +2632,8 @@ const ActionTakenForm = ({
             }
             return "Select Date & Time";
           },
-        })}
+        }}
         max={moment({ time: new Date(), format: "YYYY-MM-DDThh:mm" })}
-        error={errors.accessDateTime}
       />
       <div className={s.btns} data-testid="actionTakenBtns">
         <button className="btn secondary" type="submit">
@@ -1544,15 +2926,16 @@ const NotificationForm = ({
         }
         readOnly={true}
       />
-      <Input
+      <DateInput
         type="datetime-local"
-        {...register("notificationDateTime", {
+        control={control}
+        name={"notificationDateTime"}
+        formOptions={{
           required: "Select Date & Time",
           validate: (v) =>
             new Date(v) < new Date() || "Can not select date from future",
-        })}
+        }}
         max={moment({ time: new Date(), format: "YYYY-MM-DDThh:mm" })}
-        error={errors.notificationDateTime}
       />
       <div className={s.btns} data-testid="notificationBtns">
         <button className="btn secondary" type="submit">
@@ -1600,4 +2983,4 @@ export const Box = ({ label, children, className, collapsable }) => {
       {open && <>{children}</>}
     </div>
   );
-};
+}

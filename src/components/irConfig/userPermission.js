@@ -1,12 +1,8 @@
 import { useState, useEffect, useRef, useCallback, useContext } from "react";
 import { SiteContext, IrDashboardContext } from "../../SiteContext";
-import { FaInfoCircle, FaPlus, FaRegTrashAlt } from "react-icons/fa";
-import { BsPencilFill } from "react-icons/bs";
-import { BiSearch } from "react-icons/bi";
 import { Box } from "../incidentReport";
-import { TiTick } from "react-icons/ti";
-import { Input, Checkbox, Table, TableActions, Toggle } from "../elements";
-import { Modal, Prompt } from "../modal";
+import { Table } from "../elements";
+import { Prompt } from "../modal";
 import { permissions } from "../../config";
 import { useFetch } from "../../hooks";
 import defaultEndpoints from "../../config/endpoints";
@@ -14,7 +10,7 @@ import s from "./config.module.scss";
 
 export default function UserPermission() {
   const permissionRef = useRef(null);
-  const { user, setRoles, setPermissions } = useContext(SiteContext);
+  const { user, setPermissions } = useContext(SiteContext);
   const { irConfig } = useContext(IrDashboardContext);
   const [userPermission, setUserPermission] = useState([]);
   const [updates, setUpdates] = useState([]);

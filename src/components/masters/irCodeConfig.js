@@ -1,35 +1,16 @@
 import { useState, useEffect } from "react";
-import { FaInfoCircle, FaPlus, FaCheck, FaRegTrashAlt } from "react-icons/fa";
-import { BsPencilFill } from "react-icons/bs";
-import { BiSearch } from "react-icons/bi";
-import { Box } from "../incidentReport";
-import { TiTick } from "react-icons/ti";
-import { IoIosClose } from "react-icons/io";
-import { IoClose, IoReorderThreeOutline } from "react-icons/io5";
-import { Input, Combobox, Table, TableActions, Toggle } from "../elements";
-import { Modal, Prompt } from "../modal";
+import { IoReorderThreeOutline } from "react-icons/io5";
+import { Input, Combobox, Table } from "../elements";
+import { Prompt } from "../modal";
 import { useForm } from "react-hook-form";
 import { endpoints as defaultEndpoints } from "../../config";
 import { useFetch } from "../../hooks";
 import s from "./masters.module.scss";
 
-const _periods = [
-  { label: "MM", value: "MM" },
-  { label: "MM/YYYY", value: "MM/YYYY" },
-  { label: "YYYY", value: "YYYY" },
-];
 export default function IrCodeConfig() {
   const [periods, setPeriods] = useState();
   const [codeConfig, setCodeConfig] = useState([]);
-  const [edit, setEdit] = useState(null);
-  const {
-    handleSubmit,
-    register,
-    watch,
-    setValue,
-    setValues,
-    reset,
-  } = useForm();
+  const { handleSubmit, register, watch, setValue, reset } = useForm();
   const reseed = watch("reseed");
   const period = watch("period");
 

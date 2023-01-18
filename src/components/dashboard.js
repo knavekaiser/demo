@@ -8,11 +8,7 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import { BiChevronLeft, BiPowerOff } from "react-icons/bi";
-import {
-  SiteContext,
-  IrDashboardContextProvider,
-  IrDashboardContext,
-} from "../SiteContext";
+import { SiteContext, IrDashboardContext } from "../SiteContext";
 import { IoKeyOutline } from "react-icons/io5";
 import { FaRegBell, FaChevronRight } from "react-icons/fa";
 import { Combobox, moment } from "./elements";
@@ -98,9 +94,8 @@ export const Accordion = ({ label, basePath, items, className, startPath }) => {
 };
 
 function Dashboard() {
-  const { user, setUser, setRoles, checkPermission, logout } = useContext(
-    SiteContext
-  );
+  const { user, setUser, setRoles, checkPermission, logout } =
+    useContext(SiteContext);
   const location = useLocation();
   const navigate = useNavigate();
   const [collaped, setCollapsed] = useState(false);
@@ -335,9 +330,8 @@ function Dashboard() {
 const SidebarItem_IrDashboard = () => {
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const { irDashboardDataElements, count, checkDataElements } = useContext(
-    IrDashboardContext
-  );
+  const { irDashboardDataElements, count, checkDataElements } =
+    useContext(IrDashboardContext);
   const [listItems, setListItems] = useState({});
   useEffect(() => {
     const pathname = location.pathname.startsWith(
@@ -632,9 +626,8 @@ const SidebarItem_IrDashboard = () => {
 const SidebarItem_CapaDashboard = () => {
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const { capaDashboardDataElements, count, checkDataElements } = useContext(
-    IrDashboardContext
-  );
+  const { capaDashboardDataElements, count, checkDataElements } =
+    useContext(IrDashboardContext);
   const [listItems, setListItems] = useState({});
   useEffect(() => {
     const pathname = location.pathname.startsWith(paths.capaDashboard.basePath)

@@ -9,6 +9,7 @@ import {
   TableActions,
   Combobox,
   Input,
+  DateInput,
   Textarea,
   Moment,
   moment,
@@ -29,20 +30,7 @@ const Capa = () => {
     departments: [],
     roles: permissions.map((p) => ({ value: p.id, label: p.label })),
   });
-  const [requestInput, setRequestInput] = useState(false);
   const { handleSubmit } = useForm();
-
-  const {
-    post: saveIrDetail,
-    put: updateIrDetail,
-    savingIrDetail,
-  } = useFetch(
-    defaultEndpoints.irInvestigation +
-      (ir.irInvestigation?.length ? `/${ir.irInvestigation[0].id}` : ""),
-    {
-      validator: { sequence: /^.+$/gi },
-    }
-  );
 
   const { get: getUsers } = useFetch(defaultEndpoints.users + `?size=10000`);
   const { get: getDepartments } = useFetch(
@@ -601,6 +589,7 @@ const MonitoringPlanModal = ({ plan, parameters, onSuccess }) => {
     reset,
     clearErrors,
     formState: { errors },
+    control,
   } = useForm();
 
   useEffect(() => {
@@ -709,10 +698,10 @@ const MonitoringPlanModal = ({ plan, parameters, onSuccess }) => {
           clearErrors={clearErrors}
         />
 
-        <Input
-          type="date"
-          label="Start date for CAPA monitoring"
-          {...register("startDate", {
+        <DateInput
+          control={control}
+          name="startDate"
+          formOptions={{
             required: "Field is required",
             // validate: (v) => {
             //   if (v) {
@@ -722,14 +711,14 @@ const MonitoringPlanModal = ({ plan, parameters, onSuccess }) => {
             //   }
             //   return "Select Date & Time";
             // },
-          })}
-          error={errors.startDate}
+          }}
+          label="Start date for CAPA monitoring"
         />
 
-        <Input
-          type="date"
-          label="End date for CAPA monitoring"
-          {...register("endDate", {
+        <DateInput
+          control={control}
+          name="endDate"
+          formOptions={{
             required: "Field is required",
             // validate: (v) => {
             //   if (v) {
@@ -739,8 +728,8 @@ const MonitoringPlanModal = ({ plan, parameters, onSuccess }) => {
             //   }
             //   return "Select Date & Time";
             // },
-          })}
-          error={errors.endDate}
+          }}
+          label="End date for CAPA monitoring"
         />
 
         <Combobox
@@ -765,10 +754,11 @@ const MonitoringPlanModal = ({ plan, parameters, onSuccess }) => {
           error={errors.sampleSize}
         />
 
-        <Input
+        <DateInput
           label="Deadline"
-          type="date"
-          {...register("deadline", {
+          control={control}
+          name="deadline"
+          formOptions={{
             required: "Field is required",
             // validate: (v) => {
             //   if (v) {
@@ -778,8 +768,7 @@ const MonitoringPlanModal = ({ plan, parameters, onSuccess }) => {
             //   }
             //   return "Select Date & Time";
             // },
-          })}
-          error={errors.deadline}
+          }}
         />
 
         <Textarea
@@ -880,10 +869,10 @@ const PreventiveActionPlansForm = ({
         control={control}
         formOptions={{ required: "Field is required" }}
       />
-      <Input
-        type="date"
-        {...register("deadline", { required: "Field is required" })}
-        error={errors.deadline}
+      <DateInput
+        control={control}
+        name="deadline"
+        formOptions={{ required: "Field is required" }}
       />
       <Combobox
         name="status"

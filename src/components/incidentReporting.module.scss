@@ -67,10 +67,90 @@ main {
         color: red;
       }
     }
+    .personAffected {
+      .userTypes {
+        display: flex;
+        grid-gap: 12px;
+      }
+      display: grid;
+      grid-gap: 12px;
+      .personAffectedTable {
+        table {
+          tbody {
+            tr:first-child {
+              margin: 4px 0;
+              td {
+                padding: 0;
+                border: none;
+              }
+            }
+          }
+          .inlineForm {
+            grid-column: 1/-1;
+            form {
+              width: 100%;
+              display: grid;
+              grid-gap: 20px;
+              align-items: flex-start;
+              .btns {
+                padding: 0;
+                display: flex;
+                justify-content: flex-start;
+                button {
+                  border-radius: 4px;
+                  display: flex;
+                  align-items: center;
+                  grid-gap: 6px;
+                }
+              }
+            }
+          }
+          // tr,
+          // form {
+          //   grid-template-columns: 1fr 1fr 1fr 5rem;
+          // }
+        }
+      }
+    }
+    .contributingFactor {
+      display: grid;
+      grid-template-columns: 15rem 1fr;
+      border: 1px solid $primary-grey;
+      .sidebar {
+        padding: 10px;
+        background: $light-grey;
+        border-right: 1px solid $primary-grey;
+        ul {
+          display: grid;
+          grid-gap: 6px;
+        }
+      }
+      .content {
+        padding: 10px 25px;
+        .parent {
+          .parentName {
+            font-size: 0.9em;
+            color: $primary-color-dark3;
+            margin-bottom: 4px;
+            display: block;
+          }
+          display: grid;
+          grid-gap: 12px;
+          .children {
+            display: grid;
+            grid-gap: 6px;
+          }
+        }
+      }
+    }
     .tables {
       display: grid;
       grid-template-columns: 1fr 1fr;
       grid-gap: 1rem 2rem;
+      & > div > table {
+        min-height: 23rem;
+        // background: red;
+      }
       .inlineForm {
         grid-column: 1/-1;
         form {

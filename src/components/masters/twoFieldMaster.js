@@ -2,19 +2,10 @@ import { useState, useEffect } from "react";
 import { FaPlus, FaCheck, FaRegTrashAlt } from "react-icons/fa";
 import { BsPencilFill } from "react-icons/bs";
 import { BiSearch } from "react-icons/bi";
-import { RiCloseLine } from "react-icons/ri";
 import { IoClose } from "react-icons/io5";
-import { Box } from "../incidentReport";
-import {
-  Form,
-  Input,
-  Checkbox,
-  Table,
-  TableActions,
-  Toggle,
-} from "../elements";
+import { Input, Table, TableActions, Toggle } from "../elements";
 import { useForm } from "react-hook-form";
-import { Modal, Prompt } from "../modal";
+import { Prompt } from "../modal";
 import { endpoints as defaultEndpoints } from "../../config";
 import { useFetch } from "../../hooks";
 import s from "./masters.module.scss";
@@ -273,18 +264,19 @@ const TwoFieldMasterDetails = ({
                 if (edit) {
                   setTwoFieldMasters((prev) =>
                     prev.map((cat) => {
-                      const newTwoFieldMasterDetails = cat.twoFieldMasterDetails?.find(
-                        (sc) => sc.id === twoFieldMasterDetail.id
-                      )
-                        ? cat.twoFieldMasterDetails?.map((sc) =>
-                            sc.id === twoFieldMasterDetail.id
-                              ? twoFieldMasterDetail
-                              : sc
-                          )
-                        : [
-                            ...(cat.twoFieldMasterDetails || []),
-                            twoFieldMasterDetail,
-                          ];
+                      const newTwoFieldMasterDetails =
+                        cat.twoFieldMasterDetails?.find(
+                          (sc) => sc.id === twoFieldMasterDetail.id
+                        )
+                          ? cat.twoFieldMasterDetails?.map((sc) =>
+                              sc.id === twoFieldMasterDetail.id
+                                ? twoFieldMasterDetail
+                                : sc
+                            )
+                          : [
+                              ...(cat.twoFieldMasterDetails || []),
+                              twoFieldMasterDetail,
+                            ];
                       return cat.id === id
                         ? {
                             ...cat,
@@ -350,9 +342,10 @@ const TwoFieldMasterDetails = ({
                                 cat.id === id
                                   ? {
                                       ...cat,
-                                      twoFieldMasterDetails: cat.twoFieldMasterDetails.filter(
-                                        (c) => c.id !== twoFieldMaster.id
-                                      ),
+                                      twoFieldMasterDetails:
+                                        cat.twoFieldMasterDetails.filter(
+                                          (c) => c.id !== twoFieldMaster.id
+                                        ),
                                     }
                                   : cat
                               )

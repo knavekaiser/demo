@@ -3,17 +3,11 @@ import IrInputs from "./irInput";
 import IrDetails from "./irDetails";
 import Rca from "./rca";
 import { Tabs } from "../../elements";
-import {
-  Routes,
-  Route,
-  useLocation,
-  useMatch,
-  useNavigate,
-} from "react-router-dom";
+import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import { paths } from "../../../config";
 import s from "./style.module.scss";
 
-const Investigation = ({ ir, setIr }) => {
+const Investigation = ({}) => {
   const location = useLocation();
   const navigate = useNavigate();
   useEffect(() => {
@@ -36,8 +30,8 @@ const Investigation = ({ ir, setIr }) => {
           },
           {
             label: "IR Details",
-            path:
-              paths.incidentDashboard.irInvestigation.investigation.irDetails,
+            path: paths.incidentDashboard.irInvestigation.investigation
+              .irDetails,
           },
           {
             label: "IR Root Cause Analysis",

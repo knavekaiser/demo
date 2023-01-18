@@ -8,10 +8,10 @@ import React, {
 import { IoIosClose } from "react-icons/io";
 import { FaUpload, FaSearch, FaRegTrashAlt } from "react-icons/fa";
 import { BsFillExclamationTriangleFill } from "react-icons/bs";
-import { GoCalendar } from "react-icons/go";
 import { Link, useLocation, createSearchParams } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { Modal } from "../modal";
+import DatePicker from "react-datepicker";
 
 import s from "./elements.module.scss";
 import countries from "../../countries";
@@ -43,14 +43,6 @@ export const Input = forwardRef(
               {...rest}
               placeholder={rest.placeholder || "Enter"}
             />
-            {["date", "datetime-local"].includes(type) && (
-              <label
-                htmlFor={rest.id || _id.current}
-                className={s.calenderIcon}
-              >
-                <GoCalendar />
-              </label>
-            )}
             {icon && icon}
           </span>
           {error && <span className={s.errMsg}>{error.message}</span>}
@@ -59,6 +51,105 @@ export const Input = forwardRef(
     );
   }
 );
+export const DateInput = ({
+  control,
+  name,
+  className,
+  label,
+  type,
+  min,
+  max,
+  formOptions,
+  placeholder,
+  ...rest
+}) => {
+  return (
+    <Controller
+      control={control}
+      name={name}
+      rules={formOptions}
+      render={({
+        field: { onChange, value, name, ref },
+        fieldState: { error },
+      }) => {
+        return (
+          <section
+            className={`${s.input} ${className || ""} ${
+              error ? s.err : ""
+            } datepickerInput`}
+          >
+            {label && (
+              <label htmlFor={name}>
+                {label}
+                {formOptions.required && "*"}
+              </label>
+            )}
+            <div className={s.wrapper}>
+              <span className={s.field}>
+                <DatePicker
+                  onChange={(value) => {
+                    onChange(value);
+                  }}
+                  selected={value ? new Date(value) : null}
+                  dateFormat={
+                    type === "datetime-local"
+                      ? "MM/dd/yyyy HH:mm"
+                      : "MM/dd/yyyy"
+                  }
+                  {...(max && { maxDate: new Date(max) })}
+                  {...(min && { minDate: new Date(min) })}
+                  placeholderText={placeholder}
+                  {...rest}
+                >
+                  {type === "datetime-local" && (
+                    <div className={s.timeInputWrapper}>
+                      <div className={s.timeInput}>
+                        <label>Time:</label>
+                        <input
+                          type="time"
+                          value={
+                            value
+                              ? new Date(value).toTimeString().substr(0, 5)
+                              : "00:00"
+                          }
+                          disabled={!value}
+                          onChange={(e) => {
+                            onChange(
+                              new Date(
+                                `${value.toDateString()} ${
+                                  e.target.value || "00:00"
+                                }`
+                              )
+                            );
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </DatePicker>
+                <label htmlFor={name} className={s.calenderIcon}>
+                  <svg
+                    stroke="currentColor"
+                    fill="currentColor"
+                    stroke-width="0"
+                    viewBox="0 0 448 512"
+                    value=""
+                    height="15px"
+                    width="15px"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path d="M148 288h-40c-6.6 0-12-5.4-12-12v-40c0-6.6 5.4-12 12-12h40c6.6 0 12 5.4 12 12v40c0 6.6-5.4 12-12 12zm108-12v-40c0-6.6-5.4-12-12-12h-40c-6.6 0-12 5.4-12 12v40c0 6.6 5.4 12 12 12h40c6.6 0 12-5.4 12-12zm96 0v-40c0-6.6-5.4-12-12-12h-40c-6.6 0-12 5.4-12 12v40c0 6.6 5.4 12 12 12h40c6.6 0 12-5.4 12-12zm-96 96v-40c0-6.6-5.4-12-12-12h-40c-6.6 0-12 5.4-12 12v40c0 6.6 5.4 12 12 12h40c6.6 0 12-5.4 12-12zm-96 0v-40c0-6.6-5.4-12-12-12h-40c-6.6 0-12 5.4-12 12v40c0 6.6 5.4 12 12 12h40c6.6 0 12-5.4 12-12zm192 0v-40c0-6.6-5.4-12-12-12h-40c-6.6 0-12 5.4-12 12v40c0 6.6 5.4 12 12 12h40c6.6 0 12-5.4 12-12zm96-260v352c0 26.5-21.5 48-48 48H48c-26.5 0-48-21.5-48-48V112c0-26.5 21.5-48 48-48h48V12c0-6.6 5.4-12 12-12h40c6.6 0 12 5.4 12 12v52h128V12c0-6.6 5.4-12 12-12h40c6.6 0 12 5.4 12 12v52h48c26.5 0 48 21.5 48 48zm-48 346V160H48v298c0 3.3 2.7 6 6 6h340c3.3 0 6-2.7 6-6z"></path>
+                  </svg>
+                </label>
+              </span>
+              {error && <span className={s.errMsg}>{error.message}</span>}
+            </div>
+          </section>
+        );
+      }}
+    />
+  );
+};
 export const SearchField = ({
   url,
   data: defaultData,

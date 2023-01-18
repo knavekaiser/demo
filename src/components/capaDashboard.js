@@ -11,18 +11,31 @@ import { WiTime9 } from "react-icons/wi";
 import {
   Checkbox,
   Input,
+  DateInput,
   Combobox,
   Table,
   TableActions,
   Moment,
   moment,
+  Tabs,
+  Textarea,
+  FileInput,
 } from "./elements";
 import { useNavigate, useLocation, createSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { Prompt } from "./modal";
+import { Modal, Prompt } from "./modal";
 import { endpoints as defaultEndpoints } from "../config";
 import s from "./irDashboard.module.scss";
 import { useFetch } from "../hooks";
+
+const Data = ({ label, value }) => {
+  return (
+    <section className={s.data}>
+      <span className={s.label}>{label}</span>:{" "}
+      <span className={s.value}>{value}</span>
+    </section>
+  );
+};
 
 function paramsToObject(entries) {
   const result = {};
@@ -33,16 +46,6 @@ function paramsToObject(entries) {
 }
 
 function CapaDashboard() {
-  const { user, checkPermission } = useContext(SiteContext);
-  // const location = useLocation();
-  // const navigate = useNavigate();
-  // useEffect(() => {
-  //   if (
-  //     new RegExp(`${paths.capaDashboard.basePath}/?$`).test(location.pathname)
-  //   ) {
-  //     navigate(paths.capaDashboard.myDashboard);
-  //   }
-  // }, []);
   return (
     <div className={s.container}>
       <MyDashboard />
@@ -90,11 +93,6 @@ export const MyDashboard = () => {
     } else {
       delete _filters.userId;
     }
-
-    // if (_filters.irBy === "self") {
-    // } else {
-    //   delete _filters.userId;
-    // }
 
     if (Object.entries(_filters).length) {
       searchIrs(null, { query: _filters })
@@ -330,127 +328,325 @@ export const MyDashboard = () => {
     </div>
   );
 };
-const SingleIr = memo(
-  ({ ir, focus, setFocus, className, parameters, styles }) => {
-    const { tatConfig } = useContext(IrDashboardContext);
-    const { irTypes } = useContext(SiteContext);
-    const [showPlans, setShowPlans] = useState(false);
-    const [showCapaMonitoring, setShowCapaMonitoring] = useState(true);
-    return (
-      <tr
-        className={`${ir.typeofInci === 8 ? s.sentinel : ""} ${
-          focus === ir.id ? s.focus : ""
-        } ${className || ""}`}
-        style={styles || {}}
-      >
-        <td>
-          <button
-            className={`btn clear ${s.expandBtn}`}
-            onClick={() => setShowPlans(!showPlans)}
+const SingleIr = memo(({ ir, focus, className, parameters, styles }) => {
+  const [showPlans, setShowPlans] = useState(false);
+  const [capaAction, setCapaAction] = useState(false);
+  return (
+    <tr
+      className={`${ir.typeofInci === 8 ? s.sentinel : ""} ${
+        focus === ir.id ? s.focus : ""
+      } ${className || ""}`}
+      style={styles || {}}
+    >
+      <td>
+        <button
+          className={`btn clear ${s.expandBtn}`}
+          onClick={() => setShowPlans(!showPlans)}
+        >
+          {showPlans ? <FaMinusSquare /> : <FaPlusSquare />}
+        </button>
+      </td>
+      <td className={s.irCode}>
+        <span className={s.icons}>
+          <span
+            className={s.icon}
+            style={{ color: "rgb(230, 163, 16)", fontSize: "1.15em" }}
           >
-            {showPlans ? <FaMinusSquare /> : <FaPlusSquare />}
-          </button>
-        </td>
-        <td className={s.irCode}>
-          <span className={s.icons}>
-            <span
-              className={s.icon}
-              style={{ color: "rgb(230, 163, 16)", fontSize: "1.15em" }}
-            >
-              <WiTime9 />
-            </span>
+            <WiTime9 />
           </span>
-          {ir.sequence}
+        </span>
+        {ir.sequence}
+      </td>
+      <td>
+        <Moment format="DD/MM/YYYY hh:mm">{ir.reportingDate}</Moment>
+      </td>
+      <td>
+        <Moment format="DD/MM/YYYY hh:mm">{ir.incident_Date_Time}</Moment>
+      </td>
+      <td>
+        {parameters?.locations?.find((item) => item.id === ir.location)?.name ||
+          ir.location}
+      </td>
+      <td>
+        {parameters?.investigators?.find(
+          ({ value }) => value === ir.irInvestigator
+        )?.label || ir.irInvestigator}
+      </td>
+      <td className={s.capa}>{ir.irInvestigators}</td>
+      <td />
+
+      {showPlans && (
+        <td className={s.actionPlans}>
+          <Table
+            columns={[
+              { label: "Action Plan" },
+              { label: "Deadline" },
+              { label: "Action Responsibility" },
+              { label: "CAPA Status" },
+              { label: "Actions" },
+            ]}
+          >
+            {ir.actionPlans.map((plan) => (
+              <tr key={plan.id}>
+                <td>{plan.action}</td>
+                <td>
+                  <Moment format="DD/MM/YYYY">{plan.deadline}</Moment>
+                </td>
+                <td>{plan.responsibility}</td>
+                <td>{plan.status}</td>
+                <TableActions
+                  actions={[
+                    {
+                      icon: <FaExternalLinkAlt />,
+                      label: "View IR",
+                      callBack: () => {
+                        setCapaAction(true);
+                      },
+                    },
+                    {
+                      icon: <FaHeartbeat />,
+                      label: "CAPA Monitoring",
+                      callBack: () => {},
+                    },
+                  ]}
+                />
+                {
+                  //   <Modal
+                  //   head
+                  //   label="CAPA MONITORING"
+                  //   open={showCapaMonitoring}
+                  //   setOpen={setShowCapaMonitoring}
+                  //   className={s.capaMonitoringModal}
+                  // >
+                  //   <CapaMonitoringModal
+                  //     ir={ir}
+                  //     plan={plan}
+                  //     parameters={parameters}
+                  //   />
+                  // </Modal>
+                }
+              </tr>
+            ))}
+          </Table>
         </td>
-        <td>
-          <Moment format="DD/MM/YYYY hh:mm">{ir.reportingDate}</Moment>
-        </td>
-        <td>
-          <Moment format="DD/MM/YYYY hh:mm">{ir.incident_Date_Time}</Moment>
-        </td>
-        <td>
-          {parameters?.locations?.find((item) => item.id === ir.location)
-            ?.name || ir.location}
-        </td>
-        <td>
-          {parameters?.investigators?.find(
-            ({ value }) => value === ir.irInvestigator
-          )?.label || ir.irInvestigator}
-        </td>
-        <td className={s.capa}>{ir.irInvestigators}</td>
-        <td />
-        {showPlans && (
-          <td className={s.actionPlans}>
-            <Table
-              columns={[
-                { label: "Action Plan" },
-                { label: "Deadline" },
-                { label: "Action Responsibility" },
-                { label: "CAPA Status" },
-                { label: "Actions" },
-              ]}
+      )}
+
+      {capaAction && (
+        <CapaAction
+          parameters={parameters}
+          ir={ir}
+          open={capaAction}
+          setOpen={setCapaAction}
+          onSubmit={(data) => {
+            // handle data
+          }}
+        />
+      )}
+    </tr>
+  );
+});
+const CapaAction = ({ ir, open, setOpen, parameters }) => {
+  const { irTypes } = useContext(SiteContext);
+  const [tab, setTab] = useState("info");
+  const {
+    handleSubmit,
+    register,
+    reset,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm();
+  const uploads = watch("upload");
+  return (
+    <Modal
+      open={open}
+      head
+      label="CAPA ACTIONS"
+      className={s.capaActions}
+      setOpen={setOpen}
+    >
+      <div className={s.content}>
+        <Tabs
+          activeTab={tab}
+          tabs={[
+            { label: "CAPA INFO", value: "info" },
+            { label: "HISOTRY OF COMMENTS", value: "comments" },
+          ]}
+          onChange={(tab) => setTab(tab.value)}
+          secondary
+        />
+
+        {tab === "info" && (
+          <>
+            <div className={s.summary}>
+              <Data label="IR Code" value={ir?.sequence} />
+              <Data
+                label="Incident Date & Time"
+                value={moment({
+                  time: ir?.incident_Date_Time,
+                  format: "DD/MM/YYYY hh:mm",
+                })}
+              />
+              <Data
+                label="Incident Type"
+                value={
+                  irTypes?.find(
+                    (item) => item.id?.toString() === ir?.typeofInci?.toString()
+                  )?.label || ir?.typeofInci
+                }
+              />
+              <Data
+                label="Category"
+                value={
+                  parameters?.categories?.find(
+                    (item) => item.id?.toString() === ir?.inciCateg?.toString()
+                  )?.name || ir?.inciCateg
+                }
+              />
+              <Data
+                label="Location"
+                value={
+                  parameters?.locations?.find(
+                    (item) => item.id?.toString() === ir?.location?.toString()
+                  )?.label || ir?.location
+                }
+              />
+              <Data
+                label="Sub Category"
+                value={
+                  parameters?.categories
+                    ?.find(
+                      (item) =>
+                        item.id?.toString() === ir?.inciCateg?.toString()
+                    )
+                    ?.subCategorys?.find(
+                      (item) =>
+                        item.id?.toString() === ir?.inciSubCat?.toString()
+                    )?.name || ir?.inciSubCat
+                }
+              />
+            </div>
+
+            <div className={s.actionPlan}>
+              <label>Action Plan</label>
+              <p className={s.plan}>
+                <strong>Counsel lab safety office</strong> - Counseling is to be
+                done to ensure safety team is informed for any outsourced work
+                being done.
+              </p>
+              <p className={s.deadline}>
+                Deadline -{" "}
+                <span>
+                  <Moment format={"DD/MM/YYYY"}>{new Date()}</Moment>
+                </span>
+              </p>
+            </div>
+
+            <form
+              onSubmit={handleSubmit((values) => {
+                ///
+              })}
             >
-              {ir.actionPlans.map((plan) => (
-                <tr key={plan.id}>
-                  <td>{plan.action}</td>
-                  <td>
-                    <Moment format="DD/MM/YYYY">{plan.deadline}</Moment>
-                  </td>
-                  <td>{plan.responsibility}</td>
-                  <td>{plan.status}</td>
-                  <TableActions
-                    actions={[
-                      {
-                        icon: <FaExternalLinkAlt />,
-                        label: "View IR",
-                        callBack: () => {},
-                      },
-                      {
-                        icon: <FaHeartbeat />,
-                        label: "CAPA Monitoring",
-                        callBack: () => {},
-                      },
-                    ]}
-                  />
-                  {
-                    //   <Modal
-                    //   head
-                    //   label="CAPA MONITORING"
-                    //   open={showCapaMonitoring}
-                    //   setOpen={setShowCapaMonitoring}
-                    //   className={s.capaMonitoringModal}
-                    // >
-                    //   <CapaMonitoringModal
-                    //     ir={ir}
-                    //     plan={plan}
-                    //     parameters={parameters}
-                    //   />
-                    // </Modal>
-                  }
-                </tr>
-              ))}
-            </Table>
-          </td>
+              <section className={s.status}>
+                <Checkbox label="Acknowledge" {...register("acknowledge")} />
+                <Checkbox label="Deligate" {...register("deligate")} />
+              </section>
+              <Textarea
+                label="Comments / Reason for rejection"
+                {...register("comment")}
+              />
+              <FileInput
+                label="Upload"
+                prefill={uploads}
+                onChange={(files) => {
+                  setValue("upload", files);
+                }}
+              />
+              <div className={`${s.btns} flex`}>
+                <button
+                  type="button"
+                  className="btn wd-100 ghost"
+                  onClick={() => reset()}
+                >
+                  Clear
+                </button>
+                <button type="submit" className="btn wd-100">
+                  Submit
+                </button>
+                <button type="button" className="btn wd-100 secondary">
+                  Deligate
+                </button>
+              </div>
+            </form>
+          </>
         )}
-      </tr>
-    );
-  }
-);
+
+        {tab === "comments" && (
+          <>
+            <div className={s.comments}>
+              {[
+                {
+                  id: 1,
+                  user: 15,
+                  comment: "This is the first comment",
+                  dateTime: "2022-11-05T09:18:55.631Z",
+                },
+                {
+                  id: 2,
+                  user: 17,
+                  comment: "This is the second comment",
+                  dateTime: "2022-12-05T09:12:10.631Z",
+                },
+                {
+                  id: 3,
+                  user: 20,
+                  comment: "This is the third comment",
+                  dateTime: "2022-10-05T09:04:19.631Z",
+                },
+              ]
+                .sort((a, b) =>
+                  new Date(a.dateTime) < new Date(b.dateTime) ? 1 : -1
+                )
+                .map((comment, i) => (
+                  <div key={comment.id} className={i === 0 ? s.latest : ""}>
+                    <span className={s.ball} />
+                    <p>
+                      Commented by -{" "}
+                      <span className={s.user}>
+                        {parameters.users?.find(
+                          (user) =>
+                            user.value?.toString() === comment.user.toString()
+                        )?.label || comment.user}
+                      </span>{" "}
+                      on{" "}
+                      <Moment format="DD/MM/YYYY hh:mm">
+                        {comment.dateTime}
+                      </Moment>
+                    </p>
+                    <p className={s.comment}>{comment.comment}</p>
+                  </div>
+                ))}
+            </div>
+          </>
+        )}
+      </div>
+    </Modal>
+  );
+};
 const Filters = ({ onSubmit }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, checkPermission, irTypes } = useContext(SiteContext);
-  const { parameters, irConfig } = useContext(IrDashboardContext);
+  const { user, irTypes } = useContext(SiteContext);
+  const { parameters } = useContext(IrDashboardContext);
   const defaultView = user?.role?.includes?.(7) ? "all" : "assigned";
-  const { handleSubmit, register, watch, reset, setValue, getValues } = useForm(
-    {
+  const { control, handleSubmit, register, watch, reset, setValue, getValues } =
+    useForm({
       defaultValues: {
         irBy: "self",
         status: "",
         view: user?.role?.includes?.(7) ? "all" : "assigned",
       },
-    }
-  );
+    });
   const [categories, setCategories] = useState([]);
   const fromIncidentDateTime = watch("fromIncidentDateTime");
   const fromreportingDate = watch("fromreportingDate");
@@ -481,16 +677,16 @@ const Filters = ({ onSubmit }) => {
       <Input label="IR Code" {...register("sequence")} />
       <section className={s.pair}>
         <label>IR Reporting Date</label>
-        <Input
-          type="date"
+        <DateInput
+          control={control}
+          name="fromIncidentDateTime"
           placeholder="From"
-          {...register("fromIncidentDateTime")}
           max={moment({ format: "YYYY-MM-DD", time: new Date() })}
         />
-        <Input
-          type="date"
+        <DateInput
+          control={control}
+          name="toIncidentDateTime"
           placeholder="To"
-          {...register("toIncidentDateTime")}
           min={moment({
             format: "YYYY-MM-DD",
             time: new Date(fromIncidentDateTime),
@@ -500,16 +696,16 @@ const Filters = ({ onSubmit }) => {
       </section>
       <section className={s.pair}>
         <label>Action Deadline Date</label>
-        <Input
-          type="date"
+        <DateInput
+          control={control}
+          name="fromreportingDate"
           placeholder="From"
-          {...register("fromreportingDate")}
           max={moment({ format: "YYYY-MM-DD", time: new Date() })}
         />
-        <Input
-          type="date"
+        <DateInput
           placeholder="To"
-          {...register("toreportingDate")}
+          control={control}
+          name="toreportingDate"
           min={moment({
             format: "YYYY-MM-DD",
             time: new Date(fromreportingDate),

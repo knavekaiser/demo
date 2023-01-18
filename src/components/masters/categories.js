@@ -1,15 +1,12 @@
 import { useState, useEffect } from "react";
-import { FaInfoCircle, FaPlus, FaCheck, FaRegTrashAlt } from "react-icons/fa";
+import { FaPlus, FaCheck, FaRegTrashAlt } from "react-icons/fa";
 import { BsPencilFill } from "react-icons/bs";
 import { BiSearch } from "react-icons/bi";
-import { RiCloseLine } from "react-icons/ri";
 import { IoClose } from "react-icons/io5";
-import { Box } from "../incidentReport";
 import {
   Textarea,
   Select,
   Combobox,
-  SearchField,
   Input,
   Checkbox,
   Table,
@@ -178,9 +175,11 @@ const CategoryForm = ({ edit, onSuccess, clearForm, categories }) => {
     formState: { errors },
   } = useForm();
 
-  const { post: postCategory, put: updateCategory, loading } = useFetch(
-    defaultEndpoints.categories + `/${edit?.id || ""}`
-  );
+  const {
+    post: postCategory,
+    put: updateCategory,
+    loading,
+  } = useFetch(defaultEndpoints.categories + `/${edit?.id || ""}`);
 
   useEffect(() => {
     reset({ ...edit });
@@ -484,9 +483,11 @@ const SubCategoryForm = ({
   const [showReportableForm, setShowReportableForm] = useState(false);
   const reportable = watch("reportable");
 
-  const { post: postSubCategory, put: updateSubCategory, loading } = useFetch(
-    defaultEndpoints.subCategories + `/${edit?.id || ""}`
-  );
+  const {
+    post: postSubCategory,
+    put: updateSubCategory,
+    loading,
+  } = useFetch(defaultEndpoints.subCategories + `/${edit?.id || ""}`);
 
   useEffect(() => {
     reset({

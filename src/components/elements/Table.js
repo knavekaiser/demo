@@ -12,10 +12,10 @@ export const Table = ({
   sortable,
   actions,
   loading,
+  tHeadStyle,
 }) => {
   const tbody = useRef();
   const table = useRef();
-  const [style, setStyle] = useState({});
   useEffect(() => {
     if (sortable) {
       Sortable.create(tbody.current, {
@@ -35,7 +35,7 @@ export const Table = ({
     >
       {columns && (
         <thead>
-          <tr>
+          <tr style={tHeadStyle || {}}>
             {columns.map((column, i) => (
               <th key={i}>{column.label}</th>
             ))}
@@ -220,8 +220,8 @@ export const VirtualTable = ({
           rows.map((row, i, arr) => {
             const buffer = 10;
             const containerHeight = tbodyRef.current.clientHeight;
-            const theadHeight = tbodyRef.current.querySelector("thead")
-              .clientHeight;
+            const theadHeight =
+              tbodyRef.current.querySelector("thead").clientHeight;
             const x =
               (getRowHeight
                 ? arr.slice(0, i).reduce((p, a) => p + getRowHeight(a), 0)

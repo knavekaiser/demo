@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useContext } from "react";
 import { SiteContext } from "../SiteContext";
 import { Prompt } from "../components/modal";
-import { endpoints as defaultEndpoints } from "../config";
 
 const defaultRegex = /^[\-\+.,:@ a-z0-9]+$/gi;
 
@@ -22,7 +21,7 @@ const badCharacters = (payload, defaultRegex, validator = {}) => {
 // This custom hook is used throughout the app to make api calls
 export const useFetch = (
   url,
-  { his, headers: hookHeaders, defaultHeaders, noDbSchema, validator } = {}
+  { his, headers: hookHeaders, defaultHeaders, validator } = {}
 ) => {
   const { user, logout } = useContext(SiteContext);
   const [error, setError] = useState(false);
@@ -47,7 +46,6 @@ export const useFetch = (
       );
       if (badInput) {
         throw new Error(badInput);
-        // return { error: badInput };
       }
 
       let _url = url;

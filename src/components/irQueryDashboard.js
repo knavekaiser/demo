@@ -1,51 +1,11 @@
-import React, {
-  useState,
-  useEffect,
-  useContext,
-  Component,
-  useRef,
-  Fragment,
-  useCallback,
-  useMemo,
-  memo,
-} from "react";
-import {
-  SiteContext,
-  IrDashboardContext,
-  IrDashboardContextProvider,
-} from "../SiteContext";
-import {
-  FaInfoCircle,
-  FaRegTrashAlt,
-  FaPlus,
-  FaEye,
-  FaExternalLinkAlt,
-  FaRegStickyNote,
-  FaRegCheckSquare,
-  FaAdjust,
-  FaCrosshairs,
-  FaRegUser,
-  FaUser,
-  FaRegStar,
-  FaRegTimesCircle,
-  FaRegFileAlt,
-  FaFlag,
-  FaUpload,
-  FaPrint,
-  FaRegCheckCircle,
-  FaCircle,
-} from "react-icons/fa";
+import React, { useState, useEffect, useContext, memo } from "react";
+import { SiteContext, IrDashboardContext } from "../SiteContext";
+import { FaExternalLinkAlt } from "react-icons/fa";
 import { BiSearch } from "react-icons/bi";
-import { AiOutlinePlus } from "react-icons/ai";
-import { WiTime9 } from "react-icons/wi";
-import { BsPencilFill, BsFillExclamationTriangleFill } from "react-icons/bs";
-import { FiCheckSquare } from "react-icons/fi";
 import {
-  Radio,
   Select,
-  Tabs,
   Input,
-  Combobox,
+  DateInput,
   Table,
   TableActions,
   Moment,
@@ -54,23 +14,12 @@ import {
   FileInput,
   uploadFiles,
 } from "./elements";
-import {
-  useNavigate,
-  useLocation,
-  createSearchParams,
-  Routes,
-  Route,
-} from "react-router-dom";
+import { useNavigate, useLocation, createSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { Modal, Prompt } from "./modal";
-import { irStatus, endpoints as defaultEndpoints, paths } from "../config";
-import { CSVLink } from "react-csv";
+import { endpoints as defaultEndpoints, paths } from "../config";
 import s from "./irDashboard.module.scss";
 import { useFetch } from "../hooks";
-import { useReactToPrint } from "react-to-print";
-import { countDays } from "../helpers";
-
-import IrInvestigation from "./irInvestigation";
 
 function paramsToObject(entries) {
   const result = {};
@@ -81,7 +30,6 @@ function paramsToObject(entries) {
 }
 
 function IrDashboard() {
-  const { user, checkPermission } = useContext(SiteContext);
   const location = useLocation();
   const navigate = useNavigate();
   useEffect(() => {
@@ -101,13 +49,10 @@ function IrDashboard() {
 }
 export const MyDashboard = () => {
   const { user, checkPermission } = useContext(SiteContext);
-  const { parameters, count, dashboard, setDashboard, irConfig } = useContext(
-    IrDashboardContext
-  );
+  const { parameters, count, setDashboard } = useContext(IrDashboardContext);
   const location = useLocation();
   const navigate = useNavigate();
   const [incidents, setIncidents] = useState([]);
-  const [filters, setFilters] = useState({});
   const [focus, setFocus] = useState(null);
 
   const { get: searchIrs, loading } = useFetch(defaultEndpoints.irQuerySearch, {
@@ -256,88 +201,83 @@ const ReportCount = ({ label, className, irs }) => {
     </div>
   );
 };
-const SingleIr = memo(
-  ({ ir, focus, setFocus, className, parameters, setIncidents }) => {
-    const [showResForm, setShowResForm] = useState(false);
-    return (
-      <>
-        <tr
-          className={`${ir.typeofInci === 8 ? s.sentinel : ""} ${
-            focus === ir.id ? s.focus : ""
-          } ${className || ""}`}
-          // onClick={() => {
-          //   setFocus && setFocus(ir.id);
-          // }}
-        >
-          <td className={s.sequence}>{ir.sequence}</td>
-          <td>
-            <Moment format="DD/MM/YYYY hh:mm">{ir.reportingDate}</Moment>
-          </td>
-          <td>
-            <Moment format="DD/MM/YYYY hh:mm">{ir.incident_Date_Time}</Moment>
-          </td>
-          <td>
-            {parameters?.locations?.find(
-              (item) => item.id.toString() === ir.location.toString()
-            )?.name || ir.location}
-          </td>
-          <td>
-            {parameters?.categories?.find((item) => item.id === ir.inciCateg)
-              ?.name || ir.inciCateg}
-          </td>
-          <td>
-            {parameters?.categories
-              ?.find((item) => item.id === ir.inciCateg)
-              ?.subCategorys?.find((item) => item.id === ir.inciSubCat)?.name ||
-              ir.inciSubCat}
-          </td>
-          <td>
-            {parameters?.users?.find(({ value }) => value === ir.queryRaisedBy)
-              ?.label || ir.queryRaisedBy}
-          </td>
-          <td>
-            <Moment format="DD/MM/YYYY hh:mm">{ir.queryDateTime}</Moment>
-          </td>
-          <TableActions
-            actions={[
-              {
-                icon: <FaExternalLinkAlt />,
-                label: "Response",
-                callBack: () => setShowResForm(true),
-              },
-            ]}
-          />
-        </tr>
-        <Modal
-          open={showResForm}
-          setOpen={setShowResForm}
-          head={true}
-          label="SUBMIT IR INPUT"
-          className={s.responseForm}
-        >
-          <ResponseForm
-            ir={ir}
-            parameters={parameters}
-            setShowResForm={setShowResForm}
-            onSuccess={(newRes) => {
-              setIncidents((prev) =>
-                prev.map((ir) =>
-                  ir.reqInputId === newRes.reqId
-                    ? {
-                        ...ir,
-                        response: newRes,
-                      }
-                    : ir
-                )
-              );
-              setShowResForm(false);
-            }}
-          />
-        </Modal>
-      </>
-    );
-  }
-);
+const SingleIr = memo(({ ir, focus, className, parameters, setIncidents }) => {
+  const [showResForm, setShowResForm] = useState(false);
+  return (
+    <>
+      <tr
+        className={`${ir.typeofInci === 8 ? s.sentinel : ""} ${
+          focus === ir.id ? s.focus : ""
+        } ${className || ""}`}
+      >
+        <td className={s.sequence}>{ir.sequence}</td>
+        <td>
+          <Moment format="DD/MM/YYYY hh:mm">{ir.reportingDate}</Moment>
+        </td>
+        <td>
+          <Moment format="DD/MM/YYYY hh:mm">{ir.incident_Date_Time}</Moment>
+        </td>
+        <td>
+          {parameters?.locations?.find(
+            (item) => item.id.toString() === ir.location.toString()
+          )?.name || ir.location}
+        </td>
+        <td>
+          {parameters?.categories?.find((item) => item.id === ir.inciCateg)
+            ?.name || ir.inciCateg}
+        </td>
+        <td>
+          {parameters?.categories
+            ?.find((item) => item.id === ir.inciCateg)
+            ?.subCategorys?.find((item) => item.id === ir.inciSubCat)?.name ||
+            ir.inciSubCat}
+        </td>
+        <td>
+          {parameters?.users?.find(({ value }) => value === ir.queryRaisedBy)
+            ?.label || ir.queryRaisedBy}
+        </td>
+        <td>
+          <Moment format="DD/MM/YYYY hh:mm">{ir.queryDateTime}</Moment>
+        </td>
+        <TableActions
+          actions={[
+            {
+              icon: <FaExternalLinkAlt />,
+              label: "Response",
+              callBack: () => setShowResForm(true),
+            },
+          ]}
+        />
+      </tr>
+      <Modal
+        open={showResForm}
+        setOpen={setShowResForm}
+        head={true}
+        label="SUBMIT IR INPUT"
+        className={s.responseForm}
+      >
+        <ResponseForm
+          ir={ir}
+          parameters={parameters}
+          setShowResForm={setShowResForm}
+          onSuccess={(newRes) => {
+            setIncidents((prev) =>
+              prev.map((ir) =>
+                ir.reqInputId === newRes.reqId
+                  ? {
+                      ...ir,
+                      response: newRes,
+                    }
+                  : ir
+              )
+            );
+            setShowResForm(false);
+          }}
+        />
+      </Modal>
+    </>
+  );
+});
 const ResponseForm = ({ ir, parameters, setShowResForm, onSuccess }) => {
   const { user } = useContext(SiteContext);
   const { irTypes } = useContext(SiteContext);
@@ -493,15 +433,7 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
   const { user, checkPermission, irTypes } = useContext(SiteContext);
   const { parameters } = useContext(IrDashboardContext);
   const defaultView = user?.role?.includes?.(7) ? "all" : "assigned";
-  const {
-    handleSubmit,
-    register,
-    watch,
-    reset,
-    setValue,
-    getValues,
-    control,
-  } = useForm({
+  const { handleSubmit, register, watch, reset, setValue, control } = useForm({
     defaultValues: {
       status: "",
     },
@@ -549,16 +481,16 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
       <Input label="IR Code" {...register("irCode")} />
       <section className={s.pair}>
         <label>Query Date Range</label>
-        <Input
-          type="date"
+        <DateInput
+          control={control}
+          name="fromQueryDateTime"
           placeholder="From"
-          {...register("fromQueryDateTime")}
           max={moment({ format: "YYYY-MM-DD", time: new Date() })}
         />
-        <Input
-          type="date"
+        <DateInput
+          control={control}
+          name="toQueryDateTime"
           placeholder="To"
-          {...register("toQueryDateTime")}
           min={moment({
             format: "YYYY-MM-DD",
             time: new Date(fromQueryDateTime),
@@ -568,16 +500,16 @@ const Filters = ({ onSubmit, qualityDashboard }) => {
       </section>
       <section className={s.pair}>
         <label>IR Date Range</label>
-        <Input
-          type="date"
+        <DateInput
+          control={control}
+          name="fromIncidentDateTime"
           placeholder="From"
-          {...register("fromIncidentDateTime")}
           max={moment({ format: "YYYY-MM-DD", time: new Date() })}
         />
         <Input
-          type="date"
+          control={control}
+          name="toIncidentDateTime"
           placeholder="To"
-          {...register("toIncidentDateTime")}
           min={moment({
             format: "YYYY-MM-DD",
             time: new Date(fromIncidentDateTime),

@@ -1,20 +1,9 @@
 import { useState, useEffect } from "react";
-import { FaInfoCircle, FaCheck, FaPlus, FaRegTrashAlt } from "react-icons/fa";
+import { FaCheck, FaPlus, FaRegTrashAlt } from "react-icons/fa";
 import { BsPencilFill } from "react-icons/bs";
-import { BiSearch } from "react-icons/bi";
-import { Box } from "../incidentReport";
-import { TiTick } from "react-icons/ti";
-import { IoIosClose } from "react-icons/io";
 import { IoClose } from "react-icons/io5";
-import {
-  Form,
-  Input,
-  Combobox,
-  Table,
-  TableActions,
-  Toggle,
-} from "../elements";
-import { Modal, Prompt } from "../modal";
+import { Combobox, Table, TableActions, Toggle } from "../elements";
+import { Prompt } from "../modal";
 import { useForm } from "react-hook-form";
 import { endpoints as defaultEndpoints, riskColors } from "../../config";
 import { useFetch } from "../../hooks";
@@ -209,9 +198,11 @@ const RiskAssessmentForm = ({
     ...edit,
   });
 
-  const { post: postRam, put: updateRam, loading } = useFetch(
-    defaultEndpoints.riskAssessments + `/${edit?.id || ""}`
-  );
+  const {
+    post: postRam,
+    put: updateRam,
+    loading,
+  } = useFetch(defaultEndpoints.riskAssessments + `/${edit?.id || ""}`);
 
   useEffect(() => {
     reset({ status: true, ...edit });

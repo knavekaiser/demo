@@ -391,3 +391,150 @@ button {
     -webkit-line-clamp: 4;
   }
 }
+
+.datepickerInput {
+  .react-datepicker-popper {
+    transform: translate(0px, 26px) !important;
+    z-index: 20;
+  }
+}
+
+.customComponent {
+  .row {
+    font-size: 1rem;
+    grid-gap: 1rem;
+    & > div {
+      padding: 0;
+      div:has(.react-datepicker-wrapper) {
+        &:has(label) {
+          // background: red;
+          .disStyles {
+            position: relative;
+            input {
+              min-height: 30px;
+              border: 1px solid #b7b7b7;
+              border-radius: 4px;
+              min-width: 4rem;
+              font-size: 0.88em;
+              outline: none;
+              &:focus {
+                border-color: #3450a3;
+              }
+            }
+            span {
+              position: absolute;
+              top: -2px;
+              right: 0;
+              border: none;
+              svg {
+                height: 18px;
+                width: 18px;
+              }
+            }
+          }
+          .react-datepicker__tab-loop {
+            .react-datepicker__triangle {
+              transform: translate(230px, 0px) !important;
+            }
+          }
+          input[type="time"] {
+            margin: 0;
+            padding: 2px;
+            padding-left: 6px;
+            outline: none;
+            border: 1px solid #b7b7b7;
+            border-radius: 4px;
+            &:focus {
+              border-color: #3450a3;
+            }
+          }
+          .react-datepicker__day--selected {
+            background: $primary-color;
+          }
+        }
+      }
+      &:has(div):has(input[type="radio"]),
+      &:has(div):has(input[type="checkbox"]) {
+        display: flex;
+        grid-gap: 1.5rem;
+        flex-wrap: wrap;
+        & > div:has(label) {
+          &:not(:has(input)) {
+            margin-bottom: -1.5rem;
+            flex-basis: 100%;
+          }
+        }
+        & > p {
+          flex-basis: 100%;
+          margin-bottom: -1.5rem;
+          font-size: 0.8rem;
+          font-weight: 600;
+          white-space: nowrap;
+        }
+        div:has(input[type="radio"]) {
+          font-size: 0.95rem;
+          input[type="radio"] {
+            margin: 0;
+            padding: 0;
+            &:after {
+              display: none !important;
+            }
+          }
+          display: flex;
+          align-items: center;
+        }
+      }
+      label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-bottom: 0.2rem;
+        white-space: nowrap;
+      }
+      &:has(div):has(textarea) {
+        height: min-content !important;
+        textarea {
+          min-height: 31px;
+          // height: 31px;
+          border: 1px solid #b7b7b7;
+          padding: 5px 6px;
+          border-radius: 4px;
+          font-size: 0.88em;
+          &:focus {
+            border-color: #3450a3;
+          }
+        }
+      }
+      canvas {
+        border-radius: 4px;
+      }
+      &:has(select) {
+        select {
+          border-radius: 4px;
+          margin-right: 10px;
+          margin-bottom: 10px;
+          outline: none;
+          option {
+            padding: 4px 6px;
+          }
+          &:focus {
+            border-color: #3450a3;
+          }
+        }
+        input {
+          border: 1px solid #b7b7b7;
+          border-radius: 4px;
+          padding-left: 6px;
+          outline: none;
+          min-height: 30px;
+          &::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+          }
+          &:focus {
+            border-color: #3450a3;
+          }
+        }
+      }
+    }
+  }
+}

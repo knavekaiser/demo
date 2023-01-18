@@ -7,6 +7,7 @@ import {
   TableActions,
   Combobox,
   Input,
+  DateInput,
   Textarea,
   FileInput,
   moment,
@@ -650,6 +651,7 @@ const RecordInputForm = ({ edit, parameters, onSuccess }) => {
   const { user } = useContext(SiteContext);
   const { ir } = useContext(InvestigationContext);
   const {
+    control,
     handleSubmit,
     register,
     watch,
@@ -766,16 +768,17 @@ const RecordInputForm = ({ edit, parameters, onSuccess }) => {
         options={parameters?.evidenceSources}
         errors={errors.evidenceSource}
       />
-      <Input
+      <DateInput
         label="Received On"
         type="datetime-local"
-        {...register("recievedOn", {
+        control={control}
+        name="recievedOn"
+        formOptions={{
           required: "Enter Received Date",
           validate: (v) =>
             new Date(v) < new Date() || "Can not select date from future",
-        })}
+        }}
         max={moment({ time: new Date(), format: "YYYY-MM-DDThh:mm" })}
-        error={errors.recievedOn}
       />
       <Textarea
         className={s.response}
@@ -922,15 +925,10 @@ const Evidence = ({ parameters }) => {
     </Table>
   );
 };
-const EvidenceForm = ({
-  edit,
-  onSuccess,
-  clearForm,
-  evidences,
-  parameters,
-}) => {
+const EvidenceForm = ({ edit, onSuccess, clearForm, parameters }) => {
   const { ir } = useContext(InvestigationContext);
   const {
+    control,
     handleSubmit,
     register,
     reset,
@@ -941,12 +939,13 @@ const EvidenceForm = ({
   } = useForm({ ...edit });
 
   const uploads = watch("upload");
-  const { post: postEvidence, put: updateEvidence, loading } = useFetch(
-    defaultEndpoints.evidences + `/${edit?.id || ""}`,
-    {
-      validator: { upload: /^.+$/gi },
-    }
-  );
+  const {
+    post: postEvidence,
+    put: updateEvidence,
+    loading,
+  } = useFetch(defaultEndpoints.evidences + `/${edit?.id || ""}`, {
+    validator: { upload: /^.+$/gi },
+  });
   const { post: upload, laoding: uploadingFiles } = useFetch(
     defaultEndpoints.uploadFiles
   );
@@ -1034,15 +1033,16 @@ const EvidenceForm = ({
         })}
         error={errors.eviDesc}
       />
-      <Input
-        type="datetime-local"
-        {...register("dateTime", {
+      <DateInput
+        control={control}
+        name="dateTime"
+        formOptions={{
           required: "Select Evidence Date & Time",
           validate: (v) =>
             new Date(v) < new Date() || "Can not select date from future",
-        })}
+        }}
+        type="datetime-local"
         max={moment({ time: new Date(), format: "YYYY-MM-DDThh:mm" })}
-        error={errors.dateTime}
       />
       <FileInput
         prefill={uploads}

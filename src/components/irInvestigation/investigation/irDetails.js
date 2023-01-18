@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useContext, useRef } from "react";
+import { useEffect, useState, useCallback, useContext } from "react";
 import s from "./style.module.scss";
 import { Box } from "../../incidentReport";
 import { InvestigationContext } from "../InvestigationContext";
@@ -9,14 +9,12 @@ import {
   TableActions,
   Combobox,
   Input,
-  Textarea,
-  FileInput,
+  DateInput,
   Radio,
   Tabs,
   Moment,
   moment,
 } from "../../elements";
-import { ImEye } from "react-icons/im";
 import {
   FaRegTrashAlt,
   FaCheck,
@@ -29,7 +27,6 @@ import {
 import { IoClose } from "react-icons/io5";
 import { BsPencilFill } from "react-icons/bs";
 import { useFetch } from "../../../hooks";
-import { wait } from "../../../helpers";
 import {
   paths,
   endpoints as defaultEndpoints,
@@ -127,7 +124,11 @@ const IrDetails = () => {
   const methods = useForm();
   const navigate = useNavigate();
 
-  const { post: saveIrDetail, put: updateIrDetail, savingIrDetail } = useFetch(
+  const {
+    post: saveIrDetail,
+    put: updateIrDetail,
+    savingIrDetail,
+  } = useFetch(
     defaultEndpoints.irInvestigation +
       (ir.irInvestigation?.length ? `/${ir.irInvestigation[0].id}` : "")
   );
@@ -543,9 +544,11 @@ const Events = ({ events, setEvents }) => {
     setEdit(null);
   }, []);
 
-  const { remove: deleteEvent, put: updateEvent, loading } = useFetch(
-    defaultEndpoints.investigationEvents + "/{ID}"
-  );
+  const {
+    remove: deleteEvent,
+    put: updateEvent,
+    loading,
+  } = useFetch(defaultEndpoints.investigationEvents + "/{ID}");
 
   return (
     <Table
@@ -697,6 +700,7 @@ const EventForm = ({ edit, onSuccess, clearForm }) => {
   const { user } = useContext(SiteContext);
   const { ir, setIr, updateIr } = useContext(InvestigationContext);
   const {
+    control,
     handleSubmit,
     register,
     reset,
@@ -744,15 +748,16 @@ const EventForm = ({ edit, onSuccess, clearForm }) => {
         {...register("details", { required: "Please enter Detail" })}
         error={errors.details}
       />
-      <Input
+      <DateInput
         type="datetime-local"
-        {...register("dateTime", {
+        control={control}
+        name="dateTime"
+        formOptions={{
           required: "Please enter Date & Time",
           validate: (v) =>
             new Date(v) < new Date() || "Can not select date from future",
-        })}
+        }}
         max={moment({ time: new Date(), format: "YYYY-MM-DDThh:mm" })}
-        error={errors.dateTime}
       />
       <div className={s.btns}>
         <button className="btn secondary" type="submit">
@@ -977,6 +982,7 @@ const NoteForm = ({ edit, onSuccess, clearForm }) => {
   const { user } = useContext(SiteContext);
   const { ir, setIr } = useContext(InvestigationContext);
   const {
+    control,
     handleSubmit,
     register,
     reset,
@@ -1029,15 +1035,16 @@ const NoteForm = ({ edit, onSuccess, clearForm }) => {
         {...register("notes", { required: "Please enter Detail" })}
         error={errors.notes}
       />
-      <Input
-        type="datetime-local"
-        {...register("dateTime", {
+      <DateInput
+        control={control}
+        name="dateTime"
+        formOptions={{
           required: "Please enter Date & Time",
           validate: (v) =>
             new Date(v) < new Date() || "Can not select date from future",
-        })}
+        }}
+        type="datetime-local"
         max={moment({ time: new Date(), format: "YYYY-MM-DDThh:mm" })}
-        error={errors.dateTime}
       />
       <div className={s.btns}>
         <button className="btn secondary" type="submit">

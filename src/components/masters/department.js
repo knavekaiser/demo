@@ -1,20 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
-import { FaInfoCircle, FaPlus, FaCheck, FaRegTrashAlt } from "react-icons/fa";
+import { FaPlus, FaCheck, FaRegTrashAlt } from "react-icons/fa";
 import { IoClose } from "react-icons/io5";
 import { BsPencilFill } from "react-icons/bs";
-import { BiSearch } from "react-icons/bi";
-import { Box } from "../incidentReport";
-import { TiTick } from "react-icons/ti";
-import { IoIosClose } from "react-icons/io";
-import {
-  Form,
-  Input,
-  Combobox,
-  Table,
-  TableActions,
-  Toggle,
-} from "../elements";
-import { Modal, Prompt } from "../modal";
+import { Input, Table, TableActions } from "../elements";
+import { Prompt } from "../modal";
 import { useForm } from "react-hook-form";
 import { endpoints as defaultEndpoints } from "../../config";
 import { useFetch } from "../../hooks";
@@ -117,9 +106,11 @@ const DepartmentForm = ({ edit, onSuccess, clearForm, departments }) => {
     formState: { errors },
   } = useForm({ ...edit });
 
-  const { post: postDepartment, put: updateDepartment, loading } = useFetch(
-    defaultEndpoints.departments + `/${edit?.id || ""}`
-  );
+  const {
+    post: postDepartment,
+    put: updateDepartment,
+    loading,
+  } = useFetch(defaultEndpoints.departments + `/${edit?.id || ""}`);
 
   useEffect(() => {
     reset({ ...edit });

@@ -1,20 +1,12 @@
 import React, { useState, useEffect, useContext, useCallback } from "react";
 import { SiteContext } from "../SiteContext";
-import {
-  FaInfoCircle,
-  FaRegTrashAlt,
-  FaPlus,
-  FaCheck,
-  FaCheckCircle,
-} from "react-icons/fa";
-import { IoClose } from "react-icons/io5";
+import { FaCheckCircle } from "react-icons/fa";
 import { BiChevronsDown } from "react-icons/bi";
-import { BsPencilFill } from "react-icons/bs";
-import { Input, Select, Textarea, Table, moment, Moment } from "./elements";
+import { Input, Textarea, Table, moment, Moment } from "./elements";
 import { Prompt, Modal } from "./modal";
-import { useForm, FormProvider, useFormContext } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useHisFetch, useFetch } from "../hooks";
+import { useFetch } from "../hooks";
 import {
   endpoints as defaultEndpoints,
   preventability,
@@ -726,7 +718,6 @@ export const Box = ({ label, children, className, collapsable }) => {
         {collapsable && (
           <button
             type="button"
-            style
             className="clear"
             style={open ? { transform: `rotate(180deg)` } : {}}
             onClick={() => setOpen(!open)}

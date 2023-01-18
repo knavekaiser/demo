@@ -1,19 +1,13 @@
 import { useEffect, useContext, useState, useCallback } from "react";
 import { SiteContext } from "../SiteContext";
-import {
-  Routes,
-  Route,
-  useNavigate,
-  useLocation,
-  createSearchParams,
-} from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { Input, Checkbox } from "./elements";
 import { Prompt } from "./modal";
 import bcrypt from "bcryptjs";
 import s from "./login.module.scss";
 import { useFetch } from "../hooks";
-import { appConfig, endpoints as defaultEndpoints, paths } from "../config";
+import { endpoints as defaultEndpoints, paths } from "../config";
 import jwt_decode from "jwt-decode";
 
 export default function Login() {
@@ -49,7 +43,6 @@ export default function Login() {
   const {
     handleSubmit,
     register,
-    watch,
     formState: { errors },
   } = useForm();
   useEffect(() => {

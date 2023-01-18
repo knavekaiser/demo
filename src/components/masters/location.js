@@ -1,24 +1,11 @@
 import { useState, useEffect } from "react";
-import { FaInfoCircle, FaPlus, FaCheck, FaRegTrashAlt } from "react-icons/fa";
+import { FaPlus, FaCheck, FaRegTrashAlt } from "react-icons/fa";
 import { BsPencilFill } from "react-icons/bs";
-import { BiSearch } from "react-icons/bi";
-import { Box } from "../incidentReport";
-import { TiTick } from "react-icons/ti";
-import { IoIosClose } from "react-icons/io";
 import { IoClose } from "react-icons/io5";
-import {
-  Form,
-  Input,
-  SearchField,
-  Combobox,
-  Table,
-  TableActions,
-  Toggle,
-  Select,
-} from "../elements";
+import { SearchField, Table, TableActions, Toggle, Select } from "../elements";
 
-import { Modal, Prompt } from "../modal";
-import { useForm, Controller } from "react-hook-form";
+import { Prompt } from "../modal";
+import { useForm } from "react-hook-form";
 import { endpoints as defaultEndpoints } from "../../config";
 import { useFetch } from "../../hooks";
 import s from "./masters.module.scss";
@@ -162,9 +149,11 @@ const LocationForm = ({
     control,
   } = useForm();
 
-  const { post: postLocation, put: updateLocation, loading } = useFetch(
-    defaultEndpoints.locations + `/${edit?.id || ""}`
-  );
+  const {
+    post: postLocation,
+    put: updateLocation,
+    loading,
+  } = useFetch(defaultEndpoints.locations + `/${edit?.id || ""}`);
 
   useEffect(() => {
     reset({ status: true, ...edit });
